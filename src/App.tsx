@@ -7,6 +7,7 @@ import { startCloudSync } from './net/cloudSync'
 import { startPush } from './net/push'
 import { startRaidFeed } from './net/raidFeed'
 import { startIncursionSync } from './net/incursionSync'
+import { refreshServerGifts } from './net/serverGifts'
 import { startRaidSync } from './net/raidSync'
 import { startTradeBoard } from './net/tradeBoard'
 import { AccountHost } from './ui/account/AccountHost'
@@ -50,6 +51,8 @@ export default function App() {
   // Salas compartidas de los jefes comunitarios: entrar, ponerse al día y avisar al salir
   useEffect(startRaidSync, [])
   useEffect(startIncursionSync, [])
+  // Regalos del servidor para todos (en Notificaciones)
+  useEffect(() => void refreshServerGifts(), [])
   useEffect(startRaidFeed, [])
   // Notificaciones push: el plan de avisos al ocultarse la app y la suscripción al día con la cuenta
   useEffect(startPush, [])

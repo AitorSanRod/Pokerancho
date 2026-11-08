@@ -1,5 +1,7 @@
 import type { DailyGift } from '../../data/dailyGifts'
+import { incursion, type IncursionId } from '../../data/incursions'
 import { species } from '../../data/species'
+import type { ServerGift } from '../../game/collection/serverGifts'
 import type { RaidPrize } from '../../game/raid/raidRoom'
 import { ROUTE_RAID_STREAK_RESET_MS } from '../../game/raid/routeRaidStreak'
 import { Sprite } from './common'
@@ -92,6 +94,16 @@ export function giftRewards(gift: DailyGift): RewardItem[] {
     items.push({ key: 'shards', icon: <ItemIcon item={ICON.Shard} size={96} />, title: `+${gift.missingnoShards} trozos de MissingNo`, color: '#7a5ab0' })
   }
   return items
+}
+
+/** Lo que da un regalo del servidor: cada llave de incursión */
+export function serverGiftRewards(gift: ServerGift): RewardItem[] {
+  return (Object.entries(gift.incursionKeys) as [IncursionId, number][]).map(([id, n]) => ({
+    key: `key-${id}`,
+    icon: <ItemIcon item={ICON.Incursion} size={96} />,
+    title: `Llave: ${incursion(id).name} ×${n}`,
+    color: '#1f5f86',
+  }))
 }
 
 /** Premios de los jefes comunitarios derrotados, sumados: cada jefe, y después EXP, ₽, tickets y tickets de cada jefe */

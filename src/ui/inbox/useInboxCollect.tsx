@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { species } from '../../data/species'
 import { act, getState } from '../../game/core/store'
+import { claimServerGift, type ServerGift } from '../../game/collection/serverGifts'
 import { collectRaidPrize, collectRaidPrizes } from '../../game/raid/raidPrizes'
 import { goodText } from '../../game/trade/goodText'
 import { TradeAction, type InboxEntry } from '../../game/trade/tradeProtocol'
@@ -8,11 +9,11 @@ import { receiveBlocker } from '../../game/trade/tradeReceive'
 import { claimDailyGift } from '../../net/dailyGift'
 import { tradeOp } from '../../net/tradeApi'
 import { refreshTradeBoard } from '../../net/tradeBoard'
-import { giftRewards, raidPrizeRewards } from '../shared/rewardItems'
+import { giftRewards, raidPrizeRewards, serverGiftRewards } from '../shared/rewardItems'
 import { RewardOverlay, type RewardItem } from '../shared/RewardOverlay'
 
-// Recoger lo de Notificaciones: el obsequio diario, cada premio de raid, cada cosa de los intercambios o todo a la vez.
-// Obsequio y premios se enseñan en la pantalla de premios; lo de los intercambios, en un aviso de texto.
+// Recoger lo de Notificaciones: el obsequio diario, cada regalo del servidor, cada premio de raid, cada cosa de los
+// intercambios o todo a la vez. Obsequio, regalos y premios se enseñan en la pantalla de premios; lo de los intercambios, en un aviso de texto.
 
 interface Report {
   title: string
@@ -50,6 +51,11 @@ export function useInboxCollect() {
       if (gift) setReport({ title: '¡Obsequio diario!', items: giftRewards(gift) })
     })
 
+  const collectServerGift = (gift: ServerGift) =>
+    exclusive(`server:${gift.id}`, async () => {
+      if (act((s) => claimServerGift(s, gift))) setReport({ title: '¡Regalo!', items: serverGiftRewards(gift) })
+    })
+
   const collectPrize = (index: number) =>
     exclusive(`prize:${index}`, async () => {
       const prize = act((s) => collectRaidPrize(s, index))
@@ -63,19 +69,20 @@ export function useInboxCollect() {
     })
 
   /** Todo lo que se pueda: lo de un intercambio que aún no cabe (un Pokémon sin sitio) se queda */
-  const collectAll = (giftReady: boolean, entries: InboxEntry[]) =>
+  const collectAll = (giftReady: boolean, entries: InboxEntry[], serverGifts: ServerGift[]) =>
     exclusive('all', async () => {
       const gift = giftReady ? await claimDailyGift() : null
       const prizes = act(collectRaidPrizes)
+      const gifts = serverGifts.filter((g) => act((s) => claimServerGift(s, g)))
       const notes: string[] = []
       // Se mira con la partida de cada momento: cada Pokémon recogido ocupa sitio
       for (const entry of entries) if (!receiveBlocker(getState(), entry.good)) notes.push(await claimTrade(entry))
       if (entries.length) await refreshTradeBoard()
-      const items = [...(gift ? giftRewards(gift) : []), ...(prizes.length ? raidPrizeRewards(prizes) : [])]
+      const items = [...(gift ? giftRewards(gift) : []), ...gifts.flatMap(serverGiftRewards), ...(prizes.length ? raidPrizeRewards(prizes) : [])]
       if (items.length) setReport({ title: '¡Todo recogido!', items })
       setNotice(notes.length ? notes.join(' ') : null)
     })
 
   const overlay: ReactNode = report && <RewardOverlay title={report.title} items={report.items} onClose={() => setReport(null)} />
-  return { busy, notice, overlay, collectGift, collectPrize, collectTrade, collectAll }
+  return { busy, notice, overlay, collectGift, collectServerGift, collectPrize, collectTrade, collectAll }
 }

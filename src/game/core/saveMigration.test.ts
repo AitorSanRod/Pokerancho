@@ -43,6 +43,7 @@ function advancedGame(): GameState {
     ranchNames: { 0: 'Prado' },
     stones: { [Stone.Fire]: 1, [Stone.Moon]: 3 },
     incursionKeys: { [IncursionId.CuevaHelada]: 2 },
+    claimedServerGifts: ['regalo-1'],
     // Coherente: con Pueblo Paleta completada, también abierta la ruta que desbloquea
     unlockedRoutes: [RouteId.PuebloPaleta, route(RouteId.PuebloPaleta).unlocks!, RouteId.BosqueVerde],
     completedRoutes: [RouteId.PuebloPaleta],
@@ -64,7 +65,7 @@ const fromOldVersion = (s: GameState, version = OLD) => JSON.parse(JSON.stringif
 
 const KEPT: (keyof GameState)[] = [
   'money', 'tickets', 'missingnoShards', 'seen', 'caught', 'favorites', 'pieces', 'upgrades', 'ranchTypeItems', 'ranchTypeOf', 'ranchExtraSlots', 'ranchNames',
-  'stones', 'incursionKeys', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'lastTick',
+  'stones', 'incursionKeys', 'claimedServerGifts', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'lastTick',
 ]
 
 afterEach(() => {

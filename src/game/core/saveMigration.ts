@@ -4,6 +4,7 @@ import { RANCH_TYPES } from '../../data/ranchTypes'
 import { SPECIES } from '../../data/species'
 import { Stone } from '../../data/stones'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
+import { SERVER_GIFT_ID } from '../collection/serverGifts'
 import { createMon } from '../team/mons'
 import { RANCH_EXPANSION_MAX, RANCH_EXPANSION_SLOTS } from '../team/ranchExpansion'
 import { cleanRanchName } from '../team/ranchNames'
@@ -97,6 +98,7 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   routeRaidStreaks: (v) =>
     isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([, r]) => isRecord(r) && isInt(r.count) && typeof r.lastAt === 'number')) : undefined,
   roomsToLeave: (v) => listOf(v, (x): x is string => typeof x === 'string'),
+  claimedServerGifts: (v) => listOf(v, (x): x is string => typeof x === 'string' && SERVER_GIFT_ID.test(x)),
   lastTick: (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(v, Date.now()) : undefined),
 }
 

@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
 import { species } from '../../data/species'
 import { giftAt, giftIndex } from '../../game/collection/dailyGift'
+import { pendingServerGifts } from '../../game/collection/serverGifts'
 import type { GameState } from '../../game/core/state'
 import { InboxReason } from '../../game/trade/tradeProtocol'
 import { receiveBlocker } from '../../game/trade/tradeReceive'
 import { AccountStatus, useAccount } from '../../net/account'
 import { giftReady, useDailyGift } from '../../net/dailyGift'
+import { refreshServerGifts, useServerGifts } from '../../net/serverGifts'
 import { refreshTradeBoard, useTradeBoard } from '../../net/tradeBoard'
 import { giftText } from '../gift/giftText'
 import { prizeText } from '../raid/useRaidPrizeCollect'
@@ -25,15 +27,19 @@ const REASON_TEXT: Record<InboxReason, string> = {
   [InboxReason.Withdrawn]: 'Has retirado el anuncio: vuelve a ti',
 }
 
-/** Notificaciones (menú del rancho): obsequio diario listo, premios de raid y lo que llega de los intercambios */
+/** Notificaciones (menú del rancho): obsequio diario listo, regalos del servidor, premios de raid y lo que llega de los intercambios */
 export function InboxSheet({ game, onBack }: { game: GameState; onBack: () => void }) {
   const { status } = useAccount()
   const giftView = useDailyGift()
   const trades = useTradeBoard().board?.inbox ?? []
   const collect = useInboxCollect()
-  useEffect(() => void refreshTradeBoard(), [])
+  const serverGifts = pendingServerGifts(game, useServerGifts())
+  useEffect(() => {
+    void refreshTradeBoard()
+    void refreshServerGifts()
+  }, [])
   const gift = giftReady(giftView) && giftView.state ? giftView.state.claimed : null
-  const empty = gift === null && game.raidPrizes.length === 0 && trades.length === 0
+  const empty = gift === null && serverGifts.length === 0 && game.raidPrizes.length === 0 && trades.length === 0
   const row = (key: string) => ({ collecting: collect.busy === key, disabled: collect.busy !== null })
 
   return (
@@ -43,7 +49,7 @@ export function InboxSheet({ game, onBack }: { game: GameState; onBack: () => vo
       {empty ? (
         <p className="notice small">No tienes nada pendiente de recoger.</p>
       ) : (
-        <button className="btn primary wide" disabled={collect.busy !== null} onClick={() => void collect.collectAll(gift !== null, trades)}>
+        <button className="btn primary wide" disabled={collect.busy !== null} onClick={() => void collect.collectAll(gift !== null, trades, serverGifts)}>
           {collect.busy === 'all' ? 'Recogiendo…' : 'Recoger todo'}
         </button>
       )}
@@ -54,6 +60,12 @@ export function InboxSheet({ game, onBack }: { game: GameState; onBack: () => vo
           <span className="small inbox-thing-name">Obsequio</span>
         </InboxRow>
       )}
+      {serverGifts.map((g) => (
+        <InboxRow key={g.id} detail={g.title} {...row(`server:${g.id}`)} onCollect={() => void collect.collectServerGift(g)}>
+          <ItemIcon item={ICON.Incursion} size={56} />
+          <span className="small inbox-thing-name">Regalo</span>
+        </InboxRow>
+      ))}
       {game.raidPrizes.map((prize, i) => (
         <InboxRow key={`${prize.bossSpeciesId}:${prize.uid}:${i}`} detail={`Premio de raid: ${prizeText(prize)}`} {...row(`prize:${i}`)} onCollect={() => void collect.collectPrize(i)}>
           <Sprite id={prize.bossSpeciesId} size={64} animated={false} />

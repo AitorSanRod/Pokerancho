@@ -132,6 +132,8 @@ export interface GameState {
   incursionKeys: Partial<Record<IncursionId, number>>
   /** La incursión en la que está un Pokémon del jugador (ver incursion/incursionGame.ts); null si ninguna */
   incursion: ActiveIncursion | null
+  /** Regalos del servidor ya recogidos, por su id (ver collection/serverGifts.ts) */
+  claimedServerGifts: string[]
   /** Buscando grupo para una incursión con otros jugadores (ver incursion/online/linkedIncursion.ts); null si no */
   incursionQueue: IncursionQueue | null
   tutorial: TutorialStep | null
@@ -165,7 +167,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 36
+export const SAVE_VERSION = 37
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 
@@ -193,6 +195,7 @@ export function initialState(): GameState {
     incursionKeys: {},
     incursion: null,
     incursionQueue: null,
+    claimedServerGifts: [],
     tutorial: TutorialStep.Starter,
     unlockedRoutes: [RouteId.PuebloPaleta],
     completedRoutes: [],

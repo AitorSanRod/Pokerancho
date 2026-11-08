@@ -8,6 +8,7 @@ import { incursionRoute } from './incursion'
 import { raidRoute } from './raid'
 import { rankingRoute } from './ranking'
 import { saveRoute } from './save'
+import { serverGiftsRoute } from './serverGifts'
 import { tradeRoute } from './trade'
 
 // El Worker de Pokérancho. La web (dist/) la sirve Cloudflare sin pasar por aquí (ver run_worker_first en
@@ -23,6 +24,7 @@ export default {
     if (pathname === '/api/incursion') return incursionRoute(request, env)
     if (pathname === '/api/save') return saveRoute(request, env)
     if (pathname === '/api/gift') return giftRoute(request, env)
+    if (pathname === '/api/server-gifts') return serverGiftsRoute(request, env)
     if (pathname === '/api/trade') return tradeRoute(request, env)
     if (pathname === '/api/ranking') return rankingRoute(request, env)
     if (pathname.startsWith(AUTH_PREFIX)) return authRoute(request, env, pathname.slice(AUTH_PREFIX.length))
