@@ -1,0 +1,46 @@
+/* Escena de la incursión, como un combate de ruta (route/battle.css): cada Pokémon en su columna, con el nombre del
+   ataque y los números encima y el sprite abajo; los marcadores, a sus pies */
+
+.incursion-stage {
+  height: 330px;
+  border-radius: var(--radius);
+}
+.incursion-fighter {
+  position: absolute;
+  height: 190px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  transform: translateX(-50%) scale(var(--spot-scale));
+  transform-origin: bottom center;
+}
+.incursion-fighter .sprite {
+  display: flex;
+  filter: drop-shadow(0 2px 0 #0003);
+}
+/* El grupo mira hacia los rivales */
+.incursion-fighter.party .sprite {
+  transform: scaleX(-1);
+}
+/* Los rivales entran desde la derecha, como el de una ruta */
+.incursion-fighter.foe {
+  animation: enemy-enter 0.5s ease-out;
+}
+/* El rival que cae se hunde y desaparece; el del grupo se queda tumbado y en gris hasta que lo revivan */
+.incursion-fighter.fainted .sprite {
+  animation: faint 0.6s ease forwards;
+}
+.incursion-fighter.down .sprite {
+  filter: grayscale(1) brightness(0.75);
+  opacity: 0.6;
+  rotate: 14deg;
+  translate: 0 6px;
+}
+.incursion-fighter .raid-mine-tag {
+  bottom: -14px;
+}
+/* El marcador del jefe, algo más a la derecha que en la ruta para no tocar el de tu Pokémon */
+.incursion-stage .battle-hud-slot.boss {
+  left: 74%;
+}

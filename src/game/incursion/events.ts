@@ -1,5 +1,6 @@
 import type { StatusId } from '../../data/passives'
 import type { PokeType } from '../../data/types'
+import type { MissReason } from '../battle/battle'
 import type { GroupPassive } from './groupPassives'
 import type { GroupFighter, Team } from './fighter'
 
@@ -57,6 +58,10 @@ export interface IncursionEvent {
   eff?: number
   /** Hit de un movimiento: su tipo (el efecto del golpe en pantalla) */
   type?: PokeType
+  /** Move: el movimiento que usa (su nombre y color en pantalla) */
+  moveId?: string
+  /** Miss: por qué no hizo nada (falló, lo esquivó o el tipo lo anula) */
+  miss?: MissReason
   status?: StatusId
   room?: number
   fighters?: FighterView[]

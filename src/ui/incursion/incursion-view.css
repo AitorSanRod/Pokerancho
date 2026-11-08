@@ -33,17 +33,6 @@
   font-weight: 800;
   text-shadow: 0 1px 0 #0006;
 }
-.incursion-stage {
-  height: 260px;
-  border-radius: var(--radius);
-}
-/* Los rivales miran hacia el grupo: sin dar la vuelta al sprite */
-.incursion-mon.foe .sprite {
-  transform: none;
-}
-.incursion-mon .battle-pop.heal {
-  color: var(--hp-ok);
-}
 .incursion-log {
   min-height: 2.6em;
   margin: 0;

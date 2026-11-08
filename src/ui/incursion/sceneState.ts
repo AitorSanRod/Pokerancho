@@ -34,6 +34,12 @@ export interface SceneState {
   /** El evento que se está viendo y su número de orden en el tramo (para reiniciar animaciones) */
   current: IncursionEvent | null
   seq: number
+  /** El ataque que se está viendo: desde que se lanza hasta el siguiente (para su nombre sobre quien lo usa) */
+  move: { actor: string; moveId: string; seq: number } | null
+  /** El rival en juego: el último al que se ha golpeado o que ha actuado (su marcador se ve a la derecha) */
+  focusFoe: string | null
+  /** Número de orden del evento con que empezó la sala */
+  roomSeq: number
 }
 
 function partyAtStart(a: ActiveIncursion, p: IncursionProgress): SceneMon[] {
@@ -44,9 +50,10 @@ function partyAtStart(a: ActiveIncursion, p: IncursionProgress): SceneMon[] {
   }))
 }
 
-function apply(scene: SceneState, e: IncursionEvent) {
+function apply(scene: SceneState, e: IncursionEvent, seq: number) {
+  if (e.kind === EventKind.Move && e.actor && e.moveId) scene.move = { actor: e.actor, moveId: e.moveId, seq }
   if (e.kind === EventKind.Room) {
-    scene.room = e.room ?? scene.room
+    Object.assign(scene, { room: e.room ?? scene.room, roomSeq: seq, move: null, focusFoe: null })
     scene.foes = []
     for (const f of e.fighters ?? []) {
       const mon: SceneMon = { ...f, status: null }
@@ -54,6 +61,8 @@ function apply(scene: SceneState, e: IncursionEvent) {
       else scene.party = scene.party.map((p) => (p.id === f.id ? { ...mon, status: p.status } : p))
     }
   }
+  const foe = scene.foes.find((m) => m.id === e.target || (e.kind === EventKind.Move && m.id === e.actor))
+  if (foe) scene.focusFoe = foe.id
   if (e.kind === EventKind.Passives && e.passives) scene.passives = e.passives
   if (e.kind === EventKind.Revive && e.revives !== undefined) scene.revives = e.revives
   const target = [...scene.party, ...scene.foes].find((m) => m.id === e.target)
@@ -68,9 +77,12 @@ export function sceneAt(a: ActiveIncursion, p: IncursionProgress): SceneState {
   const leg = p.record.legs[p.leg]
   const startRevives = p.leg === 0 ? INCURSION_REVIVES : p.record.legs[p.leg - 1].next.revives
   const startRoom = p.leg === 0 ? 0 : p.record.legs[p.leg - 1].next.room
-  const scene: SceneState = { room: startRoom, party: partyAtStart(a, p), foes: [], revives: startRevives, passives: [], current: null, seq: 0 }
+  const scene: SceneState = {
+    room: startRoom, party: partyAtStart(a, p), foes: [], revives: startRevives, passives: [], current: null, seq: 0, move: null,
+    focusFoe: null, roomSeq: 0,
+  }
   const seen = eventsStarted(leg, p.legMs)
-  for (const e of leg.events.slice(0, seen)) apply(scene, e)
+  leg.events.slice(0, seen).forEach((e, i) => apply(scene, e, i + 1))
   scene.current = seen > 0 ? leg.events[seen - 1] : null
   scene.seq = seen
   return scene
