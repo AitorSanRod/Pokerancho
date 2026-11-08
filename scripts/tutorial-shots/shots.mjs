@@ -86,6 +86,29 @@ export const SHOTS = [
   },
   { name: 'raid-battle', scenario: { raid: true }, steps: (p) => toRouteTab(p, 'Raids', 3000), focus: '::-p-text(Caerá en)' },
   { name: 'raid-prize', scenario: { raidPrize: true }, steps: (p) => toRouteTab(p, 'Raids', 1500), focus: '::-p-text(Recoger premio)' },
+  // Incursiones
+  { name: 'inc-tab', steps: toRoute, focus: '::-p-aria(Incursiones)' },
+  {
+    name: 'inc-keys',
+    steps: async (p) => {
+      await nav(p, 'shop')
+      await tap(p, '::-p-text(Llaves de incursión)')
+    },
+    focus: '.shop-fold-keys .shop-grid',
+  },
+  { name: 'inc-info', steps: (p) => toRouteTab(p, 'Incursiones'), focus: '::-p-text(Cómo funcionan las incursiones)' },
+  {
+    name: 'inc-prep',
+    steps: async (p) => {
+      await toRouteTab(p, 'Incursiones')
+      await tap(p, '::-p-text(Preparar)', 900)
+    },
+    focus: '.incursion-moves',
+  },
+  { name: 'inc-queue', scenario: { incursionQueue: true }, hold: '/api/incursion', steps: (p) => toRouteTab(p, 'Incursiones'), focus: '.incursion-queue-count' },
+  { name: 'inc-battle', scenario: { incursion: 'battle' }, steps: (p) => toRouteTab(p, 'Incursiones', 1500), focus: '.incursion-revives' },
+  { name: 'inc-regroup', scenario: { incursion: 'regroup' }, steps: (p) => toRouteTab(p, 'Incursiones', 1500), focus: '.incursion-regroup' },
+  { name: 'inc-summary', scenario: { incursion: 'finished' }, steps: (p) => toRouteTab(p, 'Incursiones', 1500), focus: '.incursion-summary' },
   // Evolucionar y mejorar
   {
     name: 'evo-train',

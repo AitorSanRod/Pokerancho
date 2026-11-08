@@ -33,6 +33,7 @@ const browser = await puppeteer.launch({ executablePath: CHROME_PATH, headless: 
 for (const shot of SHOTS.filter((s) => s.name.startsWith(filter))) {
   const page = await browser.newPage()
   await page.setViewport(VIEWPORT)
+  if (shot.hold) await holdRequests(page, shot.hold)
   await page.goto(APP_URL)
   const save = await page.evaluate(buildDemoSave, shot.scenario ?? {})
   await page.evaluateOnNewDocument((data) => {
@@ -55,6 +56,17 @@ for (const shot of SHOTS.filter((s) => s.name.startsWith(filter))) {
   await page.close()
 }
 await browser.close()
+
+/**
+ * Deja sin respuesta las peticiones a esa dirección, como si el servidor tardara: así se ve lo que la app enseña
+ * mientras espera (p. ej. buscando grupo de incursión, que sin servidor pasaría enseguida a jugarse en local)
+ */
+async function holdRequests(page, path) {
+  await page.setRequestInterception(true)
+  page.on('request', (request) => {
+    if (!request.url().includes(path)) void request.continue()
+  })
+}
 
 /** Oscurece todo menos el elemento y lo rodea con un anillo amarillo */
 async function spotlight(page, selector) {

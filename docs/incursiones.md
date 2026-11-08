@@ -1,7 +1,7 @@
 # Incursiones
 
 > Estado: **se puede jugar**, con otros jugadores por el servidor (cola de 1 min y, si no llegan a cinco, bots) o, sin
-> servidor, en local con bots. Falta un tutorial y el fondo de la Cueva Helada. Los números están en la tabla
+> servidor, en local con bots. Hay guía en Tutoriales (menú del rancho). Falta el fondo de la Cueva Helada. Los números están en la tabla
 > [Números](#números) y son un punto de partida para ajustar a mano.
 
 Una incursión es una mazmorra clásica para **5 jugadores**: una ruta de salas escritas a mano (combates, curación,
@@ -314,7 +314,7 @@ uno de nivel 40 (sincronizado a 33) gana casi siempre. Cinco bots casi nunca gan
 4. ~~**Servidor**: cola, formación del grupo a los 60 s, tramos, reorganizar, votos, tablas y cliente de red.~~ Hecho.
 5. ~~**Pantallas**: pestaña, **información**, preparación, escena de grupo, sala de reorganizar, retirada y resumen.~~
    Hecho, también la cola y los votos. Queda el fondo de la Cueva Helada (ahora usa el de cueva).
-6. **Documentación**: ~~fila en la tabla «Sistemas» de `diseno.md`~~ y un tutorial.
+6. ~~**Documentación**: fila en la tabla «Sistemas» de `diseno.md` y un tutorial.~~ Hecho: guía «Incursiones» (`ui/tutorials/guides/incursionGuide.ts`, capturas `inc-*`).
 
 ## Con y sin servidor
 
