@@ -3,16 +3,17 @@ import { POKEMON } from './pokemon'
 import { Rarity } from './species'
 import { MoveKind, SUPPORT_MOVES, type SupportMove } from './supportMoves'
 
-// Qué movimientos puede llevar un Pokémon a una incursión (el repertorio lo arma game/incursion/repertoire.ts): los de
-// daño de sus tipos, los de apoyo de sus tipos (supportMoves.ts) y los propios de su especie. Para editar a mano.
+// Qué movimientos puede llevar un Pokémon a una incursión (el repertorio lo arma game/incursion/repertoire.ts): por cada
+// uno de sus tipos, su mejor ataque de daño y el de apoyo del tipo (supportMoves.ts); además, los propios de su especie.
+// Para editar a mano.
 
 export type DamageMove = Move & { kind: typeof MoveKind.Damage }
 /** Un movimiento de incursión: de daño (los de siempre) o de apoyo */
 export type BattleMove = DamageMove | SupportMove
 
 /**
- * Nivel desde el que se aprende el ataque de daño de cada escalón de sus tipos. Nunca uno de un escalón por encima de
- * su rareza: un común solo tiene el común; un épico, el común, el raro y el épico
+ * Nivel desde el que se pasa al ataque de daño de cada escalón de sus tipos (lleva el más alto al que llega). Nunca uno de
+ * un escalón por encima de su rareza: un común se queda en el común; un épico llega hasta el épico
  */
 export const DAMAGE_TIER_LEVELS: Record<Rarity, number> = {
   [Rarity.Common]: 1,
@@ -30,7 +31,7 @@ export const SPECIES_MOVES: Partial<Record<number, { moveId: string; level: numb
 
 const BATTLE_MOVES: Record<string, BattleMove> = Object.fromEntries([
   ...Object.values(MOVES).map((mv): [string, BattleMove] => [mv.id, { ...mv, kind: MoveKind.Damage }]),
-  ...Object.values(SUPPORT_MOVES).flatMap((list) => list.map((mv): [string, BattleMove] => [mv.id, mv])),
+  ...Object.values(SUPPORT_MOVES).map((mv): [string, BattleMove] => [mv.id, mv]),
 ])
 
 export function battleMove(id: string): BattleMove {

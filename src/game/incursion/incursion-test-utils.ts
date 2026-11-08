@@ -16,7 +16,7 @@ export const HIT = typeMove('normal', Rarity.Common).id
 
 /** El primer movimiento de apoyo que haya de ese tipo de efecto */
 export function supportOf<K extends SupportMove['kind']>(kind: K): Extract<SupportMove, { kind: K }> {
-  const mv = Object.values(SUPPORT_MOVES).flat().find((m) => m.kind === kind)
+  const mv = Object.values(SUPPORT_MOVES).find((m) => m.kind === kind)
   if (!mv) throw new Error(`No hay movimiento de ${kind}`)
   return mv as Extract<SupportMove, { kind: K }>
 }

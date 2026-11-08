@@ -17,12 +17,19 @@ describe('repertorio de incursión', () => {
     }
   })
 
-  it.each(RARITY_ORDER)('un %s tiene los ataques de daño de sus tipos hasta su escalón, no más', (rarity) => {
+  it.each(RARITY_ORDER)('un %s lleva, de cada tipo, el ataque de daño del escalón más alto al que llega', (rarity) => {
     const id = speciesOfRarity(rarity)
-    const allowed = RARITY_ORDER.slice(0, RARITY_ORDER.indexOf(rarity) + 1)
-    const expected = species(id).types.flatMap((t) => allowed.map((r) => typeMove(t, r).id))
-    const damage = repertoire(id, MAX_LEVEL).filter((mv) => mv.kind === MoveKind.Damage).map((mv) => mv.id)
-    expect(damage.sort()).toEqual(expected.sort())
+    const damageAt = (level: number) => repertoire(id, level).filter((mv) => mv.kind === MoveKind.Damage).map((mv) => mv.id)
+    expect(damageAt(MAX_LEVEL).sort()).toEqual(species(id).types.map((t) => typeMove(t, rarity).id).sort())
+    expect(damageAt(DAMAGE_TIER_LEVELS[Rarity.Common]).sort()).toEqual(species(id).types.map((t) => typeMove(t, Rarity.Common).id).sort())
+  })
+
+  it('como mucho dos movimientos por tipo, sin contar los propios de su especie', () => {
+    for (const sp of SPECIES) {
+      const own = new Set((SPECIES_MOVES[sp.id] ?? []).map((m) => m.moveId))
+      const byType = repertoire(sp.id, MAX_LEVEL).filter((mv) => !own.has(mv.id))
+      for (const t of sp.types) expect(byType.filter((mv) => mv.type === t).length).toBeLessThanOrEqual(2)
+    }
   })
 
   it('cada movimiento se aprende desde su nivel', () => {

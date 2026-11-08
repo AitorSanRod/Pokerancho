@@ -14,7 +14,7 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
 | Tema | Decisión |
 |---|---|
 | Ritmo | Por turnos y automático. Lo que se decide (movimiento) se elige antes de entrar o en las salas de reorganizar |
-| Ataques | Uno por Pokémon (más adelante, varios con condiciones). Cada Pokémon tiene su **repertorio**: ataques comunes de sus tipos más los propios de la especie. MTs: previstas, pero no se usan aún |
+| Ataques | Uno por Pokémon (más adelante, varios con condiciones). Cada Pokémon tiene su **repertorio**: como mucho dos por tipo (su mejor ataque de daño y el de apoyo del tipo) más los propios de la especie. MTs: previstas, pero no se usan aún |
 | Roles | Libres: el papel lo da el movimiento elegido (daño, curar, provocar, apoyo) |
 | Grupo | Cola automática de 5. Si en **1 min** no se llena, se completa con bots |
 | Salas | Escritas a mano en cada incursión: combate, curar, revivir, reorganizar ataques, jefe. PS y estados se arrastran entre salas |
@@ -183,10 +183,20 @@ Las rutas y raids siguen con su ataque único (`signatureMove`). En las incursio
 Los golpes, bajadas y estados contra un solo rival van al que provoca, si hay alguno. El mismo movimiento renueva su
 cambio de stats en vez de sumarlo otra vez (cinco con Danza Dragón no la quintuplican).
 
-**Repertorio** (`game/incursion/repertoire.ts`) = los ataques de daño de sus tipos hasta el escalón de su rareza (un
-común solo el común; un épico, común, raro y épico), cada escalón desde su nivel (`learnsets.ts › DAMAGE_TIER_LEVELS`)
-\+ los de apoyo de sus tipos desde su nivel (`supportMoves.ts`, la base propuesta: 2–3 por tipo) + los propios de su
-especie (`learnsets.ts › SPECIES_MOVES`). Las MTs, más adelante.
+**Repertorio** (`game/incursion/repertoire.ts`): como mucho **dos por tipo**. De cada uno de sus tipos, el ataque de
+daño del escalón más alto al que llega (sin pasar de su rareza y desde su nivel, `learnsets.ts › DAMAGE_TIER_LEVELS`) y
+el ataque de apoyo del tipo desde su nivel (`supportMoves.ts`, uno por tipo); además, los propios de su especie
+(`learnsets.ts › SPECIES_MOVES`). Las MTs, más adelante.
+
+Cada tipo tiene su papel en el grupo por su ataque de apoyo (y sus pasivas de grupo van en la misma línea):
+
+| Papel | Tipos |
+|---|---|
+| Aguantar (provocar) | Acero (el que más aguanta) y roca. Sus pasivas de grupo son las más defensivas |
+| Curar | Planta (la cura más fuerte a uno) y agua (la única que cura a todo el grupo); sus pasivas regeneran. Normal, psíquico y hada curan menos |
+| Subir stats al grupo | Hielo (Defensa), lucha, bicho y dragón (Ataque y Velocidad), volador (Velocidad) |
+| Bajar stats a los rivales | Tierra (Ataque de todos), siniestro (Defensa de uno) |
+| Estados | Fuego (quemar), eléctrico (paralizar), veneno (envenenar), fantasma (confundir) |
 
 ## Pasivas de grupo
 
@@ -230,7 +240,8 @@ cubre lo que le falte al grupo: si nadie cura, cura; si nadie provoca, provoca; 
 ## Números
 
 Simulado con la Cueva Helada (100 partidas por caso): un grupo bien montado (curador, tanque y tres de daño con
-cobertura) gana un 60% a nivel 30 (la dificultad buscada, por ahora), con 2–3 revivires gastados, y unos 14 min de combate (más 1:30 de reorganizar). Con
+cobertura) gana un 60% a nivel 30 con un curador de planta (la dificultad buscada, por ahora); con uno de agua, un
+70%, y con uno que no sea de planta ni de agua, un 25%, con 2–3 revivires gastados, y unos 14 min de combate (más 1:30 de reorganizar). Con
 uno de nivel 40 (sincronizado a 33) gana casi siempre. Cinco bots casi nunca ganan: están para completar.
 
 | Qué | Valor | Dónde |

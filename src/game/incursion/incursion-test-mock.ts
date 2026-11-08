@@ -10,7 +10,7 @@ export * from '../../data/incursions/types'
  * `vi.mock('../../data/incursions', () => import('./incursion-test-mock'))`. Dos salas fáciles con una de reorganizar
  * en medio
  */
-const easy = { speciesId: POKEMON.Caterpie, levelDelta: -50, moveId: SUPPORT_MOVES.bug[0].id }
+const easy = { speciesId: POKEMON.Caterpie, levelDelta: -50, moveId: SUPPORT_MOVES.bug.id }
 const room: IncursionRoom = { kind: RoomKind.Battle, name: 'Sala', foes: [easy], reward: { money: 10, exp: 20 } }
 
 export const TEST_INCURSION: Incursion = {

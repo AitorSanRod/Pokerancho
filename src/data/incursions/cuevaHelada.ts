@@ -30,7 +30,7 @@ export const CUEVA_HELADA: Incursion = {
       name: 'Guardián de hielo',
       foes: [
         foe(POKEMON.Cloyster, 5, 'blizzard', { hpMult: 2.5, boss: { areaEvery: 4 } }),
-        foe(POKEMON.Shellder, 1, 'withdraw'),
+        foe(POKEMON.Shellder, 1, 'aurora-veil'),
         foe(POKEMON.Shellder, 1, 'powder-snow'),
       ],
       reward: { money: 600, exp: 300 },
