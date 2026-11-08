@@ -5,7 +5,7 @@ import { addPieces } from '../collection/pieces'
 import type { Rng } from '../core/random'
 import { findMon, type GameState } from '../core/state'
 import { gainExp } from '../team/stats'
-import type { RaidMember, RaidPrize } from './raidRoom'
+import { outOfLives, type RaidMember, type RaidPrize } from './raidRoom'
 
 /** Fracción mínima de la pelea (desde que apareció el jefe hasta que cayó) que hay que haber estado dentro para cobrar */
 export const RAID_MIN_PRESENCE = 0.1
@@ -13,8 +13,15 @@ export const RAID_MIN_PRESENCE = 0.1
 /** Fracción de la pelea que ha estado dentro (1 al empezar, cuando aún no ha pasado tiempo) */
 export const presenceShare = (m: RaidMember, fightMs: number): number => (fightMs > 0 ? Math.min(1, m.presentMs / fightMs) : 1)
 
-/** Cobra quien estuvo dentro al menos RAID_MIN_PRESENCE de la pelea o quien seguía dentro cuando cayó el jefe */
-export const earnsPrize = (m: RaidMember, fightMs: number): boolean => !m.left || m.presentMs >= fightMs * RAID_MIN_PRESENCE
+/** Ha estado dentro al menos RAID_MIN_PRESENCE de los `fightMs` de pelea */
+export const presentEnough = (m: RaidMember, fightMs: number): boolean => m.presentMs >= fightMs * RAID_MIN_PRESENCE
+
+/**
+ * Cobra al caer el jefe quien estuvo dentro al menos RAID_MIN_PRESENCE de la pelea o quien seguía dentro; no quien salió
+ * por gastar sus vidas, que ya cobró al salir (ver raidLives.ts)
+ */
+export const earnsPrize = (m: RaidMember, fightMs: number): boolean =>
+  !m.left || (!outOfLives(m) && presentEnough(m, fightMs))
 
 /** Tira cada línea de la tabla de premios de la categoría del jefe por separado; la EXP es para el Pokémon `uid` */
 export function rollPrize(boss: RaidBoss, uid: string, rng: Rng): RaidPrize {

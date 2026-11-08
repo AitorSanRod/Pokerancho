@@ -6,8 +6,9 @@ import { joinRaid, leaveRaid, monRaidBlocker, raidRoomBlocker } from '../../game
 import { isEnding } from '../../game/raid/raidEnding'
 import type { RaidRotation } from '../../game/raid/online/protocol'
 import { playerMembers } from '../../game/raid/raidEngine'
+import { spentMember, TAB_RAID_LIVES } from '../../game/raid/raidLives'
 import { earnsPrize, presenceShare, RAID_MIN_PRESENCE } from '../../game/raid/raidPrizes'
-import { RaidMemberKind, type Raid } from '../../game/raid/raidRoom'
+import { RaidMemberKind, type Raid, type RaidMember } from '../../game/raid/raidRoom'
 import { nickname } from '../../net/identity'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { Sprite } from '../shared/common'
@@ -39,6 +40,7 @@ function InRaid({ game, raid, uid }: { game: GameState; raid: Raid; uid: string 
       <p className="small">
         {name} lleva el {formatPercent(presenceShare(member, raid.elapsedMs))} de la pelea y ha hecho {member.damage} de daño. Recibe recompensas si llega al{' '}
         {formatPercent(RAID_MIN_PRESENCE)} o si sigue dentro cuando caiga el jefe.
+        {member.lives !== null && ` Le quedan ${member.lives} de ${TAB_RAID_LIVES} vidas.`}
       </p>
       <RaidLinkNote raid={raid} />
       {/* Mientras se ve el final de la pelea ya no se puede retirar */}
@@ -70,21 +72,23 @@ function InRaid({ game, raid, uid }: { game: GameState; raid: Raid; uid: string 
 }
 
 /** Los Pokémon que pueden ir contra el jefe ahora mismo, los de más nivel primero */
-const eligibleMons = (game: GameState, raid: Raid) =>
-  game.owned.filter((m) => monRaidBlocker(game, m.uid, raid) === null).sort((a, b) => b.level - a.level || b.hp - a.hp)
+const eligibleMons = (game: GameState, rotation: RaidRotation, raid: Raid) =>
+  game.owned.filter((m) => monRaidBlocker(game, m.uid, rotation, raid) === null).sort((a, b) => b.level - a.level || b.hp - a.hp)
 
 /** Por qué no hay ningún Pokémon que pueda ir (los de rutas, expediciones u otros jefes no están en el rancho) */
 const noneEligible = (raid: Raid) =>
   raid.boss.minLevel
-    ? `Ningún Pokémon libre en el rancho puede ir: hace falta Nv. ${raid.boss.minLevel} y no estar debilitado.`
-    : 'No queda ningún Pokémon libre en el rancho que no esté debilitado.'
+    ? `Ningún Pokémon libre en el rancho puede ir: hace falta Nv. ${raid.boss.minLevel}, no estar debilitado y no haber gastado sus vidas contra este jefe.`
+    : 'No queda ningún Pokémon libre en el rancho que no esté debilitado ni haya gastado sus vidas contra este jefe.'
 
 function JoinPicker({ game, raid, rotation, onJoin }: { game: GameState; raid: Raid; rotation: RaidRotation; onJoin?: (uid: string) => void }) {
   const [selectedUid, setSelectedUid] = useState('')
   // La primera vez se elige el apodo con el que te verán los demás jugadores
   const [naming, setNaming] = useState(false)
   const roomBlocker = raidRoomBlocker(game, rotation, raid)
-  const mons = roomBlocker ? [] : eligibleMons(game, raid)
+  const mons = roomBlocker ? [] : eligibleMons(game, rotation, raid)
+  const own = game.raids[rotation]
+  const spent = spentMember(game, raid) ?? (own ? spentMember(game, own) : undefined)
   const mon = mons.find((m) => m.uid === selectedUid) ?? mons[0]
   const send = () => {
     setNaming(false)
@@ -95,6 +99,7 @@ function JoinPicker({ game, raid, rotation, onJoin }: { game: GameState; raid: R
 
   return (
     <>
+      {spent && <SpentNote game={game} member={spent} />}
       {secured && <p className="small muted">Ya tienes asegurado el premio de este jefe.</p>}
       {roomBlocker ? (
         <p className="small muted">{roomBlocker}</p>
@@ -114,5 +119,16 @@ function JoinPicker({ game, raid, rotation, onJoin }: { game: GameState; raid: R
       )}
       {naming && <NicknameDialog onDone={send} onCancel={() => setNaming(false)} />}
     </>
+  )
+}
+
+/** Aviso de que a ese Pokémon lo han sacado de la sala por gastar sus vidas */
+function SpentNote({ game, member }: { game: GameState; member: RaidMember }) {
+  const name = species(findMon(game, member.id)!.speciesId).name
+  return (
+    <p className="small">
+      <strong>¡Sin vidas!</strong> {name} ha caído {TAB_RAID_LIVES} veces y ha vuelto al rancho. Si había luchado lo suficiente, su premio está en
+      Notificaciones.
+    </p>
   )
 }

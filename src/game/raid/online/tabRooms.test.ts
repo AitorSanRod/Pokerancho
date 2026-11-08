@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { newId, player, rng, seatPlayers, snap, T0 } from './online-test-utils'
+import { newId, player, rng, seatPlayers, snap, T0, tabRoom } from './online-test-utils'
 import { channelKey, RaidAction, RaidRotation, roomRotation, RoomSlot, type JoinRequest } from './protocol'
+import { RaidMemberKind } from '../raidRoom'
 import { cycleChannel, firstCycle } from './raidCycle'
-import { joinRotation, updateCycle } from './tabRooms'
+import { seatPlayer } from './sharedRoom'
+import { joinRotation, joinTabRoom, updateCycle } from './tabRooms'
 
 vi.mock('../../../data/maps/kantoMaps', () => import('../../core/test-map'))
 
@@ -47,5 +49,18 @@ describe('entrar en una rotación de la pestaña Raids', () => {
     seatPlayers(all[1].rooms[0], 1, 7)
     const ordered = { ...join(7), channel: { slot: RoomSlot.Tab, rotation: RaidRotation.Ordered } } as const
     expect(joinRotation(all, ordered)).toBe(RaidRotation.Ordered)
+  })
+})
+
+describe('vidas en las salas de la pestaña Raids', () => {
+  it('quien ha gastado sus vidas en una sala no entra en otra del mismo jefe', () => {
+    const [{ cycle, rooms }] = boards()
+    const spentIn = rooms[0]
+    seatPlayer(spentIn, player(1), 'J1', snap('mon1'))
+    Object.assign(spentIn.raid.members.find((m) => m.kind === RaidMemberKind.Player)!, { lives: 0, left: true })
+    const other = tabRoom()
+    const roomId = () => `${channelKey(cycleChannel(cycle))}/${newId()}`
+    expect(joinTabRoom(cycle, [spentIn, other], join(1, other.id), T0, rng, roomId).room).toBeNull()
+    expect(joinTabRoom(cycle, [spentIn, other], join(2, other.id), T0, rng, roomId).room).not.toBeNull()
   })
 })

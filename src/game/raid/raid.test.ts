@@ -55,8 +55,8 @@ describe('jefe comunitario', () => {
     s.owned.push(other)
     joinRaid(s, mon.uid)
     expect(raidRoomBlocker(s, LOCAL_ROTATION)).not.toBeNull()
-    expect(monRaidBlocker(s, mon.uid, raid)).not.toBeNull()
-    expect(monRaidBlocker(s, other.uid, raid)).toBeNull()
+    expect(monRaidBlocker(s, mon.uid, LOCAL_ROTATION, raid)).not.toBeNull()
+    expect(monRaidBlocker(s, other.uid, LOCAL_ROTATION, raid)).toBeNull()
   })
 
   it('si el jefe tiene nivel mínimo, solo entran los que llegan a él', () => {

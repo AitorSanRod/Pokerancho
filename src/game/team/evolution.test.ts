@@ -53,12 +53,11 @@ describe('evolve', () => {
     expect(s.activeUid).toBe(uid)
   })
 
-  it('en la Pokédex la especie de antes vuelve a quedar solo como vista', () => {
+  it('en la Pokédex la especie de antes sigue como capturada', () => {
     const { s, mon } = stateReady()
     evolve(s, mon.uid, INTO)
     expect(s.caught).toContain(INTO)
-    expect(s.caught).not.toContain(FROM)
-    expect(s.seen).toContain(FROM)
+    expect(s.caught).toContain(FROM)
   })
 
   it('antes de su nivel no puede evolucionar', () => {

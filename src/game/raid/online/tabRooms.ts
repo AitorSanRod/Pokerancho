@@ -15,9 +15,9 @@ import {
   noteFalls,
   type RaidCycle,
 } from './raidCycle'
-import { escapePush, fallPush, newBossPush, type RaidPush } from './raidPushes'
+import { escapePush, markRoom, newBossPush, roomPushes, type RaidPush } from './raidPushes'
 import { canMakeRoom } from './roomServer'
-import { catchUp, createTabRoom, playersIn, seatPlayer, seatsOf, viewFor, type SharedRoom } from './sharedRoom'
+import { catchUp, createTabRoom, playersIn, seatPlayer, seatsOf, spentLivesIn, viewFor, type SharedRoom } from './sharedRoom'
 
 // Las salas de la pestaña Raids en el servidor: ponerlas al día junto con su ciclo (raidCycle.ts), la sala principal,
 // entrar respetando el ciclo y el resumen de cada sala para la lista.
@@ -61,9 +61,9 @@ export function updateCycle(
   taken: number[] = [],
 ): CycleUpdate {
   const touched = roomsToCatchUp(rooms, focusIds)
-  const standing = touched.filter((r) => r.raid.hp > 0)
+  const marks = touched.map(markRoom)
   for (const room of touched) catchUp(room, now, rng)
-  const pushes = standing.filter((r) => r.raid.hp === 0).flatMap((r) => fallPush(r, now) ?? [])
+  const pushes = touched.flatMap((r, i) => roomPushes(r, marks[i], now))
   let cycleChanged = noteFalls(c, rooms, now)
   let current = rooms
   const escaped = advanceCycle(c, rooms, now, taken, rng)
@@ -114,6 +114,8 @@ export function joinRotation(rotations: { cycle: RaidCycle; rooms: SharedRoom[] 
 /** Entrar en el jefe de una rotación de la pestaña Raids; devuelve la sala (null si no hay jefe ahora) y el ciclo puesto al día */
 export function joinTabRoom(c: RaidCycle, rooms: SharedRoom[], req: JoinRequest, now: number, rng: Rng, newId: () => string, taken: number[] = []) {
   const update = updateCycle(c, rooms, [req.targetRoomId, ownRoom(rooms, req.playerId)?.id ?? null], now, rng, newId, taken)
+  // Todas las salas del ciclo son del mismo jefe: quien ha gastado sus vidas en una no entra en otra
+  if (update.rooms.some((r) => spentLivesIn(r, req.playerId, req.mon.uid))) return { update, room: null }
   const room = tabRoomFor(c, update.rooms, req, now, newId)
   if (room && !seatPlayer(room, req.playerId, req.nickname, req.mon)) return { update, room: null }
   if (room && !update.touched.includes(room)) update.touched.push(room)

@@ -1,6 +1,7 @@
 import type { GameState, OwnedMon } from '../../../game/core/state'
 import { act } from '../../../game/core/store'
-import { BOX_SLOTS, boxedMons, moveBlocker, moveMon, RANCH_SLOTS, ranchCount, usedSlots, type MonDestination } from '../../../game/team/ranches'
+import { ranchName } from '../../../game/team/ranchNames'
+import { BOX_SLOTS, boxedMons, moveBlocker, moveMon, ranchCapacity, ranchCount, usedSlots, type MonDestination } from '../../../game/team/ranches'
 import { ICON } from '../icons'
 import { ItemIcon } from '../ItemIcon'
 import { MonSection } from './MonSheet'
@@ -23,9 +24,9 @@ export function MovePanel({ game, mon, onMoved }: { game: GameState; mon: OwnedM
             <button key={to ?? 'box'} className="btn" disabled={!!blocker} title={blocker ?? undefined} onClick={() => move(to)}>
               <span className="with-icon">
                 <ItemIcon item={to === null ? ICON.Box : ICON.Ranch} size={22} />
-                {to === null ? 'Caja' : `Rancho ${to + 1}`}
+                {to === null ? 'Caja' : ranchName(game, to)}
               </span>
-              <span className="tiny">{to === null ? `${boxedMons(game).length}/${BOX_SLOTS}` : `${usedSlots(game, to)}/${RANCH_SLOTS}`}</span>
+              <span className="tiny">{to === null ? `${boxedMons(game).length}/${BOX_SLOTS}` : `${usedSlots(game, to)}/${ranchCapacity(game, to)}`}</span>
             </button>
           )
         })}

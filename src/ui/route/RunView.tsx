@@ -61,7 +61,7 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
         moving={walking}
         speed={Math.min(1.8, Math.max(0.6, spm / 22))}
         walkerClass={battle && frame ? `battling ${playerClass} ${statusClass(frame.event.playerStatus)}` : run.heal ? 'healing' : ''}
-        onStep={walking || battle ? () => act(tapRun) : undefined}
+        onStep={walking ? () => act(tapRun) : undefined}
         landmark={landmark}
       >
         {battle && frame && <RouteBattle record={battle} frame={frame} />}
@@ -90,7 +90,6 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
         {/* En el combate de la última parada la ruta sigue 'walking' hasta que acaba, pero ya no hay tramo siguiente */}
         {run.phase === 'walking' && run.stop < lastStop && <LegProgress game={game} run={run} spm={spm} />}
         {routeRaid && <RaidHudLine game={game} raid={routeRaid} />}
-        {battle && <p className="run-hud-note">¡Combate! Toca para acelerarlo</p>}
         {routeRaid && !searching && <p className="run-hud-note">Los que acaban la ruta se unen a la pelea</p>}
       </div>
 

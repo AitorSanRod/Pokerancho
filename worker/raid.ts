@@ -1,7 +1,7 @@
 import { channelKey, RaidAction, RoomSlot, type JoinRequest, type RaidRequest, type RaidResponse, type RoomView, type SyncRequest } from '../src/game/raid/online/protocol'
 import { parseRequest } from '../src/game/raid/online/requests'
 import { isExpired, isSettled, joinStopRoom, syncRoom } from '../src/game/raid/online/roomServer'
-import { fallPush } from '../src/game/raid/online/raidPushes'
+import { markRoom, roomPushes } from '../src/game/raid/online/raidPushes'
 import { viewFor } from '../src/game/raid/online/sharedRoom'
 import { deleteRoom, deleteRooms, loadChannel, loadRoom, saveRoom } from './db/rooms'
 import type { Env } from './env'
@@ -39,6 +39,7 @@ async function joinStop(db: D1Database, req: JoinRequest): Promise<RoomView | ty
   )
   const live = stored.filter((s) => !expired.includes(s))
   const newId = () => `${channelKey(channel)}/${crypto.randomUUID().replaceAll('-', '').slice(0, ROOM_ID_LENGTH)}`
+  const marks = live.map((s) => markRoom(s.room))
   const room = joinStopRoom(
     live.map((s) => s.room),
     { ...req, channel },
@@ -46,8 +47,11 @@ async function joinStop(db: D1Database, req: JoinRequest): Promise<RoomView | ty
     Math.random,
     newId,
   )
-  const version = live.find((s) => s.room === room)?.version ?? null
-  return (await saveRoom(db, { room, version })) ? viewFor(room, req.playerId) : CONFLICT
+  const index = live.findIndex((s) => s.room === room)
+  if (!(await saveRoom(db, { room, version: live[index]?.version ?? null }))) return CONFLICT
+  // Solo se guarda la sala elegida: lo que haya pasado en las demás se avisará cuando se guarden
+  if (index >= 0) await notifyRaid(db, roomPushes(room, marks[index], now), req.playerId)
+  return viewFor(room, req.playerId)
 }
 
 async function sync(db: D1Database, req: SyncRequest): Promise<RoomView | null | typeof CONFLICT> {
@@ -58,14 +62,13 @@ async function sync(db: D1Database, req: SyncRequest): Promise<RoomView | null |
     await deleteRooms(db, [req.roomId])
     return null
   }
-  const standing = stored.room.raid.hp > 0
+  const mark = markRoom(stored.room)
   const view = syncRoom(stored.room, req, now, Math.random)
   // Una parada terminada de la que ya han salido todos no se guarda: se borra
   const kept = isSettled(stored.room) ? await deleteRoom(db, stored) : await saveRoom(db, stored)
   if (!kept) return CONFLICT
   if (!(await noteTabFall(db, stored.room, now))) return CONFLICT
-  const fell = standing && stored.room.raid.hp === 0 ? fallPush(stored.room, now) : null
-  if (fell) await notifyRaid(db, [fell], req.playerId)
+  await notifyRaid(db, roomPushes(stored.room, mark, now), req.playerId)
   return view
 }
 

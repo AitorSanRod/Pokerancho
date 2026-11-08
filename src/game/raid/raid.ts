@@ -6,6 +6,7 @@ import { RAID_ROTATIONS, RaidRotation, roomRotation } from './online/protocol'
 import { RAID_BOTS } from './raidBots'
 import { addPlayer, advanceRoom, isLinked, localHooks, newRaid, playerMembers, removePlayer, runLinkedClock, settleFall } from './raidEngine'
 import { beginEnding, isEnding, spendEnding } from './raidEnding'
+import { sendOffSpent, spentLivesAgainst, TAB_RAID_LIVES } from './raidLives'
 import { hasRoom, pendingLink, presentMembers, RaidMemberKind, type Raid } from './raidRoom'
 
 // Los jefes de la pestaña Raids: hay uno por rotación (online/protocol.ts), se manda a un Pokémon del rancho a cada uno
@@ -53,20 +54,25 @@ export function raidRoomBlocker(s: GameState, rotation: RaidRotation, raid: Raid
   return null
 }
 
-/** Por qué no puede ir ese Pokémon contra el jefe de `raid` (sin mirar la sala); null si puede */
-export function monRaidBlocker(s: GameState, uid: string, raid: Raid): string | null {
+/**
+ * Por qué no puede ir ese Pokémon contra el jefe de `raid`, de la rotación `rotation` (sin mirar si cabe en la sala); null
+ * si puede. Las vidas gastadas se miran también en la sala de la partida: todas las de la rotación son del mismo jefe
+ */
+export function monRaidBlocker(s: GameState, uid: string, rotation: RaidRotation, raid: Raid): string | null {
   const mon = findMon(s, uid)
   if (!mon) return 'Ese Pokémon no existe.'
   if (monPlace(s, uid) !== MonPlace.Ranch) return 'Solo puede ir desde el rancho.'
   const minLevel = raid.boss.minLevel ?? 0
   if (mon.level < minLevel) return `Hace falta Nv. ${minLevel} para luchar contra este jefe.`
   if (mon.hp < 1) return `${species(mon.speciesId).name} está debilitado.`
+  const own = s.raids[rotation]
+  if (spentLivesAgainst(raid, uid) || (own && spentLivesAgainst(own, uid))) return `${species(mon.speciesId).name} ya ha gastado sus vidas contra este jefe.`
   return null
 }
 
 /** Por qué no puede ir ese Pokémon contra el jefe de la rotación (por defecto, el de su sala en la partida); null si puede */
 export function raidBlocker(s: GameState, uid: string, rotation: RaidRotation, raid: Raid | null = s.raids[rotation]): string | null {
-  return raidRoomBlocker(s, rotation, raid) ?? monRaidBlocker(s, uid, raid!)
+  return raidRoomBlocker(s, rotation, raid) ?? monRaidBlocker(s, uid, rotation, raid!)
 }
 
 /**
@@ -76,7 +82,7 @@ export function raidBlocker(s: GameState, uid: string, rotation: RaidRotation, r
 export function joinRaid(s: GameState, uid: string) {
   if (raidBlocker(s, uid, LOCAL_ROTATION)) return
   const raid = s.raids[LOCAL_ROTATION]!
-  addPlayer(s, raid, findMon(s, uid)!)
+  addPlayer(s, raid, findMon(s, uid)!, TAB_RAID_LIVES)
   raid.remote ??= pendingLink()
 }
 
@@ -89,7 +95,7 @@ export function joinServerRaid(s: GameState, uid: string, room: Raid, roomId: st
   if (raidBlocker(s, uid, rotation, room)) return
   const raid: Raid = { ...structuredClone(room), remote: pendingLink(null, roomId) }
   s.raids[rotation] = raid
-  addPlayer(s, raid, findMon(s, uid)!)
+  addPlayer(s, raid, findMon(s, uid)!, TAB_RAID_LIVES)
 }
 
 /**
@@ -137,7 +143,10 @@ function waitForBoss(raid: Raid, ms: number): number {
   return ms - waited
 }
 
-/** Avanza `ms` la sala de una rotación; la enlazada al servidor solo cuenta su reloj (la pelea la juega él). Al caer el jefe, se ve el final */
+/**
+ * Avanza `ms` la sala de una rotación; la enlazada al servidor solo cuenta su reloj (la pelea la juega él). Si un
+ * Pokémon del jugador gasta sus vidas, sale con su premio y la pelea sigue; al caer el jefe, se ve el final
+ */
 function advanceTabRaid(s: GameState, rotation: RaidRotation, ms: number, rng: Rng) {
   const raid = s.raids[rotation]
   if (!raid) return
@@ -150,6 +159,10 @@ function advanceTabRaid(s: GameState, rotation: RaidRotation, ms: number, rng: R
   }
   const left = advanceRoom(raid, waitForBoss(raid, ms), RAID_BOTS, rng, localHooks(s))
   if (left === null) return
+  if (raid.hp > 0) {
+    sendOffSpent(s, raid, rng)
+    return advanceTabRaid(s, rotation, left, rng)
+  }
   beginEnding(raid)
   finishTabEnding(s, rotation, raid, left, rng)
 }

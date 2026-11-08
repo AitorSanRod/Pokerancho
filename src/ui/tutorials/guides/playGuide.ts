@@ -31,7 +31,7 @@ export const PLAY_GUIDE: Guide = {
     {
       image: shot('play-run'),
       title: 'Combate solo',
-      text: 'Tu Pokémon camina de parada en parada y combate él solo. Toca la pantalla para dar pasos más rápido o acelerar el combate. Ganar no cura: si cae, la ruta acaba y pierdes parte del dinero ganado en ella.',
+      text: 'Tu Pokémon camina de parada en parada y combate él solo. Toca la pantalla para dar pasos más rápido; los combates van siempre a su velocidad. Ganar no cura: si cae, la ruta acaba y pierdes parte del dinero ganado en ella.',
     },
     {
       image: shot('play-expeditions'),

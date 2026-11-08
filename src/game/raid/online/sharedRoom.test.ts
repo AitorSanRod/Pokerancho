@@ -3,6 +3,7 @@ import { seqRng } from '../../core/test-utils'
 import { RAID_ROUND_MS } from '../raidCombat'
 import { PLAYER_TRAINER } from '../raidEngine'
 import { BOSS_ID, presentMembers, RAID_ROOM_SIZE, RaidMemberKind } from '../raidRoom'
+import { TAB_RAID_LIVES } from '../raidLives'
 import { ROUTE_RAID_LIVES } from '../routeRaid'
 import { fillWithBots, player, rng, seatPlayers, snap, stopChannel, T0, tabRoom } from './online-test-utils'
 import { catchUp, createRoom, playersIn, ROOM_MAX_CATCHUP_MS, seatPlayer, unseatPlayer, viewFor } from './sharedRoom'
@@ -12,10 +13,10 @@ vi.mock('../../../data/maps/kantoMaps', () => import('../../core/test-map'))
 const present = (room: ReturnType<typeof tabRoom>) => presentMembers(room.raid)
 
 describe('sala compartida', () => {
-  it('un jugador se sienta con su Pokémon; en la pestaña sin límite de vidas, en una parada con las de la ruta', () => {
+  it('un jugador se sienta con su Pokémon, con las vidas de la pestaña o con las de la ruta en una parada', () => {
     const tab = tabRoom()
     expect(seatPlayer(tab, player(1), 'Ana', snap('a'))).toBe(true)
-    expect(present(tab)).toMatchObject([{ kind: RaidMemberKind.Player, trainer: 'Ana', lives: null }])
+    expect(present(tab)).toMatchObject([{ kind: RaidMemberKind.Player, trainer: 'Ana', lives: TAB_RAID_LIVES }])
 
     const stop = createRoom(stopChannel(), 'stop', T0, null, rng)
     seatPlayer(stop, player(1), 'Ana', snap('a'))
@@ -76,6 +77,23 @@ describe('sala compartida', () => {
     catchUp(room, T0 + 10 * RAID_ROUND_MS, seqRng(0))
     expect(room.raid.members[0]).toMatchObject({ left: true, lives: 0 })
     expect(room.raid.round).toBe(10)
+  })
+
+  it('en la pestaña, quien vuelve a entrar conserva las vidas que le quedaban', () => {
+    const room = tabRoom()
+    seatPlayer(room, player(1), 'Ana', snap('a'))
+    present(room)[0].lives = 2
+    unseatPlayer(room, player(1))
+    seatPlayer(room, player(1), 'Ana', snap('a'))
+    expect(present(room)[0].lives).toBe(2)
+  })
+
+  it('en la pestaña, quien ha gastado sus vidas no puede volver contra ese jefe', () => {
+    const room = tabRoom()
+    seatPlayer(room, player(1), 'Ana', snap('a'))
+    Object.assign(present(room)[0], { lives: 0, left: true })
+    expect(seatPlayer(room, player(1), 'Ana', snap('a'))).toBe(false)
+    expect(present(room)).toHaveLength(0)
   })
 
   it('cada jugador ve sus Pokémon con su uid y como suyos, y los de los demás como invitados', () => {

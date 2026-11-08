@@ -6,6 +6,7 @@ import { RAID_BOTS } from '../raidBots'
 import { advanceRoom, newRaid, playerMembers, PLAYER_TRAINER, type RoomHooks } from '../raidEngine'
 import { BOSS_ID, hasRoom, newMember, outOfLives, presentMembers, RaidMemberKind, type Raid, type RaidMember } from '../raidRoom'
 import { RAID_ROUND_MS } from '../raidCombat'
+import { TAB_RAID_LIVES } from '../raidLives'
 import { ROUTE_RAID_LIVES } from '../routeRaid'
 import { advanceStopRoom, stopRoom } from '../stopRoom'
 import { ROOM_PLAYED_ROUNDS, skipAhead } from './skipAhead'
@@ -125,6 +126,12 @@ function refreshSeat(room: SharedRoom, seat: Seat, nickname: string, mon: MonSna
   Object.assign(memberOf(room, seat), { trainer: nickname, speciesId: mon.speciesId, level: mon.level, stars: mon.stars })
 }
 
+/** Ese Pokémon del jugador ha gastado sus vidas en esta sala */
+export function spentLivesIn(room: SharedRoom, playerId: string, uid: string): boolean {
+  const seat = room.seats[seatKey(playerId, uid)]
+  return !!seat && outOfLives(memberOf(room, seat))
+}
+
 /**
  * Mete al Pokémon en la sala (si ya estuvo, conserva su tiempo y su daño), echando a un bot si no cabe. Sus demás
  * Pokémon salen: cada jugador lleva uno por sala. false si no cabe
@@ -132,15 +139,19 @@ function refreshSeat(room: SharedRoom, seat: Seat, nickname: string, mon: MonSna
 export function seatPlayer(room: SharedRoom, playerId: string, nickname: string, mon: MonSnapshot): boolean {
   if (room.raid.hp === 0 || room.closed) return false
   const key = seatKey(playerId, mon.uid)
-  for (const other of seatsOf(room, playerId)) if (other.uid !== mon.uid) memberOf(room, other).left = true
   const seat = room.seats[key]
   const member = seat && memberOf(room, seat)
+  const isTab = room.channel.slot === RoomSlot.Tab
+  // En la pestaña Raids, quien ya ha gastado sus vidas no vuelve contra este jefe
+  if (isTab && spentLivesIn(room, playerId, mon.uid)) return false
+  for (const other of seatsOf(room, playerId)) if (other.uid !== mon.uid) memberOf(room, other).left = true
   if (member && !member.left) {
     refreshSeat(room, seat, nickname, mon)
     return true
   }
   if (!makeRoomFor(room.raid)) return false
-  const lives = room.channel.slot === RoomSlot.Route ? ROUTE_RAID_LIVES : null
+  // En la ruta vuelve con todas sus vidas (al gastarlas empezó la ruta de nuevo); en la pestaña, con las que le quedaban
+  const lives = isTab ? (member?.lives ?? TAB_RAID_LIVES) : ROUTE_RAID_LIVES
   if (member) Object.assign(member, { left: false, hpFraction: mon.hpFraction, downMs: 0, lives })
   else {
     const memberId = `p${room.nextSeat++}`

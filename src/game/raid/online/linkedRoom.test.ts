@@ -146,6 +146,19 @@ describe('sala enlazada al servidor', () => {
     expect(s.raids[RaidRotation.Ordered]).toBeNull()
   })
 
+  it('si gasta sus vidas en el servidor, vuelve al rancho con su premio una sola vez, también cuando cae el jefe', () => {
+    const { s, room, mon } = linkedTab()
+    Object.assign(room.raid.members.find((m) => m.kind === RaidMemberKind.Player)!, { lives: 0, left: true })
+    applyView(s, RaidRotation.Ordered, room.id, serverView(s, RaidRotation.Ordered, room))
+    expect(monPlace(s, mon.uid)).toBe(MonPlace.Ranch)
+    expect(s.raidPrizes).toHaveLength(1)
+    applyView(s, RaidRotation.Ordered, room.id, serverView(s, RaidRotation.Ordered, room))
+    room.raid.hp = 0
+    applyView(s, RaidRotation.Ordered, room.id, serverView(s, RaidRotation.Ordered, room))
+    advanceRaid(s, RAID_ENDING_MS)
+    expect(s.raidPrizes).toHaveLength(1)
+  })
+
   it('si el jefe se escapa (el ciclo pasó al siguiente), el Pokémon vuelve al rancho sin premio', () => {
     const { s, room, mon } = linkedTab()
     room.closed = true

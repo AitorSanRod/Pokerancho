@@ -10,7 +10,7 @@ import { createMon } from '../team/mons'
 import { ranchPassives } from '../team/ranchPassives'
 import { maxHp, stepsPerMinute } from '../team/stats'
 import { advanceRun, endRun, runBlocker, startRun, tapRun, walk } from './run'
-import { BATTLE_EVENT_MS, battleDuration, battleMoment } from './battleTimeline'
+import { battleDuration } from './battleTimeline'
 import { BOSS_MONEY_MULT, BOSS_TICKETS } from './runBattle'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
@@ -253,21 +253,13 @@ describe('tapRun', () => {
     expect(s.run!.steps).toBe(1)
   })
 
-  it('en combate lo adelanta en vez de dar pasos', () => {
+  it('en combate no hace nada: ni lo adelanta ni da pasos', () => {
     const s = stateOnRoute(50)
     walk(s, firstLeg(s))
     const pause = s.run!.battleMsLeft
     tapRun(s)
-    expect(s.run!.battleMsLeft).toBeLessThan(pause)
+    expect(s.run!.battleMsLeft).toBe(pause)
     expect(s.run!.steps).toBe(0)
-  })
-
-  it('en combate salta justo al siguiente evento', () => {
-    const s = stateOnRoute(50)
-    walk(s, firstLeg(s))
-    const battle = s.run!.lastBattle!
-    tapRun(s)
-    expect(battleMoment(battle, s.run!.battleMsLeft)).toMatchObject({ index: 1, msToNext: BATTLE_EVENT_MS[battle.events[1].kind] })
   })
 })
 

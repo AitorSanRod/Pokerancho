@@ -55,7 +55,7 @@ export function evolveBlocker(s: GameState, uid: string, intoId: number): string
 
 /**
  * Evoluciona: paga, gasta la piedra si hace falta y el Pokémon cambia de especie. En la Pokédex la especie de antes
- * vuelve a quedar solo como vista (silueta) y se puede volver a crear con sus piezas
+ * sigue como capturada y se puede volver a crear con sus piezas
  */
 export function evolve(s: GameState, uid: string, intoId: number): EvolveResult | null {
   if (evolveBlocker(s, uid, intoId)) return null
@@ -68,7 +68,6 @@ export function evolve(s: GameState, uid: string, intoId: number): EvolveResult 
   if (destination !== mon.ranch) mon.spot = null
   Object.assign(mon, { speciesId: intoId, stars: 0, ranch: destination })
   mon.hp = maxHp(mon)
-  s.caught = s.caught.filter((id) => id !== fromId)
   markCaught(s, intoId)
   return { fromId, intoId, destination }
 }

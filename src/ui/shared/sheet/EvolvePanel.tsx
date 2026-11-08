@@ -5,6 +5,7 @@ import { STONES } from '../../../data/stones'
 import type { GameState, OwnedMon } from '../../../game/core/state'
 import { act } from '../../../game/core/store'
 import { evolve, evolveBlocker, evolveDestination, evolvePrice, type EvolveResult } from '../../../game/team/evolution'
+import { ranchName } from '../../../game/team/ranchNames'
 import { stonesOf } from '../../../game/team/stones'
 import { ConfirmDialog } from '../ConfirmDialog'
 import { ICON } from '../icons'
@@ -67,7 +68,7 @@ function confirmText(game: GameState, mon: OwnedMon, intoId: number): string {
   const moves = destination !== undefined && destination !== null && destination !== mon.ranch
   return [
     `${name} evolucionará a ${species(intoId).name}: conserva su nivel y su EXP, pierde sus ★. Cuesta ${cost}.`,
-    moves ? `En su rancho no cabe: irá al Rancho ${destination + 1}.` : '',
+    moves ? `En su rancho no cabe: irá a ${ranchName(game, destination)}.` : '',
     `En la Pokédex, ${name} volverá a quedar solo como visto.`,
   ]
     .filter(Boolean)

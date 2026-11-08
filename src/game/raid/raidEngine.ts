@@ -59,12 +59,12 @@ export const playerMembers = (raid: Raid) => presentMembers(raid).filter((m) => 
 
 /**
  * Mete al Pokémon en la sala con sus PS de ahora y `lives` vidas (null, sin límite); si ya estuvo contra este jefe,
- * conserva su tiempo y su daño
+ * conserva su tiempo, su daño y las vidas que le quedaban
  */
 export function addPlayer(s: GameState, raid: Raid, mon: OwnedMon, lives: number | null = null) {
   const hpFraction = mon.hp / maxHp(mon)
   const before = raid.members.find((m) => m.id === mon.uid)
-  if (before) Object.assign(before, { left: false, hpFraction, downMs: 0, lives })
+  if (before) Object.assign(before, { left: false, hpFraction, downMs: 0, lives: before.lives ?? lives })
   else {
     const who = { id: mon.uid, kind: RaidMemberKind.Player, trainer: PLAYER_TRAINER, speciesId: mon.speciesId, level: mon.level, stars: mon.stars }
     raid.members.push({ ...newMember(who, hpFraction), lives })

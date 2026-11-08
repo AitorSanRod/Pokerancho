@@ -1,9 +1,11 @@
+import type { Rng } from '../../core/random'
 import { findMon, type GameState } from '../../core/state'
 import { ranchPassives } from '../../team/ranchPassives'
 import { gainExp } from '../../team/stats'
 import { playerMembers, raidExpPerRound, removePlayer } from '../raidEngine'
 import { RaidMemberKind, type Raid } from '../raidRoom'
 import { beginEnding, isEnding } from '../raidEnding'
+import { sendOffSpentRemote } from '../raidLives'
 import { currentRouteRaid } from '../routeRaid'
 import { RAID_ROTATIONS, RaidAction, RoomSlot, type RaidRotation, type JoinRequest, type MonSnapshot, type JoinChannel, type RoomView, type SyncRequest } from './protocol'
 
@@ -92,9 +94,9 @@ function resolve(s: GameState, key: RoomKey, raid: Raid, closed: boolean) {
  * Aplica la respuesta a la petición hecha por la sala `sentRoomId` (null: la de entrar). Se descarta si la sala ya no
  * es esa. Sin sala en la respuesta (ya no existe, o no hay jefe al que entrar): la de la pestaña Raids se deja (el
  * frontal es del servidor) y la de una parada sigue en local. Mientras se ve el final de la pelea, ya no se aplica nada.
- * Devuelve si se ha aplicado
+ * En la pestaña Raids, el Pokémon que ha gastado sus vidas en el servidor sale con su premio. Devuelve si se ha aplicado
  */
-export function applyView(s: GameState, key: RoomKey, sentRoomId: string | null, view: RoomView | null): boolean {
+export function applyView(s: GameState, key: RoomKey, sentRoomId: string | null, view: RoomView | null, rng: Rng = Math.random): boolean {
   const raid = roomAt(s, key)
   if (!raid?.remote || raid.remote.roomId !== sentRoomId || isEnding(raid)) return false
   if (!view) {
@@ -106,6 +108,7 @@ export function applyView(s: GameState, key: RoomKey, sentRoomId: string | null,
   if (!joining) grantExp(s, view, raid.remote.exp)
   const next: Raid = { ...view.raid, endingMs: 0, felled: raid.felled, remote: { roomId: view.roomId, exp: view.exp, openHp: null, target: null } }
   setRoomAt(s, key, next)
+  if (isTab(key)) sendOffSpentRemote(s, raid, next, rng)
   resolve(s, key, next, view.closed)
   return true
 }

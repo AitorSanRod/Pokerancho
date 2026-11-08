@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
+import { seqRng } from '../../core/test-utils'
+import { RAID_ROUND_MS } from '../raidCombat'
 import { presentMembers, RAID_ROOM_SIZE, RaidMemberKind } from '../raidRoom'
+import { ROUTE_RAID_LIVES } from '../routeRaid'
 import { ROUTE_RAID_JOIN_MIN_HP } from '../stopRoom'
 import { fillWithBots, newId, player, rng, seatPlayers, snap, stopChannel, T0, tabRoom } from './online-test-utils'
 import { RaidAction, type JoinRequest } from './protocol'
@@ -84,6 +87,19 @@ describe('entrar en una parada y ponerse al día', () => {
     expect(playersIn(room)).toBe(0)
     syncRoom(room, { ...sync, mon: snap('mon1') }, T0, rng)
     expect(playersIn(room)).toBe(1)
+  })
+
+  it('en una parada, quien gasta sus vidas no vuelve a sentarse al consultar, pero sí al pedir entrar otra vez', () => {
+    const room = joinStopRoom([], joinReq(1), T0, rng, newId)
+    const me = () => room.raid.members.find((m) => m.kind === RaidMemberKind.Player)!
+    Object.assign(me(), { lives: 1, hpFraction: Number.MIN_VALUE })
+    room.raid.hp = room.raid.maxHp = Number.MAX_SAFE_INTEGER
+    const sync = { action: RaidAction.Sync, playerId: player(1), nickname: 'J1', roomId: room.id, mon: snap('mon1') } as const
+    // Con 0 el jefe pega al primero que está en pie
+    syncRoom(room, sync, T0 + 10 * RAID_ROUND_MS, seqRng(0))
+    expect(me()).toMatchObject({ lives: 0, left: true })
+    joinStopRoom([room], joinReq(1), room.updatedAt, rng, newId)
+    expect(me()).toMatchObject({ lives: ROUTE_RAID_LIVES, left: false })
   })
 
   it('en una parada terminada, quien la consulta ve cómo acabó y sale; sin nadie dentro, queda para borrar', () => {
