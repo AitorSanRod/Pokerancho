@@ -45,6 +45,12 @@ export const ICON = {
   Wins: ITEM.Protein,
   Exp: ITEM.ExpShare,
   Locked: ITEM.LockCapsule,
+  /** Incursiones (mazmorras de 5) y su llave */
+  Incursion: ITEM.SecretKey,
+  /** Retirarse de una incursión */
+  Retreat: ITEM.EscapeRope,
+  /** Revivires del grupo en una incursión */
+  Revive: ITEM.Revive,
   /** Participante de una sala que no es un jugador */
   Bot: ITEM.PokeDoll,
 } as const

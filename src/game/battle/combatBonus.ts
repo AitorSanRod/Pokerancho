@@ -1,4 +1,4 @@
-import { TYPE_PASSIVES, type PassiveRef, type StatusId } from '../../data/passives'
+import { TYPE_PASSIVES, type PassiveEffect, type PassiveRef, type StatusId } from '../../data/passives'
 import type { PokeType } from '../../data/types'
 
 /** Todas las pasivas de un combatiente sumadas: los porcentajes se suman y los estados y bonos por tipo se acumulan */
@@ -35,11 +35,14 @@ const NO_BONUS: CombatBonus = {
   bonusVs: [],
 }
 
-/** Suma de las pasivas; la reducción de daño, la esquiva y el crítico no pasan del 90% */
-export function combineBonus(passives: PassiveRef[]): CombatBonus {
+/** Suma de las pasivas de rancho; la reducción de daño, la esquiva y el crítico no pasan del 90% */
+export const combineBonus = (passives: PassiveRef[]): CombatBonus =>
+  sumEffects(passives.map(({ type, level }) => TYPE_PASSIVES[type][level - 1]))
+
+/** Suma de efectos de pasiva sueltos (también las de grupo de las incursiones), con los mismos topes */
+export function sumEffects(effects: PassiveEffect[]): CombatBonus {
   const total = structuredClone(NO_BONUS)
-  for (const { type, level } of passives) {
-    const e = TYPE_PASSIVES[type][level - 1]
+  for (const e of effects) {
     total.hp += e.hp ?? 0
     total.atk += e.atk ?? 0
     total.def += e.def ?? 0

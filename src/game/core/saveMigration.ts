@@ -1,9 +1,12 @@
+import { IncursionId, MAX_KEYS } from '../../data/incursions'
 import { route } from '../../data/maps'
 import { RANCH_TYPES } from '../../data/ranchTypes'
 import { SPECIES } from '../../data/species'
 import { Stone } from '../../data/stones'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
 import { createMon } from '../team/mons'
+import { RANCH_EXPANSION_MAX, RANCH_EXPANSION_SLOTS } from '../team/ranchExpansion'
+import { cleanRanchName } from '../team/ranchNames'
 import { expToNext, MAX_LEVEL, MAX_STARS, maxHp } from '../team/stats'
 import { UPGRADES } from '../team/upgrades'
 import { initialState, SAVE_VERSION, TutorialStep, type GameState, type OwnedMon } from './state'
@@ -21,14 +24,15 @@ type Save = Record<string, unknown>
  */
 export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {}
 
-/** Lo que se descarta al cambiar de versión: la ruta y la sala de raid en curso (el Pokémon vuelve al rancho) */
-const IN_PROGRESS: (keyof GameState)[] = ['run', 'raids', 'raidServer', 'timeScale']
+/** Lo que se descarta al cambiar de versión: la ruta, la sala de raid y la incursión en curso o en cola (el Pokémon vuelve al rancho) */
+const IN_PROGRESS: (keyof GameState)[] = ['run', 'raids', 'raidServer', 'incursion', 'incursionQueue', 'timeScale']
 /** Ranchos que puede llegar a tener el jugador: el primero más todos los de la tienda */
 const MAX_RANCHES = 1 + UPGRADES.ranches.prices.length
 
 const SPECIES_IDS = new Set(SPECIES.map((sp) => sp.id))
 const isRecord = (v: unknown): v is Save => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isInt = (v: unknown, min = 0, max = Number.MAX_SAFE_INTEGER): v is number => Number.isInteger(v) && (v as number) >= min && (v as number) <= max
+const isRanch = (k: string) => isInt(Number(k), 0, MAX_RANCHES - 1)
 const isSpecies = (v: unknown): v is number => SPECIES_IDS.has(v as number)
 const isRoute = (v: unknown): v is string => {
   try {
@@ -79,8 +83,12 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   pieces: (v) => countsOf(v, (k) => isSpecies(Number(k))),
   upgrades: (v) => (isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([k, n]) => k in UPGRADES && isInt(n, 0, UPGRADES[k as keyof typeof UPGRADES].prices.length))) : undefined),
   ranchTypeItems: (v) => countsOf(v, (k) => k in RANCH_TYPES),
-  ranchTypeOf: (v) => (isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([k, t]) => isInt(Number(k), 0, MAX_RANCHES - 1) && typeof t === 'string' && t in RANCH_TYPES)) : undefined),
+  ranchTypeOf: (v) => (isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([k, t]) => isRanch(k) && typeof t === 'string' && t in RANCH_TYPES)) : undefined),
+  ranchExtraSlots: (v) => countsOf(v, isRanch, RANCH_EXPANSION_MAX * RANCH_EXPANSION_SLOTS),
+  ranchNames: (v) =>
+    isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([k, n]) => isRanch(k) && typeof n === 'string' && n === cleanRanchName(n) && n)) : undefined,
   stones: (v) => countsOf(v, (k) => (Object.values(Stone) as string[]).includes(k)),
+  incursionKeys: (v) => countsOf(v, (k) => (Object.values(IncursionId) as string[]).includes(k), MAX_KEYS),
   tutorial: (v) => (v === null || (Object.values(TutorialStep) as unknown[]).includes(v) ? v : undefined),
   unlockedRoutes: (v) => listOf(v, isRoute),
   completedRoutes: (v) => listOf(v, isRoute),

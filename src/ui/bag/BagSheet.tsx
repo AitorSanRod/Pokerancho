@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { incursion } from '../../data/incursions'
 import { RANCH_TYPES } from '../../data/ranchTypes'
 import { STONES } from '../../data/stones'
 import type { GameState } from '../../game/core/state'
@@ -30,6 +31,13 @@ export function BagSheet({ game, onBack }: { game: GameState; onBack: () => void
             <BagGroup title="Tipos de rancho" hint="Se colocan desde el botón de arriba a la izquierda del rancho.">
               {bag.ranchTypes.map(({ id, count }) => (
                 <BagTile key={id} icon={<RanchTypeGems types={RANCH_TYPES[id].favors} />} name={`Rancho ${RANCH_TYPES[id].name}`} count={count} />
+              ))}
+            </BagGroup>
+          )}
+          {bag.incursionKeys.length > 0 && (
+            <BagGroup title="Llaves de incursión" hint="Se gasta una al entrar en su incursión, en Ruta › Incursiones.">
+              {bag.incursionKeys.map(({ id, count }) => (
+                <BagTile key={id} icon={<ItemIcon item={ICON.Incursion} size={44} />} name={incursion(id).name} count={count} />
               ))}
             </BagGroup>
           )}

@@ -1,0 +1,110 @@
+/* Incursiones: lista, información, preparación y selector de movimientos */
+
+.incursion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.incursion-info-btn {
+  align-self: stretch;
+}
+.incursion-card {
+  padding: 0;
+  overflow: hidden;
+}
+.incursion-card-art {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 96px;
+  padding: 10px 12px;
+  background: center / cover;
+}
+.incursion-card-art h3 {
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 2px 0 #0008;
+}
+.incursion-card-tier {
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #fbfbf2dd;
+  font-weight: 800;
+}
+.incursion-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 12px;
+}
+.incursion-card-body p {
+  margin: 0;
+}
+.incursion-card-actions {
+  align-items: center;
+}
+.incursion-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 800;
+}
+
+/* Movimientos para elegir: una franja del color del tipo a la izquierda */
+.incursion-moves {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.incursion-move {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 2px solid var(--line);
+  border-left: 6px solid var(--type-color);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  text-align: left;
+}
+.incursion-move.selected {
+  border-color: var(--accent);
+  border-left-color: var(--type-color);
+  background: #fff;
+}
+.incursion-move-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.incursion-move-kind {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* Información */
+.incursion-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 64px - var(--safe-top) - var(--safe-bottom));
+}
+.incursion-info h3 {
+  margin: 0;
+}
+.incursion-info-body {
+  overflow-y: auto;
+}
+.incursion-info-body h4 {
+  margin: 10px 0 2px;
+}
+.incursion-info-body p {
+  margin: 0;
+}

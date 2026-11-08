@@ -4,7 +4,6 @@ import type { Rng } from '../core/random'
 import { activeMon, MonPlace, monPlace, TutorialStep, type GameState } from '../core/state'
 import { advanceRouteRaid, enterRouteRaid } from '../raid/routeRaid'
 import { stepsPerMinute } from '../team/stats'
-import { battleMoment } from './battleTimeline'
 import { completeRoute, spendBattleTime, startStopBattle } from './runBattle'
 import { spendHealTime, drinkStopPotion } from './runHeal'
 
@@ -15,6 +14,7 @@ export function runBlocker(s: GameState): string | null {
   const name = species(mon.speciesId).name
   if (monPlace(s, mon.uid) === MonPlace.Expedition) return `${name} está de expedición.`
   if (monPlace(s, mon.uid) === MonPlace.Raid) return `${name} está luchando contra el jefe.`
+  if (monPlace(s, mon.uid) === MonPlace.Incursion) return `${name} está en una incursión.`
   if (mon.hp < 1) return `${name} está debilitado. Déjalo descansar o cúralo en el rancho.`
   return null
 }
@@ -85,12 +85,9 @@ export function walk(s: GameState, steps: number, rng: Rng = Math.random): numbe
   return needed
 }
 
-/** Tocar la escena: caminando da un paso; en combate salta al siguiente evento (la cura no se adelanta) */
+/** Tocar la escena caminando da un paso; los combates y la cura van siempre a su velocidad, sin adelantarse */
 export function tapRun(s: GameState) {
-  const run = s.run
-  if (!run) return
-  if (run.battleMsLeft > 0) spendBattleTime(s, route(run.routeId), battleMoment(run.lastBattle!, run.battleMsLeft).msToNext)
-  else walk(s, 1)
+  if (s.run && s.run.battleMsLeft === 0) walk(s, 1)
 }
 
 function arrive(s: GameState, r: Route, rng: Rng) {

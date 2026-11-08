@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { IncursionId, MAX_KEYS } from '../../data/incursions'
 import { route, RouteId } from '../../data/maps'
 import { RanchTypeId } from '../../data/ranchTypes'
 import { STARTERS } from '../../data/species'
@@ -38,7 +39,10 @@ function advancedGame(): GameState {
     upgrades: { ranches: 1, expeditionSlots: UPGRADES.expeditionSlots.prices.length },
     ranchTypeItems: { [Object.values(RanchTypeId)[0]]: 2 },
     ranchTypeOf: { 1: Object.values(RanchTypeId)[0] },
+    ranchExtraSlots: { 1: 5 },
+    ranchNames: { 0: 'Prado' },
     stones: { [Stone.Fire]: 1, [Stone.Moon]: 3 },
+    incursionKeys: { [IncursionId.CuevaHelada]: 2 },
     // Coherente: con Pueblo Paleta completada, también abierta la ruta que desbloquea
     unlockedRoutes: [RouteId.PuebloPaleta, route(RouteId.PuebloPaleta).unlocks!, RouteId.BosqueVerde],
     completedRoutes: [RouteId.PuebloPaleta],
@@ -59,8 +63,8 @@ function advancedGame(): GameState {
 const fromOldVersion = (s: GameState, version = OLD) => JSON.parse(JSON.stringify({ ...s, version }))
 
 const KEPT: (keyof GameState)[] = [
-  'money', 'tickets', 'missingnoShards', 'seen', 'caught', 'favorites', 'pieces', 'upgrades', 'ranchTypeItems', 'ranchTypeOf',
-  'stones', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'lastTick',
+  'money', 'tickets', 'missingnoShards', 'seen', 'caught', 'favorites', 'pieces', 'upgrades', 'ranchTypeItems', 'ranchTypeOf', 'ranchExtraSlots', 'ranchNames',
+  'stones', 'incursionKeys', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'lastTick',
 ]
 
 afterEach(() => {
@@ -68,6 +72,17 @@ afterEach(() => {
 })
 
 describe('al actualizar el juego no se pierde nada', () => {
+  it('las llaves de incursión se quedan si son de una incursión que existe y sin pasar del máximo', () => {
+    const save = { ...fromOldVersion(advancedGame()), incursionKeys: { [IncursionId.CuevaHelada]: MAX_KEYS + 1, quitada: 1 } }
+    expect(migrateSave(save)!.incursionKeys).toEqual({})
+  })
+
+  it('la incursión en curso se descarta: el Pokémon vuelve al rancho', () => {
+    const s = advancedGame()
+    const save = { ...fromOldVersion(s), incursion: { uid: s.owned[0].uid } }
+    expect(migrateSave(save)!.incursion).toBeNull()
+  })
+
   it('se conserva todo: dinero, tickets, trozos, Pokédex, vistos, piezas, compras, rutas, equipo, expediciones y premios', () => {
     const s = advancedGame()
     const migrated = migrateSave(fromOldVersion(s))!
@@ -84,7 +99,7 @@ describe('al actualizar el juego no se pierde nada', () => {
   it('de una partida muy antigua se conserva lo que tenía; lo que no existía entonces toma su valor inicial', () => {
     const s = advancedGame()
     const ancient = fromOldVersion(s, 1)
-    for (const key of ['favorites', 'stones', 'ranchTypeOf', 'routeRaidStreaks', 'raidPrizes']) delete ancient[key]
+    for (const key of ['favorites', 'stones', 'ranchTypeOf', 'ranchExtraSlots', 'ranchNames', 'routeRaidStreaks', 'raidPrizes']) delete ancient[key]
     for (const mon of ancient.owned) delete mon.spot
     const migrated = migrateSave(ancient)!
     expect(migrated).toMatchObject({ money: s.money, pieces: s.pieces, completedRoutes: s.completedRoutes, favorites: [], stones: {}, routeRaidStreaks: {} })
@@ -98,6 +113,8 @@ describe('al actualizar el juego no se pierde nada', () => {
     save.completedRoutes.push('ruta-que-ya-no-existe')
     save.stones.piedraInventada = 2
     save.upgrades.ranches = 999
+    save.ranchNames = { 0: 'Prado', 1: '   ', 2: 7, 999: 'Lejos' }
+    save.ranchExtraSlots = { 1: 5, 999: 5, 0: -5 }
     save.owned.push({ ...save.owned[0], uid: 'raro', speciesId: UNKNOWN_SPECIES })
     save.expeditions.push({ ...save.expeditions[0], uid: 'nadie' })
     const migrated = migrateSave(save)!
@@ -106,6 +123,8 @@ describe('al actualizar el juego no se pierde nada', () => {
     expect(migrated.completedRoutes).toEqual([RouteId.PuebloPaleta])
     expect(migrated.stones).not.toHaveProperty('piedraInventada')
     expect(migrated.upgrades.ranches).toBeLessThanOrEqual(UPGRADES.ranches.prices.length)
+    expect(migrated.ranchNames).toEqual({ 0: 'Prado' })
+    expect(migrated.ranchExtraSlots).toEqual({ 1: 5 })
     expect(migrated.owned).toHaveLength(2)
     expect(migrated.expeditions).toHaveLength(2)
   })

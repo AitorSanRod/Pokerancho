@@ -4,6 +4,8 @@ import { act } from '../../game/core/store'
 import { buyUpgrade, nextUpgradePrice, UPGRADE_IDS, UPGRADES, upgradeLevel, type UpgradeId } from '../../game/team/upgrades'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
+import { RanchExpansionTile } from './RanchExpansionTile'
+import { IncursionKeyShop } from './IncursionKeyShop'
 import { RanchTypeShop } from './RanchTypeShop'
 import './shop.css'
 import { ShopSection, ShopTile } from './ShopTile'
@@ -11,7 +13,7 @@ import { StoneShop } from './StoneShop'
 
 const UPGRADE_ICON: Record<UpgradeId, Item> = { expeditionSlots: ICON.Expedition, ranches: ICON.Ranch }
 
-/** Pestaña Tienda: mejoras permanentes, tipos de rancho y piedras, cada grupo en su desplegable */
+/** Pestaña Tienda: mejoras permanentes, tipos de rancho, piedras y llaves de incursión, cada grupo en su desplegable */
 export function UpgradeShop({ game }: { game: GameState }) {
   return (
     <div className="screen scroll">
@@ -19,9 +21,11 @@ export function UpgradeShop({ game }: { game: GameState }) {
         {UPGRADE_IDS.map((id) => (
           <UpgradeTile key={id} game={game} id={id} />
         ))}
+        <RanchExpansionTile game={game} />
       </ShopSection>
       <RanchTypeShop game={game} />
       <StoneShop game={game} />
+      <IncursionKeyShop game={game} />
     </div>
   )
 }

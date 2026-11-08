@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { activeMon, type GameState } from '../../game/core/state'
 import { isExpeditionDone } from '../../game/team/expedition'
 import { ExpeditionScreen } from '../expeditions/ExpeditionScreen'
+import { IncursionScreen } from '../incursion/IncursionScreen'
 import { RaidScreen } from '../raid/RaidScreen'
 import { IconTabs } from '../shared/IconTabs'
 import { ICON } from '../shared/icons'
@@ -10,9 +11,9 @@ import { RouteMap } from './RouteMap'
 import { RunView } from './RunView'
 import './route.css'
 
-type RouteTab = 'route' | 'expeditions' | 'raid'
+type RouteTab = 'route' | 'expeditions' | 'raid' | 'incursion'
 
-/** Pestaña Ruta: la ruta del Pokémon activo (mapa o ruta en curso), las expediciones del resto y el jefe comunitario */
+/** Pestaña Ruta: la ruta del Pokémon activo (mapa o ruta en curso), las expediciones del resto, el jefe comunitario y las incursiones */
 export function RouteScreen({ game }: { game: GameState }) {
   const [tab, setTab] = useState<RouteTab>('route')
   const mon = activeMon(game)
@@ -30,10 +31,13 @@ export function RouteScreen({ game }: { game: GameState }) {
           { id: 'route', icon: ICON.Route, label: 'Ruta' },
           { id: 'expeditions', icon: ICON.Expedition, label: 'Expediciones', count: returnedUnseen ? returned.length : 0 },
           { id: 'raid', icon: ICON.Raid, label: 'Raids', count: prizesUnseen ? prizes.length : 0 },
+          { id: 'incursion', icon: ICON.Incursion, label: 'Incursiones' },
         ]}
       />
       <div className="tabbed-body">
-        {tab === 'raid' ? (
+        {tab === 'incursion' ? (
+          <IncursionScreen game={game} />
+        ) : tab === 'raid' ? (
           <RaidScreen game={game} />
         ) : tab === 'expeditions' ? (
           <ExpeditionScreen game={game} />

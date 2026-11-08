@@ -3,13 +3,16 @@ import { randInt, type Rng } from '../core/random'
 import { findMon, MonPlace, monPlace, type GameState, type RanchSpot } from '../core/state'
 import { upgradeLevel } from './upgrades'
 
-/** Espacios de cada rancho; cada Pokémon ocupa los de su rareza (`RARITY_INFO.ranchSlots`) */
+/** Espacios con los que empieza cada rancho; cada Pokémon ocupa los de su rareza (`RARITY_INFO.ranchSlots`) */
 export const RANCH_SLOTS = 10
 /** Pokémon que caben en la Caja, uno por sitio sea cual sea su rareza */
 export const BOX_SLOTS = 8
 
 /** Ranchos que tiene el jugador: el primero más los comprados en la tienda */
 export const ranchCount = (s: GameState): number => 1 + upgradeLevel(s, 'ranches')
+
+/** Espacios que tiene el rancho: los de partida más los de sus ampliaciones (ver ranchExpansion.ts) */
+export const ranchCapacity = (s: GameState, ranch: number): number => RANCH_SLOTS + (s.ranchExtraSlots[ranch] ?? 0)
 
 export const slotsOf = (speciesId: number): number => RARITY_INFO[rarityOf(species(speciesId))].ranchSlots
 
@@ -19,7 +22,7 @@ export const usedSlots = (s: GameState, ranch: number): number =>
 
 /** Si cabe una especie en el rancho; `freed` son los espacios que se liberan a la vez (p. ej. al evolucionar) */
 export const fitsInRanch = (s: GameState, ranch: number, speciesId: number, freed = 0): boolean =>
-  usedSlots(s, ranch) - freed + slotsOf(speciesId) <= RANCH_SLOTS
+  usedSlots(s, ranch) - freed + slotsOf(speciesId) <= ranchCapacity(s, ranch)
 
 /** El primer rancho donde cabe la especie, o null si no cabe en ninguno */
 export function ranchWithRoom(s: GameState, speciesId: number): number | null {
@@ -41,7 +44,7 @@ export function moveBlocker(s: GameState, uid: string, to: MonDestination): stri
   const mon = findMon(s, uid)
   if (!mon) return 'Ese Pokémon no existe.'
   const place = monPlace(s, uid)
-  if (place === MonPlace.Run || place === MonPlace.Expedition || place === MonPlace.Raid) return 'Está fuera del rancho.'
+  if (place === MonPlace.Run || place === MonPlace.Expedition || place === MonPlace.Raid || place === MonPlace.Incursion) return 'Está fuera del rancho.'
   if (mon.ranch === to) return to === null ? 'Ya está en la Caja.' : 'Ya está en ese rancho.'
   if (to === null) {
     if (boxedMons(s).length >= BOX_SLOTS) return 'La Caja está llena.'

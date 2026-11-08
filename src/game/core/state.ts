@@ -1,8 +1,11 @@
+import type { IncursionId } from '../../data/incursions'
 import { RouteId } from '../../data/maps'
 import type { Potion } from '../../data/potions'
 import type { RanchTypeId } from '../../data/ranchTypes'
 import type { Stone } from '../../data/stones'
 import type { BattleRecord } from '../battle/battle'
+import type { ActiveIncursion } from '../incursion/activeIncursion'
+import type { IncursionQueue } from '../incursion/online/linkedIncursion'
 import { RaidRotation } from '../raid/online/protocol'
 import type { Raid, RaidPrize } from '../raid/raidRoom'
 import type { UpgradeId } from '../team/upgrades'
@@ -119,8 +122,18 @@ export interface GameState {
   ranchTypeItems: Partial<Record<RanchTypeId, number>>
   /** Tipo de rancho colocado en cada rancho, por su índice; sin entrada, rancho normal */
   ranchTypeOf: Partial<Record<number, RanchTypeId>>
+  /** Espacios de más de cada rancho, por su índice, comprados con la Ampliación de rancho de la tienda */
+  ranchExtraSlots: Partial<Record<number, number>>
+  /** Nombre que el jugador ha puesto a cada rancho, por su índice; sin entrada, «Rancho N» (ver ranchNames.ts) */
+  ranchNames: Partial<Record<number, string>>
   /** Piedras evolutivas compradas y aún sin gastar */
   stones: Partial<Record<Stone, number>>
+  /** Llaves de incursión compradas y aún sin gastar, por incursión */
+  incursionKeys: Partial<Record<IncursionId, number>>
+  /** La incursión en la que está un Pokémon del jugador (ver incursion/incursionGame.ts); null si ninguna */
+  incursion: ActiveIncursion | null
+  /** Buscando grupo para una incursión con otros jugadores (ver incursion/online/linkedIncursion.ts); null si no */
+  incursionQueue: IncursionQueue | null
   tutorial: TutorialStep | null
   unlockedRoutes: string[]
   completedRoutes: string[]
@@ -152,7 +165,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 34
+export const SAVE_VERSION = 36
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 
@@ -174,7 +187,12 @@ export function initialState(): GameState {
     upgrades: {},
     ranchTypeItems: {},
     ranchTypeOf: {},
+    ranchExtraSlots: {},
+    ranchNames: {},
     stones: {},
+    incursionKeys: {},
+    incursion: null,
+    incursionQueue: null,
     tutorial: TutorialStep.Starter,
     unlockedRoutes: [RouteId.PuebloPaleta],
     completedRoutes: [],
@@ -199,7 +217,7 @@ export function activeMon(s: GameState): OwnedMon | null {
   return (s.activeUid && findMon(s, s.activeUid)) || null
 }
 
-export const MonPlace = { Ranch: 'ranch', Run: 'run', Expedition: 'expedition', Raid: 'raid', Box: 'box' } as const
+export const MonPlace = { Ranch: 'ranch', Run: 'run', Expedition: 'expedition', Raid: 'raid', Incursion: 'incursion', Box: 'box' } as const
 export type MonPlace = (typeof MonPlace)[keyof typeof MonPlace]
 
 /** Dónde está un Pokémon: solo los que están en el rancho se pueden curar, entrenar o enviar */
@@ -207,6 +225,7 @@ export function monPlace(s: GameState, uid: string): MonPlace {
   if (s.run && uid === s.activeUid) return MonPlace.Run
   if (s.expeditions.some((e) => e.uid === uid)) return MonPlace.Expedition
   if (Object.values(s.raids).some((r) => r?.members.some((m) => m.id === uid && !m.left))) return MonPlace.Raid
+  if (s.incursion?.uid === uid || s.incursionQueue?.uid === uid) return MonPlace.Incursion
   if (findMon(s, uid)?.ranch === null) return MonPlace.Box
   return MonPlace.Ranch
 }

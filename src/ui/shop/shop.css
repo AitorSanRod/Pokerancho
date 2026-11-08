@@ -9,6 +9,9 @@
 .shop-fold-stones {
   --fold-bg: linear-gradient(135deg, #7e6bd6 0%, #45339c 100%);
 }
+.shop-fold-keys {
+  --fold-bg: linear-gradient(135deg, #4aa3c8 0%, #1f5f86 100%);
+}
 .shop-hint {
   margin: 0 0 10px;
 }
@@ -58,4 +61,17 @@
 }
 .ranch-type-gems .item-icon + .item-icon {
   margin-left: -12px;
+}
+/* Diálogo de la Ampliación de rancho: un botón por rancho, el elegido resaltado */
+.expansion-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.expansion-options .btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
 }

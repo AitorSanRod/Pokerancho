@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { INCURSIONS } from '../../data/incursions'
 import { RANCH_TYPE_IDS } from '../../data/ranchTypes'
 import { STONE_IDS } from '../../data/stones'
 import { initialState } from '../core/state'
@@ -25,5 +26,13 @@ describe('mochila', () => {
     expect(bagContents(s).ranchTypes).toEqual([{ id: RANCH_TYPE, count: 1 }])
     s.ranchTypeItems[RANCH_TYPE] = 1
     expect(isBagEmpty(bagContents(s))).toBe(true)
+  })
+
+  it('guarda las llaves de incursión sin gastar', () => {
+    const s = initialState()
+    const id = INCURSIONS[0].id
+    s.incursionKeys[id] = 3
+    expect(bagContents(s).incursionKeys).toEqual([{ id, count: 3 }])
+    expect(isBagEmpty(bagContents(s))).toBe(false)
   })
 })

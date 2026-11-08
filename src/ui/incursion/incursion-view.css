@@ -1,0 +1,155 @@
+/* Incursión en curso: cabecera, escena, lista del grupo, reorganizar y final */
+
+.incursion-view {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.incursion-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.incursion-head h3 {
+  margin: 0;
+}
+.incursion-revives {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 800;
+}
+.incursion-passives {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.incursion-passive {
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: var(--type-color);
+  color: #fff;
+  font-weight: 800;
+  text-shadow: 0 1px 0 #0006;
+}
+.incursion-stage {
+  height: 260px;
+  border-radius: var(--radius);
+}
+/* Los rivales miran hacia el grupo: sin dar la vuelta al sprite */
+.incursion-mon.foe .sprite {
+  transform: none;
+}
+.incursion-mon .battle-pop.heal {
+  color: var(--hp-ok);
+}
+.incursion-log {
+  min-height: 2.6em;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 2px solid var(--line);
+}
+.incursion-roster {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+.incursion-roster-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.incursion-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 10px;
+  background: var(--card);
+}
+.incursion-line.gone {
+  opacity: 0.5;
+}
+.incursion-line-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.incursion-line-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.incursion-line-name em {
+  color: var(--accent);
+  font-style: normal;
+  font-weight: 800;
+}
+.incursion-status {
+  color: var(--red-dark);
+  font-weight: 900;
+}
+.incursion-retreat {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+}
+
+/* Reorganizar y final */
+.incursion-regroup,
+.incursion-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 3px solid var(--accent);
+}
+.incursion-regroup h3,
+.incursion-summary h3 {
+  margin: 0;
+}
+.incursion-summary p {
+  margin: 0;
+}
+.incursion-regroup-head {
+  align-items: center;
+  justify-content: space-between;
+}
+.incursion-countdown {
+  font-size: 20px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+.incursion-regroup-team {
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* Buscando grupo */
+.incursion-queue {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.incursion-queue h3,
+.incursion-queue p {
+  margin: 0;
+}
+.incursion-queue-count {
+  font-size: 18px;
+  font-weight: 900;
+}
+.incursion-ready {
+  color: var(--hp-ok);
+  font-style: normal;
+  font-weight: 800;
+}

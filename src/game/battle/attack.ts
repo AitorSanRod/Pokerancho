@@ -11,8 +11,11 @@ const STAB = 1.5
 /** Fracción del daño normal que se hace a sí mismo un Pokémon confuso al golpearse */
 const CONFUSION_SELF_DAMAGE = 0.5
 
+/** Lo que la fórmula de daño necesita de cada lado (también los combatientes de las incursiones) */
+export type DamageSide = Pick<Fighter, 'level' | 'types' | 'stats' | 'status' | 'bonus'>
+
 /** Fórmula de daño de los juegos con una sola stat de ataque y otra de defensa, más quemadura y pasivas */
-function damage(atk: Fighter, def: Fighter, mv: Move, rng: Rng): { dealt: number; eff: number; crit: boolean } {
+export function damage(atk: DamageSide, def: DamageSide, mv: Move, rng: Rng): { dealt: number; eff: number; crit: boolean } {
   const eff = effectiveness(mv.type, def.types)
   const stab = atk.types.includes(mv.type) ? STAB : 1
   const atkStat = atk.stats.atk * (atk.status ? (STATUS_INFO[atk.status].atkMult ?? 1) : 1)

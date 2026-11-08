@@ -39,8 +39,13 @@ src/
     collection/       dex (vistos, capturados, favoritos), pieces, gacha, shredder
     raid/             raidEngine (lo común a toda sala: crear, entrar, salir, avanzar, reparto), raid (jefe de la
                       pestaña Raids), routeRaid (jefes de las paradas de ruta), raidRoom (tipos y sala), raidCombat
-                      (rondas), raidBots (bots de la sala), raidPrizes (reparto y recogida), raidEstimate (tiempo que
-                      falta), stopRoom (salas de parada sin la partida)
+                      (rondas), raidBots (bots de la sala), raidPrizes (reparto y recogida), raidLives (vidas de la
+                      pestaña Raids), raidEstimate (tiempo que falta), stopRoom (salas de parada sin la partida)
+    incursion/        Incursiones (mazmorras de 5; ver docs/incursiones.md): incursionRun (tramos encadenados, retirada),
+                      incursionLeg (un tramo: salas hasta reorganizar o el final), groupBattle (combate N contra M),
+                      moveEffects + targeting (qué hace cada movimiento y a quién), groupStatus, bossMechanics, revives,
+                      groupPassives, levelSync (nivel de la incursión y sincronizado), repertoire, party (bots),
+                      incursionRewards, incursionTimeline, retreatVote, entry (nivel mínimo y máximo para entrar), keys, activeIncursion (lo guardado y por dónde va) e incursionGame (en la partida, sin servidor); online/ (protocolo, validar, el grupo en el servidor y la partida enlazada)
     trade/            Intercambios: tradeGoods (qué se ofrece y pide, límites, validar), tradeGive (lo que sale de la
                       partida), tradeReceive (lo que entra; repetidos), tradeOps (operaciones que aplican servidor y móvil),
                       tradeProtocol (tablón y peticiones), goodText (textos), serverSale (venta al servidor)
@@ -71,12 +76,16 @@ src/
     raid/             Pestaña Ruta › Raids y la pelea contra un jefe comunitario (RaidBattleScene: la escena de ruta con
                       el grupo en filas desordenadas, partySpot; roundReplay reparte los golpes en el tiempo), lista de
                       la sala, enviar o retirar a tu Pokémon, apodo (NicknameDialog) y aviso de conexión (RaidLinkNote)
+    incursion/        Pestaña Ruta › Incursiones: lista con información, preparación (Pokémon y movimiento), la
+                      incursión en curso (IncursionStage sobre la escena de ruta; sceneState rehace cada momento desde
+                      los eventos), sala de reorganizar, retirada y final
     gacha/            Tiradas, apertura de la Pokéball, trituradora y tienda de MissingNo
     dex/              Pokédex; al tocar una casilla abre PokemonSheet, la misma ficha que el rancho
     shop/             Mejoras
 worker/
   index.ts            Entrada: /api/raid, /api/save y /api/auth/* (la web la sirve Cloudflare sin pasar por aquí)
   raid.ts             POST /api/raid: salas de ruta y ponerse al día (lee de D1, llama a game/raid/online y guarda)
+  incursion.ts        POST /api/incursion: cola y grupos de incursión (lee de D1, llama a game/incursion/online y guarda)
   raidTab.ts          La pestaña Raids: sus rotaciones (tabla raid_cycles), entrar y la acción feed
   save.ts             GET / POST /api/save: la partida de la cuenta con sesión
   gift.ts             GET / POST /api/gift: el obsequio diario de la cuenta con sesión
@@ -122,6 +131,8 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `game/team/stones.ts` | Comprar y gastar piedras evolutivas (`buyStone`, `spendStone`) |
 | `game/team/expedition.ts` | Expediciones por tiempo |
 | `game/team/upgrades.ts` | Mejoras de la pestaña Tienda (precios por nivel y compra) |
+| `game/team/ranchExpansion.ts` | Ampliación de rancho: compra y espacios de más del rancho elegido |
+| `game/team/ranchNames.ts` | Nombre que el jugador pone a cada rancho |
 | `game/team/tutorial.ts` | Elección del inicial (da sus piezas) y pasos del tutorial; `combine` y `startRun` lo avanzan |
 | `game/collection/dex.ts` | Vistos, capturados y favoritos |
 | `game/collection/pieces.ts` | Piezas por especie y combinación (desbloqueo, ★ o ₽) |
@@ -136,6 +147,7 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `game/raid/raidBots.ts` | Bots que entran y salen de la sala (en local y en el servidor) |
 | `game/raid/raidEstimate.ts` | Tiempo que tardará en caer el jefe: simula rondas sobre una copia de la sala con un azar de semilla fija |
 | `game/raid/raidPrizes.ts` | Quién cobra (presencia mínima o seguir dentro), tirada de la tabla y recogida |
+| `game/raid/raidLives.ts` | Vidas contra los jefes de la pestaña Raids: al gastarlas sale de la sala y cobra en el acto, sin volver contra ese jefe en ninguna de sus salas (el servidor lo comprueba en `tabRooms.joinTabRoom` y al consultar no vuelve a sentar a quien las ha gastado, tampoco en las paradas) |
 | `game/raid/stopRoom.ts` | Salas de parada sin la partida: abrir una nueva o en marcha (`stopRoom`) y avanzarla (`advanceStopRoom`) |
 | `game/raid/online/protocol.ts` | Peticiones y respuestas entre el juego y el servidor de salas |
 | `game/raid/online/linkedRoom.ts` | La sala de la partida enlazada a la del servidor: qué pedir (`roomRequest`) y aplicar la respuesta (`applyView`) |
@@ -367,7 +379,7 @@ Push estándar (Web Push) desde el Worker: llegan aunque la app esté cerrada. C
   la ruta (`predictRunEnd`: simula la partida hacia delante sobre una copia con `tick`; es una estimación). Se mandan
   al servidor al pasar la app a segundo plano (`POST /api/push/jobs`) y se vacían al volver.
 - **Avisos que decide el servidor**: el obsequio (al recogerlo se programa el siguiente, `push/notify.ts`) y las
-  raids (`game/raid/online/raidPushes.ts`: cae un jefe con el jugador dentro, se escapa, aparece el siguiente), al
+  raids (`game/raid/online/raidPushes.ts`: cae un jefe con el jugador dentro, su Pokémon gasta sus vidas, se escapa, aparece el siguiente), al
   ver lo que pasa en las salas (`updateCycle` devuelve `pushes`). Al jugador de la petición no se le avisa.
 - **Envío** (`worker/push/`): la tarea programada (`worker/scheduled.ts`, cron cada minuto) pone al día las raids sin
   nadie mirando y manda como mucho `SENDS_PER_RUN` avisos que ya tocan (`push_jobs`), firmados con VAPID y

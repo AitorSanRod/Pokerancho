@@ -41,6 +41,9 @@ export const ITEM = {
   Nugget: 'nugget',
   OrangeMail: 'orange-mail',
   RelicCrown: 'relic-crown',
+  SecretKey: 'secret-key',
+  EscapeRope: 'escape-rope',
+  Revive: 'revive',
 } as const
 export type Item = (typeof ITEM)[keyof typeof ITEM]
 

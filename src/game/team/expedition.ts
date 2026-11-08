@@ -52,6 +52,7 @@ export function expeditionBlocker(s: GameState, uid: string): string | null {
   const place = monPlace(s, uid)
   if (place === 'run') return 'Está explorando una ruta.'
   if (place === MonPlace.Expedition) return 'Ya está de expedición.'
+  if (place === MonPlace.Incursion) return 'Está en una incursión.'
   if (place === MonPlace.Box) return 'Está guardado en la Caja.'
   const general = expeditionsBlocker(s)
   if (general) return general

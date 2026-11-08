@@ -20,6 +20,7 @@ Cómo funciona por dentro: [arquitectura.md › Salas compartidas](arquitectura.
 | Esquema de la base de datos (cuentas, sesiones, partidas, salas) | `migrations/0001_init.sql` |
 | Entrada del Worker y rutas de la API | `worker/index.ts` |
 | Salas: `POST /api/raid` | `worker/raid.ts` + `worker/db/rooms.ts` |
+| Incursiones con otros jugadores: `POST /api/incursion` (cola, grupo, reorganizar, votos). Una consulta sin cambios no escribe en D1; los grupos sin consultas en 24 h los borra la tarea programada | `worker/incursion.ts` + `worker/db/incursions.ts`; tablas en `migrations/0010_incursions.sql` |
 | Partida en la nube: `GET` / `POST /api/save` (solo con sesión) | `worker/save.ts` + `worker/db/saves.ts` |
 | Cuentas: `/api/auth/*` (crear, confirmar, entrar, salir, recuperar, apodo) | `worker/auth/` + `worker/db/users.ts` |
 | Obsequio diario: `GET` / `POST /api/gift` (solo con sesión) | `worker/gift.ts` + `worker/db/gifts.ts` |
@@ -142,6 +143,8 @@ Lo que consulta cada jugador (solo con la app delante; cerrada, el servidor sigu
 | App abierta en otra pestaña con un Pokémon en una sala (cada 60 s; se puede estar en una sala de cada rotación de Raids y en la de la ruta) | ≈ 60 por sala |
 | Con cuenta: subir la partida (cada 2 min) | ≈ 30 |
 | Con cuenta: tablón de intercambios y Notificaciones (cada 60 s, `REFRESH_EVERY_MS` en `src/net/tradeBoard.ts`) | ≈ 60 |
+| Buscando grupo de incursión (cada 3 s, como mucho ≈ 1 min) o en su sala de reorganizar (cada 3 s, como mucho 90 s) | ≈ 1200 mientras dura |
+| Jugando un tramo de incursión (cada 10 s, `PLAY_SYNC_MS` en `src/net/incursionSync.ts`) | ≈ 360 |
 | Sin Pokémon en salas y sin cuenta | 0 |
 
 Con 100 000 peticiones al día caben ≈ 130 horas diarias de alguien mirando una pelea: de sobra para poco tráfico. Si

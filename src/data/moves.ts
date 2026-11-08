@@ -143,8 +143,11 @@ export function move(id: string): Move {
   return mv
 }
 
-/** El único ataque de una especie: el de su primer tipo y su rareza. No se elige ni cambia con el nivel. */
+/** El ataque de daño de un tipo en el escalón de una rareza (las incursiones los usan como repertorio común) */
+export const typeMove = (type: PokeType, rarity: Rarity): Move => BY_TYPE[type][rarity]
+
+/** El único ataque de una especie en rutas y raids: el de su primer tipo y su rareza. No se elige ni cambia con el nivel. */
 export function signatureMove(speciesId: number): Move {
   const sp = species(speciesId)
-  return BY_TYPE[sp.types[0]][rarityOf(sp)]
+  return typeMove(sp.types[0], rarityOf(sp))
 }

@@ -4,6 +4,7 @@ import { pushRoute } from './push/routes'
 import { scheduled } from './scheduled'
 import type { Env } from './env'
 import { json } from './http'
+import { incursionRoute } from './incursion'
 import { raidRoute } from './raid'
 import { rankingRoute } from './ranking'
 import { saveRoute } from './save'
@@ -19,6 +20,7 @@ export default {
   async fetch(request, env): Promise<Response> {
     const { pathname } = new URL(request.url)
     if (pathname === '/api/raid') return raidRoute(request, env)
+    if (pathname === '/api/incursion') return incursionRoute(request, env)
     if (pathname === '/api/save') return saveRoute(request, env)
     if (pathname === '/api/gift') return giftRoute(request, env)
     if (pathname === '/api/trade') return tradeRoute(request, env)
