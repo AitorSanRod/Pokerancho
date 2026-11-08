@@ -1,3 +1,4 @@
+import { markEvolutionLines } from '../collection/dex'
 import { unlockReachedRoutes } from '../run/routeUnlocks'
 import { migrateSave } from './saveMigration'
 import { backupTeam, parseTeamBackup, restoreTeam, type TeamBackup } from './teamBackup'
@@ -48,11 +49,13 @@ export const cloudUpload = (s: GameState) => ({ save: s, team: backupTeam(s) })
 /**
  * La partida guardada: si es de esta versión, tal cual; si es de otra, pasada a esta sin perder nada de lo que siga
  * existiendo (saveMigration.ts). Si la partida no se puede leer o se ha quedado sin Pokémon, el equipo sale de su copia.
- * En las dos se abren las rutas que tocan por las ya completadas (rutas añadidas después)
+ * En las dos se abren las rutas que tocan por las ya completadas (rutas añadidas después) y se da por capturada la
+ * línea evolutiva anterior de lo capturado
  */
 export function stateFromSaved(saved: unknown, team: unknown): GameState {
   const s = (saved && typeof saved === 'object' ? restoreState(saved as GameState) : null) ?? salvaged(saved, team)
   unlockReachedRoutes(s)
+  markEvolutionLines(s)
   return s
 }
 
@@ -99,4 +102,15 @@ export function parseUpload(body: unknown): SaveUpload | null {
   const validSave = !!save && typeof save === 'object' && Number.isInteger((save as GameState).version)
   const backup = parseTeamBackup(team)
   return validBase && validSave && backup ? { baseRevision: baseRevision as number | null, save: save as GameState, team: backup } : null
+}
+
+/**
+ * La partida en la nube con la línea evolutiva anterior de lo capturado ya capturada: el servidor la repasa al leerla,
+ * así las partidas de antes de esta regla salen bien en cualquier dispositivo. Si no tiene la forma esperada, tal cual
+ */
+export function withEvolutionLines(cloud: CloudSave): CloudSave {
+  const { caught, seen } = cloud.save as Partial<GameState>
+  if (!Array.isArray(caught) || !Array.isArray(seen)) return cloud
+  markEvolutionLines(cloud.save)
+  return cloud
 }

@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import { route, RouteId } from '../../data/maps'
+import { EVOLVING_SPECIES, evolutionsOf } from '../../data/evolutions'
 import { STARTERS } from '../../data/species'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
-import { CloudAction, cloudAction, cloudUpload, parseUpload, saveSummary, stateFromSaved } from './cloudSave'
+import { CloudAction, cloudAction, cloudUpload, parseUpload, saveSummary, stateFromSaved, withEvolutionLines } from './cloudSave'
 import { initialState, SAVE_VERSION } from './state'
 import { backupTeam } from './teamBackup'
 import { chooseStarter } from './test-utils'
@@ -62,6 +63,15 @@ describe('partida en la nube', () => {
     s.unlockedRoutes = [RouteId.PuebloPaleta]
     const saved = JSON.parse(JSON.stringify(s))
     expect(stateFromSaved(saved, backupTeam(s)).unlockedRoutes).toContain(route(RouteId.PuebloPaleta).unlocks)
+  })
+
+  it('al cargar (aquí o desde el servidor), lo capturado da por capturada su línea evolutiva anterior', () => {
+    const [from, { into }] = [EVOLVING_SPECIES[0], evolutionsOf(EVOLVING_SPECIES[0])[0]]
+    const s = playedGame()
+    s.caught = [into]
+    const cloud = { ...cloudUpload(s), revision: 1, updatedAt: 0 }
+    expect(stateFromSaved(JSON.parse(JSON.stringify(s)), cloud.team).caught).toContain(from)
+    expect(withEvolutionLines(JSON.parse(JSON.stringify(cloud))).save.caught).toContain(from)
   })
 
   it('si la partida guardada no se puede leer, el equipo sale de su copia', () => {

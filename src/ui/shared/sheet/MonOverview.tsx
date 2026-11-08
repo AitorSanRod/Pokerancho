@@ -1,6 +1,6 @@
 import { signatureMove } from '../../../data/moves'
 import { RARITY_INFO, rarityOf, species } from '../../../data/species'
-import { isSeen } from '../../../game/collection/dex'
+import { isCaughtByLine, isSeen } from '../../../game/collection/dex'
 import { MonPlace, monPlace, type GameState, type OwnedMon } from '../../../game/core/state'
 import { REGEN_PER_MIN } from '../../../game/team/ranch'
 import { calcStats, maxHp, stepsPerMinute } from '../../../game/team/stats'
@@ -22,8 +22,9 @@ function statLine(mon: OwnedMon, level: number): StatLine {
 
 /**
  * Sección «Datos», igual en el rancho y en la Pokédex: tipos, rareza, dónde está, stats y ataque.
- * Sin `mon` (especie que aún no tienes) solo se ve lo que se sabe de la especie. Con `previewLevel` (el nivel al que
- * llegaría con el entrenamiento elegido) las stats dicen cuánto subirían.
+ * Sin `mon` (especie que aún no tienes) solo se ve lo que se sabe de la especie y, si cuenta como capturada por tener
+ * una evolución suya, el aviso de que lo es. Con `previewLevel` (el nivel al que llegaría con el entrenamiento elegido)
+ * las stats dicen cuánto subirían.
  */
 export function MonOverview({ game, speciesId, mon, previewLevel = null }: { game: GameState; speciesId: number; mon?: OwnedMon; previewLevel?: number | null }) {
   const sp = species(speciesId)
@@ -49,6 +50,7 @@ export function MonOverview({ game, speciesId, mon, previewLevel = null }: { gam
       ) : (
         seen && <p className="tiny muted center">Sus stats se ven cuando lo tengas.</p>
       )}
+      {!mon && isCaughtByLine(game, speciesId) && <p className="notice small center">Capturado como línea evolutiva</p>}
       {seen && <MoveChip id={signatureMove(speciesId).id} />}
     </MonSection>
   )

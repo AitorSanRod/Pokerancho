@@ -73,7 +73,7 @@ Cada `.ts` de `src/game` tiene su `.test.ts` al lado; las pantallas, su CSS en l
 | Base de datos (tablas) | `../migrations/` (un fichero nuevo por cambio) |
 | Mejoras de la tienda / Ampliación de rancho (+espacios en el rancho elegido) / secciones desplegables y casillas de la cuadrícula | `game/team/upgrades.ts` + `ui/shop/UpgradeShop.tsx` / `game/team/ranchExpansion.ts` + `ui/shop/RanchExpansionTile.tsx` / `ui/shop/ShopTile.tsx` |
 | Tutorial e inicial | `game/team/tutorial.ts` + `ui/starter/`, `ui/shared/TutorialHint.tsx` |
-| Piezas, crear Pokémon y Pokédex | `game/collection/pieces.ts`, `dex.ts` + `ui/dex/` (`DexScreen`, `DexSection` el desplegable de cada Pokédex, `DexCell`; la ficha es `PokemonSheet`, la misma que el rancho) |
+| Piezas, crear Pokémon y Pokédex (capturar cuenta para la línea evolutiva anterior: `dex.ts › markCaught`) | `game/collection/pieces.ts`, `dex.ts` + `ui/dex/` (`DexScreen`, `DexSection` el desplegable de cada Pokédex, `DexCell`; la ficha es `PokemonSheet`, la misma que el rancho) |
 | Pokédex regionales y Nacional (rangos y mapa de cada región) | `data/pokedexes.ts`; las especies nuevas, en `NATIONAL_IDS` de `scripts/fetch-pokemon.mjs` + `data/pokemon.ts` |
 | Gacha, trituradora, MissingNo | `game/collection/gacha.ts`, `shredder.ts` + `ui/gacha/` (`GachaScreen` pestañas, `GachaMachine` + `GachaRates` tirar, `Shredder` + `ShredCell` trituradora, `MissingnoShop` casillas de la Pokédex que abren `PokemonSheet`, `RarityFoldout` + `rarityTitles` desplegable por rareza) |
 | Rancho (pasar de rancho como fotos de una galería, siguiendo al dedo: `ui/ranch/useRanchCarousel.ts` + `ui/shared/useSwipe.ts`) | `ui/ranch/RanchScreen.tsx`, `RanchPage.tsx` (un rancho: fondo y Pokémon) |

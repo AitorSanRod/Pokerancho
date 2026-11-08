@@ -1,4 +1,4 @@
-import type { CloudSave } from '../../src/game/core/cloudSave'
+import { withEvolutionLines, type CloudSave } from '../../src/game/core/cloudSave'
 
 // Partidas en la nube en D1 (tabla saves): una por cuenta. Subir solo vale encima de la revisión que el dispositivo
 // vio por última vez y con un sello de intercambios que no sea más viejo que el de la nube (ver trade/tradeOps.ts); la
@@ -10,7 +10,7 @@ interface SaveRow {
 
 export async function loadSave(db: D1Database, userId: string): Promise<CloudSave | null> {
   const row = await db.prepare('SELECT data FROM saves WHERE user_id = ?').bind(userId).first<SaveRow>()
-  return row && (JSON.parse(row.data) as CloudSave)
+  return row && withEvolutionLines(JSON.parse(row.data) as CloudSave)
 }
 
 /** El sello de intercambios de una partida subida (las de antes de los intercambios no lo tienen: 0) */

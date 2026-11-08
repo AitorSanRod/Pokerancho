@@ -1,3 +1,4 @@
+import { evolutionsOf, preEvolutionsOf } from '../../data/evolutions'
 import { species } from '../../data/species'
 import type { GameState } from '../core/state'
 
@@ -14,9 +15,27 @@ export function markSeen(s: GameState, speciesId: number) {
 export const knownName = (s: GameState, speciesId: number): string =>
   isSeen(s, speciesId) ? species(speciesId).name : UNKNOWN_NAME
 
-export function markCaught(s: GameState, speciesId: number) {
+const isCaught = (s: GameState, speciesId: number): boolean => s.caught.includes(speciesId)
+
+function addCaught(s: GameState, speciesId: number) {
   markSeen(s, speciesId)
-  if (!s.caught.includes(speciesId)) s.caught.push(speciesId)
+  if (!isCaught(s, speciesId)) s.caught.push(speciesId)
+}
+
+/** Capturar una especie cuenta también para las anteriores de su línea evolutiva (Charizard: Charmander y Charmeleon) */
+export function markCaught(s: GameState, speciesId: number) {
+  for (const id of [speciesId, ...preEvolutionsOf(speciesId)]) addCaught(s, id)
+}
+
+/** Repaso al cargar la partida: las capturadas antes de esta regla también dan por capturada su línea anterior */
+export function markEvolutionLines(s: GameState) {
+  for (const id of [...s.caught]) markCaught(s, id)
+}
+
+/** Capturada solo por tener una evolución suya: no hay ninguna en el equipo pero sí una especie a la que evoluciona */
+export function isCaughtByLine(s: GameState, speciesId: number): boolean {
+  if (!isCaught(s, speciesId) || s.owned.some((m) => m.speciesId === speciesId)) return false
+  return evolutionsOf(speciesId).some((e) => isCaught(s, e.into))
 }
 
 export const isFavorite = (s: GameState, speciesId: number): boolean => s.favorites.includes(speciesId)

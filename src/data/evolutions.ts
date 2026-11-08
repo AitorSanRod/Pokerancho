@@ -92,3 +92,9 @@ export const evolutionsOf = (speciesId: number): Evolution[] => EVOLUTIONS[speci
 export const evolutionTo = (speciesId: number, intoId: number): Evolution | undefined => evolutionsOf(speciesId).find((e) => e.into === intoId)
 
 export const EVOLVING_SPECIES = Object.keys(EVOLUTIONS).map(Number)
+
+/** Especies de las que sale `speciesId` al evolucionar, de la más cercana a la primera (Charizard → Charmeleon, Charmander) */
+export function preEvolutionsOf(speciesId: number): number[] {
+  const from = EVOLVING_SPECIES.find((id) => evolutionTo(id, speciesId))
+  return from === undefined ? [] : [from, ...preEvolutionsOf(from)]
+}

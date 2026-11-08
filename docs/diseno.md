@@ -102,7 +102,10 @@ cupón) y los tickets que se gastan en el gacha, «tickets de gacha». En el có
    la Caja (allí se queda); en un rancho se queda en el suyo si cabe y si no va al primero con hueco (el diálogo de
    confirmar lo dice); si no cabe en ninguno, o si ya tienes esa especie, el botón sale desactivado con el aviso. En
    la Pokédex la especie de antes sigue como capturada (lo conseguido no se pierde al evolucionar, vender ni
-   intercambiar) y se puede volver a crear con sus piezas. Las piedras (Fuego, Agua, Trueno, Hoja y Lunar) se compran en la Tienda, sin límite, y se guardan
+   intercambiar) y se puede volver a crear con sus piezas. Capturar una especie (crearla, evolucionarla, recibirla en un
+   intercambio) da también por capturadas las anteriores de su línea: con Charizard, Charmander y Charmeleon. Si no
+   tienes ninguna en el equipo, su ficha es la de una especie que no tienes, con el aviso «Capturado como línea
+   evolutiva» en Datos (`dex.ts › markCaught`, `isCaughtByLine`). Las piedras (Fuego, Agua, Trueno, Hoja y Lunar) se compran en la Tienda, sin límite, y se guardan
    hasta gastarlas. Eevee elige entre sus tres.
 
 Los premios del gacha, de las expediciones, del final de ruta y de cada combinación se muestran en una pantalla
