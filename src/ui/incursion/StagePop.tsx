@@ -29,7 +29,7 @@ function popContent(e: IncursionEvent): ReactNode {
     case EventKind.Miss:
       return MISS_POP[e.miss ?? 'miss']
     case EventKind.Heal:
-      return `+${e.amount ?? 0} PS`
+      return `+${e.amount ?? 0}`
     case EventKind.Status:
       return e.status ? `¡${STATUS_INFO[e.status].name}!` : null
     case EventKind.Revive:

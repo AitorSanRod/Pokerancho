@@ -3,7 +3,8 @@ import { EventKind } from '../../game/incursion/events'
 import { BattleHud } from '../route/BattleHud'
 import { WalkScene } from '../route/WalkScene'
 import { partySpot } from '../raid/partySpot'
-import type { SceneMon, SceneState } from './sceneState'
+import { MoveBanner } from './MoveBanner'
+import { eventLine, type SceneMon, type SceneState } from './sceneState'
 import { StageFighter, type Spot } from './StageFighter'
 import '../route/battle.css'
 import '../route/battle-callouts.css'
@@ -38,7 +39,8 @@ function shownFoe(scene: SceneState): SceneMon | undefined {
 
 /**
  * La sala que se está jugando, como un combate de ruta: el grupo a la izquierda y los rivales a la derecha, con el
- * marcador de tu Pokémon y el del rival en juego a sus pies, el destello del crítico y el aviso del jefe
+ * marcador de tu Pokémon y el del rival en juego a sus pies, el destello del crítico y el aviso del jefe. Arriba en el
+ * centro, el ataque que se usa; abajo, una línea con lo que pasa
  */
 export function IncursionStage({ biome, scene, uid }: { biome: Biome; scene: SceneState; uid: string }) {
   const e = scene.current
@@ -59,6 +61,7 @@ export function IncursionStage({ biome, scene, uid }: { biome: Biome; scene: Sce
           {scene.foes.map((m, i) => (
             <StageFighter key={m.id} m={m} spot={foeSpot(i, scene.foes.length)} side="foe" mine={false} scene={scene} idleDelay={-i * IDLE_PHASE_S} />
           ))}
+          <MoveBanner scene={scene} />
           {bossWarning && <div className="boss-warning">¡Un jefe os corta el paso!</div>}
           {mine && (
             <div className="battle-hud-slot player">
@@ -70,6 +73,7 @@ export function IncursionStage({ biome, scene, uid }: { biome: Biome; scene: Sce
               <BattleHud fighter={foe} hp={foe.hp} status={foe.status} boss={foe.boss} struck={struck(foe.id)} />
             </div>
           )}
+          <p className="incursion-caption">{eventLine(scene)}</p>
         </div>
       </WalkScene>
     </div>

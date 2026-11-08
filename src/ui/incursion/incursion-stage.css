@@ -44,3 +44,59 @@
 .incursion-stage .battle-hud-slot.boss {
   left: 74%;
 }
+/* El ataque que se usa, arriba en el centro (como el nombre del ataque de la ruta, pero más grande) y quién lo usa */
+.incursion-move-banner {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 3;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  animation: callout-in 0.25s ease-out;
+}
+.incursion-move-name {
+  padding: 4px 14px;
+  border-radius: 99px;
+  background: var(--type-color);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 900;
+  white-space: nowrap;
+  text-shadow: 0 1px 0 #0006;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 3px 8px #0005;
+}
+.incursion-move-user {
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: #fbfbf2dd;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 800;
+}
+/* Lo que pasa, en pequeño, abajo de la escena */
+.incursion-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  z-index: 3;
+  translate: -50% 0;
+  max-width: calc(100% - 16px);
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 8px;
+  background: #222c;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.incursion-caption:empty {
+  display: none;
+}

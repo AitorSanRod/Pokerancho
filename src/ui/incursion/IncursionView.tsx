@@ -9,7 +9,7 @@ import { IncursionStage } from './IncursionStage'
 import { IncursionSummary } from './IncursionSummary'
 import { RegroupPanel } from './RegroupPanel'
 import { RetreatVote } from './RetreatVote'
-import { eventLine, sceneAt } from './sceneState'
+import { sceneAt } from './sceneState'
 import './incursion-view.css'
 
 /** La incursión en curso: sala, revivires y pasivas; la escena, lo que pasa, el grupo y, según el momento, reorganizar o el final */
@@ -45,7 +45,6 @@ export function IncursionView({ game, a }: { game: GameState; a: ActiveIncursion
         </div>
       )}
       <IncursionStage biome={inc.biome} scene={scene} uid={a.uid} />
-      <p className="incursion-log small">{eventLine(scene)}</p>
       {p.phase === IncursionPhase.Regroup && <RegroupPanel game={game} a={a} members={members} msLeft={p.regroupMsLeft} />}
       {p.phase === IncursionPhase.Finished && <IncursionSummary outcome={p.record.outcome} earned={p.record.earned} />}
       <IncursionRoster party={scene.party} foes={scene.foes} moveOf={moveOf} uid={a.uid} nicknames={a.online?.nicknames ?? {}} />

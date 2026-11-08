@@ -33,14 +33,6 @@
   font-weight: 800;
   text-shadow: 0 1px 0 #0006;
 }
-.incursion-log {
-  min-height: 2.6em;
-  margin: 0;
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: var(--card);
-  border: 2px solid var(--line);
-}
 .incursion-roster {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
