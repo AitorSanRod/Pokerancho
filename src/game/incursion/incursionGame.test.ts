@@ -6,9 +6,11 @@ import { seqRng } from '../core/test-utils'
 import { initialState, MonPlace, monPlace, type GameState } from '../core/state'
 import { createMon } from '../team/mons'
 import { incursionProgress, IncursionPhase, recordOf, REGROUP_MS } from './activeIncursion'
-import { advanceIncursion, chooseIncursionMove, collectIncursion, continueIncursion, incursionBlocker, retreatIncursion, startIncursion } from './incursionGame'
-import { legDuration } from './incursionTimeline'
+import { advanceIncursion, boostIncursionTap, chooseIncursionMove, collectIncursion, continueIncursion, incursionBlocker, retreatIncursion, startIncursion } from './incursionGame'
+import { LegOutcome } from './incursionLeg'
+import { eventStartMs, legDuration } from './incursionTimeline'
 import { PARTY_SIZE } from './party'
+import { TAP_WINDOW_MS } from './tapWindow'
 import { repertoire } from './repertoire'
 
 vi.mock('../../data/incursions', () => import('./incursion-test-mock'))
@@ -31,7 +33,22 @@ beforeEach(() => {
 })
 
 const start = () => startIncursion(s, ID, uid, move, NOW, seqRng(0.5))
-const endOfLeg = (leg: number) => s.incursion!.legStarts[leg] + legDuration(recordOf(s.incursion!).legs[leg])
+/** Deja pasar sin tocar las ventanas de toques del tramo y dice cuándo acaba */
+function endOfLeg(leg: number): number {
+  for (;;) {
+    const a = s.incursion!
+    const played = recordOf(a).legs[leg]
+    const end = a.legStarts[leg] + legDuration(played)
+    if (played.outcome !== LegOutcome.Waiting) return end
+    advanceIncursion(s, end)
+  }
+}
+
+/** Hora a la que empieza la ventana de toques en la que está parado el tramo */
+function openWindowAt(leg: number): number {
+  const played = recordOf(s.incursion!).legs[leg]
+  return s.incursion!.legStarts[leg] + eventStartMs(played, played.events.length - 1)
+}
 
 describe('entrar en una incursión', () => {
   it('hace falta una llave, el nivel justo y un movimiento que conozca', () => {
@@ -86,6 +103,25 @@ describe('incursión en curso', () => {
     expect(s.money).toBe(money + boostedMoney(earned.money))
     expect(s.incursion).toBeNull()
     expect(monPlace(s, uid)).toBe(MonPlace.Ranch)
+  })
+
+  it('antes de cada turno se para en la ventana de toques; si no llega a los toques, se cierra sin potenciar', () => {
+    start()
+    const played = recordOf(s.incursion!).legs[0]
+    expect(played.outcome).toBe(LegOutcome.Waiting)
+    const opens = openWindowAt(0)
+    expect(incursionProgress(s.incursion!, opens + 1).phase).toBe(IncursionPhase.Tap)
+    advanceIncursion(s, opens + TAP_WINDOW_MS)
+    expect(s.incursion!.orders[0].taps[0]).toEqual([])
+  })
+
+  it('al llegar a los toques en la ventana abierta, su Pokémon queda potenciado ese turno', () => {
+    start()
+    const opens = openWindowAt(0)
+    boostIncursionTap(s, opens - 1)
+    expect(s.incursion!.orders[0].taps).toEqual([])
+    boostIncursionTap(s, opens + 1)
+    expect(s.incursion!.orders[0].taps[0]).toEqual([uid])
   })
 
   it('al retirarse se termina en ese momento, con lo ganado hasta entonces', () => {

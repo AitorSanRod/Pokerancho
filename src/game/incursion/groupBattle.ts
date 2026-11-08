@@ -7,9 +7,11 @@ import { applyGroupPassives, groupPassives, samePassives } from './groupPassives
 import { endOfTurn, loseTurn } from './groupStatus'
 import { performMove } from './moveEffects'
 import { resolveFallen } from './revives'
+import { anyPlayerUp } from './tapWindow'
 
 // Un combate de sala: el grupo contra los rivales, por turnos. Al empezar el turno vuelven los caídos (si quedan
-// revivires) y se recalculan las pasivas; luego actúan todos por Velocidad y al final pesan los estados.
+// revivires) y se recalculan las pasivas; después viene la ventana de toques (ver tapWindow.ts), actúan todos por
+// Velocidad y al final pesan los estados.
 
 /** Turnos tras los que el grupo pierde la sala (con la furia de los jefes no debería llegarse) */
 export const MAX_ROOM_TURNS = 80
@@ -29,11 +31,18 @@ function turnOrder(bf: Battlefield, rng: Rng): GroupFighter[] {
   return [...bf.party, ...bf.foes].filter(isUp).sort((a, b) => stat(b, 'spe') - stat(a, 'spe') || tiebreak.get(a)! - tiebreak.get(b)!)
 }
 
-export function fightRoom(bf: Battlefield, rng: Rng): 'win' | 'lose' {
+/**
+ * Juega la sala. `tapWindow` abre la ventana de toques del turno y dice quiénes han potenciado su ataque; si aún no se
+ * sabe (undefined), la sala se para ahí: 'waiting'
+ */
+export function fightRoom(bf: Battlefield, rng: Rng, tapWindow: () => string[] | undefined): 'win' | 'lose' | 'waiting' {
   for (bf.turn = 1; bf.turn <= MAX_ROOM_TURNS; bf.turn++) {
     resolveFallen(bf)
     refreshPassives(bf)
     for (const boss of bossesUp(bf)) bossTurnStart(bf, boss)
+    const boosted = anyPlayerUp(bf) ? tapWindow() : []
+    if (!boosted) return 'waiting'
+    bf.boosted = boosted
     for (const f of turnOrder(bf, rng)) {
       if (!isUp(f) || loseTurn(bf, f, rng)) continue
       performMove(bf, f, rng, isAreaTurn(bf, f))

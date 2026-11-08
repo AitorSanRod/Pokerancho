@@ -62,6 +62,17 @@ describe('incursiones con otros jugadores', () => {
     expect((await api.call('/api/incursion', { body: { action: IncursionAction.Leave, ...who(1) } })).data.gone).toBe(true)
   })
 
+  it('acepta el aviso de toques de un jugador del grupo', async () => {
+    const api = testWorker()
+    await api.call('/api/incursion', { body: queue(0) })
+    vi.setSystemTime(NOW + QUEUE_MAX_MS)
+    const { groupId } = (await api.call('/api/incursion', { body: queue(0) })).data.group
+    const tapped = await api.call('/api/incursion', { body: { action: IncursionAction.Tap, ...who(0), groupId, leg: 0, turn: 0 } })
+    expect(tapped.status).toBe(200)
+    expect(tapped.data.group.groupId).toBe(groupId)
+    expect((await api.call('/api/incursion', { body: { action: IncursionAction.Tap, ...who(0), groupId, leg: -1, turn: 0 } })).status).toBe(400)
+  })
+
   it('rechaza peticiones mal hechas', async () => {
     expect((await testWorker().call('/api/incursion', { body: { action: 'queue' } })).status).toBe(400)
   })

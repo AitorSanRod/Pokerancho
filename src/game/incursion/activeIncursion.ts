@@ -1,7 +1,10 @@
 import { incursion, type IncursionId } from '../../data/incursions'
 import type { MemberState } from './fighter'
 import { IncursionOutcome, simulateIncursion, type IncursionRecord, type LegOrders, type Retreat } from './incursionRun'
-import { eventsStarted, legDuration } from './incursionTimeline'
+import { EventKind } from './events'
+import type { LegResult } from './incursionLeg'
+import { eventStartMs, eventsStarted, legDuration } from './incursionTimeline'
+import { TAP_WINDOW_MS } from './tapWindow'
 
 // Una incursión tal y como se guarda (en la partida y en el servidor): quién entró, las órdenes de cada tramo y cuándo
 // empezó cada uno. Lo demás (combates, PS, premios) se recalcula siempre igual a partir de esto y de la hora.
@@ -43,7 +46,8 @@ export interface ActiveIncursion extends IncursionPlan {
   online: OnlineIncursion | null
 }
 
-export const IncursionPhase = { Playing: 'playing', Regroup: 'regroup', Finished: 'finished' } as const
+/** `Tap`: ventana de toques abierta. `Waiting`: ya se vio la ventana pero aún no se sabe quién potenció su ataque (con otros jugadores) */
+export const IncursionPhase = { Playing: 'playing', Tap: 'tap', Waiting: 'waiting', Regroup: 'regroup', Finished: 'finished' } as const
 export type IncursionPhase = (typeof IncursionPhase)[keyof typeof IncursionPhase]
 
 export interface IncursionProgress {
@@ -55,6 +59,8 @@ export interface IncursionProgress {
   legMs: number
   /** Sala de reorganizar: milisegundos que quedan para cambiar de movimiento */
   regroupMsLeft: number
+  /** Ventana de toques abierta: su número en el tramo y los milisegundos que le quedan */
+  tap: { turn: number; msLeft: number } | null
 }
 
 let cache: { key: string; record: IncursionRecord } | null = null
@@ -72,12 +78,26 @@ export function incursionProgress(a: IncursionPlan, now: number): IncursionProgr
   const duration = legDuration(record.legs[leg])
   const elapsed = Math.max(0, now - a.legStarts[leg])
   const legMs = Math.min(elapsed, duration)
-  if (a.retreat) return { phase: IncursionPhase.Finished, record, leg, legMs: a.retreat.atMs, regroupMsLeft: 0 }
-  if (elapsed < duration) return { phase: IncursionPhase.Playing, record, leg, legMs, regroupMsLeft: 0 }
-  if (record.outcome === IncursionOutcome.Pending) {
-    return { phase: IncursionPhase.Regroup, record, leg, legMs, regroupMsLeft: Math.max(0, duration + REGROUP_MS - elapsed) }
+  const base = { record, leg, legMs, regroupMsLeft: 0, tap: null }
+  if (a.retreat) return { ...base, phase: IncursionPhase.Finished, legMs: a.retreat.atMs }
+  if (elapsed < duration) {
+    const tap = openTap(record.legs[leg], legMs)
+    return { ...base, phase: tap ? IncursionPhase.Tap : IncursionPhase.Playing, tap }
   }
-  return { phase: IncursionPhase.Finished, record, leg, legMs, regroupMsLeft: 0 }
+  if (record.outcome === IncursionOutcome.Waiting) return { ...base, phase: IncursionPhase.Waiting }
+  if (record.outcome === IncursionOutcome.Pending) {
+    return { ...base, phase: IncursionPhase.Regroup, regroupMsLeft: Math.max(0, duration + REGROUP_MS - elapsed) }
+  }
+  return { ...base, phase: IncursionPhase.Finished }
+}
+
+/** La ventana de toques que se está viendo a los `ms` del tramo, si aún está abierta */
+function openTap(leg: LegResult, ms: number): IncursionProgress['tap'] {
+  const index = eventsStarted(leg, ms) - 1
+  const event = leg.events[index]
+  if (event?.kind !== EventKind.TapWindow) return null
+  const msLeft = eventStartMs(leg, index) + TAP_WINDOW_MS - ms
+  return msLeft > 0 ? { turn: event.turn ?? 0, msLeft } : null
 }
 
 /** Fracción de PS con la que acaba un Pokémon: la del último evento que le tocó antes del final (o de la retirada) */
@@ -97,7 +117,7 @@ export function finalHpFraction(a: IncursionPlan, p: IncursionProgress, id: stri
  */
 export function startNextLeg(a: IncursionPlan, at: number, moves: Record<string, string>) {
   const seed = (a.orders[0].seed + a.orders.length * 7919) % 2 ** 31
-  a.orders.push({ seed, moves })
+  a.orders.push({ seed, moves, taps: [] })
   a.legStarts.push(at)
 }
 

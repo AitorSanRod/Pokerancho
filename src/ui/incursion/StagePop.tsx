@@ -12,7 +12,7 @@ const isHeavy = (e: IncursionEvent) => e.kind === EventKind.Hit && (!!e.crit || 
 function hitNote(e: IncursionEvent): string {
   if (e.status) return STATUS_INFO[e.status].name
   const eff = e.eff ?? 1
-  return [e.crit ? '¡Crítico!' : '', eff > 1 ? '¡Muy eficaz!' : eff < 1 ? 'Poco eficaz' : ''].filter(Boolean).join(' ')
+  return [e.potent ? '¡Potenciado!' : '', e.crit ? '¡Crítico!' : '', eff > 1 ? '¡Muy eficaz!' : eff < 1 ? 'Poco eficaz' : ''].filter(Boolean).join(' ')
 }
 
 function popContent(e: IncursionEvent): ReactNode {

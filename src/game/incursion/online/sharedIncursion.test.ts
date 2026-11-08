@@ -3,12 +3,14 @@ import { POKEMON } from '../../../data/pokemon'
 import { seqRng } from '../../core/test-utils'
 import { incursionProgress, IncursionPhase, recordOf, REGROUP_MS } from '../activeIncursion'
 import { TEST_INCURSION } from '../incursion-test-mock'
-import { legDuration } from '../incursionTimeline'
+import { LegOutcome } from '../incursionLeg'
+import { eventStartMs, legDuration } from '../incursionTimeline'
+import { TAP_WINDOW_MS } from '../tapWindow'
 import { PARTY_SIZE, freshMember } from '../party'
 import { repertoire } from '../repertoire'
 import { votesNeeded } from '../retreatVote'
 import { QUEUE_MAX_MS } from './protocol'
-import { advanceShared, chooseShared, formGroup, groupView, pickGroup, readyShared, voteShared, type Queued } from './sharedIncursion'
+import { advanceShared, chooseShared, formGroup, groupView, pickGroup, readyShared, TAP_CLOSE_DELAY_MS, tapShared, voteShared, type Queued } from './sharedIncursion'
 
 vi.mock('../../../data/incursions', () => import('../incursion-test-mock'))
 
@@ -23,7 +25,21 @@ const queued = (n: number, joinedAt = NOW): Queued => ({
   joinedAt,
 })
 const group = (players = 2) => formGroup('abcdef12', TEST_INCURSION.id, Array.from({ length: players }, (_, i) => queued(i)), NOW, seqRng(0.5))
-const regroupAt = (g: ReturnType<typeof group>) => g.legStarts[0] + legDuration(recordOf(g).legs[0])
+/** Cierra sin toques las ventanas del primer tramo y dice cuándo acaba (llega la sala de reorganizar) */
+function regroupAt(g: ReturnType<typeof group>): number {
+  for (;;) {
+    const played = recordOf(g).legs[0]
+    const end = g.legStarts[0] + legDuration(played)
+    if (played.outcome !== LegOutcome.Waiting) return end
+    advanceShared(g, end)
+  }
+}
+
+/** Hora a la que acaba la ventana de toques en la que está parado el primer tramo */
+function windowEndAt(g: ReturnType<typeof group>): number {
+  const played = recordOf(g).legs[0]
+  return g.legStarts[0] + eventStartMs(played, played.events.length - 1) + TAP_WINDOW_MS
+}
 
 describe('cola de incursión', () => {
   it('con cinco esperando se forma el grupo con los cinco primeros', () => {
@@ -68,6 +84,20 @@ describe('grupo de incursión', () => {
     expect(g.legStarts).toHaveLength(1)
     readyShared(g, 'jugador-1', at + 1)
     expect(g.legStarts).toEqual([NOW, at + 1])
+  })
+
+  it('la ventana de toques se cierra un poco después de acabar, con los que avisaron a tiempo', () => {
+    const g = group(3)
+    const end = windowEndAt(g)
+    tapShared(g, 'jugador-0', 0, 0, end - 1)
+    tapShared(g, 'otro', 0, 0, end - 1)
+    tapShared(g, 'jugador-1', 0, 5, end - 1)
+    advanceShared(g, end)
+    expect(g.orders[0].taps).toEqual([])
+    advanceShared(g, end + TAP_CLOSE_DELAY_MS)
+    expect(g.orders[0].taps[0]).toEqual(['mon0'])
+    tapShared(g, 'jugador-2', 0, 0, end + TAP_CLOSE_DELAY_MS + 1)
+    expect(g.tapPending).toEqual([])
   })
 
   it('con los votos necesarios, la incursión acaba en ese momento; los votos se pueden quitar', () => {

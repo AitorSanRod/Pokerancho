@@ -13,6 +13,8 @@ export interface Battlefield {
   /** Contador de caídas, para gastar los revivires en el orden en que cayeron */
   falls: number
   passives: GroupPassive[]
+  /** Pokémon del grupo que han potenciado su ataque este turno con los toques (ver tapWindow.ts) */
+  boosted: string[]
   log: Log
 }
 

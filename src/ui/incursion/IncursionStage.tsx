@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Biome } from '../../data/maps'
 import { EventKind } from '../../game/incursion/events'
 import { BattleHud } from '../route/BattleHud'
@@ -40,9 +41,9 @@ function shownFoe(scene: SceneState): SceneMon | undefined {
 /**
  * La sala que se está jugando, como un combate de ruta: el grupo a la izquierda y los rivales a la derecha, con el
  * marcador de tu Pokémon y el del rival en juego a sus pies, el destello del crítico y el aviso del jefe. Arriba en el
- * centro, el ataque que se usa; abajo, una línea con lo que pasa
+ * centro, el ataque que se usa; abajo, una línea con lo que pasa. Encima de todo, `overlay` (la ventana de toques)
  */
-export function IncursionStage({ biome, scene, uid }: { biome: Biome; scene: SceneState; uid: string }) {
+export function IncursionStage({ biome, scene, uid, overlay }: { biome: Biome; scene: SceneState; uid: string; overlay?: ReactNode }) {
   const e = scene.current
   const mine = scene.party.find((m) => m.id === uid)
   const foe = shownFoe(scene)
@@ -76,6 +77,7 @@ export function IncursionStage({ biome, scene, uid }: { biome: Biome; scene: Sce
           <p className="incursion-caption">{eventLine(scene)}</p>
         </div>
       </WalkScene>
+      {overlay}
     </div>
   )
 }

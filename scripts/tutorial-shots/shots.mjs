@@ -106,6 +106,7 @@ export const SHOTS = [
     focus: '.incursion-moves',
   },
   { name: 'inc-queue', scenario: { incursionQueue: true }, hold: '/api/incursion', steps: (p) => toRouteTab(p, 'Incursiones'), focus: '.incursion-queue-count' },
+  { name: 'inc-tap', scenario: { incursion: 'tap' }, steps: (p) => toRouteTab(p, 'Incursiones', 1200), focus: '.incursion-tap-pad' },
   { name: 'inc-battle', scenario: { incursion: 'battle' }, steps: (p) => toRouteTab(p, 'Incursiones', 1500), focus: '.incursion-revives' },
   { name: 'inc-regroup', scenario: { incursion: 'regroup' }, steps: (p) => toRouteTab(p, 'Incursiones', 1500), focus: '.incursion-regroup' },
   { name: 'inc-summary', scenario: { incursion: 'finished' }, steps: (p) => toRouteTab(p, 'Incursiones', 1500), focus: '.incursion-summary' },

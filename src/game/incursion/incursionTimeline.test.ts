@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { battleRoom, member, testIncursion, weakFoe } from './incursion-test-utils'
+import { battleRoom, member, NO_TAPS, testIncursion, weakFoe } from './incursion-test-utils'
 import { simulateLeg } from './incursionLeg'
 import { eventsStarted, INCURSION_EVENT_MS, legDuration } from './incursionTimeline'
 import { INCURSION_REVIVES } from './revives'
 
 const MONEY = 10
 const inc = testIncursion([battleRoom([weakFoe()], MONEY), battleRoom([weakFoe()], MONEY)])
-const leg = simulateLeg(inc, { room: 0, members: [member('a')], revives: INCURSION_REVIVES }, 1)
+const leg = simulateLeg(inc, { room: 0, members: [member('a')], revives: INCURSION_REVIVES }, 1, NO_TAPS)
 
 describe('línea de tiempo de una incursión', () => {
   it('dura lo que suman sus eventos', () => {

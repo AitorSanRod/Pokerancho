@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { act, getState } from '../game/core/store'
 import { incursionProgress, IncursionPhase } from '../game/incursion/activeIncursion'
+import { IncursionOutcome } from '../game/incursion/incursionRun'
 import { applyGroupView, dropGroup, leaveQueue, playQueueLocally, queueRequest } from '../game/incursion/online/linkedIncursion'
 import { IncursionAction, type IncursionResponse, type QueueView } from '../game/incursion/online/protocol'
 import { DEFAULT_NICKNAME } from '../game/raid/online/protocol'
@@ -13,8 +14,13 @@ import { nickname, playerId } from './identity'
 
 /** Milisegundos reales entre consultas en la cola y en la sala de reorganizar */
 const QUICK_SYNC_MS = 3_000
-/** Milisegundos reales entre consultas mientras se juega un tramo (nadie decide nada) */
+/** Milisegundos reales entre consultas mientras se juega un tramo sin ventana de toques pendiente */
 const PLAY_SYNC_MS = 10_000
+/**
+ * Milisegundos reales entre consultas con una ventana de toques pendiente ya cerrada: hay que saber enseguida quién
+ * potenció su ataque para que el turno empiece a tiempo
+ */
+const TAP_RESULT_SYNC_MS = 800
 /** Cada cuánto se mira si toca alguna consulta */
 const LOOP_MS = 1_000
 
@@ -51,7 +57,10 @@ async function syncQueue() {
 
 function syncEvery(): number {
   const a = getState().incursion
-  return a && incursionProgress(a, Date.now()).phase === IncursionPhase.Regroup ? QUICK_SYNC_MS : PLAY_SYNC_MS
+  if (!a) return PLAY_SYNC_MS
+  const p = incursionProgress(a, Date.now())
+  if (p.phase === IncursionPhase.Regroup || p.phase === IncursionPhase.Tap) return QUICK_SYNC_MS
+  return p.record.outcome === IncursionOutcome.Waiting ? TAP_RESULT_SYNC_MS : PLAY_SYNC_MS
 }
 
 async function step() {
@@ -73,7 +82,13 @@ async function step() {
 }
 
 /** Manda una decisión del jugador en su grupo (movimiento, seguir, voto) y aplica la respuesta; sin conexión, no pasa nada */
-async function sendToGroup(extra: { action: typeof IncursionAction.Move; moveId: string } | { action: typeof IncursionAction.Ready } | { action: typeof IncursionAction.Vote; retreat: boolean }) {
+async function sendToGroup(
+  extra:
+    | { action: typeof IncursionAction.Move; moveId: string }
+    | { action: typeof IncursionAction.Ready }
+    | { action: typeof IncursionAction.Vote; retreat: boolean }
+    | { action: typeof IncursionAction.Tap; leg: number; turn: number },
+) {
   const groupId = getState().incursion?.online?.groupId
   if (!groupId) return
   try {
@@ -86,6 +101,8 @@ async function sendToGroup(extra: { action: typeof IncursionAction.Move; moveId:
 export const sendIncursionMove = (moveId: string) => sendToGroup({ action: IncursionAction.Move, moveId })
 export const sendIncursionReady = () => sendToGroup({ action: IncursionAction.Ready })
 export const sendIncursionVote = (retreat: boolean) => sendToGroup({ action: IncursionAction.Vote, retreat })
+/** Ha llegado a los toques en la ventana `turn` del tramo `leg` */
+export const sendIncursionTap = (leg: number, turn: number) => sendToGroup({ action: IncursionAction.Tap, leg, turn })
 
 /** Sale de la cola; si el grupo ya se había formado, entra en él */
 export async function leaveIncursionQueue() {

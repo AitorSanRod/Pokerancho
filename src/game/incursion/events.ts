@@ -28,6 +28,8 @@ export const EventKind = {
   Passives: 'passives',
   /** Sala superada: `reward` es lo que gana cada uno */
   Cleared: 'cleared',
+  /** Ventana de toques antes del turno del grupo (ver tapWindow.ts): `turn` es su número en el tramo */
+  TapWindow: 'tap',
 } as const
 export type EventKind = (typeof EventKind)[keyof typeof EventKind]
 
@@ -62,6 +64,10 @@ export interface IncursionEvent {
   moveId?: string
   /** Miss: por qué no hizo nada (falló, lo esquivó o el tipo lo anula) */
   miss?: MissReason
+  /** TapWindow: su número en el tramo */
+  turn?: number
+  /** Hit: el ataque iba potenciado por los toques */
+  potent?: boolean
   status?: StatusId
   room?: number
   fighters?: FighterView[]

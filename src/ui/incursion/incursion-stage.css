@@ -100,3 +100,45 @@
 .incursion-caption:empty {
   display: none;
 }
+/* Ventana de toques: toda la escena es el botón, con el contador y el tiempo que queda abajo */
+.incursion-tap-pad {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 0;
+  border-radius: var(--radius);
+  background: #10204066;
+  color: #fff;
+  text-shadow: 0 2px 0 #0008;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.incursion-tap-pad:active:not(.done) .incursion-tap-count {
+  scale: 1.12;
+}
+.incursion-tap-pad.done {
+  background: #3a8f2f66;
+}
+.incursion-tap-title {
+  font-size: 22px;
+  font-weight: 900;
+}
+.incursion-tap-count {
+  font-size: 44px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  transition: scale 0.05s;
+}
+.incursion-tap-time {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 6px;
+  background: var(--yellow);
+}

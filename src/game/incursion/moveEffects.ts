@@ -6,6 +6,7 @@ import { allies, enemies, hurt, restore, type Battlefield } from './battlefield'
 import { EventKind, on } from './events'
 import { damageSide, isUp, type GroupFighter } from './fighter'
 import { inflict } from './groupStatus'
+import { tapMult } from './tapWindow'
 import { debuffTarget, healTarget, inflictTarget, strikeTarget } from './targeting'
 
 // Qué hace cada movimiento en una incursión. `area`: el golpe de un jefe que da a todo el grupo (bossMechanics.ts).
@@ -23,9 +24,10 @@ function strike(bf: Battlefield, actor: GroupFighter, target: GroupFighter, mv: 
   }
   const { dealt, eff, crit } = damage(damageSide(actor), damageSide(target), mv, rng)
   if (eff === 0) return bf.log(on(target, { kind: EventKind.Miss, actor: actor.id, miss: 'immune', text: `No afecta a ${target.name}…` }))
-  const taken = Math.max(1, Math.floor(dealt * mult * (1 - (target.taunt?.guard ?? 0))))
+  const potent = tapMult(bf, actor.id) > 1
+  const taken = Math.max(1, Math.floor(dealt * mult * tapMult(bf, actor.id) * (1 - (target.taunt?.guard ?? 0))))
   const note = [crit ? '¡Crítico!' : '', eff > 1 ? '¡Es muy eficaz!' : eff < 1 ? 'No es muy eficaz…' : ''].filter(Boolean).join(' ')
-  hurt(bf, target, taken, { kind: EventKind.Hit, actor: actor.id, crit, eff, type: mv.type, text: note })
+  hurt(bf, target, taken, { kind: EventKind.Hit, actor: actor.id, crit, eff, potent, type: mv.type, text: note })
   if (actor.bonus.drain > 0) restore(bf, actor, taken * actor.bonus.drain)
   if (!isUp(target)) return
   for (const { status, chance } of actor.bonus.inflicts) if (rng() < chance) inflict(bf, target, status)

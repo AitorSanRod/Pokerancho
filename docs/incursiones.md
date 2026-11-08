@@ -149,6 +149,28 @@ Para que sea **exigente** (cada incursión elige cuáles usa):
 - **Fases**: a cierto % de PS el jefe cambia de ataque o llama a refuerzos.
 - **Tipos**: cada incursión tiene un tema de tipos; llevar solo un tipo no basta.
 
+## Toques antes de cada turno
+
+Antes de cada turno del grupo hay una **ventana de toques** de 5 s: toda la escena es un botón y, si el jugador llega a
+50 toques, su Pokémon hace un **10% más de daño** ese turno (`game/incursion/tapWindow.ts`). Solo hay ventana si queda
+en pie algún Pokémon de un jugador (los bots no tocan); quien no mira, sigue sin potenciar.
+
+Es la única decisión dentro de un tramo, así que la simulación **se para en cada ventana** de la que aún no se sabe el
+resultado y sigue cuando se sabe, igual en todos los móviles. La ventana es un evento más de la línea de tiempo (5 s de
+toques + 1,5 s para ver el resultado), así que todos saben exactamente cuándo empieza y acaba. Las órdenes de cada tramo
+guardan quién potenció su ataque en cada ventana (`LegOrders.taps`).
+
+- **Sin servidor**: al llegar a los toques se apunta enseguida; al pasar la hora, la ventana se cierra sin potenciar
+  (`incursionGame.ts › boostIncursionTap`, `advanceIncursion`).
+- **Con servidor**: al llegar a los toques el móvil avisa (`IncursionAction.Tap`); el servidor cierra la ventana 0,75 s
+  después de que acabe con los que avisaron a tiempo (`sharedIncursion.ts › TAP_CLOSE_DELAY_MS`) y los móviles
+  consultan enseguida para tenerlo antes de que empiece el turno. Si no llega a tiempo, se ve «Esperando a los toques del
+  grupo…».
+- **Con la app cerrada**: las ventanas pasadas se cierran todas de una vez, sin nadie (`tapSettle.ts › settleTaps`).
+
+Las partidas e incursiones guardadas de antes no tienen `taps`: se leen como «ninguna ventana cerrada aún», así que no
+hizo falta subir `SAVE_VERSION`.
+
 ## Salas (a mano)
 
 Cada incursión es una lista de salas en `data/incursions.ts`, como las paradas de una ruta:
@@ -255,6 +277,7 @@ uno de nivel 40 (sincronizado a 33) gana casi siempre. Cinco bots casi nunca gan
 | Turnos por sala | 80 como mucho (luego se pierde) | `groupBattle.ts › MAX_ROOM_TURNS` |
 | Confusión | se quita el 10% de sus PS | `groupStatus.ts › CONFUSION_SELF_HIT` |
 | Grupo y bots | 5; bots del mínimo a +4 | `party.ts › PARTY_SIZE, BOT_LEVEL_SPREAD` |
+| Toques | 5 s de ventana + 1,5 s de resultado; 50 toques dan +10% de daño ese turno; el servidor cierra a los 0,75 s | `tapWindow.ts › TAP_WINDOW_MS, TAP_SETTLE_MS, TAP_GOAL, TAP_BONUS`, `online/sharedIncursion.ts › TAP_CLOSE_DELAY_MS` |
 | Ritmo en pantalla | ms de cada evento | `incursionTimeline.ts › INCURSION_EVENT_MS` |
 | Pasivas | pesos 1/2/3/4, umbrales 3/6/10 | `data/incursionPassives.ts` |
 | Llaves | 10.000 / 30.000 / 50.000 ₽, máx. 10 | `data/incursions.ts › KEY_PRICE, MAX_KEYS` |

@@ -1,4 +1,5 @@
 import { EventKind, type IncursionEvent } from './events'
+import { TAP_SETTLE_MS, TAP_WINDOW_MS } from './tapWindow'
 import type { LegResult } from './incursionLeg'
 import { noEarnings, addEarnings, type Earned } from './incursionRewards'
 
@@ -21,9 +22,10 @@ export const INCURSION_EVENT_MS: Record<EventKind, number> = {
   [EventKind.Rage]: 1200,
   [EventKind.Passives]: 1000,
   [EventKind.Cleared]: 2000,
+  [EventKind.TapWindow]: TAP_WINDOW_MS + TAP_SETTLE_MS,
 }
 
-const eventMs = (e: IncursionEvent) => INCURSION_EVENT_MS[e.kind]
+export const eventMs = (e: IncursionEvent) => INCURSION_EVENT_MS[e.kind]
 
 export const legDuration = (leg: LegResult): number => leg.events.reduce((sum, e) => sum + eventMs(e), 0)
 
@@ -36,6 +38,9 @@ export function eventsStarted(leg: LegResult, ms: number): number {
   }
   return leg.events.length
 }
+
+/** Milisegundos desde que empieza el tramo hasta que empieza su evento `index` */
+export const eventStartMs = (leg: LegResult, index: number): number => leg.events.slice(0, index).reduce((sum, e) => sum + eventMs(e), 0)
 
 /** Lo ganado en las salas superadas del tramo antes de los `ms` (al retirarse se cobra solo eso) */
 export function earnedBefore(leg: LegResult, ms: number): Earned {

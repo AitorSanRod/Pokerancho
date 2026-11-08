@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { MoveKind } from '../../data/supportMoves'
 import { seqRng } from '../core/test-utils'
+import { EventKind } from './events'
 import { stat } from './fighter'
 import { ally, enemy, field, supportOf } from './incursion-test-utils'
 import { AREA_DAMAGE_MULT, performMove } from './moveEffects'
@@ -54,6 +55,22 @@ describe('movimientos de incursión', () => {
     performMove(bf, a, rng)
     expect(big.changes.length).toBe(1)
     expect(small.changes.length).toBe(0)
+  })
+
+  it('un ataque potenciado por los toques hace más daño y se anuncia', () => {
+    const strikeOn = (boosted: boolean) => {
+      const a = ally('a')
+      const foe = enemy('e', { hpMult: 50 })
+      const { bf, events } = field([a], [foe])
+      if (boosted) bf.boosted = [a.id]
+      performMove(bf, a, seqRng(0.5))
+      return events.find((e) => e.kind === EventKind.Hit)!
+    }
+    const plain = strikeOn(false)
+    const potent = strikeOn(true)
+    expect(potent.amount).toBeGreaterThan(plain.amount!)
+    expect(potent.potent).toBe(true)
+    expect(plain.potent).toBe(false)
   })
 
   it('un golpe en área da a todo el grupo con el daño rebajado', () => {

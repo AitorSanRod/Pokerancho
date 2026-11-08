@@ -13,9 +13,11 @@ import { keysOf, spendKey } from './keys'
 import { fillWithBots, freshMember } from './party'
 import { canLearn } from './repertoire'
 import { retreatPasses } from './retreatVote'
+import { settleTaps } from './tapSettle'
 
 // La incursión en la partida, sin servidor: el grupo se completa con bots al entrar y los tramos siguen solos con la
-// hora. Las salas de reorganizar duran REGROUP_MS o hasta que el jugador sigue.
+// hora. Las salas de reorganizar duran REGROUP_MS o hasta que el jugador sigue; cada ventana de toques se cierra al
+// pasar su hora, con el ataque potenciado si el jugador llegó a los toques.
 
 /** Por qué no puede entrar ese Pokémon con ese movimiento (null si puede) */
 export function incursionBlocker(s: GameState, id: IncursionId, uid: string, moveId: string): string | null {
@@ -46,7 +48,7 @@ export function startIncursion(s: GameState, id: IncursionId, uid: string, moveI
     incursionId: id,
     uid,
     members: fillWithBots(incursion(id), [player], rng),
-    orders: [{ seed: newSeed(rng), moves: {} }],
+    orders: [{ seed: newSeed(rng), moves: {}, taps: [] }],
     legStarts: [now],
     nextMove: null,
     retreat: null,
@@ -61,15 +63,27 @@ function nextLeg(a: ActiveIncursion, at: number) {
 }
 
 /**
- * Con el tiempo: al acabar el plazo de una sala de reorganizar, empieza el tramo siguiente (aunque la app estuviera
- * cerrada). Con otros jugadores lo decide el servidor
+ * Con el tiempo: se cierran las ventanas de toques ya pasadas y, al acabar el plazo de una sala de reorganizar, empieza
+ * el tramo siguiente (aunque la app estuviera cerrada). Con otros jugadores lo decide el servidor
  */
 export function advanceIncursion(s: GameState, now: number) {
   const a = s.incursion
   if (!a || a.online) return
-  for (let p = incursionProgress(a, now); p.phase === IncursionPhase.Regroup && p.regroupMsLeft === 0; p = incursionProgress(a, now)) {
+  for (;;) {
+    settleTaps(a, now, 0, [])
+    const p = incursionProgress(a, now)
+    if (p.phase !== IncursionPhase.Regroup || p.regroupMsLeft > 0) return
     nextLeg(a, regroupEnd(a, p))
   }
+}
+
+/** Sin servidor: el jugador ha llegado a los toques en la ventana abierta y su Pokémon pega más este turno */
+export function boostIncursionTap(s: GameState, now: number) {
+  const a = s.incursion
+  if (!a || a.online) return
+  const p = incursionProgress(a, now)
+  const taps = a.orders[p.leg].taps
+  if (p.phase === IncursionPhase.Tap && p.tap && taps.length === p.tap.turn) taps.push([a.uid])
 }
 
 /** En la sala de reorganizar: elige el movimiento para el tramo siguiente */

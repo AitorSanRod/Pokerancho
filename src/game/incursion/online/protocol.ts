@@ -25,6 +25,8 @@ export const IncursionAction = {
   Ready: 'ready',
   /** Votar retirarse o quitar el voto */
   Vote: 'vote',
+  /** Ha llegado a los toques en una ventana (ver tapWindow.ts) */
+  Tap: 'tap',
 } as const
 export type IncursionAction = (typeof IncursionAction)[keyof typeof IncursionAction]
 
@@ -59,7 +61,12 @@ export interface VoteRequest extends GroupRequestBase {
   action: typeof IncursionAction.Vote
   retreat: boolean
 }
-export type GroupRequest = SyncRequest | MoveRequest | ReadyRequest | VoteRequest
+export interface TapRequest extends GroupRequestBase {
+  action: typeof IncursionAction.Tap
+  leg: number
+  turn: number
+}
+export type GroupRequest = SyncRequest | MoveRequest | ReadyRequest | VoteRequest | TapRequest
 export type IncursionRequest = QueueRequest | LeaveRequest | GroupRequest
 
 /** En la cola: cuántos esperan esa incursión (con él) y desde cuándo espera él */

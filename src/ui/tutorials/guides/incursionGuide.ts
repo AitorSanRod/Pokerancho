@@ -3,6 +3,7 @@ import { REGROUP_MS } from '../../../game/incursion/activeIncursion'
 import { QUEUE_MAX_MS } from '../../../game/incursion/online/protocol'
 import { PARTY_SIZE } from '../../../game/incursion/party'
 import { INCURSION_REVIVES } from '../../../game/incursion/revives'
+import { TAP_BONUS, TAP_GOAL, TAP_WINDOW_MS } from '../../../game/incursion/tapWindow'
 import { ICON } from '../../shared/icons'
 import { shot, type Guide } from './guide'
 
@@ -43,6 +44,11 @@ export const INCURSION_GUIDE: Guide = {
       image: shot('inc-battle'),
       title: 'La incursión',
       text: `El combate va solo, por turnos. Arriba a la derecha, los ${INCURSION_REVIVES} revivires del grupo: quien cae vuelve al turno siguiente mientras queden. Sin ellos, se queda mirando. Puedes cerrar la app: al volver, sigue por donde va.`,
+    },
+    {
+      image: shot('inc-tap'),
+      title: 'Toca para pegar más',
+      text: `Antes de cada turno del grupo tienes ${seconds(TAP_WINDOW_MS)} para tocar la pantalla. Si llegas a ${TAP_GOAL} toques, tu Pokémon hace un ${Math.round(TAP_BONUS * 100)}% más de daño ese turno. Si no estás mirando, el turno sigue sin potenciar.`,
     },
     {
       image: shot('inc-regroup'),

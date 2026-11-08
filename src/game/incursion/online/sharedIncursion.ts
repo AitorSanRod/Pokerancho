@@ -5,6 +5,8 @@ import type { MemberState } from '../fighter'
 import { fillWithBots, PARTY_SIZE } from '../party'
 import { canLearn } from '../repertoire'
 import { retreatPasses } from '../retreatVote'
+import { settleTaps } from '../tapSettle'
+import { TAP_SETTLE_MS } from '../tapWindow'
 import { QUEUE_MAX_MS, type GroupView } from './protocol'
 
 // Un grupo de incursión tal y como lo guarda el servidor: la incursión (como en la partida) más quién es cada jugador,
@@ -27,8 +29,16 @@ export interface SharedIncursion extends IncursionPlan {
   ready: string[]
   /** Movimiento elegido en la sala de reorganizar en curso, por Pokémon */
   nextMoves: Record<string, string>
+  /** Pokémon de los jugadores que han llegado a los toques en la ventana abierta (ver tapWindow.ts) */
+  tapPending: string[]
   updatedAt: number
 }
+
+/**
+ * Milisegundos tras acabar una ventana de toques en los que aún se aceptan avisos (lo que tardan en llegar); luego se
+ * cierra. Menos que TAP_SETTLE_MS, para que los móviles se enteren antes de que empiece el turno
+ */
+export const TAP_CLOSE_DELAY_MS = Math.round(TAP_SETTLE_MS / 2)
 
 /** Uno en la cola */
 export interface Queued {
@@ -53,13 +63,14 @@ export function formGroup(id: string, incursionId: IncursionId, players: Queued[
     id,
     incursionId,
     members: fillWithBots(incursion(incursionId), players.map((p) => p.member), rng),
-    orders: [{ seed: Math.floor(rng() * 2 ** 31), moves: {} }],
+    orders: [{ seed: Math.floor(rng() * 2 ** 31), moves: {}, taps: [] }],
     legStarts: [now],
     retreat: null,
     seats: players.map((p) => ({ playerId: p.playerId, nickname: p.nickname, memberId: p.member.id })),
     votes: [],
     ready: [],
     nextMoves: {},
+    tapPending: [],
     updatedAt: now,
   }
 }
@@ -70,14 +81,30 @@ function nextLeg(g: SharedIncursion, at: number) {
   startNextLeg(g, at, g.nextMoves)
   g.nextMoves = {}
   g.ready = []
+  g.tapPending = []
 }
 
-/** Pone el grupo al día: cada sala de reorganizar cuyo plazo ha acabado da paso al tramo siguiente */
+/**
+ * Pone el grupo al día: cierra las ventanas de toques ya pasadas (la abierta, con quienes llegaron a tiempo) y cada sala
+ * de reorganizar cuyo plazo ha acabado da paso al tramo siguiente
+ */
 export function advanceShared(g: SharedIncursion, now: number) {
   g.updatedAt = now
-  for (let p = incursionProgress(g, now); p.phase === IncursionPhase.Regroup && p.regroupMsLeft === 0; p = incursionProgress(g, now)) {
+  for (;;) {
+    if (settleTaps(g, now, TAP_CLOSE_DELAY_MS, g.tapPending ?? [])) g.tapPending = []
+    const p = incursionProgress(g, now)
+    if (p.phase !== IncursionPhase.Regroup || p.regroupMsLeft > 0) return
     nextLeg(g, regroupEnd(g, p))
   }
+}
+
+/** El jugador ha llegado a los toques en la ventana `turn` del tramo `leg`: vale si es la abierta y llega a tiempo */
+export function tapShared(g: SharedIncursion, playerId: string, leg: number, turn: number, now: number) {
+  const memberId = seatOf(g, playerId)?.memberId
+  const waiting = incursionProgress(g, now)
+  const open = waiting.leg === leg && (g.orders[leg]?.taps?.length ?? 0) === turn
+  if (!memberId || !open || waiting.phase === IncursionPhase.Finished) return
+  g.tapPending = [...new Set([...(g.tapPending ?? []), memberId])]
 }
 
 const inRegroup = (g: SharedIncursion, now: number) => incursionProgress(g, now).phase === IncursionPhase.Regroup
