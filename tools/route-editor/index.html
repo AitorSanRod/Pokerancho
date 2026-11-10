@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editor de rutas</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./editor.css" />
+  </head>
+  <body>
+    <header class="top">
+      <h1>Editor de rutas</h1>
+      <select id="load"></select>
+      <button id="paste" type="button">Pegar ruta</button>
+      <button id="reset" type="button">Ruta nueva</button>
+      <p id="summary" class="summary"></p>
+    </header>
+    <main class="editor">
+      <div id="form" class="form"></div>
+      <aside class="output">
+        <section class="card">
+          <h2>Avisos</h2>
+          <ul id="issues" class="issues"></ul>
+        </section>
+        <section class="card">
+          <div class="out-head"><h2>Código de la ruta</h2><button id="copy" type="button">Copiar</button></div>
+          <p class="hint">Pégalo dentro de <code>routes: [ … ]</code> de <code>src/data/maps/kantoMaps.ts</code>, en lugar de la ruta antigua si la estás editando.</p>
+          <pre id="code"></pre>
+        </section>
+        <section class="card" hidden>
+          <div class="out-head"><h2>Añadir también</h2><button id="copy-extra" type="button">Copiar</button></div>
+          <pre id="extra"></pre>
+        </section>
+      </aside>
+    </main>
+    <dialog id="paste-dialog" class="card paste">
+      <h2>Pegar una ruta</h2>
+      <p class="hint">Pega el objeto entero de la ruta, desde su <code>{</code> hasta su <code>}</code>, como está en <code>kantoMaps.ts</code>. Se pierde lo que hay en el formulario.</p>
+      <textarea id="paste-text" rows="18" spellcheck="false" placeholder="{&#10;  id: RouteId.Ruta1,&#10;  name: 'Ruta 1',&#10;  …&#10;}"></textarea>
+      <p id="paste-error" class="paste-error"></p>
+      <div class="paste-actions">
+        <button id="paste-cancel" type="button">Cancelar</button>
+        <button id="paste-load" type="button" class="primary">Cargar</button>
+      </div>
+    </dialog>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

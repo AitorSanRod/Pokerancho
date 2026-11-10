@@ -45,5 +45,6 @@ export const BIOME_SCENERY: Record<Biome, string> = {
   [Biome.PewterCity]: city,
   [Biome.Forest]: forest,
   [Biome.Cave]: earthycave,
+  [Biome.MtMoon]: earthycave,
   [Biome.Sea]: beach,
 }

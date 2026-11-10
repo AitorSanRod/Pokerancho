@@ -1,7 +1,9 @@
+import type { FormItem } from '../../data/forms'
 import type { IncursionId } from '../../data/incursions'
 import { RouteId } from '../../data/maps'
 import type { Potion } from '../../data/potions'
 import type { RanchTypeId } from '../../data/ranchTypes'
+import { baseSpeciesOf } from '../../data/species'
 import type { StarItem } from '../../data/starItems'
 import type { Stone } from '../../data/stones'
 import type { BattleRecord } from '../battle/battle'
@@ -127,8 +129,10 @@ export interface GameState {
   ranchExtraSlots: Partial<Record<number, number>>
   /** Nombre que el jugador ha puesto a cada rancho, por su índice; sin entrada, «Rancho N» (ver ranchNames.ts) */
   ranchNames: Partial<Record<number, string>>
-  /** Piedras evolutivas compradas y aún sin gastar */
+  /** Objetos evolutivos (piedras y otros) comprados y aún sin gastar */
   stones: Partial<Record<Stone, number>>
+  /** Objetos de forma comprados (ver team/forms.ts): no se gastan, se usan siempre que se quiera */
+  formItems: FormItem[]
   /** Objetos estelares sin gastar (ver collection/starItems.ts) */
   starItems: Partial<Record<StarItem, number>>
   /** Tiradas seguidas del gacha sin que haya salido cada objeto estelar con garantía */
@@ -172,7 +176,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 39
+export const SAVE_VERSION = 40
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 
@@ -197,6 +201,7 @@ export function initialState(): GameState {
     ranchExtraSlots: {},
     ranchNames: {},
     stones: {},
+    formItems: [],
     starItems: {},
     gachaPity: {},
     incursionKeys: {},
@@ -221,6 +226,12 @@ export function initialState(): GameState {
 
 export function findMon(s: GameState, uid: string): OwnedMon | undefined {
   return s.owned.find((m) => m.uid === uid)
+}
+
+/** El Pokémon del jugador de esa especie, esté en la forma que esté (Rotom o Rotom Calor cuentan como Rotom) */
+export function ownedOfSpecies(s: GameState, speciesId: number): OwnedMon | undefined {
+  const base = baseSpeciesOf(speciesId)
+  return s.owned.find((m) => baseSpeciesOf(m.speciesId) === base)
 }
 
 export function activeMon(s: GameState): OwnedMon | null {

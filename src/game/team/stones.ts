@@ -1,15 +1,16 @@
-import type { Stone } from '../../data/stones'
+import { STONES, type Stone } from '../../data/stones'
 import type { GameState } from '../core/state'
 
-/** ₽ que cuesta cada piedra evolutiva en la tienda (sin límite de compra) */
-export const STONE_PRICE = 2000
+/** ₽ que cuesta el objeto evolutivo en la tienda (sin límite de compra) */
+export const stonePrice = (stone: Stone): number => STONES[stone].price
 
 export const stonesOf = (s: GameState, stone: Stone): number => s.stones[stone] ?? 0
 
 /** Compra una piedra; false si no hay ₽ */
 export function buyStone(s: GameState, stone: Stone): boolean {
-  if (s.money < STONE_PRICE) return false
-  s.money -= STONE_PRICE
+  const price = stonePrice(stone)
+  if (s.money < price) return false
+  s.money -= price
   s.stones[stone] = stonesOf(s, stone) + 1
   return true
 }

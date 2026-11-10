@@ -1,4 +1,4 @@
-// Cueva (bioma Cave, Monte Moon): penumbra violeta, techo con estalactitas, paredes de roca a dos distancias,
+// Cueva (bioma Cave: la incursión Cueva Helada y las raids de tipos de cueva): penumbra violeta, techo con estalactitas, paredes de roca a dos distancias,
 // peñascos con cristales que brillan junto al camino y suelo de roca con charcos.
 
 import type { SceneDef, SceneLayer } from '../../engine/types'

@@ -1,7 +1,7 @@
 import { RARITY_INFO, rarityOf, species } from '../../data/species'
 import type { StarItem } from '../../data/starItems'
 import { boostedMoney } from '../battle/rewards'
-import { TutorialStep, type GameState } from '../core/state'
+import { ownedOfSpecies, TutorialStep, type GameState } from '../core/state'
 import { createMon, NEW_MON_LEVEL } from '../team/mons'
 import { ranchWithRoom } from '../team/ranches'
 import { MAX_STARS } from '../team/stats'
@@ -36,7 +36,7 @@ export function addPieces(s: GameState, speciesId: number, count: number) {
 }
 
 export function combineKind(s: GameState, speciesId: number): CombineKind {
-  const owned = s.owned.find((m) => m.speciesId === speciesId)
+  const owned = ownedOfSpecies(s, speciesId)
   if (!owned) return CombineKind.Unlock
   return owned.stars < MAX_STARS ? CombineKind.Star : CombineKind.Money
 }
@@ -55,7 +55,7 @@ export function combinePrice(s: GameState, speciesId: number): number {
   const kind = combineKind(s, speciesId)
   if (kind === CombineKind.Money || s.tutorial === TutorialStep.Combine) return 0
   if (kind === CombineKind.Unlock) return RARITY_INFO[rarityOf(species(speciesId))].createPrice
-  return STAR_PRICES[s.owned.find((m) => m.speciesId === speciesId)!.stars]
+  return STAR_PRICES[ownedOfSpecies(s, speciesId)!.stars]
 }
 
 /** Por qué no se puede combinar ahora (null si se puede): hay que haberla visto en una ruta o expedición */
@@ -99,7 +99,7 @@ export function combine(s: GameState, speciesId: number): CombineResult | null {
     return { kind, speciesId, level: mon.level }
   }
   if (kind === CombineKind.Star) {
-    const mon = s.owned.find((m) => m.speciesId === speciesId)!
+    const mon = ownedOfSpecies(s, speciesId)!
     mon.stars++
     return { kind, speciesId, stars: mon.stars }
   }

@@ -25,8 +25,8 @@ export const EVOLVE_GUIDE: Guide = {
     },
     {
       image: shot('evo-stones'),
-      title: 'Piedras evolutivas',
-      text: 'Algunos Pokémon evolucionan con una piedra, a cualquier nivel. Se compran en Tienda › Piedras evolutivas.',
+      title: 'Objetos evolutivos',
+      text: 'Algunos Pokémon evolucionan con una piedra u otro objeto, a cualquier nivel. Se compran en Tienda › Objetos evolutivos.',
     },
     {
       image: shot('evo-bag'),

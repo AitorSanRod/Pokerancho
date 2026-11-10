@@ -1,3 +1,4 @@
+import { baseSpeciesOf } from '../../data/species'
 import { isFavorite } from '../collection/dex'
 import { piecesOf } from '../collection/pieces'
 import { starItemsOf } from '../collection/starItems'
@@ -24,7 +25,8 @@ export function givableMons(s: GameState): OwnedMon[] {
   return s.owned.filter((m) => m.uid !== s.activeUid && atHome(m.uid))
 }
 
-export const tradedMon = (m: OwnedMon): TradedMon => ({ speciesId: m.speciesId, level: m.level, exp: m.exp, stars: m.stars })
+/** El Pokémon tal como sale en un intercambio: en la forma normal de su especie (los objetos de forma no se dan) */
+export const tradedMon = (m: OwnedMon): TradedMon => ({ speciesId: baseSpeciesOf(m.speciesId), level: m.level, exp: m.exp, stars: m.stars })
 
 /** Quita el Pokémon de la partida si se puede dar y devuelve cómo viaja */
 export function takeMon(s: GameState, uid: string): TradedMon | null {
@@ -71,7 +73,7 @@ function countHeld(s: GameState, ask: Exclude<TradeAsk, { kind: typeof GoodKind.
 export function payBlocker(s: GameState, ask: TradeAsk, uid: string | null): string | null {
   if (ask.kind === GoodKind.Mon) {
     const mon = uid ? findMon(s, uid) : undefined
-    if (!mon || !ask.speciesIds.includes(mon.speciesId)) return 'Elige uno de los Pokémon que se piden.'
+    if (!mon || !ask.speciesIds.includes(baseSpeciesOf(mon.speciesId))) return 'Elige uno de los Pokémon que se piden.'
     return giveMonBlocker(s, mon.uid)
   }
   return countHeld(s, ask) >= ask.count ? null : 'No tienes suficiente.'
@@ -79,7 +81,7 @@ export function payBlocker(s: GameState, ask: TradeAsk, uid: string | null): str
 
 /** Los Pokémon de las especies pedidas que hay en el rancho o la Caja (también los favoritos, para enseñarlos apagados) */
 export const payOptions = (s: GameState, ask: TradeAsk): OwnedMon[] =>
-  ask.kind === GoodKind.Mon ? givableMons(s).filter((m) => ask.speciesIds.includes(m.speciesId)) : []
+  ask.kind === GoodKind.Mon ? givableMons(s).filter((m) => ask.speciesIds.includes(baseSpeciesOf(m.speciesId))) : []
 
 /** Si se puede pagar lo pedido con algo de lo que hay */
 export const canPay = (s: GameState, ask: TradeAsk): boolean =>

@@ -13,8 +13,9 @@ import { battleDuration } from './battleTimeline'
 /**
  * Multiplicador de stats de los salvajes. Por debajo de 1 porque el jugador encadena combates y solo se cura en las
  * paradas de poción: se ajustó simulando la Ruta 1 con sus dos pociones y los tres iniciales (ver docs/diseno.md).
+ * Una parada puede poner el suyo con `statMult`.
  */
-const WILD_STAT_MULT = 0.7
+export const WILD_STAT_MULT = 0.7
 /** Multiplicador de los pokécuartos por derrotar a un jefe (respecto a un salvaje de su nivel) */
 export const BOSS_MONEY_MULT = 3
 /** Multiplicador de la EXP por derrotar a un jefe (respecto a un salvaje de su nivel) */
@@ -42,7 +43,8 @@ export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng) 
   const mon = activeMon(s)!
   const isBoss = n.kind === NodeKind.Boss
   const { speciesId: enemyId, level, passives } = rivalOf(r, n, rng)
-  const enemy = makeFighter('enemy', enemyId, level, { statMult: isBoss ? 1 : WILD_STAT_MULT, passives })
+  const statMult = n.statMult ?? (isBoss ? 1 : WILD_STAT_MULT)
+  const enemy = makeFighter('enemy', enemyId, level, { statMult, passives })
   const player = makeFighter('player', mon.speciesId, mon.level, {
     hp: Math.floor(mon.hp),
     stars: mon.stars,

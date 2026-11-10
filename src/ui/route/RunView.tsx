@@ -1,16 +1,13 @@
 import { useState } from 'react'
 import { legSteps, node, route } from '../../data/maps'
-import { species } from '../../data/species'
 import type { GameState, OwnedMon, Run } from '../../game/core/state'
 import { act } from '../../game/core/store'
-import { isSearching, playerMembers } from '../../game/raid/raidEngine'
-import type { Raid } from '../../game/raid/raidRoom'
+import { isSearching } from '../../game/raid/raidEngine'
 import { isEnding } from '../../game/raid/raidEnding'
 import { currentRouteRaid } from '../../game/raid/routeRaid'
 import { endRun, tapRun } from '../../game/run/run'
 import { landmarkInView } from '../../game/run/runLandmark'
-import { maxHp, stepsPerMinute } from '../../game/team/stats'
-import { Bar } from '../shared/common'
+import { stepsPerMinute } from '../../game/team/stats'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { formatMinutes } from '../shared/format'
 import { earningsRewards, levelUpReward, raidBossReward, repeatNote } from '../shared/rewardItems'
@@ -20,16 +17,11 @@ import { RouteBattle } from './RouteBattle'
 import { RaidBattle } from '../raid/RaidBattleScene'
 import { RaidHudLine, RaidSearching, RetreatButton } from './RouteRaidHud'
 import { HealStop } from './HealStop'
+import { StopTrack } from './StopTrack'
 import { WalkScene } from './WalkScene'
 import './run.css'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
-
-/** PS del Pokémon de la ruta en la sala del jefe comunitario (allí se llevan como fracción de los máximos) */
-function raidHp(raid: Raid, mon: OwnedMon): number {
-  const member = playerMembers(raid).find((m) => m.id === mon.uid)
-  return Math.round(maxHp(mon) * (member?.hpFraction ?? 0))
-}
 
 /**
  * La ruta avanza sola: el Pokémon camina, se para a combatir (o a curarse) en cada parada y sigue hasta el final. En una
@@ -44,8 +36,6 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
   const frame = battle && battleFrame(battle, run.battleMsLeft)
   const walking = run.phase === 'walking' && !battle && !run.heal
   const lastStop = run.path.length - 1
-  // Durante el combate se ven los PS del momento, no los finales que el motor ya ha calculado
-  const hp = routeRaid ? raidHp(routeRaid, mon) : frame ? frame.event.playerHp : Math.floor(mon.hp)
   const playerClass = battle && frame ? fighterClass(battle, frame, 'player') : ''
   const defeated = run.phase === 'fainted' || playerClass === 'fainted'
   const ended = run.phase === 'complete' || run.phase === 'fainted'
@@ -78,15 +68,7 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
           {run.phase === 'walking' && <AbandonButton />}
           {routeRaid && !isEnding(routeRaid) && <RetreatButton />}
         </div>
-        <div className="row between small">
-          <span>
-            {species(mon.speciesId).name} Nv. {mon.level}
-          </span>
-          <span>
-            PS {hp}/{maxHp(mon)}
-          </span>
-        </div>
-        <Bar value={hp} max={maxHp(mon)} kind="hp" />
+        <StopTrack run={run} />
         {/* En el combate de la última parada la ruta sigue 'walking' hasta que acaba, pero ya no hay tramo siguiente */}
         {run.phase === 'walking' && run.stop < lastStop && <LegProgress game={game} run={run} spm={spm} />}
         {routeRaid && <RaidHudLine game={game} raid={routeRaid} />}
@@ -106,15 +88,12 @@ function LegProgress({ game, run, spm }: { game: GameState; run: Run; spm: numbe
   const needed = legSteps(r, run.path, run.stop + 1)
   const remainingMin = (needed - run.steps) / (spm * game.timeScale)
   return (
-    <>
-      <div className="row between small">
-        <span>
-          Hacia <strong>{node(r, run.path[run.stop + 1]).name}</strong>
-        </span>
-        <span>~{formatMinutes(remainingMin)}</span>
-      </div>
-      <Bar value={run.steps} max={needed} kind="steps" />
-    </>
+    <div className="row between small">
+      <span>
+        Hacia <strong>{node(r, run.path[run.stop + 1]).name}</strong>
+      </span>
+      <span>~{formatMinutes(remainingMin)}</span>
+    </div>
   )
 }
 

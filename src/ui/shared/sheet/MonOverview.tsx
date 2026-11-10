@@ -29,7 +29,8 @@ function statLine(mon: OwnedMon, level: number): StatLine {
  * las stats dicen cuánto subirían. Junto al ataque, la «i» abre el resumen de todos sus ataques (MovesInfo).
  */
 export function MonOverview({ game, speciesId, mon, previewLevel = null }: { game: GameState; speciesId: number; mon?: OwnedMon; previewLevel?: number | null }) {
-  const sp = species(speciesId)
+  // Con una forma (Rotom Calor), sus tipos y su ataque; lo de la Pokédex, de su especie
+  const sp = species(mon?.speciesId ?? speciesId)
   const rarity = RARITY_INFO[rarityOf(sp)]
   const seen = isSeen(game, speciesId)
   const place = mon && monPlace(game, mon.uid)
@@ -56,13 +57,13 @@ export function MonOverview({ game, speciesId, mon, previewLevel = null }: { gam
       {!mon && isCaughtByLine(game, speciesId) && <p className="notice small center">Capturado como línea evolutiva</p>}
       {seen && (
         <div className="move-with-info">
-          <MoveChip id={signatureMove(speciesId).id} />
+          <MoveChip id={signatureMove(sp.id).id} />
           <button className="move-info-btn" onClick={() => setMovesOpen(true)} aria-label="Todos sus ataques">
             i
           </button>
         </div>
       )}
-      {movesOpen && <MovesInfo speciesId={speciesId} level={mon?.level ?? null} onClose={() => setMovesOpen(false)} />}
+      {movesOpen && <MovesInfo speciesId={sp.id} level={mon?.level ?? null} onClose={() => setMovesOpen(false)} />}
     </MonSection>
   )
 }

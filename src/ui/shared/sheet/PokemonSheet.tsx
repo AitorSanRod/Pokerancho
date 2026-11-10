@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { baseSpeciesOf } from '../../../data/species'
 import { isSeen, knownName } from '../../../game/collection/dex'
-import type { GameState } from '../../../game/core/state'
+import { ownedOfSpecies, type GameState } from '../../../game/core/state'
 import type { EvolveResult } from '../../../game/team/evolution'
 import { trainPlan } from '../../../game/team/ranch'
 import { CareSection } from './CareSection'
@@ -8,6 +9,7 @@ import { CompanionButton } from './CompanionButton'
 import { EvolvePanel } from './EvolvePanel'
 import { EvolveResultAnimation } from './EvolveResultAnimation'
 import { FavoriteButton } from './FavoriteButton'
+import { FormPanel } from './FormPanel'
 import { HealButton } from './HealButton'
 import { MonHero } from './MonHero'
 import { MonOverview } from './MonOverview'
@@ -19,13 +21,15 @@ import { TicketsSection } from './TicketsSection'
 
 /**
  * Ficha de un Pokémon a pantalla completa: la misma desde el rancho y desde la Pokédex. Si lo tienes, todas sus
- * secciones; si no, lo que se sabe de la especie y sus tickets. Al evolucionar se cierra tras la animación.
+ * secciones; si no, lo que se sabe de la especie y sus tickets. Al evolucionar se cierra tras la animación. Con una forma
+ * (Rotom Calor) es la ficha de su especie: Pokédex, favorito y tickets son de Rotom; el Pokémon se ve con su forma.
  */
-export function PokemonSheet({ game, speciesId, onClose }: { game: GameState; speciesId: number; onClose: () => void }) {
+export function PokemonSheet({ game, speciesId: shownId, onClose }: { game: GameState; speciesId: number; onClose: () => void }) {
+  const speciesId = baseSpeciesOf(shownId)
   // Sesiones de entrenamiento elegidas sin aceptar: se ven en el arco de EXP antes de pagarlas
   const [sessions, setSessions] = useState(0)
   const [evolution, setEvolution] = useState<EvolveResult | null>(null)
-  const mon = game.owned.find((m) => m.speciesId === speciesId)
+  const mon = ownedOfSpecies(game, speciesId)
   const plan = mon && sessions > 0 ? trainPlan(mon, sessions) : null
 
   if (evolution) return <EvolveResultAnimation result={evolution} onClose={onClose} />
@@ -47,6 +51,7 @@ export function PokemonSheet({ game, speciesId, onClose }: { game: GameState; sp
       {mon && <CareSection game={game} mon={mon} sessions={sessions} onSessionsChange={setSessions} />}
       <TicketsSection game={game} speciesId={speciesId} />
       {mon && <EvolvePanel game={game} mon={mon} onEvolved={setEvolution} />}
+      {mon && <FormPanel game={game} mon={mon} />}
       {mon && <MovePanel game={game} mon={mon} />}
     </MonSheet>
   )

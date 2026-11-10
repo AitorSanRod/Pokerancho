@@ -8,9 +8,10 @@ const atLevel = (into: number, level: number): Evolution => ({ into, level })
 const withStone = (into: number, stone: Stone): Evolution => ({ into, stone })
 
 /**
- * Evoluciones de la 1ª generación: especie → sus evoluciones. Solo las que llevan a otra de las 151 (sin Crobat,
- * Steelix, Scizor…). Niveles de los juegos; las de intercambio (Alakazam, Machamp, Golem, Gengar) llevan uno propio.
- * Eevee es la única con varias opciones; el jugador elige.
+ * Evoluciones: especie → sus evoluciones. Solo las que llevan a una especie del juego (sin Crobat, Steelix, Scizor…).
+ * Niveles de los juegos, sin sus condiciones extra (Pangoro no pide un siniestro en el equipo); las de intercambio
+ * (Alakazam, Machamp, Golem, Gengar) llevan uno propio, y Milotic, la Escama Bella. Con varias opciones (Eevee,
+ * Charcadet, Kirlia), el jugador elige.
  */
 const EVOLUTIONS: Record<number, Evolution[]> = {
   [POKEMON.Bulbasaur]: [atLevel(POKEMON.Ivysaur, 16)],
@@ -83,6 +84,22 @@ const EVOLUTIONS: Record<number, Evolution[]> = {
   [POKEMON.Kabuto]: [atLevel(POKEMON.Kabutops, 40)],
   [POKEMON.Dratini]: [atLevel(POKEMON.Dragonair, 30)],
   [POKEMON.Dragonair]: [atLevel(POKEMON.Dragonite, 55)],
+  [POKEMON.Ralts]: [atLevel(POKEMON.Kirlia, 20)],
+  [POKEMON.Kirlia]: [atLevel(POKEMON.Gardevoir, 30), withStone(POKEMON.Gallade, Stone.Dawn)],
+  [POKEMON.Shroomish]: [atLevel(POKEMON.Breloom, 23)],
+  [POKEMON.Feebas]: [withStone(POKEMON.Milotic, Stone.PrismScale)],
+  [POKEMON.Shinx]: [atLevel(POKEMON.Luxio, 15)],
+  [POKEMON.Luxio]: [atLevel(POKEMON.Luxray, 30)],
+  [POKEMON.Drilbur]: [atLevel(POKEMON.Excadrill, 31)],
+  [POKEMON.Cottonee]: [withStone(POKEMON.Whimsicott, Stone.Sun)],
+  [POKEMON.Vanillite]: [atLevel(POKEMON.Vanillish, 35)],
+  [POKEMON.Vanillish]: [atLevel(POKEMON.Vanilluxe, 47)],
+  [POKEMON.Tynamo]: [atLevel(POKEMON.Eelektrik, 39)],
+  [POKEMON.Eelektrik]: [withStone(POKEMON.Eelektross, Stone.Thunder)],
+  [POKEMON.Larvesta]: [atLevel(POKEMON.Volcarona, 59)],
+  [POKEMON.Pancham]: [atLevel(POKEMON.Pangoro, 32)],
+  [POKEMON.Noibat]: [atLevel(POKEMON.Noivern, 48)],
+  [POKEMON.Charcadet]: [withStone(POKEMON.Armarouge, Stone.AuspiciousArmor), withStone(POKEMON.Ceruledge, Stone.MaliciousArmor)],
 }
 
 /** Evoluciones de la especie (vacío si no evoluciona) */

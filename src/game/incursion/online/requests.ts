@@ -1,5 +1,5 @@
 import { INCURSIONS, type IncursionId } from '../../../data/incursions'
-import { SPECIES } from '../../../data/species'
+import { isKnownSpecies } from '../../../data/species'
 import { MAX_STARS } from '../../team/stats'
 import { cleanNickname } from '../../raid/online/requests'
 import { canEnter } from '../entry'
@@ -21,7 +21,6 @@ const MAX_TURNS = 5000
 
 type Json = Record<string, unknown>
 
-const SPECIES_IDS = new Set(SPECIES.map((sp) => sp.id))
 const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isInt = (v: unknown, min: number, max: number): v is number => Number.isInteger(v) && (v as number) >= min && (v as number) <= max
 const matches = (v: unknown, re: RegExp): v is string => typeof v === 'string' && re.test(v)
@@ -29,7 +28,7 @@ const isIncursion = (v: unknown): v is IncursionId => INCURSIONS.some((i) => i.i
 
 /** El Pokémon con el que se entra: que exista, tenga el nivel de la incursión, conozca el movimiento y no esté debilitado */
 function parseMember(incursionId: IncursionId, v: unknown): MemberState | null {
-  if (!isObject(v) || !matches(v.id, MON_UID) || !SPECIES_IDS.has(v.speciesId as number) || !matches(v.moveId, MOVE_ID)) return null
+  if (!isObject(v) || !matches(v.id, MON_UID) || !isKnownSpecies(v.speciesId) || !matches(v.moveId, MOVE_ID)) return null
   const inc = INCURSIONS.find((i) => i.id === incursionId)!
   if (!isInt(v.level, 1, inc.maxLevel) || !canEnter(inc, v.level) || !isInt(v.stars, 0, MAX_STARS)) return null
   if (typeof v.hpFraction !== 'number' || !(v.hpFraction > 0 && v.hpFraction <= 1)) return null

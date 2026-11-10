@@ -17,7 +17,7 @@ export const NodeKind = { Start: 'start', Wild: 'wild', Boss: 'boss', Raid: 'rai
 export type NodeKind = (typeof NodeKind)[keyof typeof NodeKind]
 
 /** Fondo de la escena de caminar (ver src/ui/route/pixelScene/). PalletTown es solo de Pueblo Paleta */
-export const Biome = { Meadow: 'meadow', PalletTown: 'pallet-town', PewterCity: 'pewter-city', Forest: 'forest', Cave: 'cave', Sea: 'sea' } as const
+export const Biome = { Meadow: 'meadow', PalletTown: 'pallet-town', PewterCity: 'pewter-city', Forest: 'forest', Cave: 'cave', MtMoon: 'mt-moon', Sea: 'sea' } as const
 export type Biome = (typeof Biome)[keyof typeof Biome]
 
 /** Rutas por su id. El valor se guarda en la partida: no cambiarlo sin subir SAVE_VERSION */
@@ -30,6 +30,7 @@ export const RouteId = {
   CiudadPlateada2: 'ciudad-plateada2',
   CiudadPlateada3: 'ciudad-plateada3',
   Ruta3: 'ruta-3',
+  Ruta4: 'ruta-4',
   MonteMoon: 'monte-moon',
   RutaMarina: 'ruta-marina',
 } as const
@@ -67,7 +68,13 @@ export interface RouteNode {
   name: string
   kind: NodeKind
   next: RouteEdge[]
+  /** Niveles que se suman a los salvajes de esta parada (no afecta a los jefes, que llevan su propio nivel) */
   levelBonus?: number
+  /**
+   * Multiplicador de stats del rival de esta parada (1 = stats completas). Sin él, los salvajes usan el de por defecto
+   * (`runBattle.ts › WILD_STAT_MULT`) y los jefes de ruta, 1. No afecta a los jefes comunitarios (`NodeKind.Raid`)
+   */
+  statMult?: number
   /** Si se define, sustituye a los encuentros de la ruta */
   encounters?: Encounter[]
   /** Obligatorio en las paradas de jefe y de jefe comunitario: siempre sale este Pokémon a este nivel */

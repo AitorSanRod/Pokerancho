@@ -1,7 +1,7 @@
 // Copia del equipo (los Pokémon y sus expediciones en curso), aparte de la partida: es la red de seguridad si la
 // partida guardada no se puede leer. Normalmente una partida de otra versión se migra entera (saveMigration.ts).
 import { route } from '../../data/maps'
-import { SPECIES } from '../../data/species'
+import { isKnownSpecies } from '../../data/species'
 import { markCaught } from '../collection/dex'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
 import { createMon } from '../team/mons'
@@ -66,7 +66,6 @@ export function backupTeam(s: GameState): TeamBackup {
 }
 
 const isInt = (v: unknown, min: number, max: number): v is number => Number.isInteger(v) && (v as number) >= min && (v as number) <= max
-const SPECIES_IDS = new Set(SPECIES.map((sp) => sp.id))
 
 const knownRoute = (id: unknown) => {
   try {
@@ -115,7 +114,7 @@ export function parseTeamBackup(raw: unknown): TeamBackup | null {
     (m): m is BackedUpMon =>
       typeof m === 'object' &&
       m !== null &&
-      SPECIES_IDS.has(m.speciesId) &&
+      isKnownSpecies(m.speciesId) &&
       isInt(m.level, 1, MAX_LEVEL) &&
       isInt(m.exp, 0, Number.MAX_SAFE_INTEGER) &&
       isInt(m.stars, 0, MAX_STARS) &&

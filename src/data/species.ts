@@ -14,6 +14,8 @@ interface Species {
   name: string
   types: PokeType[]
   base: BaseStats
+  /** Solo en las formas (Rotom Calor…): la especie de la que son forma (ver data/forms.ts) */
+  baseId?: number
 }
 
 export const Rarity = { Common: 'common', Rare: 'rare', Epic: 'epic', Legendary: 'legendary' } as const
@@ -50,8 +52,19 @@ function simplifyStats(b: RawSpecies['base']): BaseStats {
   return { hp: b.hp, atk: Math.max(b.atk, b.spa), def: Math.round((b.def + b.spd) / 2), spe: b.spe }
 }
 
-export const SPECIES: Species[] = (raw as RawSpecies[]).map((s) => ({ ...s, base: simplifyStats(s.base) }))
-const BY_ID = new Map(SPECIES.map((s) => [s.id, s]))
+const ALL_SPECIES: Species[] = (raw as RawSpecies[]).map((s) => ({ ...s, base: simplifyStats(s.base) }))
+const BY_ID = new Map(ALL_SPECIES.map((s) => [s.id, s]))
+
+/** Las especies que se coleccionan (gacha, tickets, Pokédex); sin las formas, que solo se consiguen cambiando de forma */
+export const SPECIES: Species[] = ALL_SPECIES.filter((s) => s.baseId === undefined)
+/** Las formas (Rotom Calor…): un Pokémon del jugador puede ser una de ellas */
+export const FORM_SPECIES: Species[] = ALL_SPECIES.filter((s) => s.baseId !== undefined)
+
+/** Especie o forma que existe: lo que puede llevar un Pokémon del jugador */
+export const isKnownSpecies = (id: unknown): id is number => BY_ID.has(id as number)
+
+/** La especie de la que es forma (Rotom Calor → Rotom); la misma si no es una forma */
+export const baseSpeciesOf = (id: number): number => BY_ID.get(id)?.baseId ?? id
 
 export function species(id: number): Species {
   const s = BY_ID.get(id)
@@ -64,8 +77,9 @@ function baseStatTotal(s: Species): number {
   return b.hp + b.atk + b.def + b.spe
 }
 
-/** Umbrales sobre el total de las 4 stats base (Mewtwo, el máximo, suma 480) */
+/** Umbrales sobre el total de las 4 stats base (Mewtwo, el máximo, suma 480); una forma tiene la de su especie */
 export function rarityOf(s: Species): Rarity {
+  if (s.baseId !== undefined) return rarityOf(species(s.baseId))
   const bst = baseStatTotal(s)
   if (bst >= 392) return Rarity.Legendary
   if (bst >= 335) return Rarity.Epic

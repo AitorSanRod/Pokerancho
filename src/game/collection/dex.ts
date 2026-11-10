@@ -1,6 +1,6 @@
 import { evolutionsOf, preEvolutionsOf } from '../../data/evolutions'
-import { species } from '../../data/species'
-import type { GameState } from '../core/state'
+import { baseSpeciesOf, species } from '../../data/species'
+import { ownedOfSpecies, type GameState } from '../core/state'
 
 /** Nombre que se muestra de una especie que aún no se ha visto */
 const UNKNOWN_NAME = '???'
@@ -34,11 +34,12 @@ export function markEvolutionLines(s: GameState) {
 
 /** Capturada solo por tener una evolución suya: no hay ninguna en el equipo pero sí una especie a la que evoluciona */
 export function isCaughtByLine(s: GameState, speciesId: number): boolean {
-  if (!isCaught(s, speciesId) || s.owned.some((m) => m.speciesId === speciesId)) return false
+  if (!isCaught(s, speciesId) || ownedOfSpecies(s, speciesId)) return false
   return evolutionsOf(speciesId).some((e) => isCaught(s, e.into))
 }
 
-export const isFavorite = (s: GameState, speciesId: number): boolean => s.favorites.includes(speciesId)
+/** Favorita la especie (una forma cuenta como su especie) */
+export const isFavorite = (s: GameState, speciesId: number): boolean => s.favorites.includes(baseSpeciesOf(speciesId))
 
 /** Marca o desmarca una especie vista como favorita */
 export function toggleFavorite(s: GameState, speciesId: number) {

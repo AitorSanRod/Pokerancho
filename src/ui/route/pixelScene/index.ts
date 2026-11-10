@@ -5,6 +5,7 @@ import type { SceneDef } from './engine/types'
 import { caveScene } from './scenes/cave'
 import { forestScene } from './scenes/forest'
 import { meadowScene } from './scenes/meadow'
+import { mtMoonScene } from './scenes/mtMoon'
 import { palletTownScene } from './scenes/palletTown'
 import { pewterCityScene } from './scenes/pewterCity'
 import { seaScene } from './scenes/sea'
@@ -22,6 +23,7 @@ const BUILDERS: Record<Biome, (seed: number) => SceneDef> = {
   [Biome.PewterCity]: pewterCityScene,
   [Biome.Forest]: forestScene,
   [Biome.Cave]: caveScene,
+  [Biome.MtMoon]: mtMoonScene,
   [Biome.Sea]: seaScene,
 }
 const cache = new Map<Biome, SceneDef>()

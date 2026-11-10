@@ -1,0 +1,42 @@
+/* Mapa de paradas de la ruta en curso (StopTrack): círculos unidos por tramos que se llenan al avanzar */
+.stop-track {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  margin: 2px 0;
+  padding: 0;
+  list-style: none;
+}
+/* Tramo entre dos paradas: `--fill` (0–1) es lo recorrido, en color */
+.stop-link {
+  flex: 1 1 0;
+  min-width: 4px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--accent) calc(var(--fill, 0) * 100%), var(--line) 0);
+}
+.stop-dot {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+.stop-dot.passed,
+.stop-dot.current {
+  border-color: var(--accent);
+}
+.stop-dot.passed .item-icon {
+  opacity: 0.6;
+}
+.stop-dot.current {
+  width: 32px;
+  height: 32px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent);
+}

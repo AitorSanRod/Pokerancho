@@ -101,3 +101,56 @@ export function rockMass(pix: Pixmap, base: number, waves: Waves, colors: readon
     }
   }
 }
+
+/** Dirección de la luz (arriba a la izquierda), normalizada */
+const LIGHT_DIR = { x: -0.6, y: -0.8 }
+
+/**
+ * Roca de caras planas y cantos (no de bolas): un contorno de 5 a 7 vértices sobre el suelo; cada cara, del tono que le
+ * da su orientación respecto a la luz (arriba a la izquierda, más clara). Canto claro arriba, contorno en la sombra y
+ * una grieta. `size` es el alto aproximado; `rock.colors`: hueco, sombra, base, luz y brillo.
+ */
+export function crag(pix: Pixmap, rng: Rng, cx: number, groundY: number, size: number, rock: Inked) {
+  const stretch = between(rng, 0.75, 1.15)
+  const corners = 5 + Math.floor(rng() * 3)
+  const points = Array.from({ length: corners }, (_, i) => {
+    const a = Math.PI - (i / (corners - 1)) * Math.PI
+    const r = size * between(rng, 0.8, 1.1)
+    return { x: cx + Math.cos(a) * r * stretch, y: groundY - Math.sin(a) * r }
+  })
+  const center = { x: cx + size * 0.1, y: groundY - size * 0.3 }
+  const faceOf = (x: number, y: number) => {
+    const a = Math.atan2(center.y - y, x - center.x)
+    return Math.min(corners - 2, Math.max(0, Math.floor(((Math.PI - a) / Math.PI) * (corners - 1))))
+  }
+  const tones = points.slice(0, -1).map((p, i) => {
+    const q = points[i + 1]
+    const nx = q.y - p.y
+    const ny = p.x - q.x
+    const facing = (nx * LIGHT_DIR.x + ny * LIGHT_DIR.y) / Math.hypot(nx, ny)
+    return facing > 0.55 ? rock.colors[3] : facing > 0.05 ? rock.colors[2] : rock.colors[1]
+  })
+  const inside = (x: number, y: number) => y <= groundY && pointInPolygon(x, y, points)
+  const left = Math.floor(cx - size * stretch * 1.2)
+  const right = Math.ceil(cx + size * stretch * 1.2)
+  for (let y = Math.floor(groundY - size * 1.2); y <= groundY; y++)
+    for (let x = left; x <= right; x++) {
+      if (!inside(x, y)) continue
+      const edge = !inside(x + 1, y) || !inside(x, y + 1)
+      const rim = !inside(x, y - 1) && !edge
+      pix.set(x, y, edge && y < groundY ? rock.ink : rim ? rock.colors[4] : tones[faceOf(x, y)])
+    }
+  let x = cx + between(rng, -size * 0.3, size * 0.3)
+  for (let y = groundY - size * 0.7, k = 0; k < size * 0.5; k++, y++, x += rng() < 0.4 ? 1 : 0) if (inside(x, y)) pix.set(x, y, rock.colors[0])
+}
+
+function pointInPolygon(x: number, y: number, points: readonly { x: number; y: number }[]): boolean {
+  const closed = [{ x: points[0].x, y: points[0].y + 1 }, ...points, { x: points.at(-1)!.x, y: points.at(-1)!.y + 1 }]
+  let inside = false
+  for (let i = 0, j = closed.length - 1; i < closed.length; j = i++) {
+    const a = closed[i]
+    const b = closed[j]
+    if (a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x) inside = !inside
+  }
+  return inside
+}

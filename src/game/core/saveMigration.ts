@@ -1,7 +1,8 @@
 import { IncursionId, MAX_KEYS } from '../../data/incursions'
 import { route } from '../../data/maps'
 import { RANCH_TYPES } from '../../data/ranchTypes'
-import { SPECIES } from '../../data/species'
+import { isFormItem } from '../../data/forms'
+import { baseSpeciesOf, isKnownSpecies, SPECIES } from '../../data/species'
 import { isStarItem, STAR_ITEMS } from '../../data/starItems'
 import { Stone } from '../../data/stones'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
@@ -68,7 +69,7 @@ function countsOf(v: unknown, validKey: (k: string) => boolean, max = Number.MAX
 
 /** Un Pokémon guardado, con la forma de ahora: lo que falte, de un Pokémon nuevo; lo que no encaje, se arregla o se descarta */
 function salvageMon(v: unknown): OwnedMon | null {
-  if (!isRecord(v) || !isSpecies(v.speciesId) || !isInt(v.level, 1, MAX_LEVEL) || typeof v.uid !== 'string' || !v.uid) return null
+  if (!isRecord(v) || !isKnownSpecies(v.speciesId) || !isInt(v.level, 1, MAX_LEVEL) || typeof v.uid !== 'string' || !v.uid) return null
   const ranch = v.ranch === null || isInt(v.ranch, 0, MAX_RANCHES - 1) ? v.ranch : 0
   const mon = { ...createMon(v.speciesId, v.level, ranch), uid: v.uid } as OwnedMon & Save
   for (const key of Object.keys(mon)) if (typeof v[key] === typeof mon[key] && v[key] !== null) mon[key] = v[key]
@@ -103,6 +104,7 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   ranchNames: (v) =>
     isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([k, n]) => isRanch(k) && typeof n === 'string' && n === cleanRanchName(n) && n)) : undefined,
   stones: (v) => countsOf(v, (k) => (Object.values(Stone) as string[]).includes(k)),
+  formItems: (v) => listOf(v, isFormItem),
   starItems: (v) => countsOf(v, isStarItem),
   gachaPity: (v) => countsOf(v, (k) => isStarItem(k) && STAR_ITEMS[k].pity !== null),
   incursionKeys: (v) => countsOf(v, (k) => (Object.values(IncursionId) as string[]).includes(k), MAX_KEYS),
@@ -139,7 +141,7 @@ function linkUp(s: GameState) {
       typeof e.elapsedMin === 'number' &&
       e.elapsedMin >= 0,
   )
-  s.caught = [...new Set([...s.caught, ...s.owned.map((m) => m.speciesId)])]
+  s.caught = [...new Set([...s.caught, ...s.owned.map((m) => baseSpeciesOf(m.speciesId))])]
   s.seen = [...new Set([...s.seen, ...s.caught])]
   s.unlockedRoutes = [...new Set([...initialState().unlockedRoutes, ...s.unlockedRoutes, ...s.completedRoutes])]
   const lastRanch = Math.max(0, ...s.owned.map((m) => m.ranch ?? 0))

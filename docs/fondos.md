@@ -6,8 +6,15 @@ generan por código al abrir la primera ruta de cada bioma (semilla fija, siempr
 
 Escenas hechas: **Prado** (bioma `Meadow`: Ruta 1 y Ruta 1 - Final), **Pueblo Paleta** (`PalletTown`, solo esa ruta),
 **Bosque Verde** (`Forest`), **Ciudad Plateada** (`PewterCity`, ciudad de piedra de día con el museo y el gimnasio),
-**Cueva** (`Cave`, Monte Moon: penumbra violeta, estalactitas y cristales) y **Mar** (`Sea`, ruta marina: islotes,
+**Cueva** (`Cave`, la incursión Cueva Helada y las raids: penumbra violeta, estalactitas y cristales), **Monte Moon**
+(`MtMoon`, ver abajo) y **Mar** (`Sea`, ruta marina: islotes,
 rocas con espuma y agua en la que nada el Pokémon). Todos los biomas tienen escena pixel art.
+
+**Monte Moon** (`scenes/mtMoon/`) parte de la Cueva: casi a oscuras, la luz sale de los cristales y aclara por
+bandas la roca de alrededor (`light.ts › relight`, sin halos); rocas de caras planas (`crag`, no de bolas, que parecían
+nubes), fósiles en la pared media, alguna Piedra Lunar junto al camino, gotas que caen del techo (`particles.ts`) y el
+cartel «MONTE MOON» como elemento de parada. Reutiliza el techo y el suelo de la Cueva (`cavePath` admite un
+`FloorStyle` con sus colores, un reborde más ondulado y el borde de arriba recortado).
 
 ## Índice
 
@@ -213,7 +220,7 @@ Parallax habitual: nubes 0,02–0,03 · colinas 0,05–0,1 · plano lejano 0,1�
 | `houseRow` | `houseRow(seed, row, style)`: fila de casas sin solape sobre césped, con calle, caminitos (`walkway`) y árboles en los huecos; `TownStyle` pone colores, paletas, plantas y los edificios especiales (`big`, en los puestos 2.º, 4.º…) |
 | `museum`, `gym` | Museo de frontón y columnas con escalinata; gimnasio de sillares con cuerpo central, emblema de roca y peñascos |
 | `lamppost` | `lamppost`: farola de hierro con farol encendido y halo semitransparente solo sobre lo vacío |
-| `rocks` | `spike` (estalactita o estalagmita), `boulder` (peñasco de varias bolas), `crystals` (racimo de cristales con halo), `rockMass` (pared de roca de fondo sin contorno) |
+| `rocks` | `spike` (estalactita o estalagmita), `boulder` (peñasco de varias bolas), `crag` (roca de caras planas y cantos), `crystals` (racimo de cristales con halo), `rockMass` (pared de roca de fondo sin contorno) |
 | `fence` | `picketFence` (valla blanca con postes en los extremos), `flowerBed` (parterre de flores de tallo alto) |
 | `fountain`, `log`, `mushroom`, `signpost` | Fuente de plaza, tronco hueco, seta, cartel de madera con fuente 3×5 (añadir letras a `GLYPHS` si faltan) |
 

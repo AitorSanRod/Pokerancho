@@ -44,9 +44,9 @@ export const RAID_BOSSES: RaidBoss[] = [
  * por tanto más vida) que los de RAID_BOSSES y mejores premios (`prizeMult` multiplica las cantidades de su tabla)
  */
 export const HARD_RAID_BOSSES: RaidBoss[] = [
-  { speciesId: POKEMON.Charizard, level: 60, minLevel: 55, tier: RaidTier.LowHard, prizeMult: 2 },
-  { speciesId: POKEMON.Venusaur, level: 60, minLevel: 55, tier: RaidTier.LowHard, prizeMult: 2 },
-  { speciesId: POKEMON.Blastoise, level: 60, minLevel: 55, tier: RaidTier.LowHard, prizeMult: 2 },
+  { speciesId: POKEMON.Charizard, level: 60, minLevel: 50, tier: RaidTier.LowHard, prizeMult: 2 },
+  { speciesId: POKEMON.Venusaur, level: 60, minLevel: 50, tier: RaidTier.LowHard, prizeMult: 2 },
+  { speciesId: POKEMON.Blastoise, level: 60, minLevel: 50, tier: RaidTier.LowHard, prizeMult: 2 }
 ]
 
 /** Qué da una línea de premio: `Exp` es EXP para el Pokémon que luchó contra el jefe (además de la que gana por minuto) */

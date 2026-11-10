@@ -10,8 +10,8 @@ import { RAID_ROOM_SIZE, type Raid, type RaidPlace } from './raidRoom'
 // Las salas de una parada de jefe comunitario (NodeKind.Raid) por sí mismas, sin la partida: cómo se abren y cómo
 // avanzan. Las usan la ruta del jugador (routeRaid.ts) y el servidor (online/sharedRoom.ts).
 
-/** Bots de una sala de parada: no hay mínimo; van llegando (como si acabaran la ruta), uno cada ≈40 s, hasta llenarla */
-const ROUTE_RAID_BOTS: BotPolicy = { min: 0, max: RAID_ROOM_SIZE - 1, joinPerMinute: 1.5 }
+/** Bots de una sala de parada: no hay mínimo; van llegando (como si acabaran la ruta), uno cada ≈75 s, hasta 5 */
+export const ROUTE_RAID_BOTS: BotPolicy = { min: 0, max: 5, joinPerMinute: 0.8 }
 /** Milisegundos de juego tras abrir una sala nueva en los que entra el primer bot (luego, al ritmo de ROUTE_RAID_BOTS) */
 export const ROUTE_RAID_FIRST_BOT_MS = 5_000
 /** Vida mínima del jefe (fracción de la total) para poder entrar en una sala en marcha; si no, se abre otra */
@@ -30,7 +30,7 @@ function stopBoss(n: RouteNode): RaidBoss {
  */
 function runningRoom(n: RouteNode, place: RaidPlace, hpFraction: number, rng: Rng, passives: PassivesOf): Raid {
   const raid = newRaid(stopBoss(n), place)
-  const bots = randInt(1, RAID_ROOM_SIZE - 2, rng)
+  const bots = randInt(1, Math.min(ROUTE_RAID_BOTS.max, RAID_ROOM_SIZE - 2), rng)
   for (let i = 0; i < bots; i++) addBot(raid, rng)
   const minHp = Math.floor(raid.maxHp * ROUTE_RAID_JOIN_MIN_HP) + 1
   raid.hp = Math.min(raid.maxHp, Math.max(minHp, Math.round(raid.maxHp * hpFraction)))

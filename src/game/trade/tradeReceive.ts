@@ -1,7 +1,7 @@
 import { markCaught } from '../collection/dex'
 import { addPieces } from '../collection/pieces'
 import { addStarItems } from '../collection/starItems'
-import type { GameState } from '../core/state'
+import { ownedOfSpecies, type GameState } from '../core/state'
 import { createMon } from '../team/mons'
 import { BOX_SLOTS, boxedMons, ranchWithRoom } from '../team/ranches'
 import { maxHp } from '../team/stats'
@@ -24,7 +24,7 @@ export interface DuplicateRefund {
   money: number
 }
 
-export const isDuplicate = (s: GameState, speciesId: number): boolean => s.owned.some((m) => m.speciesId === speciesId)
+export const isDuplicate = (s: GameState, speciesId: number): boolean => !!ownedOfSpecies(s, speciesId)
 
 export const duplicateRefund = (mon: TradedMon): DuplicateRefund => ({
   speciesId: mon.speciesId,

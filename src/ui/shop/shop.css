@@ -9,6 +9,9 @@
 .shop-fold-stones {
   --fold-bg: linear-gradient(135deg, #7e6bd6 0%, #45339c 100%);
 }
+.shop-fold-forms {
+  --fold-bg: linear-gradient(135deg, #e8803a 0%, #a8431b 100%);
+}
 .shop-fold-keys {
   --fold-bg: linear-gradient(135deg, #4aa3c8 0%, #1f5f86 100%);
 }

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { FORM_ITEM_IDS, FORM_ITEMS } from '../../data/forms'
 import { IncursionId, MAX_KEYS } from '../../data/incursions'
 import { route, RouteId } from '../../data/maps'
 import { RanchTypeId } from '../../data/ranchTypes'
@@ -43,6 +44,7 @@ function advancedGame(): GameState {
     ranchExtraSlots: { 1: 5 },
     ranchNames: { 0: 'Prado' },
     stones: { [Stone.Fire]: 1, [Stone.Moon]: 3 },
+    formItems: [FORM_ITEM_IDS[0]],
     incursionKeys: { [IncursionId.CuevaHelada]: 2 },
     claimedServerGifts: ['regalo-1'],
     // Coherente: con Pueblo Paleta completada, también abierta la ruta que desbloquea
@@ -66,7 +68,7 @@ const fromOldVersion = (s: GameState, version = OLD) => JSON.parse(JSON.stringif
 
 const KEPT: (keyof GameState)[] = [
   'money', 'tickets', 'missingnoShards', 'seen', 'caught', 'favorites', 'pieces', 'upgrades', 'ranchTypeItems', 'ranchTypeOf', 'ranchExtraSlots', 'ranchNames',
-  'stones', 'incursionKeys', 'claimedServerGifts', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'lastTick',
+  'stones', 'formItems', 'incursionKeys', 'claimedServerGifts', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'lastTick',
 ]
 
 /** El paso de verdad de la versión anterior, que algún test sustituye por uno de prueba */
@@ -90,6 +92,16 @@ describe('al actualizar el juego no se pierde nada', () => {
     const s = migrateSave(save)!
     expect(s.starItems).toEqual({ [withPity]: 2 })
     expect(s.gachaPity).toEqual({ [withPity]: 7 })
+  })
+
+  it('los objetos de forma se quedan si existen y un Pokémon con otra forma la conserva', () => {
+    const game = advancedGame()
+    const { formId } = FORM_ITEMS[FORM_ITEM_IDS[0]]
+    game.owned[0].speciesId = formId
+    const s = migrateSave({ ...fromOldVersion(game), formItems: [FORM_ITEM_IDS[0], 'quitado'] })!
+    expect(s.formItems).toEqual([FORM_ITEM_IDS[0]])
+    expect(s.owned[0].speciesId).toBe(formId)
+    expect(s.caught).not.toContain(formId)
   })
 
   it('la incursión en curso se descarta: el Pokémon vuelve al rancho', () => {

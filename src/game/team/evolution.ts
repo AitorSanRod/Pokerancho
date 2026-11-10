@@ -3,7 +3,7 @@ import { RARITY_INFO, rarityOf, species } from '../../data/species'
 import { STONES } from '../../data/stones'
 import { markCaught } from '../collection/dex'
 import { spendStarItem, starItemBlocker, starItemFor } from '../collection/starItems'
-import { findMon, MonPlace, monPlace, type GameState, type OwnedMon } from '../core/state'
+import { findMon, MonPlace, monPlace, ownedOfSpecies, type GameState, type OwnedMon } from '../core/state'
 import { fitsInRanch, ranchCount, slotsOf, type MonDestination } from './ranches'
 import { maxHp } from './stats'
 import { spendStone, stonesOf } from './stones'
@@ -49,7 +49,7 @@ export function evolveBlocker(s: GameState, uid: string, intoId: number): string
   if (place !== MonPlace.Ranch && place !== MonPlace.Box) return 'Solo puede evolucionar en el rancho o en la Caja.'
   const requirement = requirementBlocker(s, mon, evo)
   if (requirement) return requirement
-  if (s.owned.some((m) => m.speciesId === intoId)) return `Ya tienes a ${species(intoId).name}.`
+  if (ownedOfSpecies(s, intoId)) return `Ya tienes a ${species(intoId).name}.`
   if (s.money < evolvePrice(intoId)) return `Necesitas ₽ ${evolvePrice(intoId)}.`
   const missingItem = starItemBlocker(s, intoId)
   if (missingItem) return missingItem

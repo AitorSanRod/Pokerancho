@@ -110,8 +110,9 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `data/maps/kantoMaps.ts` | Rutas de Kanto; solo datos. Cada región tendrá su `xxxMaps.ts` |
 | `data/maps/mapCommon.ts` | Tipos y diccionarios de los mapas, atajos para escribirlos (`enc`, `boss`, `chain`) y consultas de caminos (`pathFrom`, `isValidPath`) |
 | `data/maps/index.ts` | Entrada de la carpeta (se importa como `data/maps`): lista de regiones y `route(id)` |
-| `data/evolutions.ts` | Evoluciones de la 1ª gen., cada una por nivel o por piedra (`evolutionsOf`, `evolutionTo`) |
-| `data/stones.ts` | Piedras evolutivas (`Stone`, `STONES`) |
+| `data/evolutions.ts` | Evoluciones, cada una por nivel o por objeto evolutivo (`evolutionsOf`, `evolutionTo`) |
+| `data/stones.ts` | Objetos evolutivos: piedras, armaduras y Escama Bella (`Stone`, `STONES`, con su precio) |
+| `data/forms.ts` | Objetos de forma (`FormItem`, `FORM_ITEMS`: la forma a la que lleva cada uno y su precio). Las formas son especies de `pokemon.json` con `baseId`: fuera de `SPECIES` (gacha, Pokédex, tickets), en `FORM_SPECIES`; `baseSpeciesOf` da su especie |
 | `game/core/state.ts` | Tipos de `GameState`, estado inicial, `SAVE_VERSION`, `restoreState` y dónde está cada Pokémon (`monPlace`) |
 | `game/core/store.ts` | Estado global, guardado en `localStorage` y hook `useGame()` |
 | `game/core/saveMigration.ts` | Migrar una partida de otra versión sin perder nada: pasos de `SAVE_MIGRATIONS` y rescate campo a campo |

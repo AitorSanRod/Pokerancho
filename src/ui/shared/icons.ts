@@ -41,6 +41,8 @@ export const ICON = {
   Rest: ITEM.FullRestore,
   Train: ITEM.RareCandy,
   Evolve: ITEM.MoonStone,
+  /** Cambio de forma (Rotom) y sus objetos */
+  Form: ITEM.RotomCatalog,
   Active: ITEM.PokeBall,
   Money: ITEM.AmuletCoin,
   Wins: ITEM.Protein,

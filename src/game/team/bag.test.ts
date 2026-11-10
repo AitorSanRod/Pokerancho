@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { FORM_ITEM_IDS } from '../../data/forms'
 import { INCURSIONS } from '../../data/incursions'
 import { RANCH_TYPE_IDS } from '../../data/ranchTypes'
 import { STAR_ITEM_IDS } from '../../data/starItems'
@@ -18,6 +19,12 @@ describe('mochila', () => {
     const s = initialState()
     s.stones[STONE] = 2
     expect(bagContents(s).stones).toEqual([{ id: STONE, count: 2 }])
+  })
+
+  it('guarda los objetos de forma, uno de cada', () => {
+    const s = initialState()
+    s.formItems.push(FORM_ITEM_IDS[0])
+    expect(bagContents(s).formItems).toEqual([{ id: FORM_ITEM_IDS[0], count: 1 }])
   })
 
   it('solo cuenta los tipos de rancho que no están colocados', () => {

@@ -8,6 +8,8 @@ const route1 = asset(new URL('../../assets/routes/route-1.webp', import.meta.url
 const viridianForest = asset(new URL('../../assets/routes/viridian-forest.webp', import.meta.url))
 const pewterCity = asset(new URL('../../assets/routes/pewter-city.webp', import.meta.url))
 const route3 = asset(new URL('../../assets/routes/route-3.webp', import.meta.url))
+// const mtMoon = asset(new URL('../../assets/routes/mt-moon.webp', import.meta.url))
+// const ruta4 = asset(new URL('../../assets/routes/route-4.webp', import.meta.url))
 
 export const KANTO: GameMap = {
   id: 'kanto',
@@ -40,7 +42,7 @@ export const KANTO: GameMap = {
       biome: Biome.Meadow,
       backdrop: { image: route1, focusY: 40 },
       levels: [5, 8],
-      encounters: enc([POKEMON.Pidgey, 30], [POKEMON.Rattata, 30], [POKEMON.Caterpie, 13], [POKEMON.Weedle, 13], [POKEMON.NidoranF, 7], [POKEMON.NidoranM, 7]),
+      encounters: enc([POKEMON.Pidgey, 30], [POKEMON.Rattata, 30], [POKEMON.Caterpie, 13], [POKEMON.Weedle, 12], [POKEMON.NidoranF, 7], [POKEMON.NidoranM, 7], [POKEMON.Larvesta, 1]),
       reward: { tickets: 2, money: 400, exp: 250 },
       unlocks: RouteId.Ruta1Boss,
       nodes: chain(
@@ -100,7 +102,7 @@ export const KANTO: GameMap = {
       biome: Biome.PewterCity,
       backdrop: { image: pewterCity, focusY: 45 },
       levels: [14, 20],
-      encounters: enc([POKEMON.Geodude, 20], [POKEMON.Sandshrew, 13], [POKEMON.Spearow, 15], [POKEMON.Pidgey, 15], [POKEMON.Diglett, 10], [POKEMON.Mankey, 5], [POKEMON.Rattata, 20], [POKEMON.Jigglypuff, 2]),
+      encounters: enc([POKEMON.Geodude, 20], [POKEMON.Sandshrew, 13], [POKEMON.Spearow, 15], [POKEMON.Pidgey, 15], [POKEMON.Diglett, 10], [POKEMON.Mankey, 5], [POKEMON.Rattata, 20], [POKEMON.Jigglypuff, 1], [POKEMON.Growlithe, 1]),
       reward: { tickets: 3, money: 400, exp: 200 },
       unlocks: RouteId.CiudadPlateada2,
       nodes: chain(
@@ -153,6 +155,7 @@ export const KANTO: GameMap = {
       description: 'Camino de rocas y hierba entre Ciudad Plateada y el Monte Moon, lleno de entrenadores.',
       biome: Biome.Meadow,
       backdrop: { image: route3, focusY: 50 },
+      //unlocks: RouteId.MonteMoon,
       levels: [22, 28],
       encounters: enc([POKEMON.Spearow, 30], [POKEMON.Jigglypuff, 15], [POKEMON.Mankey, 15], [POKEMON.Sandshrew, 15], [POKEMON.Ekans, 15], [POKEMON.NidoranF, 5], [POKEMON.NidoranM, 5]),
       reward: { tickets: 5, money: 1500, exp: 1200 },
@@ -184,28 +187,32 @@ export const KANTO: GameMap = {
     //   id: RouteId.MonteMoon,
     //   name: 'Monte Moon',
     //   description: 'Cuevas oscuras donde dicen que caen meteoritos.',
-    //   biome: Biome.Cave,
-    //   backdrop: { image: mtMoon, focusY: 50 }, (con const mtMoon = asset(new URL('../../assets/routes/mt-moon.webp', import.meta.url)))
-    //   levels: [7, 11],
-    //   encounters: enc([POKEMON.Zubat, 25], [POKEMON.Geodude, 20], [POKEMON.Paras, 15], [POKEMON.Sandshrew, 10], [POKEMON.Ekans, 10], [POKEMON.Machop, 10], [POKEMON.Clefairy, 5], [POKEMON.Jigglypuff, 5]),
-    //   reward: { tickets: 5, money: 300, exp: 800 },
-    //   unlocks: RouteId.RutaMarina,
+    //   biome: Biome.MtMoon,
+    //   backdrop: { image: mtMoon, focusY: 50 },
+    //   levels: [30, 36],
+    //   unlocks: RouteId.Ruta4,
+    //   encounters: enc([POKEMON.Zubat, 25], [POKEMON.Geodude, 23], [POKEMON.Drilbur, 1], [POKEMON.Ekans, 19], [POKEMON.Machop, 10], [POKEMON.Clefairy, 10], [POKEMON.Jigglypuff, 10], [POKEMON.Rotom, 2]),
+    //   reward: { tickets: 10, money: 5000, exp: 1800 },
     //   nodes: chain(
     //     { id: 's', name: 'Entrada a la cueva', kind: NodeKind.Start, steps: 0 },
     //     { id: 'a', name: 'Galería', kind: NodeKind.Wild, steps: 90 },
+    //     { id: 'j5', name: 'Entrenador de fuego', kind: NodeKind.Boss, steps: 40, boss: boss(POKEMON.Growlithe, 36, [{ type: 'fire', level: 2 }]) },
     //     { id: 'b', name: 'Túnel de rocas', kind: NodeKind.Wild, steps: 100, encounters: enc([POKEMON.Geodude, 50], [POKEMON.Sandshrew, 25], [POKEMON.Machop, 25]) },
-    //     { id: 'c', name: 'Charca subterránea', kind: NodeKind.Wild, steps: 90, encounters: enc([POKEMON.Zubat, 45], [POKEMON.Paras, 33], [POKEMON.Ekans, 22]) },
-    //     { id: 'd', name: 'Cráter lunar', kind: NodeKind.Wild, steps: 100, levelBonus: 1, encounters: enc([POKEMON.Clefairy, 45], [POKEMON.Jigglypuff, 33], [POKEMON.Zubat, 22]) },
-    //     { id: 'e', name: 'Cima del monte', kind: NodeKind.Wild, steps: 80, levelBonus: 3, encounters: enc([POKEMON.Clefairy, 33], [POKEMON.Geodude, 33], [POKEMON.Golbat, 17], [POKEMON.Graveler, 17]) },
+    //     { id: 'p1', name: 'Merendero', kind: NodeKind.Heal, steps: 15, potion: Potion.SuperPotion },
+    //     { id: 'j1', name: 'Entrenador de agua', kind: NodeKind.Boss, steps: 40, boss: boss(POKEMON.Poliwhirl, 36, [{ type: 'water', level: 2 }]) },
+    //     { id: 'c', name: 'Charca subterránea', kind: NodeKind.Wild, steps: 90, levelBonus: 3, encounters: enc([POKEMON.Zubat, 45], [POKEMON.Paras, 33], [POKEMON.Ekans, 22]) },
+    //     { id: 'd', name: 'Cráter lunar', kind: NodeKind.Wild, steps: 100, levelBonus: 5, encounters: enc([POKEMON.Clefairy, 45], [POKEMON.Jigglypuff, 33], [POKEMON.Zubat, 22]) },
+    //     { id: 'j3', name: 'Entrenador de planta', kind: NodeKind.Boss, steps: 40, boss: boss(POKEMON.Victreebel, 36, [{ type: 'grass', level: 2 }]) },
+    //     { id: 'e', name: 'Cima del monte', kind: NodeKind.Raid, steps: 80, boss: raidBoss(POKEMON.Lapras, 38, RaidTier.Mid, { soloMinutes: 30 }) },
     //   ),
     // },
     // {
-    //   id: RouteId.RutaMarina,
-    //   name: 'Ruta Marina',
-    //   description: 'Islotes y corrientes. Hay que nadar mucho.',
-    //   biome: Biome.Sea,
-    //   backdrop: { image: route19, focusY: 15 }, (con const route19 = asset(new URL('../../assets/routes/route-19.webp', import.meta.url)))
-    //   levels: [13, 18],
+    //   id: RouteId.Ruta4,
+    //   name: 'Ruta 4',
+    //   description: 'Ruta hacia Ciudad Celeste.',
+    //   biome: Biome.Meadow,
+    //   backdrop: { image: ruta4, focusY: 15 },
+    //   levels: [36, 40],
     //   encounters: enc([POKEMON.Tentacool, 22], [POKEMON.Magikarp, 17], [POKEMON.Psyduck, 13], [POKEMON.Poliwag, 13], [POKEMON.Horsea, 9], [POKEMON.Krabby, 9], [POKEMON.Staryu, 9], [POKEMON.Shellder, 8]),
     //   reward: { tickets: 6, money: 450, exp: 1800 },
     //   nodes: chain(

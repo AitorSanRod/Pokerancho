@@ -10,10 +10,11 @@ import { RanchTypeShop } from './RanchTypeShop'
 import './shop.css'
 import { ShopSection, ShopTile } from './ShopTile'
 import { StoneShop } from './StoneShop'
+import { FormItemShop } from './FormItemShop'
 
 const UPGRADE_ICON: Record<UpgradeId, Item> = { expeditionSlots: ICON.Expedition, ranches: ICON.Ranch }
 
-/** Pestaña Tienda: mejoras permanentes, tipos de rancho, piedras y llaves de incursión, cada grupo en su desplegable */
+/** Pestaña Tienda: mejoras permanentes, tipos de rancho, objetos evolutivos, objetos de forma y llaves de incursión, cada grupo en su desplegable */
 export function UpgradeShop({ game }: { game: GameState }) {
   return (
     <div className="screen scroll">
@@ -25,6 +26,7 @@ export function UpgradeShop({ game }: { game: GameState }) {
       </ShopSection>
       <RanchTypeShop game={game} />
       <StoneShop game={game} />
+      <FormItemShop game={game} />
       <IncursionKeyShop game={game} />
     </div>
   )

@@ -1,0 +1,284 @@
+:root {
+  --bg: #15181d;
+  --panel: #1f242b;
+  --panel-2: #262c35;
+  --line: #333a44;
+  --text: #e8ecf1;
+  --muted: #9aa4b1;
+  --accent: #e3350d;
+  --ok: #5bbf6a;
+  --warn: #f0b429;
+  color-scheme: dark;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.4 system-ui, sans-serif;
+}
+.top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg);
+}
+.top h1 {
+  font-size: 17px;
+  margin: 0 8px 0 0;
+}
+.summary {
+  margin: 0 0 0 auto;
+  color: var(--muted);
+}
+.editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 560px);
+  gap: 16px;
+  padding: 16px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .editor {
+    grid-template-columns: 1fr;
+  }
+}
+.form,
+.output {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.output {
+  position: sticky;
+  top: 70px;
+}
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+h2 {
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+h2 small,
+.hint,
+.field small {
+  color: var(--muted);
+  font-weight: normal;
+}
+h3 {
+  font-size: 13px;
+  margin: 16px 0 8px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px 12px;
+}
+.full {
+  grid-column: 1 / -1;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+textarea {
+  resize: vertical;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+button {
+  cursor: pointer;
+  background: var(--panel-2);
+}
+button:hover {
+  border-color: var(--muted);
+}
+button.icon {
+  padding: 4px 9px;
+}
+button.danger:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+button.wide {
+  width: 100%;
+  margin-top: 8px;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.species {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.species img {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+  flex: none;
+}
+.species input {
+  min-width: 0;
+  flex: 1;
+}
+.encounters {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.enc,
+.passive {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.enc .species {
+  flex: 1;
+}
+.chance input {
+  width: 70px;
+}
+.enc-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+[data-sum] {
+  color: var(--ok);
+}
+[data-sum].bad {
+  color: var(--warn);
+}
+.passive small {
+  color: var(--muted);
+  flex: 1;
+}
+.sub {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 4px 0 6px;
+}
+.node {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--muted);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.node header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.spacer {
+  flex: 1;
+}
+.kind-Start {
+  border-left-color: #6890f0;
+}
+.kind-Wild {
+  border-left-color: #78c850;
+}
+.kind-Boss {
+  border-left-color: var(--accent);
+}
+.kind-Raid {
+  border-left-color: #a040a0;
+}
+.kind-Heal {
+  border-left-color: #f85888;
+}
+.issues {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--warn);
+}
+.issues .ok {
+  color: var(--ok);
+  list-style: none;
+  margin-left: -18px;
+}
+.out-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.out-head h2 {
+  margin: 0;
+}
+pre {
+  margin: 8px 0 0;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: auto;
+  white-space: pre-wrap;
+  max-height: 60vh;
+  font: 12px/1.5 ui-monospace, Consolas, monospace;
+}
+.paste {
+  width: min(760px, calc(100vw - 32px));
+  color: var(--text);
+}
+.paste::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+.paste textarea {
+  width: 100%;
+  font: 12px/1.5 ui-monospace, Consolas, monospace;
+}
+.paste-error {
+  color: var(--warn);
+  min-height: 1.4em;
+  margin: 8px 0;
+}
+.paste-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+}

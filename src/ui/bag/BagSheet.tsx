@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { FORM_ITEMS } from '../../data/forms'
 import { incursion } from '../../data/incursions'
 import { RANCH_TYPES } from '../../data/ranchTypes'
 import { STAR_ITEMS } from '../../data/starItems'
@@ -6,6 +7,7 @@ import { STONES } from '../../data/stones'
 import type { GameState } from '../../game/core/state'
 import { bagContents, isBagEmpty } from '../../game/team/bag'
 import { MenuSheetHeader } from '../ranch/MenuSheetHeader'
+import { Sprite } from '../shared/common'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { RanchTypeGems } from '../shop/RanchTypeShop'
@@ -29,9 +31,16 @@ export function BagSheet({ game, onBack }: { game: GameState; onBack: () => void
             </BagGroup>
           )}
           {bag.stones.length > 0 && (
-            <BagGroup title="Piedras evolutivas" hint="Se usan en la ficha del Pokémon, en Evolución.">
+            <BagGroup title="Objetos evolutivos" hint="Se usan en la ficha del Pokémon, en Evolución.">
               {bag.stones.map(({ id, count }) => (
                 <BagTile key={id} icon={<ItemIcon item={STONES[id].item} size={44} />} name={STONES[id].name} count={count} />
+              ))}
+            </BagGroup>
+          )}
+          {bag.formItems.length > 0 && (
+            <BagGroup title="Objetos de forma" hint="No se gastan: Rotom cambia de forma en su ficha, en Forma, siempre que quieras.">
+              {bag.formItems.map(({ id, count }) => (
+                <BagTile key={id} icon={<Sprite id={FORM_ITEMS[id].formId} animated={false} size={44} />} name={FORM_ITEMS[id].name} count={count} />
               ))}
             </BagGroup>
           )}
