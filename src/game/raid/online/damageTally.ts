@@ -1,16 +1,8 @@
+import type { MonDamage } from '../../core/ranking'
 import { isOver, type SharedRoom } from './sharedRoom'
 
 // El daño de una sala compartida para el ranking de daño (worker/db/damageRanking.ts): se apunta una sola vez, al
 // terminar la pelea (cae el jefe o se escapa), con el daño de cada Pokémon de cada jugador.
-
-/** Daño que ha hecho al jefe un Pokémon de un jugador */
-export interface MonDamage {
-  playerId: string
-  uid: string
-  /** Especie con la que acabó la pelea (puede haber evolucionado) */
-  speciesId: number
-  damage: number
-}
 
 /**
  * Si la pelea ha terminado y su daño aún no está apuntado, lo devuelve y la marca como apuntada; si no, lista vacía.

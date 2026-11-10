@@ -1,47 +1,53 @@
-import { RANKING_SIZE, type DamageRankingEntry, type DamageRankingView } from '../../src/game/core/ranking'
-import type { MonDamage } from '../../src/game/raid/online/damageTally'
+import { damageWeek, RANKING_SIZE, type DamageRankingEntry, type DamageRankingView, type MonDamage } from '../../src/game/core/ranking'
 import { RANKED_USERS } from './users'
 
-// El ranking de daño a los jefes comunitarios en D1 (tablas raid_damage y damage_ranking,
-// migrations/0009_damage_ranking.sql). El daño se suma al terminar cada pelea (una escritura por sala) y la foto se
-// rehace cada hora junto a la del dinero, con los mismos permisos: apodo y «Aparecer en el ranking».
+// El ranking semanal de daño a los jefes (comunitarios y de incursión) en D1 (tablas boss_damage y damage_ranking,
+// migrations/0009_damage_ranking.sql y 0012_weekly_boss_damage.sql). El daño se suma en su semana al terminar cada
+// pelea (una escritura por sala o grupo) y la foto se rehace cada hora junto a la del dinero, solo con la semana en
+// curso y con los mismos permisos: apodo y «Aparecer en el ranking».
 
 /**
  * Suma el daño de una pelea; solo cuenta el de los jugadores con cuenta (los anónimos no pueden salir en el ranking).
  * Si falla, la sala ya está guardada: se pierde ese daño, pero la pelea sigue
  */
-export async function addDamage(db: D1Database, tally: MonDamage[]) {
+export async function addDamage(db: D1Database, tally: MonDamage[], now = Date.now()) {
   if (tally.length === 0) return
-  await addDamageRows(db, tally).catch((e: unknown) => console.error('Ranking de daño: no se ha podido apuntar', e))
+  await addDamageRows(db, tally, damageWeek(now)).catch((e: unknown) => console.error('Ranking de daño: no se ha podido apuntar', e))
 }
 
-function addDamageRows(db: D1Database, tally: MonDamage[]) {
+function addDamageRows(db: D1Database, tally: MonDamage[], week: number) {
   return db.batch(
     tally.map((d) =>
       db
         .prepare(
-          `INSERT INTO raid_damage (user_id, uid, species_id, damage)
-           SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM users WHERE id = ?)
-           ON CONFLICT (user_id, uid) DO UPDATE SET damage = damage + excluded.damage, species_id = excluded.species_id`,
+          `INSERT INTO boss_damage (user_id, week, uid, species_id, damage)
+           SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM users WHERE id = ?)
+           ON CONFLICT (user_id, week, uid) DO UPDATE SET damage = damage + excluded.damage, species_id = excluded.species_id`,
         )
-        .bind(d.playerId, d.uid, d.speciesId, d.damage, d.playerId),
+        .bind(d.playerId, week, d.uid, d.speciesId, d.damage, d.playerId),
     ),
   )
 }
 
-/** Sentencias que rehacen la foto: daño total de cada cuenta visible y su Pokémon que más ha hecho; los empates comparten puesto */
-export const rebuildDamageStatements = (db: D1Database): D1PreparedStatement[] => [
+/**
+ * Sentencias que rehacen la foto con la semana de `now`: daño total de cada cuenta visible y su Pokémon que más ha
+ * hecho; los empates comparten puesto. Borran el daño de las semanas pasadas
+ */
+export const rebuildDamageStatements = (db: D1Database, now: number): D1PreparedStatement[] => [
+  db.prepare('DELETE FROM boss_damage WHERE week < ?').bind(damageWeek(now)),
   db.prepare('DELETE FROM damage_ranking'),
-  db.prepare(
-    `INSERT INTO damage_ranking (user_id, rank, damage, species_id, mon_damage)
-     SELECT user_id, RANK() OVER (ORDER BY total DESC), total, species_id, damage FROM (
-       SELECT raid_damage.user_id, raid_damage.species_id, raid_damage.damage,
-         SUM(raid_damage.damage) OVER (PARTITION BY raid_damage.user_id) AS total,
-         ROW_NUMBER() OVER (PARTITION BY raid_damage.user_id ORDER BY raid_damage.damage DESC) AS position
-       FROM raid_damage JOIN users ON users.id = raid_damage.user_id
-       WHERE ${RANKED_USERS}
-     ) WHERE position = 1`,
-  ),
+  db
+    .prepare(
+      `INSERT INTO damage_ranking (user_id, rank, damage, species_id, mon_damage)
+       SELECT user_id, RANK() OVER (ORDER BY total DESC), total, species_id, damage FROM (
+         SELECT boss_damage.user_id, boss_damage.species_id, boss_damage.damage,
+           SUM(boss_damage.damage) OVER (PARTITION BY boss_damage.user_id) AS total,
+           ROW_NUMBER() OVER (PARTITION BY boss_damage.user_id ORDER BY boss_damage.damage DESC) AS position
+         FROM boss_damage JOIN users ON users.id = boss_damage.user_id
+         WHERE ${RANKED_USERS} AND boss_damage.week = ?
+       ) WHERE position = 1`,
+    )
+    .bind(damageWeek(now)),
 ]
 
 interface EntryRow {

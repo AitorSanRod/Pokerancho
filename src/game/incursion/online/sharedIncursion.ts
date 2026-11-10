@@ -33,6 +33,8 @@ export interface SharedIncursion extends IncursionPlan {
   tapPending: string[]
   /** Cambios de ataque y objetivo que entrarán en la próxima ventana, por Pokémon (ver movePicks.ts) */
   pickPending: Record<string, MovePick>
+  /** Falta apuntar en el ranking el daño a los jefes (ver bossDamage.ts); los grupos de antes no lo llevan y no cuentan */
+  damagePending?: boolean
   updatedAt: number
 }
 
@@ -74,6 +76,7 @@ export function formGroup(id: string, incursionId: IncursionId, players: Queued[
     nextMoves: {},
     tapPending: [],
     pickPending: {},
+    damagePending: true,
     updatedAt: now,
   }
 }

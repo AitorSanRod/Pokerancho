@@ -22,7 +22,7 @@ export async function rebuildRanking(db: D1Database, now: number) {
          ) WHERE money IS NOT NULL`,
       )
       .bind(now - RANKING_ACTIVE_MS),
-    ...rebuildDamageStatements(db),
+    ...rebuildDamageStatements(db, now),
     db.prepare('INSERT INTO ranking_meta (id, built_at) VALUES (1, ?) ON CONFLICT (id) DO UPDATE SET built_at = excluded.built_at').bind(now),
   ])
 }

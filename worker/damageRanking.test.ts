@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { damageWeek } from '../src/game/core/ranking'
 import { player as anonymousId, snap, tabRoom } from '../src/game/raid/online/online-test-utils'
 import { seatPlayer, type SharedRoom } from '../src/game/raid/online/sharedRoom'
 import { RaidMemberKind } from '../src/game/raid/raidRoom'
@@ -26,6 +27,8 @@ function room(fighters: Fighter[], fell = true): SharedRoom {
   if (fell) r.raid.hp = 0
   return r
 }
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 
 const save = (api: Api, r: SharedRoom) => saveRoom(api.env.DB, { room: r, version: null })
 
@@ -57,6 +60,16 @@ describe('ranking de daño a los jefes', () => {
     await save(ash, fought)
     await saveRoom(ash.env.DB, { room: fought, version: 1 })
     expect((await damageRanking(ash)).mine.damage).toBe(30)
+  })
+
+  it('cada lunes empieza de cero', async () => {
+    const ash = await player('ash@paleta.es', 'Ash')
+    await save(ash, room([{ playerId: await accountId(ash), uid: 'pika', damage: 30 }]))
+    const nextWeek = damageWeek(Date.now()) + WEEK_MS
+    await refreshRanking(ash.env.DB, nextWeek - 1)
+    expect((await ash.call('/api/ranking')).data.damage.mine.damage).toBe(30)
+    await refreshRanking(ash.env.DB, nextWeek)
+    expect((await ash.call('/api/ranking')).data.damage).toMatchObject({ mine: null, total: 0 })
   })
 
   it('el daño de quien juega sin cuenta no se apunta', async () => {

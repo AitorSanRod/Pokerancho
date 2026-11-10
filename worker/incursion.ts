@@ -1,6 +1,8 @@
+import { takeBossDamage } from '../src/game/incursion/online/bossDamage'
 import { IncursionAction, type GroupRequest, type IncursionRequest, type IncursionResponse, type QueueRequest } from '../src/game/incursion/online/protocol'
 import { parseIncursionRequest } from '../src/game/incursion/online/requests'
 import { advanceShared, chooseShared, formGroup, groupView, pickGroup, pickShared, readyShared, tapShared, voteShared } from '../src/game/incursion/online/sharedIncursion'
+import { addDamage } from './db/damageRanking'
 import { claimQueued, formedGroupOf, leaveQueue, loadGroup, saveGroup, upsertQueue, waitingFor } from './db/incursions'
 import type { Env } from './env'
 import { json, readJson } from './http'
@@ -70,8 +72,10 @@ async function groupAction(db: D1Database, req: GroupRequest): Promise<Outcome> 
   if (req.action === IncursionAction.Vote) voteShared(g, req.playerId, req.retreat, now)
   if (req.action === IncursionAction.Tap) tapShared(g, req.playerId, req.leg, req.turn, now)
   if (req.action === IncursionAction.Pick) pickShared(g, req.playerId, { moveId: req.moveId, target: req.target }, now)
+  const tally = takeBossDamage(g, now)
   const changed = JSON.stringify({ ...g, updatedAt: savedAt }) !== before
   if ((changed || now - savedAt > TOUCH_MS) && !(await saveGroup(db, stored))) return CONFLICT
+  await addDamage(db, tally, now)
   return { group: groupView(g, req.playerId, now)! }
 }
 

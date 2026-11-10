@@ -15,11 +15,12 @@ type Board = (typeof Board)[keyof typeof Board]
 /** Qué explica cada ranking, bajo la cabecera */
 const BOARD_INTRO: Record<Board, string> = {
   [Board.Money]: 'Celebración de la fiesta capitalista. Se actualiza cada hora.',
-  [Board.Damage]: 'Daño total a los jefes comunitarios, con tu Pokémon que más ha hecho. Cuenta al terminar cada jefe y se actualiza cada hora.',
+  [Board.Damage]:
+    'Daño a los jefes comunitarios y de incursión esta semana, con tu Pokémon que más ha hecho. Cuenta al terminar cada pelea, se actualiza cada hora y empieza de cero cada lunes.',
 }
 
 /**
- * Rankings del menú del rancho: dinero y daño a los jefes comunitarios, con tu puesto. Los dos piden lo mismo: cuenta,
+ * Rankings del menú del rancho: dinero y daño semanal a los jefes, con tu puesto. Los dos piden lo mismo: cuenta,
  * apodo y no haberse ocultado del ranking en Ajustes
  */
 export function RankingSheet({ onBack }: { onBack: () => void }) {

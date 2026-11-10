@@ -1,5 +1,5 @@
-// El ranking de dinero, tal y como lo comparten la web y el servidor (worker/ranking.ts): quién entra, cuántos se ven
-// y cada cuánto se rehace la foto.
+// Los rankings de dinero y de daño a jefes, tal y como los comparten la web y el servidor (worker/ranking.ts): quién
+// entra, cuántos se ven, cada cuánto se rehace la foto y desde cuándo cuenta el daño.
 
 /** Jugadores que se ven en la lista del ranking */
 export const RANKING_SIZE = 25
@@ -39,7 +39,27 @@ export const rankingDue = (builtAt: number | null, now: number): boolean =>
 /** Hora (ms) de la próxima foto */
 export const nextRankingAt = (now: number): number => (Math.floor(now / RANKING_REFRESH_MS) + 1) * RANKING_REFRESH_MS
 
-/** El Pokémon de un entrenador que más daño ha hecho a los jefes comunitarios */
+const DAY_MS = 24 * 60 * 60 * 1000
+const WEEK_DAYS = 7
+/** Días que van del lunes anterior al 1 de enero de 1970 (jueves), el día 0 de las fechas en ms */
+const EPOCH_AFTER_MONDAY_DAYS = 3
+
+/** Inicio (ms, lunes a las 00:00 UTC) de la semana del ranking de daño: cada lunes empieza de cero */
+export function damageWeek(now: number): number {
+  const day = Math.floor(now / DAY_MS)
+  return (day - ((day + EPOCH_AFTER_MONDAY_DAYS) % WEEK_DAYS)) * DAY_MS
+}
+
+/** Daño que ha hecho un Pokémon de un jugador a un jefe (comunitario o de incursión), tal y como se apunta */
+export interface MonDamage {
+  playerId: string
+  uid: string
+  /** Especie con la que acabó la pelea (puede haber evolucionado) */
+  speciesId: number
+  damage: number
+}
+
+/** El Pokémon de un entrenador que más daño ha hecho a los jefes esta semana */
 export interface TopMon {
   speciesId: number
   damage: number
@@ -48,14 +68,14 @@ export interface TopMon {
 export interface DamageRankingEntry {
   rank: number
   nickname: string
-  /** Daño total a los jefes comunitarios desde que empezó el ranking */
+  /** Daño total a los jefes (comunitarios y de incursión) desde el lunes */
   damage: number
   topMon: TopMon
   /** Es la cuenta que lo mira */
   mine: boolean
 }
 
-/** El ranking de daño a los jefes comunitarios: como el de dinero, con el Pokémon que más daño ha hecho de cada uno */
+/** El ranking semanal de daño a los jefes: como el de dinero, con el Pokémon que más daño ha hecho de cada uno */
 export interface DamageRankingView {
   top: DamageRankingEntry[]
   mine: { rank: number; damage: number; topMon: TopMon } | null

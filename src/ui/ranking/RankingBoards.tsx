@@ -3,7 +3,7 @@ import type { DamageRankingView, RankingView, TopMon } from '../../game/core/ran
 import { Sprite } from '../shared/common'
 import { RankingBoard } from './RankingBoard'
 
-// Los dos rankings sobre el mismo tablero: dinero y daño a los jefes comunitarios (con el Pokémon que más daño ha hecho)
+// Los dos rankings sobre el mismo tablero: dinero y daño semanal a los jefes (con el Pokémon que más daño ha hecho)
 
 const amount = (n: number) => n.toLocaleString('es-ES')
 
