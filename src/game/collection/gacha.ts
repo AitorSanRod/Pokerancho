@@ -79,7 +79,7 @@ export function pull(s: GameState, count = 1, rng: Rng = Math.random): PullResul
 }
 
 /** ₽ que cuesta cada ticket de gacha */
-export const TICKET_PRICE = 250
+export const TICKET_PRICE = 1000
 
 /** Cuántos tickets de gacha se pueden comprar ahora con el dinero que hay */
 export const maxTicketsToBuy = (s: GameState): number => Math.floor(s.money / TICKET_PRICE)
