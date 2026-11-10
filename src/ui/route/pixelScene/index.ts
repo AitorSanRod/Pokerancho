@@ -3,6 +3,7 @@
 import { Biome } from '../../../data/maps'
 import type { SceneDef } from './engine/types'
 import { caveScene } from './scenes/cave'
+import { ceruleanCityScene } from './scenes/ceruleanCity'
 import { forestScene } from './scenes/forest'
 import { meadowScene } from './scenes/meadow'
 import { mtMoonScene } from './scenes/mtMoon'
@@ -21,6 +22,7 @@ const BUILDERS: Record<Biome, (seed: number) => SceneDef> = {
   [Biome.Meadow]: meadowScene,
   [Biome.PalletTown]: palletTownScene,
   [Biome.PewterCity]: pewterCityScene,
+  [Biome.CeruleanCity]: ceruleanCityScene,
   [Biome.Forest]: forestScene,
   [Biome.Cave]: caveScene,
   [Biome.MtMoon]: mtMoonScene,

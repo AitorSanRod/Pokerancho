@@ -58,6 +58,7 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
            ▼  grupo formado: se gasta la llave, el Pokémon sale del rancho
  ┌────────────────────┐   tramo 1 → sala de reorganizar → tramo 2 → … → jefe
  │  Incursión         │   en cualquier momento: «Votar retirada» (n/votos)
+ │                    │   «Daño del grupo»: quién lleva más daño en total
  │                    │   se puede cerrar la app: al volver sigue donde va
  └─────────┬──────────┘
            ▼
@@ -402,13 +403,14 @@ completar.
 
     keys.ts                  comprar y gastar llaves
     activeIncursion.ts       la incursión guardada (miembros, órdenes, inicio de cada tramo) y por dónde va con la hora
+    damageTally.ts           daño de cada uno del grupo sumando todos los combates, hasta lo que se ve
     incursionGame.ts         en la partida: entrar, avanzar, reorganizar, retirarse y cobrar (sin servidor)
 
   src/game/core/state.ts     incursion (la de ahora) e incursionKeys; MonPlace.Incursion
   src/ui/incursion/          IncursionScreen (pestaña), IncursionList + IncursionInfo + IncursionPrep, MovePicker,
-                             IncursionView (en curso): IncursionStage (escena, stageSpots dónde va cada uno),
-                             sceneState (estado en un momento), IncursionStrip (franja con los PS), Fold (plegables:
-                             IncursionRoster, pasivas, RetreatVote), RegroupPanel, IncursionSummary
+                             IncursionView (en curso, a pantalla completa): IncursionStage (escena, stageSpots),
+                             sceneState, IncursionStrip (PS, en la cabecera), IncursionMenu (botón «Menú»: ataque y plegables:
+                             IncursionRoster, DamageTally, pasivas, RetreatVote), RegroupPanel, IncursionSummary
   src/ui/shared/moveText.ts  cómo se cuenta cada ataque de incursión; sheet/MovesInfo, todos los ataques de una especie
   src/ui/shop/IncursionKeyShop.tsx, Mochila (game/team/bag.ts)
 

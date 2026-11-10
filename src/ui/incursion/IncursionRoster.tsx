@@ -14,12 +14,16 @@ interface Props {
   nicknames: Record<string, string>
 }
 
+/** Quién lleva a un Pokémon del grupo: tú, un bot o el apodo de otro jugador */
+export const memberNote = (id: string, uid: string, nicknames: Record<string, string>) =>
+  id === uid ? 'Tú' : isBot(id) ? 'Bot' : (nicknames[id] ?? '')
+
 export function IncursionRoster({ party, foes, moveOf, uid, nicknames }: Props) {
   return (
     <div className="incursion-roster">
       <div className="incursion-roster-col">
         {party.map((m) => (
-          <RosterLine key={m.id} m={m} note={m.id === uid ? 'Tú' : isBot(m.id) ? 'Bot' : (nicknames[m.id] ?? '')} move={incursionMove(moveOf(m.id)).name} />
+          <RosterLine key={m.id} m={m} note={memberNote(m.id, uid, nicknames)} move={incursionMove(moveOf(m.id)).name} />
         ))}
       </div>
       {foes.length > 0 && (

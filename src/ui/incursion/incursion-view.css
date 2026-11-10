@@ -1,13 +1,80 @@
-/* Incursión en curso: cabecera, escena, lista del grupo, reorganizar y final */
+/* Incursión en curso, como una ruta (route/run.css): la escena llena la pantalla y encima van la cabecera, el menú
+   desplegado y reorganizar */
 
 .incursion-view {
+  position: relative;
+  overflow: hidden;
+}
+.incursion-view .incursion-stage {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  border-radius: 0;
+}
+.incursion-hud {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  right: 12px;
+  z-index: 6;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  padding: 6px 8px 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f8f8f8e6;
 }
-/* La pantalla hace scroll: que no encoja a nadie para que quepa */
-.incursion-view > * {
+/* El ataque que se usa, bajo la cabecera para que no lo tape */
+.incursion-view .incursion-move-banner {
+  top: 116px;
+}
+.incursion-hud .incursion-strip {
+  padding: 0;
+  background: none;
+}
+.incursion-hud-note {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+.incursion-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   flex-shrink: 0;
+  min-height: 36px;
+  padding: 2px 10px;
+}
+.incursion-menu-btn.open {
+  background: var(--accent);
+  color: #fff;
+}
+/* El menú desplegado, dentro de la cabecera; si no cabe, hace scroll él solo */
+.incursion-menu-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 60dvh;
+  overflow-y: auto;
+  margin: 4px -2px 0 -6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  animation: fade-in 0.15s ease-out;
+}
+/* Reorganizar: abajo, sobre la escena */
+.incursion-bottom-sheet {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 7;
+  max-height: 65%;
+  overflow-y: auto;
+  border-radius: var(--radius);
+  box-shadow: 0 -4px 16px #0003;
 }
 .incursion-head {
   display: flex;
@@ -276,4 +343,17 @@
   display: flex;
   flex-direction: column;
   padding: 0 8px 8px;
+}
+.incursion-line.mine {
+  outline: 2px solid var(--accent);
+}
+.incursion-damage-rank {
+  min-width: 1.4em;
+  font-weight: 900;
+  color: var(--muted);
+}
+.incursion-damage-total {
+  min-width: 3em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }

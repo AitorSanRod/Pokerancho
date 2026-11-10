@@ -7,8 +7,16 @@ generan por código al abrir la primera ruta de cada bioma (semilla fija, siempr
 Escenas hechas: **Prado** (bioma `Meadow`: Ruta 1 y Ruta 1 - Final), **Pueblo Paleta** (`PalletTown`, solo esa ruta),
 **Bosque Verde** (`Forest`), **Ciudad Plateada** (`PewterCity`, ciudad de piedra de día con el museo y el gimnasio),
 **Cueva** (`Cave`, la incursión Cueva Helada y las raids: penumbra violeta, estalactitas y cristales), **Monte Moon**
-(`MtMoon`, ver abajo) y **Mar** (`Sea`, ruta marina: islotes,
-rocas con espuma y agua en la que nada el Pokémon). Todos los biomas tienen escena pixel art.
+(`MtMoon`, ver abajo), **Mar** (`Sea`, ruta marina: islotes,
+rocas con espuma y agua en la que nada el Pokémon) y **Ciudad Celeste** (`CeruleanCity`, ver abajo). Todos los biomas
+tienen escena pixel art.
+
+**Ciudad Celeste** (`scenes/ceruleanCity/`) es una ciudad de puerto en azules: el mar hasta el horizonte con veleros
+que cruzan (capa con `drift`) y un faro de franjas azules en su cabo, la orilla de arena, una sola fila de casas
+blancas de tejados azules (sin fila lejana, para que se vea el mar) con el gimnasio acuático, la tienda del toldo y la
+casa del pescador, un canal animado (`canal.ts`: boyas y barca que se mecen, barandilla, farolas y anclas), calle de
+adoquín azulado con la acera del muelle detrás y gaviotas de tarde en tarde (`particles.ts`). Paradas: cartel,
+gimnasio y casa del pescador.
 
 **Monte Moon** (`scenes/mtMoon/`) parte de la Cueva: casi a oscuras, la luz sale de los cristales y aclara por
 bandas la roca de alrededor (`light.ts › relight`, sin halos); rocas de caras planas (`crag`, no de bolas, que parecían
@@ -219,6 +227,9 @@ Parallax habitual: nubes 0,02–0,03 · colinas 0,05–0,1 · plano lejano 0,1�
 | `house` | `house(palette, width, scale, floors)` (plantas con cornisa entre ellas) con tejado de tejas, ladrillo y sombra del alero (luz arriba a la izquierda, contorno solo abajo y a la derecha); `chimneyTop` para el humo. Chimenea, puerta y ventanas (alféizar, sombra y reflejo), en `houseOpenings` |
 | `houseRow` | `houseRow(seed, row, style)`: fila de casas sin solape sobre césped, con calle, caminitos (`walkway`) y árboles en los huecos; `TownStyle` pone colores, paletas, plantas y los edificios especiales (`big`, en los puestos 2.º, 4.º…) |
 | `museum`, `gym` | Museo de frontón y columnas con escalinata; gimnasio de sillares con cuerpo central, emblema de roca y peñascos |
+| `waterGym`, `shop`, `fisherHut` | Gimnasio acuático (cúpula con nervios, friso de olas, ojos de buey, gota); tienda (casa con toldo a rayas); casa del pescador de tablones con red y salvavidas |
+| `harbor` | `railing` (barandilla con postes), `anchor` (ancla de dibujo fijo), `buoy` (boya a franjas), `rowboat` (barca de remos) |
+| `pavedStreet` | `pavedStreet(seed, palette)`: calle de losas entre bordillos; la franja de detrás y la de delante (`Verge`) las pone cada escena (césped, muelle…) |
 | `lamppost` | `lamppost`: farola de hierro con farol encendido y halo semitransparente solo sobre lo vacío |
 | `rocks` | `spike` (estalactita o estalagmita), `boulder` (peñasco de varias bolas), `crag` (roca de caras planas y cantos), `crystals` (racimo de cristales con halo), `rockMass` (pared de roca de fondo sin contorno) |
 | `fence` | `picketFence` (valla blanca con postes en los extremos), `flowerBed` (parterre de flores de tallo alto) |
