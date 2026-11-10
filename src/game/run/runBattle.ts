@@ -32,6 +32,11 @@ function rivalOf(r: Route, n: RouteNode, rng: Rng): Boss {
   return { speciesId, level: randInt(r.levels[0], r.levels[1], rng) + (n.levelBonus ?? 0) }
 }
 
+/** El Pokémon de la ruta ve una especie; si es la primera vez, sale como descubierta en el resumen de la ruta */
+export function seeOnRoute(s: GameState, speciesId: number) {
+  if (markSeen(s, speciesId)) s.run!.earned.discovered.push(speciesId)
+}
+
 /**
  * Resuelve el combate de la parada pero no lo aplica: PS, premio y derrota se aplican en `settleBattle` cuando
  * termina su tiempo, para que el estado no se adelante a lo que ve el jugador. Los jefes luchan con sus stats
@@ -52,7 +57,7 @@ export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng) 
   })
   const result = simulateBattle(player, enemy, rng)
   const win = result.outcome === 'win'
-  markSeen(s, enemyId)
+  seeOnRoute(s, enemyId)
   run.earned.battles++
   run.lastBattle = {
     player: { speciesId: mon.speciesId, name: player.name, level: mon.level, maxHp: player.maxHp },

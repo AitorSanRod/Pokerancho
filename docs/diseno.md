@@ -84,6 +84,7 @@ cupón) y los tickets que se gastan en el gacha, «tickets de gacha». En el có
    se cambian por piezas del Pokémon que se quiera.
 9. **Pokédex**: combinar 5 piezas iguales y pagar para crear el Pokémon o, si ya lo tienes, darle una ★. Solo se
    puede combinar una especie vista: en un combate de ruta, descubierta en una expedición o elegida como inicial.
+   Las vistas por primera vez en una ruta salen como «descubiertas» en su resumen final (`Run.earned.discovered`).
    Las especies no vistas se muestran con una interrogación pixelada, tengan piezas o no (las que tienen piezas
    enseñan el contador y se pueden abrir); sus piezas se guardan y salen como ??? en gacha, trituradora y MissingNo.
    La pantalla tiene un desplegable por Pokédex regional (cabecera con el mapa de la región difuminado; la de Kanto,

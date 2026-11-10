@@ -92,6 +92,8 @@ export interface Run {
     raidBosses: number[]
     /** Fracción más baja del dinero que han dado los jefes de la ruta por repetirla seguida (1: entero) */
     raidMoneyMult: number
+    /** Especies vistas por primera vez en esta ruta, en el orden en que aparecieron */
+    discovered: number[]
   }
 }
 
@@ -176,7 +178,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 40
+export const SAVE_VERSION = 41
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 

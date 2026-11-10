@@ -1,7 +1,7 @@
 import { route, type Route, type RouteNode } from '../../data/maps'
 import type { Rng } from '../core/random'
 import { activeMon, type GameState } from '../core/state'
-import { completeRoute, faint } from '../run/runBattle'
+import { completeRoute, faint, seeOnRoute } from '../run/runBattle'
 import { maxHp } from '../team/stats'
 import { addPlayer, isLinked, isSearching, localHooks, passivesOf, playerMembers, removePlayer, runLinkedClock, settleFall } from './raidEngine'
 import { beginEnding, isEnding, spendEnding } from './raidEnding'
@@ -50,6 +50,7 @@ export function enterRouteRaid(s: GameState, r: Route, n: RouteNode, rng: Rng) {
   run.raid = stopRoom(n, place, hp, rng, passivesOf(s))
   run.raid.remote = pendingLink(hp)
   run.raidRejoinHp = null
+  seeOnRoute(s, run.raid.boss.speciesId)
   addPlayer(s, run.raid, activeMon(s)!, ROUTE_RAID_LIVES)
   run.phase = 'raid'
 }

@@ -35,7 +35,7 @@ export function startRun(s: GameState, routeId: string, path = pathFrom(route(ro
     raidRejoinHp: null,
     heal: null,
     unlocked: null,
-    earned: { money: 0, tickets: 0, pieces: [], exp: 0, levelsGained: 0, wins: 0, battles: 0, raidBosses: [], raidMoneyMult: 1 },
+    earned: { money: 0, tickets: 0, pieces: [], exp: 0, levelsGained: 0, wins: 0, battles: 0, raidBosses: [], raidMoneyMult: 1, discovered: [] },
   }
 }
 

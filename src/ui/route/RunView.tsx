@@ -10,7 +10,7 @@ import { landmarkInView } from '../../game/run/runLandmark'
 import { stepsPerMinute } from '../../game/team/stats'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { formatMinutes } from '../shared/format'
-import { earningsRewards, levelUpReward, raidBossReward, repeatNote } from '../shared/rewardItems'
+import { discoveryReward, earningsRewards, levelUpReward, raidBossReward, repeatNote } from '../shared/rewardItems'
 import { RewardOverlay } from '../shared/RewardOverlay'
 import { battleFrame, fighterClass, statusClass } from './battleFrame'
 import { RouteBattle } from './RouteBattle'
@@ -124,7 +124,7 @@ function AbandonButton() {
 /** Al terminar la ruta, sus premios pasan de uno en uno; ya estaban sumados en el estado */
 function RunSummary({ run, mon }: { run: Run; mon: OwnedMon }) {
   const complete = run.phase === 'complete'
-  const items = [...run.earned.raidBosses.map(raidBossReward), ...earningsRewards(run.earned)]
+  const items = [...run.earned.discovered.map(discoveryReward), ...run.earned.raidBosses.map(raidBossReward), ...earningsRewards(run.earned)]
   if (run.earned.raidMoneyMult < 1) {
     items.push({ key: 'repeat', icon: <ItemIcon item={ICON.Money} size={96} off />, title: 'Menos dinero del jefe', detail: repeatNote(run.earned.raidMoneyMult), color: '#6a6a80' })
   }
