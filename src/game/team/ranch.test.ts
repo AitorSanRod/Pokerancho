@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { RouteId } from '../../data/maps'
 import { POKEMON } from '../../data/pokemon'
 import { activeMon, initialState } from '../core/state'
-import { chooseStarter } from '../core/test-utils'
+import { chooseStarter, readyForExpeditions } from '../core/test-utils'
 import { startRun } from '../run/run'
 import { EXPEDITION_DURATIONS, sendExpedition } from './expedition'
 import { healCost, healInstant, maxTrainSessions, restInRanch, train, trainCost, trainPlan } from './ranch'
@@ -40,7 +40,7 @@ describe('rancho', () => {
     const s = stateWithStarter()
     const mon = activeMon(s)!
     mon.hp = 5
-    s.completedRoutes.push(RouteId.PuebloPaleta)
+    readyForExpeditions(s, RouteId.PuebloPaleta)
     sendExpedition(s, mon.uid, RouteId.PuebloPaleta, EXPEDITION_DURATIONS[0])
     restInRanch(s, 60)
     expect(mon.hp).toBe(5)

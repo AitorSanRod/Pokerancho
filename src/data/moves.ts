@@ -143,6 +143,14 @@ export function move(id: string): Move {
   return mv
 }
 
+/** Daño fijo de Forcejeo: no depende de stats, tipos, críticos ni pasivas */
+export const STRUGGLE_DAMAGE = 40
+/** Fracción de sus PS máximos que se quita a sí mismo quien usa Forcejeo (al menos 1 PS) */
+export const STRUGGLE_RECOIL = 0.05
+
+/** Lo que usa en rutas y raids un Pokémon cuyo único ataque no afecta al rival por tipos: siempre acierta */
+export const STRUGGLE: Move = m('struggle', 'Forcejeo', 'normal', STRUGGLE_DAMAGE)
+
 /** El ataque de daño de un tipo en el escalón de una rareza (las incursiones los usan como repertorio común) */
 export const typeMove = (type: PokeType, rarity: Rarity): Move => BY_TYPE[type][rarity]
 

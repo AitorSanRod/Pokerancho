@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { route, RouteId } from '../../data/maps'
+import { route, RouteId, wildSpecies } from '../../data/maps'
 import { POKEMON } from '../../data/pokemon'
 import { activeMon, initialState, MonPlace, monPlace } from '../core/state'
-import { chooseStarter, seqRng } from '../core/test-utils'
+import { chooseStarter, readyForExpeditions, seqRng } from '../core/test-utils'
 import { runBlocker } from '../run/run'
 import {
   advanceExpeditions,
+  cancelBlockedExpeditions,
   cancelExpedition,
   collectExpedition,
   EXPEDITION_DURATIONS,
@@ -26,13 +27,14 @@ vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
 
 const DURATION = EXPEDITION_DURATIONS[0]
 const INVALID_DURATION = Math.max(...EXPEDITION_DURATIONS) + 1
+const ROUTE = RouteId.PuebloPaleta
 
 function stateOnExpedition(durationMin = DURATION) {
   const s = initialState()
   chooseStarter(s, POKEMON.Bulbasaur)
   const mon = activeMon(s)!
-  s.completedRoutes.push(RouteId.PuebloPaleta)
-  sendExpedition(s, mon.uid, RouteId.PuebloPaleta, durationMin)
+  readyForExpeditions(s, ROUTE)
+  sendExpedition(s, mon.uid, ROUTE, durationMin)
   return { s, mon }
 }
 
@@ -46,13 +48,14 @@ describe('expediciones', () => {
     const s = initialState()
     chooseStarter(s, POKEMON.Bulbasaur)
     const mon = activeMon(s)!
-    s.unlockedRoutes.push(RouteId.PuebloPaleta)
-    expect(expeditionRouteBlocker(s, RouteId.PuebloPaleta)).not.toBeNull()
-    sendExpedition(s, mon.uid, RouteId.PuebloPaleta, DURATION)
+    s.unlockedRoutes.push(ROUTE)
+    s.seen.push(...wildSpecies(route(ROUTE)))
+    expect(expeditionRouteBlocker(s, ROUTE)).not.toBeNull()
+    sendExpedition(s, mon.uid, ROUTE, DURATION)
     expect(s.expeditions).toHaveLength(0)
-    s.completedRoutes.push(RouteId.PuebloPaleta)
-    expect(expeditionRouteBlocker(s, RouteId.PuebloPaleta)).toBeNull()
-    sendExpedition(s, mon.uid, RouteId.PuebloPaleta, DURATION)
+    s.completedRoutes.push(ROUTE)
+    expect(expeditionRouteBlocker(s, ROUTE)).toBeNull()
+    sendExpedition(s, mon.uid, ROUTE, DURATION)
     expect(s.expeditions).toHaveLength(1)
   })
 
@@ -117,24 +120,29 @@ describe('expediciones', () => {
     expect(mults[mults.length - 1]).toBeGreaterThan(mults[0])
   })
 
-  it('descubre especies no vistas según su probabilidad y las anuncia una sola vez', () => {
-    const { s, mon } = stateOnExpedition(DURATION)
-    advanceExpeditions(s, DURATION)
-    const result = collectExpedition(s, mon.uid, () => 0.001)!
-    expect(result.discovered).toHaveLength(new Set(result.discovered).size)
-    expect(result.discovered.length).toBeGreaterThan(0)
-    for (const id of result.discovered) expect(s.seen).toContain(id)
+  it('no se puede mandar a una ruta completada si falta por ver alguno de sus salvajes', () => {
+    const s = initialState()
+    chooseStarter(s, POKEMON.Bulbasaur)
+    const mon = activeMon(s)!
+    s.completedRoutes.push(ROUTE)
+    const [unseen, ...rest] = wildSpecies(route(ROUTE))
+    s.seen = s.seen.filter((id) => id !== unseen)
+    s.seen.push(...rest)
+    expect(expeditionRouteBlocker(s, ROUTE)).toMatch(/1 Pokémon/)
+    sendExpedition(s, mon.uid, ROUTE, DURATION)
+    expect(s.expeditions).toHaveLength(0)
+    s.seen.push(unseen)
+    expect(expeditionRouteBlocker(s, ROUTE)).toBeNull()
   })
 
-  it('sin superar la probabilidad no descubre nada, aunque suelte piezas', () => {
-    const { s, mon } = stateOnExpedition(DURATION)
-    mon.level = 50
-    advanceExpeditions(s, DURATION)
-    const seen = [...s.seen]
-    // Encima de todas las probabilidades de descubrimiento: gana igualmente porque su tasa es 1
-    const result = collectExpedition(s, mon.uid, () => 0.5)!
-    expect(result.discovered).toEqual([])
-    expect(s.seen).toEqual(seen)
+  it('al cargar se quitan las expediciones a rutas con salvajes sin ver y se quedan las demás', () => {
+    const { s, mon } = stateOnExpedition()
+    cancelBlockedExpeditions(s)
+    expect(s.expeditions).toHaveLength(1)
+    s.seen = s.seen.filter((id) => id !== wildSpecies(route(ROUTE))[0])
+    cancelBlockedExpeditions(s)
+    expect(s.expeditions).toHaveLength(0)
+    expect(monPlace(s, mon.uid)).toBe(MonPlace.Ranch)
   })
 
   it('los Pokémon de la Caja no pueden ir de expedición', () => {

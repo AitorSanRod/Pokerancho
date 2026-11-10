@@ -1,4 +1,4 @@
-import type { Move } from '../../data/moves'
+import { STRUGGLE, STRUGGLE_DAMAGE, STRUGGLE_RECOIL, type Move } from '../../data/moves'
 import { CRIT_MULT, STATUS_INFO } from '../../data/passives'
 import { effectiveness } from '../../data/types'
 import type { Rng } from '../core/random'
@@ -35,7 +35,23 @@ export function heal(f: Fighter, amount: number, push: Push) {
   push({ kind: 'heal', side: f.side, text: `+${healed} PS` })
 }
 
-/** Un turno de un combatiente: el estado puede impedírselo; si ataca, pueden fallar, esquivarlo o salir un crítico */
+/** El único ataque de `atk` no le hace nada a `def` por tipos: en su lugar usa Forcejeo */
+export const mustStruggle = (atk: Fighter, def: Fighter) => effectiveness(atk.move.type, def.types) === 0
+
+/** Forcejeo: siempre acierta, quita STRUGGLE_DAMAGE al rival y una fracción de sus PS máximos a quien lo usa */
+function struggle(atk: Fighter, def: Fighter, push: Push) {
+  push({ kind: 'attack', side: atk.side, struggle: true, text: `${label(atk)} usó ${STRUGGLE.name}.` })
+  def.hp = Math.max(0, def.hp - STRUGGLE_DAMAGE)
+  push({ kind: 'hit', side: def.side, struggle: true, text: '' })
+  atk.hp = Math.max(0, atk.hp - Math.max(1, Math.ceil(atk.maxHp * STRUGGLE_RECOIL)))
+  push({ kind: 'hit', side: atk.side, struggle: true, text: 'Retroceso' })
+  for (const f of [def, atk]) if (f.hp === 0) push({ kind: 'faint', side: f.side, text: `¡${label(f)} se debilitó!` })
+}
+
+/**
+ * Un turno de un combatiente: el estado puede impedírselo; si ataca, pueden fallar, esquivarlo o salir un crítico. Si su
+ * ataque no afecta al rival por tipos, forcejea
+ */
 export function attack(atk: Fighter, def: Fighter, push: Push, rng: Rng) {
   const blocked = blockedByStatus(atk, push, rng)
   if (blocked === 'skip') return
@@ -47,12 +63,12 @@ export function attack(atk: Fighter, def: Fighter, push: Push, rng: Rng) {
     return
   }
 
+  if (mustStruggle(atk, def)) return struggle(atk, def, push)
   const mv = atk.move
   push({ kind: 'attack', side: atk.side, text: `${label(atk)} usó ${mv.name}.` })
   if (rng() * 100 >= mv.accuracy) return push({ kind: 'miss', side: def.side, miss: 'miss', text: '¡Pero falló!' })
   if (def.bonus.dodge > 0 && rng() < def.bonus.dodge) return push({ kind: 'miss', side: def.side, miss: 'dodge', text: '¡Lo esquivó!' })
   const { dealt, eff, crit } = damage(atk, def, mv, rng)
-  if (eff === 0) return push({ kind: 'miss', side: def.side, miss: 'immune', text: `No afecta a ${label(def)}…` })
 
   def.hp = Math.max(0, def.hp - dealt)
   const note = [crit ? '¡Crítico!' : '', eff > 1 ? '¡Es muy eficaz!' : eff < 1 ? 'No es muy eficaz…' : ''].filter(Boolean).join(' ')

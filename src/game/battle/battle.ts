@@ -40,6 +40,8 @@ export interface BattleEvent {
   crit?: boolean
   /** hit de un ataque: multiplicador de eficacia de tipos (2 = muy eficaz, 0,5 = poco eficaz) */
   eff?: number
+  /** attack: usa Forcejeo; hit: su golpe al rival o su retroceso (sobre quien lo usa, con el texto «Retroceso») */
+  struggle?: boolean
   /** miss: por qué no le hizo nada */
   miss?: MissReason
   playerHp: number

@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
+import { signatureMove, STRUGGLE_DAMAGE } from '../../data/moves'
+import { species, SPECIES } from '../../data/species'
+import { effectiveness } from '../../data/types'
 import { seqRng } from '../core/test-utils'
 import { calcStats } from '../team/stats'
 import { makeFighter } from '../battle/battle'
@@ -27,6 +30,17 @@ describe('rondas contra el jefe', () => {
     expect(raid.hp).toBe(raid.maxHp - dealt)
     expect(raid.members[0].damage).toBe(dealt)
     expect(hits.some((h) => h.from === BOSS_ID && h.to === 'a')).toBe(true)
+  })
+
+  it('si su ataque no afecta al jefe, forcejea: le quita STRUGGLE_DAMAGE y cuenta como golpe neutral', () => {
+    const raid = soloRaid()
+    const bossTypes = species(raid.boss.speciesId).types
+    const immune = SPECIES.find((sp) => effectiveness(signatureMove(sp.id).type, bossTypes) === 0)
+    if (!immune) return
+    raid.members[0].speciesId = immune.id
+    const hit = playRound(raid, noPassives, seqRng(0)).find((h) => h.to === BOSS_ID)!
+    expect(hit.dealt).toBe(Math.min(STRUGGLE_DAMAGE, raid.maxHp))
+    expect(hit.eff).toBe(1)
   })
 
   it('si el jefe lo debilita, espera RAID_REVIVE_MS y vuelve con todos sus PS', () => {

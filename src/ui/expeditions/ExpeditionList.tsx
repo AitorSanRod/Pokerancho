@@ -7,7 +7,7 @@ import { cancelExpedition, collectExpedition, isExpeditionDone } from '../../gam
 import { Bar, Sprite } from '../shared/common'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { formatMinutes } from '../shared/format'
-import { discoveryReward, earningsRewards, levelUpReward } from '../shared/rewardItems'
+import { earningsRewards, levelUpReward } from '../shared/rewardItems'
 import { RewardOverlay, type RewardItem } from '../shared/RewardOverlay'
 import { RouteRow } from '../route/RouteRow'
 
@@ -24,7 +24,7 @@ export function ExpeditionList({ game }: { game: GameState }) {
       return result && { result, speciesId: mon.speciesId, level: mon.level, seen: [...s.seen] }
     })
     if (!collected) return
-    const items = [...collected.result.discovered.map(discoveryReward), ...earningsRewards(collected.result, collected.seen)]
+    const items = earningsRewards(collected.result, collected.seen)
     if (collected.result.levelsGained > 0) items.push(levelUpReward(collected.speciesId, collected.level))
     setReport({ name, items })
   }

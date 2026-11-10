@@ -38,7 +38,7 @@ export function ExpeditionScreen({ game }: { game: GameState }) {
         })}
       </div>
       <p className="tiny muted">
-        Solo se puede mandar a las rutas ya completadas. En expedición no hay riesgo: el Pokémon vuelve con lo que haya ganado.
+        Solo se puede mandar a las rutas ya completadas y con todos sus Pokémon salvajes descubiertos. En expedición no hay riesgo: el Pokémon vuelve con lo que haya ganado.
       </p>
       {sending && home.length > 0 && <ExpeditionStartDialog game={game} route={sending} mons={home} onClose={() => setSending(null)} />}
     </div>

@@ -1,5 +1,6 @@
+import { route, wildSpecies } from '../../data/maps'
 import { rarityOf, SPECIES, type Rarity } from '../../data/species'
-import { markCaught } from '../collection/dex'
+import { markCaught, markSeen } from '../collection/dex'
 import { createMon, NEW_MON_LEVEL } from '../team/mons'
 import type { Rng } from './random'
 import type { GameState } from './state'
@@ -22,4 +23,10 @@ export function chooseStarter(s: GameState, speciesId: number) {
   s.activeUid = mon.uid
   s.tutorial = null
   markCaught(s, speciesId)
+}
+
+/** Completa la ruta y ve todos sus salvajes, para poder mandar expediciones a ella */
+export function readyForExpeditions(s: GameState, routeId: string) {
+  if (!s.completedRoutes.includes(routeId)) s.completedRoutes.push(routeId)
+  for (const id of wildSpecies(route(routeId))) markSeen(s, id)
 }

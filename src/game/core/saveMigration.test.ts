@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { FORM_ITEM_IDS, FORM_ITEMS } from '../../data/forms'
 import { IncursionId, MAX_KEYS } from '../../data/incursions'
-import { route, RouteId } from '../../data/maps'
+import { route, RouteId, wildSpecies } from '../../data/maps'
 import { RanchTypeId } from '../../data/ranchTypes'
 import { STAR_ITEM_IDS, STAR_ITEMS } from '../../data/starItems'
 import { STARTERS } from '../../data/species'
@@ -34,7 +34,7 @@ function advancedGame(): GameState {
     money: 12_345,
     tickets: 17,
     missingnoShards: 230,
-    seen: [A, B, C],
+    seen: [...new Set([A, B, C, ...wildSpecies(route(RouteId.PuebloPaleta))])],
     caught: [A, B],
     favorites: [C],
     pieces: { [A]: 4, [C]: 9 },

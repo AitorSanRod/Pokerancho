@@ -58,9 +58,9 @@ export function combinePrice(s: GameState, speciesId: number): number {
   return STAR_PRICES[ownedOfSpecies(s, speciesId)!.stars]
 }
 
-/** Por qué no se puede combinar ahora (null si se puede): hay que haberla visto en una ruta o expedición */
+/** Por qué no se puede combinar ahora (null si se puede): hay que haberla visto antes */
 export function combineBlocker(s: GameState, speciesId: number): string | null {
-  if (!isSeen(s, speciesId)) return 'Encuéntralo antes en una ruta o en una expedición.'
+  if (!isSeen(s, speciesId)) return 'Encuéntralo antes en una ruta.'
   if (piecesOf(s, speciesId) < PIECES_PER_COMBINE) return `Faltan tickets: tienes ${piecesOf(s, speciesId)} de ${PIECES_PER_COMBINE}.`
   if (s.money < combinePrice(s, speciesId)) return `Necesitas ₽ ${combinePrice(s, speciesId)}.`
   const missingItem = combineStarItem(s, speciesId) && starItemBlocker(s, speciesId)

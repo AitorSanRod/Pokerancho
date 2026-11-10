@@ -1,6 +1,6 @@
 import type { PassiveRef } from '../../data/passives'
 import { effectiveness } from '../../data/types'
-import { attack } from '../battle/attack'
+import { attack, mustStruggle } from '../battle/attack'
 import { makeFighter, type Fighter } from '../battle/battle'
 import type { Rng } from '../core/random'
 import { BOSS_ID, type Raid, type RaidHit, type RaidMember } from './raidRoom'
@@ -43,8 +43,9 @@ function knockOut(m: RaidMember) {
 /** Golpe de `atk` a `def` con la fórmula de siempre; devuelve el daño hecho */
 function strike(atk: Fighter, def: Fighter, rng: Rng): { dealt: number; eff: number } {
   const before = def.hp
+  const eff = mustStruggle(atk, def) ? 1 : effectiveness(atk.move.type, def.types)
   attack(atk, def, silent, rng)
-  return { dealt: before - def.hp, eff: effectiveness(atk.move.type, def.types) }
+  return { dealt: before - def.hp, eff }
 }
 
 /** Golpe del jefe: nunca quita más de RAID_BOSS_MAX_HIT de los PS máximos de un Pokémon */

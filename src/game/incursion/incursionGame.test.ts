@@ -108,6 +108,14 @@ describe('incursión en curso', () => {
     expect(monPlace(s, uid)).toBe(MonPlace.Ranch)
   })
 
+  it('las piezas que da no descubren la especie', () => {
+    start()
+    continueIncursion(s, endOfLeg(0))
+    const seen = [...s.seen]
+    collectIncursion(s, endOfLeg(1))
+    expect(s.seen).toEqual(seen)
+  })
+
   it('antes de cada turno se para en la ventana de toques; si no llega a los toques, se cierra sin potenciar', () => {
     start()
     const played = recordOf(s.incursion!).legs[0]

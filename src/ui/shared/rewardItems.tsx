@@ -61,7 +61,7 @@ export function levelUpReward(speciesId: number, level: number): RewardItem {
   }
 }
 
-/** Especie vista por primera vez en una ruta o en una expedición */
+/** Especie vista por primera vez en una ruta */
 export function discoveryReward(speciesId: number): RewardItem {
   return {
     key: `discovered-${speciesId}`,

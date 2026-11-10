@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { signatureMove } from '../../data/moves'
+import { signatureMove, STRUGGLE_DAMAGE, STRUGGLE_RECOIL } from '../../data/moves'
 import { POKEMON } from '../../data/pokemon'
 import { SPECIES } from '../../data/species'
 import { effectiveness } from '../../data/types'
 import { seqRng } from '../core/test-utils'
 import { calcStats } from '../team/stats'
-import { makeFighter, simulateBattle } from './battle'
+import { attack } from './attack'
+import { makeFighter, simulateBattle, type Push } from './battle'
 
 const LEVEL = 30
 /** Primera pareja de especies en la que el ataque de una no afecta a la otra */
@@ -24,14 +25,34 @@ describe('simulateBattle', () => {
     expect(result.events.at(-1)?.kind).toBe('faint')
   })
 
-  it.runIf(IMMUNE)('un movimiento sin efecto nunca daña al rival', () => {
+  it.runIf(IMMUNE)('si su ataque no afecta al rival, forcejea: daño fijo al rival y retroceso a sí mismo', () => {
     const player = makeFighter('player', IMMUNE[0], 50)
     const enemy = makeFighter('enemy', IMMUNE[1], 50)
     const result = simulateBattle(player, enemy, seqRng(0.5))
-    const hitsOnEnemy = result.events.filter((e) => e.kind === 'hit' && e.side === 'enemy')
-    expect(hitsOnEnemy).toHaveLength(0)
-    expect(result.outcome).not.toBe('win')
-    expect(result.events.some((e) => e.kind === 'miss' && e.side === 'enemy' && e.miss === 'immune')).toBe(true)
+    const at = result.events.findIndex((e) => e.kind === 'attack' && e.side === 'player')
+    const [before, attackEvent, onEnemy, recoil] = result.events.slice(at - 1, at + 3)
+    expect(attackEvent.struggle).toBe(true)
+    expect(onEnemy).toMatchObject({ kind: 'hit', side: 'enemy', struggle: true })
+    expect(before.enemyHp - onEnemy.enemyHp).toBe(Math.min(before.enemyHp, STRUGGLE_DAMAGE))
+    expect(recoil).toMatchObject({ kind: 'hit', side: 'player', struggle: true })
+    expect(onEnemy.playerHp - recoil.playerHp).toBe(Math.min(onEnemy.playerHp, Math.ceil(player.maxHp * STRUGGLE_RECOIL)))
+    expect(result.events.some((e) => e.kind === 'miss' && e.miss === 'immune')).toBe(false)
+  })
+
+  it.runIf(IMMUNE)('el retroceso de Forcejeo puede debilitar a quien lo usa', () => {
+    const player = makeFighter('player', IMMUNE[0], 50, { hp: 1 })
+    const enemy = makeFighter('enemy', IMMUNE[1], 50)
+    const events: Parameters<Push>[0][] = []
+    attack(player, enemy, (e) => events.push(e), seqRng(0.5))
+    expect(player.hp).toBe(0)
+    expect(events.at(-1)).toMatchObject({ kind: 'faint', side: 'player' })
+  })
+
+  it('un ataque que sí afecta no forcejea', () => {
+    const player = makeFighter('player', POKEMON.Charmander, 20)
+    const enemy = makeFighter('enemy', POKEMON.Bulbasaur, 20)
+    const result = simulateBattle(player, enemy, seqRng(0.5))
+    expect(result.events.some((e) => e.struggle)).toBe(false)
   })
 
   it('cada golpe de un ataque dice su eficacia y si fue crítico', () => {

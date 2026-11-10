@@ -9,7 +9,7 @@ import { ranchCapacity, usedSlots } from '../team/ranches'
 import { CloudAction, cloudAction, cloudUpload, parseUpload, saveSummary, stateFromSaved, withEvolutionLines } from './cloudSave'
 import { initialState, SAVE_VERSION } from './state'
 import { backupTeam } from './teamBackup'
-import { chooseStarter } from './test-utils'
+import { chooseStarter, readyForExpeditions } from './test-utils'
 
 vi.mock('../../data/maps/kantoMaps', () => import('./test-map'))
 
@@ -52,6 +52,7 @@ describe('partida en la nube', () => {
 
   it('de una partida de otra versión se recuperan el equipo y sus expediciones, aunque la copia del equipo sea vieja', () => {
     const s = playedGame()
+    readyForExpeditions(s, RouteId.PuebloPaleta)
     s.expeditions.push({ uid: s.owned[0].uid, routeId: RouteId.PuebloPaleta, durationMin: EXPEDITION_DURATIONS[0], elapsedMin: 1 })
     const { expeditions: _, savedAt: __, ...oldTeam } = backupTeam(s)
     const restored = stateFromSaved({ ...s, version: SAVE_VERSION - 1 }, oldTeam)

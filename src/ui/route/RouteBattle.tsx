@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { signatureMove } from '../../data/moves'
+import { signatureMove, STRUGGLE } from '../../data/moves'
 import { STATUS_INFO } from '../../data/passives'
 import { TYPE_INFO, type PokeType } from '../../data/types'
 import type { BattleRecord, Side } from '../../game/battle/battle'
@@ -69,7 +69,7 @@ function MoveCallout({ record, frame, side }: { record: BattleRecord; frame: Bat
   const { index, event } = frame
   const attackAt = event.kind === 'attack' ? index : record.events[index - 1]?.kind === 'attack' ? index - 1 : -1
   if (attackAt < 0 || record.events[attackAt].side !== side) return null
-  const mv = signatureMove(speciesOf(record, side))
+  const mv = record.events[attackAt].struggle ? STRUGGLE : signatureMove(speciesOf(record, side))
   return (
     <span key={attackAt} className="move-callout" style={typeColor(mv.type)}>
       {mv.name}
@@ -85,6 +85,10 @@ function Hit({ record, frame, side }: { record: BattleRecord; frame: BattleFrame
   const { event, index } = frame
   if (frame.ended || event.side !== side || (event.kind !== 'hit' && event.kind !== 'status')) return null
   const rival = side === 'player' ? 'enemy' : 'player'
-  const type = event.status ? STATUS_INFO[event.status].type : signatureMove(speciesOf(record, rival)).type
+  const type = event.status
+    ? STATUS_INFO[event.status].type
+    : event.struggle
+      ? STRUGGLE.type
+      : signatureMove(speciesOf(record, rival)).type
   return <HitEffect key={index} type={type} />
 }

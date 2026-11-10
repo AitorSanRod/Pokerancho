@@ -1,7 +1,6 @@
 import { incursion, type IncursionId } from '../../data/incursions'
 import { species } from '../../data/species'
 import { boostedMoney } from '../battle/rewards'
-import { markSeen } from '../collection/dex'
 import { addPieces } from '../collection/pieces'
 import type { Rng } from '../core/random'
 import { findMon, MonPlace, monPlace, type GameState } from '../core/state'
@@ -121,7 +120,7 @@ export function retreatIncursion(s: GameState, now: number) {
   a.retreat = { leg: p.leg, atMs: p.legMs }
 }
 
-/** Al terminar: cobra lo ganado, el Pokémon vuelve al rancho con los PS que le queden y se cierra la incursión */
+/** Al terminar: cobra lo ganado (las piezas no descubren la especie), el Pokémon vuelve al rancho con los PS que le queden y se cierra la incursión */
 export function collectIncursion(s: GameState, now: number): Earned | null {
   const a = s.incursion
   if (!a) return null
@@ -130,10 +129,7 @@ export function collectIncursion(s: GameState, now: number): Earned | null {
   const { earned } = p.record
   s.money += boostedMoney(earned.money)
   s.tickets += earned.tickets
-  for (const [id, n] of Object.entries(earned.pieces)) {
-    markSeen(s, Number(id))
-    addPieces(s, Number(id), n)
-  }
+  for (const [id, n] of Object.entries(earned.pieces)) addPieces(s, Number(id), n)
   for (const [item, n] of Object.entries(earned.starItems) as [StarItem, number][]) addStarItems(s, item, n)
   const mon = findMon(s, a.uid)
   if (mon) {

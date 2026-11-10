@@ -7,7 +7,7 @@ import { createMon } from '../team/mons'
 import { CLIENT_TOPICS, MAX_CLIENT_JOBS, MAX_PUSH_AHEAD_MS, parseClientJobs, PushTopic } from './push'
 import { clientPushPlan, predictRunEnd } from './pushPlan'
 import { initialState } from './state'
-import { chooseStarter } from './test-utils'
+import { chooseStarter, readyForExpeditions } from './test-utils'
 
 vi.mock('../../data/maps/kantoMaps', () => import('./test-map'))
 
@@ -18,7 +18,7 @@ function withExpedition() {
   chooseStarter(s, STARTERS[0])
   const mon = createMon(STARTERS[1], s.owned[0].level, 0)
   s.owned.push(mon)
-  s.completedRoutes.push(RouteId.PuebloPaleta)
+  readyForExpeditions(s, RouteId.PuebloPaleta)
   sendExpedition(s, mon.uid, RouteId.PuebloPaleta, EXPEDITION_DURATIONS[0])
   return { s, mon }
 }

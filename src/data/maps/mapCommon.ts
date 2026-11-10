@@ -176,6 +176,12 @@ export function pathSpecies(r: Route, path: string[]): number[] {
   return [...new Set(ids)]
 }
 
+/** Especies salvajes de la ruta, sin repetir: las de la ruta y las de cada parada de salvajes que lleve las suyas */
+export function wildSpecies(r: Route): number[] {
+  const lists = [r.encounters, ...r.nodes.filter((n) => n.kind === NodeKind.Wild).map((n) => n.encounters ?? [])]
+  return [...new Set(lists.flat().map((e) => e.speciesId))]
+}
+
 /** Pasos medios que se andan por combate en el camino principal (los de expediciones, que no recorren tramos) */
 export function averageLegSteps(r: Route): number {
   const path = pathFrom(r)

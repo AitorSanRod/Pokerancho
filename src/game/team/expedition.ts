@@ -1,7 +1,7 @@
-import { averageLegSteps, route, type Route } from '../../data/maps'
-import { rarityOf, species, type Rarity } from '../../data/species'
+import { averageLegSteps, route, wildSpecies, type Route } from '../../data/maps'
+import { species } from '../../data/species'
 import { expReward, moneyReward, pieceReward, ticketReward } from '../battle/rewards'
-import { isSeen, markSeen } from '../collection/dex'
+import { isSeen } from '../collection/dex'
 import { addPieces } from '../collection/pieces'
 import { pickEncounter, randInt, type Rng } from '../core/random'
 import { findMon, MonPlace, monPlace, type Expedition, type GameState, type OwnedMon } from '../core/state'
@@ -16,8 +16,6 @@ export const EXPEDITION_DURATIONS = [15, 60, 240, 480]
  * decimal (×2,5: 2 o 3, de media 2,5)
  */
 const DURATION_REWARD_MULT: Record<number, number> = { 15: 1, 60: 2.5, 240: 3, 480: 3 }
-/** Probabilidad, por combate, de descubrir (marcar como vista) una especie no vista, según su rareza */
-const DISCOVERY_CHANCE: Record<Rarity, number> = { common: 0.15, rare: 0.1, epic: 0.075, legendary: 0.05 }
 /** Pokémon que pueden estar de expedición a la vez sin mejoras (cada mejora de la tienda suma 1) */
 const BASE_EXPEDITION_SLOTS = 1
 /** Combates por hora de expedición (en una ruta normal se libran unos 15) */
@@ -33,8 +31,6 @@ interface ExpeditionResult extends LevelUpResult {
   tickets: number
   /** Especies de las piezas soltadas (una entrada por pieza) */
   pieces: number[]
-  /** Especies vistas por primera vez en esta expedición */
-  discovered: number[]
 }
 
 export const expeditionSlots = (s: GameState): number => BASE_EXPEDITION_SLOTS + upgradeLevel(s, 'expeditionSlots')
@@ -60,9 +56,17 @@ export function expeditionBlocker(s: GameState, uid: string): string | null {
   return null
 }
 
-/** Por qué no se puede mandar a nadie a esa ruta (solo a las ya completadas), o null si se puede */
+/** Por qué no se puede mandar a nadie a esa ruta (solo a las completadas y con sus salvajes vistos), o null si se puede */
 export function expeditionRouteBlocker(s: GameState, routeId: string): string | null {
-  return s.completedRoutes.includes(routeId) ? null : 'Complétala primero para mandar expediciones a ella.'
+  if (!s.completedRoutes.includes(routeId)) return 'Complétala primero para mandar expediciones a ella.'
+  const missing = wildSpecies(route(routeId)).filter((id) => !isSeen(s, id)).length
+  if (missing === 0) return null
+  return missing === 1 ? 'Falta 1 Pokémon por descubrir en ella.' : `Faltan ${missing} Pokémon por descubrir en ella.`
+}
+
+/** Al cargar la partida: quita, sin premio, las expediciones a rutas a las que ya no se puede mandar (de antes de la regla) */
+export function cancelBlockedExpeditions(s: GameState) {
+  s.expeditions = s.expeditions.filter((e) => !expeditionRouteBlocker(s, e.routeId))
 }
 
 export function sendExpedition(s: GameState, uid: string, routeId: string, durationMin: number) {
@@ -97,13 +101,6 @@ export function scaleCount(amount: number, mult: number, rng: Rng): number {
   return scaled > whole && rng() < scaled - whole ? whole + 1 : whole
 }
 
-/** Marca como vista una especie nueva si se supera su probabilidad de descubrimiento; true si la descubre */
-function rollDiscovery(s: GameState, enemyId: number, rng: Rng): boolean {
-  if (isSeen(s, enemyId) || rng() >= DISCOVERY_CHANCE[rarityOf(species(enemyId))]) return false
-  markSeen(s, enemyId)
-  return true
-}
-
 /** Probabilidad de ganar cada combate: crece con el nivel del Pokémon frente al nivel medio de la ruta */
 export function expeditionWinRate(mon: OwnedMon, r: Route): number {
   const routeLevel = (r.levels[0] + r.levels[1]) / 2
@@ -128,13 +125,11 @@ export function collectExpedition(s: GameState, uid: string, rng: Rng = Math.ran
     money: 0,
     tickets: 0,
     pieces: [] as number[],
-    discovered: [] as number[],
   }
 
   for (let i = 0; i < result.battles; i++) {
     const enemyId = pickEncounter(r.encounters, rng)
     const level = randInt(r.levels[0], r.levels[1], rng)
-    if (rollDiscovery(s, enemyId, rng)) result.discovered.push(enemyId)
     if (rng() >= winRate) continue
     result.wins++
     result.exp += Math.round(expReward(level, mon.level) * mult)

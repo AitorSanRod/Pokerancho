@@ -49,9 +49,9 @@ function lostHp(record: BattleRecord, index: number, side: Side): number {
   return side === 'player' ? before.playerHp - now.playerHp : before.enemyHp - now.enemyHp
 }
 
-/** El daño grande y, debajo, por qué: crítico, eficacia, el estado que lo causa o el golpe a sí mismo */
+/** El daño grande y, debajo, por qué: crítico, eficacia, el estado que lo causa, el golpe a sí mismo o el retroceso */
 function hitPop(event: BattleEvent, lost: number): ReactNode {
-  const note = event.status ? (event.text || STATUS_INFO[event.status].name) : hitNote(event)
+  const note = event.status ? (event.text || STATUS_INFO[event.status].name) : event.struggle ? event.text : hitNote(event)
   return (
     <>
       <b>-{lost}</b>

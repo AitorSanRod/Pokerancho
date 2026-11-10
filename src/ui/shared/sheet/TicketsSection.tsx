@@ -57,7 +57,7 @@ export function TicketsSection({ game, speciesId }: { game: GameState; speciesId
         </div>
         <Bar value={pieces} max={PIECES_PER_COMBINE} kind="exp" />
       </div>
-      {!seen && <p className="notice small">Encuéntralo en una ruta o en una expedición para poder crearlo.</p>}
+      {!seen && <p className="notice small">Encuéntralo en una ruta para poder crearlo.</p>}
       {seen && blocker && pieces >= PIECES_PER_COMBINE && <p className="tiny muted center">{blocker}</p>}
       {guided && <TutorialHint>Junta los {PIECES_PER_COMBINE} tickets para conseguir a {species(speciesId).name}.</TutorialHint>}
 
