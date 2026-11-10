@@ -5,19 +5,20 @@ import { seqRng } from '../core/test-utils'
 import { buyTicket, maxTicketsToBuy, MONEY_PRIZES, MONEY_SLOT_CHANCE, PIECES_PER_PULL, pull, TICKET_PRICE } from './gacha'
 import { piecesOf } from './pieces'
 
-// El primer número de cada tirada decide si sale dinero; el resto, rareza y especie de cada pieza
-const NO_MONEY = 0.99
-const ROLLS_PER_PULL = 1 + 2 * PIECES_PER_PULL
+// El primer número de cada tirada decide si sale dinero (y, si sale, el siguiente cuál); luego, si sale objeto
+// estelar; el resto, rareza y especie de cada pieza
+const NOTHING = 0.99
 // rng = 0 siempre cae en la primera especie legendaria; 0.99 cae en común
-const LEGENDARY = seqRng(NO_MONEY, ...Array<number>(ROLLS_PER_PULL - 1).fill(0))
-const COMMON = seqRng(0.99)
-const MONEY = seqRng(0)
+const LEGENDARY = seqRng(NOTHING, NOTHING, ...Array<number>(2 * PIECES_PER_PULL).fill(0))
+const COMMON = seqRng(NOTHING)
+// Dinero (el primer premio), sin objeto y piezas comunes: justo los números de una tirada, para que todas empiecen igual
+const MONEY = seqRng(0, 0, NOTHING, ...Array<number>(2 * (PIECES_PER_PULL - 1)).fill(NOTHING))
 
 describe('pull', () => {
   it('no permite tirar sin tickets', () => {
     const s = initialState()
     s.tickets = 0
-    expect(pull(s, 1, LEGENDARY)).toEqual({ pieces: [], money: [] })
+    expect(pull(s, 1, LEGENDARY)).toEqual({ pieces: [], money: [], starItems: [] })
     expect(s.pieces).toEqual({})
   })
 

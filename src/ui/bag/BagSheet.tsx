@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { incursion } from '../../data/incursions'
 import { RANCH_TYPES } from '../../data/ranchTypes'
+import { STAR_ITEMS } from '../../data/starItems'
 import { STONES } from '../../data/stones'
 import type { GameState } from '../../game/core/state'
 import { bagContents, isBagEmpty } from '../../game/team/bag'
@@ -10,16 +11,23 @@ import { ItemIcon } from '../shared/ItemIcon'
 import { RanchTypeGems } from '../shop/RanchTypeShop'
 import './bag.css'
 
-/** Mochila (menú del rancho): lo comprado en la Tienda y aún sin usar, con dónde se usa cada cosa */
+/** Mochila (menú del rancho): lo comprado o ganado y aún sin usar, con dónde se usa cada cosa */
 export function BagSheet({ game, onBack }: { game: GameState; onBack: () => void }) {
   const bag = bagContents(game)
   return (
     <>
       <MenuSheetHeader icon={ICON.Bag} title="Mochila" onBack={onBack} />
       {isBagEmpty(bag) ? (
-        <p className="notice small">La mochila está vacía. Lo que compres en la Tienda y aún no hayas usado aparecerá aquí.</p>
+        <p className="notice small">La mochila está vacía. Lo que compres en la Tienda o ganes y aún no hayas usado aparecerá aquí.</p>
       ) : (
         <>
+          {bag.starItems.length > 0 && (
+            <BagGroup title="Objetos estelares" hint="Se gastan al crear o evolucionar a un Pokémon raro, épico o legendario.">
+              {bag.starItems.map(({ id, count }) => (
+                <BagTile key={id} icon={<ItemIcon item={STAR_ITEMS[id].item} size={44} />} name={STAR_ITEMS[id].name} count={count} />
+              ))}
+            </BagGroup>
+          )}
           {bag.stones.length > 0 && (
             <BagGroup title="Piedras evolutivas" hint="Se usan en la ficha del Pokémon, en Evolución.">
               {bag.stones.map(({ id, count }) => (

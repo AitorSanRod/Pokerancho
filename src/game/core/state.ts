@@ -2,6 +2,7 @@ import type { IncursionId } from '../../data/incursions'
 import { RouteId } from '../../data/maps'
 import type { Potion } from '../../data/potions'
 import type { RanchTypeId } from '../../data/ranchTypes'
+import type { StarItem } from '../../data/starItems'
 import type { Stone } from '../../data/stones'
 import type { BattleRecord } from '../battle/battle'
 import type { ActiveIncursion } from '../incursion/activeIncursion'
@@ -128,6 +129,10 @@ export interface GameState {
   ranchNames: Partial<Record<number, string>>
   /** Piedras evolutivas compradas y aún sin gastar */
   stones: Partial<Record<Stone, number>>
+  /** Objetos estelares sin gastar (ver collection/starItems.ts) */
+  starItems: Partial<Record<StarItem, number>>
+  /** Tiradas seguidas del gacha sin que haya salido cada objeto estelar con garantía */
+  gachaPity: Partial<Record<StarItem, number>>
   /** Llaves de incursión compradas y aún sin gastar, por incursión */
   incursionKeys: Partial<Record<IncursionId, number>>
   /** La incursión en la que está un Pokémon del jugador (ver incursion/incursionGame.ts); null si ninguna */
@@ -167,7 +172,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 38
+export const SAVE_VERSION = 39
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 
@@ -192,6 +197,8 @@ export function initialState(): GameState {
     ranchExtraSlots: {},
     ranchNames: {},
     stones: {},
+    starItems: {},
+    gachaPity: {},
     incursionKeys: {},
     incursion: null,
     incursionQueue: null,

@@ -3,10 +3,10 @@ import type { Biome } from '../../data/maps'
 import { EventKind } from '../../game/incursion/events'
 import { BattleHud } from '../route/BattleHud'
 import { WalkScene } from '../route/WalkScene'
-import { partySpot } from '../raid/partySpot'
 import { MoveBanner } from './MoveBanner'
 import { eventLine, type SceneMon, type SceneState } from './sceneState'
-import { StageFighter, type Spot } from './StageFighter'
+import { StageFighter } from './StageFighter'
+import { foeSpot, partySpot } from './stageSpots'
 import '../route/battle.css'
 import '../route/battle-callouts.css'
 import '../route/status-fx.css'
@@ -17,21 +17,6 @@ import './incursion-stage.css'
 const IDLE_PHASE_S = 0.37
 /** Eventos desde que empieza una sala con jefe durante los que se ve su aviso */
 const BOSS_WARNING_EVENTS = 2
-
-/** Sitio de los rivales a la derecha: uno solo, donde el rival de una ruta; varios, dos delante y uno detrás */
-const FOE_SPOTS: Record<number, Spot[]> = {
-  1: [{ left: 74, rise: 0, scale: 1, z: 10 }],
-  2: [
-    { left: 64, rise: 0, scale: 1, z: 10 },
-    { left: 84, rise: 18, scale: 0.9, z: 9 },
-  ],
-  3: [
-    { left: 62, rise: 0, scale: 1, z: 10 },
-    { left: 82, rise: 0, scale: 1, z: 10 },
-    { left: 72, rise: 34, scale: 0.86, z: 9 },
-  ],
-}
-const foeSpot = (index: number, count: number): Spot => (FOE_SPOTS[count] ?? FOE_SPOTS[3])[index] ?? FOE_SPOTS[3][2]
 
 /** El rival cuyo marcador se ve: el que está en juego, o el jefe, o el primero que quede en pie */
 function shownFoe(scene: SceneState): SceneMon | undefined {
@@ -57,7 +42,7 @@ export function IncursionStage({ biome, scene, uid, overlay }: { biome: Biome; s
         <div className="route-battle">
           {crit && <div key={`flash-${scene.seq}`} className="battle-flash" />}
           {scene.party.map((m, i) => (
-            <StageFighter key={m.id} m={m} spot={partySpot(i, m.id)} side="party" mine={m.id === uid} scene={scene} idleDelay={-i * IDLE_PHASE_S} />
+            <StageFighter key={m.id} m={m} spot={partySpot(i)} side="party" mine={m.id === uid} scene={scene} idleDelay={-i * IDLE_PHASE_S} />
           ))}
           {scene.foes.map((m, i) => (
             <StageFighter key={m.id} m={m} spot={foeSpot(i, scene.foes.length)} side="foe" mine={false} scene={scene} idleDelay={-i * IDLE_PHASE_S} />

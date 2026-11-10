@@ -1,4 +1,4 @@
-import { battleMove } from '../../data/learnsets'
+import { incursionMove, moveClass } from '../../data/incursionMoves'
 import { species } from '../../data/species'
 import { findMon, type GameState } from '../../game/core/state'
 import { act } from '../../game/core/store'
@@ -8,7 +8,7 @@ import type { MemberState } from '../../game/incursion/fighter'
 import { repertoire } from '../../game/incursion/repertoire'
 import { sendIncursionMove, sendIncursionReady } from '../../net/incursionSync'
 import { MovePicker } from './MovePicker'
-import { KIND_LABEL } from './moveText'
+import { CLASS_LABEL } from '../shared/moveText'
 
 /**
  * Sala de reorganizar: lo que lleva cada uno (y lo que van eligiendo los demás) y, para el tuyo, elegir otro movimiento
@@ -38,11 +38,11 @@ export function RegroupPanel({ game, a, members, msLeft }: { game: GameState; a:
       </div>
       <ul className="incursion-regroup-team tiny">
         {members.map((m) => {
-          const mv = battleMove(moveOf(m))
+          const mv = incursionMove(moveOf(m))
           const who = m.id === a.uid ? '(tú)' : (online?.nicknames[m.id] ?? '')
           return (
             <li key={m.id}>
-              <strong>{species(m.speciesId).name}</strong> {who} · {mv.name} <span className="muted">({KIND_LABEL[mv.kind]})</span>
+              <strong>{species(m.speciesId).name}</strong> {who} · {mv.name} <span className="muted">({CLASS_LABEL[moveClass(mv)]})</span>
               {online?.ready.includes(m.id) && <em className="incursion-ready"> listo</em>}
             </li>
           )

@@ -185,3 +185,95 @@
   border-color: var(--accent);
   background: #fff;
 }
+
+/* La cabecera, en una sola línea */
+.incursion-head-title {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Franja bajo la escena: el grupo a la izquierda y los rivales a la derecha, cada uno con su icono y sus PS */
+.incursion-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 12px;
+  background: var(--card);
+}
+.incursion-strip-side {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.incursion-strip-side.foes {
+  padding-left: 8px;
+  border-left: 2px solid var(--line);
+}
+.incursion-strip-mon {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 38px;
+}
+.incursion-strip-mon .bar {
+  width: 100%;
+  height: 5px;
+}
+.incursion-strip-mon.mine {
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.incursion-strip-mon.boss {
+  width: 44px;
+}
+.incursion-strip-mon.gone {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+.incursion-strip-status {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: var(--red-dark);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+/* Secciones plegadas bajo la escena */
+.incursion-fold {
+  border-radius: 12px;
+  background: var(--card);
+}
+.incursion-fold-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 12px;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+.incursion-fold-title::-webkit-details-marker {
+  display: none;
+}
+.incursion-fold-title::after {
+  content: '▾';
+  color: var(--muted);
+  transition: rotate 0.2s;
+}
+.incursion-fold[open] > .incursion-fold-title::after {
+  rotate: 180deg;
+}
+.incursion-fold-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px 8px;
+}

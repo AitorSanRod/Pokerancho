@@ -1,5 +1,6 @@
 import { EventKind, on, type IncursionEvent, type Log } from './events'
 import { isUp, Team, type GroupFighter } from './fighter'
+import { noStages } from './statStages'
 import type { GroupPassive } from './groupPassives'
 
 // Todo lo que comparte una sala en juego: los dos bandos, los revivires que le quedan al grupo y el registro.
@@ -34,7 +35,7 @@ export function hurt(bf: Battlefield, f: GroupFighter, amount: number, hit: Omit
   bf.log(on(f, { ...hit, amount: taken }))
   if (f.hp > 0) return
   f.fellAt = bf.falls++
-  f.changes = []
+  f.stages = noStages()
   f.taunt = null
   bf.log(on(f, { kind: EventKind.Faint, text: `¡${f.name} se debilitó!` }))
 }

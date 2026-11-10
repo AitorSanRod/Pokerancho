@@ -12,7 +12,7 @@ const start = (members = [member('a'), member('b')]): LegStart => ({ room: 0, me
 
 /** Un rival que no se puede ganar: un jefe enorme de nivel muy alto con furia desde el primer turno */
 const hopeless = battleRoom([
-  { speciesId: POKEMON.Mewtwo, level: 100, moveId: HIT, hpMult: 50, boss: { enrage: { fromTurn: 1, every: 1, atk: 1 } } },
+  { speciesId: POKEMON.Mewtwo, level: 100, moveIds: [HIT], hpMult: 50, boss: { enrage: { fromTurn: 1, every: 1, atk: 1 } } },
 ])
 
 describe('tramo de incursión', () => {

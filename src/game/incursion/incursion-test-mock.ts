@@ -1,7 +1,8 @@
 import { POKEMON } from '../../data/pokemon'
-import { SUPPORT_MOVES } from '../../data/supportMoves'
+import { EffectKind, effectOf, IMOVE } from '../../data/incursionMoves'
 import { IncursionId, IncursionPrizeKind, IncursionTier, RoomKind, type Incursion, type IncursionRoom } from '../../data/incursions/types'
 import { Biome } from '../../data/maps/mapCommon'
+import { STAR_ITEM_IDS } from '../../data/starItems'
 
 export * from '../../data/incursions/types'
 
@@ -10,7 +11,7 @@ export * from '../../data/incursions/types'
  * `vi.mock('../../data/incursions', () => import('./incursion-test-mock'))`. Dos salas fáciles con una de reorganizar
  * en medio
  */
-const easy = { speciesId: POKEMON.Caterpie, level: 1, moveId: SUPPORT_MOVES.bug.id }
+const easy = { speciesId: POKEMON.Caterpie, level: 1, moveIds: [Object.values(IMOVE).find((m) => effectOf(m, EffectKind.Raise))!.id] }
 const room: IncursionRoom = { kind: RoomKind.Battle, name: 'Sala', foes: [easy], reward: { money: 10, exp: 20 } }
 
 export const TEST_INCURSION: Incursion = {
@@ -22,7 +23,10 @@ export const TEST_INCURSION: Incursion = {
   minLevel: 10,
   maxLevel: 40,
   rooms: [room, { kind: RoomKind.Regroup, name: 'Reorganizar' }, room],
-  prizes: [{ kind: IncursionPrizeKind.Money, amount: 100, chance: 1 }],
+  prizes: [
+    { kind: IncursionPrizeKind.Money, amount: 100, chance: 1 },
+    { kind: IncursionPrizeKind.StarItem, item: STAR_ITEM_IDS[0], amount: 1, chance: 1 },
+  ],
   bots: [POKEMON.Snorlax],
 }
 

@@ -1,9 +1,10 @@
-import type { BattleMove } from '../../data/learnsets'
+import type { IncursionMove } from '../../data/incursionMoves'
 import { TYPE_INFO } from '../../data/types'
-import { KIND_LABEL, moveText } from './moveText'
+import { moveClass } from '../../data/incursionMoves'
+import { CLASS_LABEL, moveText } from '../shared/moveText'
 
 /** Lista de movimientos para elegir uno: nombre, tipo, papel y lo que hace */
-export function MovePicker({ moves, selectedId, onSelect }: { moves: BattleMove[]; selectedId: string; onSelect: (id: string) => void }) {
+export function MovePicker({ moves, selectedId, onSelect }: { moves: IncursionMove[]; selectedId: string; onSelect: (id: string) => void }) {
   return (
     <div className="incursion-moves" role="listbox">
       {moves.map((mv) => (
@@ -18,7 +19,7 @@ export function MovePicker({ moves, selectedId, onSelect }: { moves: BattleMove[
           <span className="incursion-move-head">
             <strong>{mv.name}</strong>
             <span className="incursion-move-kind tiny">
-              {KIND_LABEL[mv.kind]} · {TYPE_INFO[mv.type].name}
+              {CLASS_LABEL[moveClass(mv)]} · {TYPE_INFO[mv.type].name}
             </span>
           </span>
           <span className="tiny muted">{moveText(mv)}</span>

@@ -1,5 +1,6 @@
 import { markCaught } from '../collection/dex'
 import { addPieces } from '../collection/pieces'
+import { addStarItems } from '../collection/starItems'
 import type { GameState } from '../core/state'
 import { createMon } from '../team/mons'
 import { BOX_SLOTS, boxedMons, ranchWithRoom } from '../team/ranches'
@@ -71,6 +72,7 @@ export function receiveGood(s: GameState, good: TradeGood): ReceiveResult | null
   if (good.kind === GoodKind.Mon) duplicate = receiveMon(s, good.mon)
   else if (good.kind === GoodKind.Pieces) addPieces(s, good.speciesId, good.count)
   else if (good.kind === GoodKind.Shards) s.missingnoShards += good.count
+  else if (good.kind === GoodKind.StarItem) addStarItems(s, good.item, good.count)
   else if (good.kind === GoodKind.Money) s.money += good.count
   else s.tickets += good.count
   return { good, duplicate }

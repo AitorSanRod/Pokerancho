@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { battleMove } from '../../data/learnsets'
+import { incursionMove } from '../../data/incursionMoves'
 import type { GameState } from '../../game/core/state'
 import type { ActiveIncursion } from '../../game/incursion/activeIncursion'
 import { PickDialog } from './PickDialog'
@@ -13,7 +13,7 @@ export function PickButton({ game, a, scene }: { game: GameState; a: ActiveIncur
   const applied = a.orders.flatMap((o) => o.turns ?? []).findLast((t) => t.picks?.[a.uid])?.picks[a.uid]
   const current = a.pendingPick ?? { moveId: mine.moveId, target: applied?.target ?? null }
   const targetName = (id: string | null) => [...scene.party, ...scene.foes].find((m) => m.id === id)?.name
-  const label = (moveId: string, target: string | null) => [battleMove(moveId).name, targetName(target)].filter(Boolean).join(' → ')
+  const label = (moveId: string, target: string | null) => [incursionMove(moveId).name, targetName(target)].filter(Boolean).join(' → ')
 
   return (
     <>

@@ -10,7 +10,8 @@ import { pickedTarget } from './movePicks'
 const pick = <T>(list: T[], rng: Rng): T => list[Math.floor(rng() * list.length)]
 const hpFraction = (f: GroupFighter) => f.hp / f.maxHp
 
-function taunter(bf: Battlefield, actor: GroupFighter): GroupFighter | null {
+/** El rival que provoca a `actor`, si hay alguno */
+export function taunter(bf: Battlefield, actor: GroupFighter): GroupFighter | null {
   return enemies(bf, actor).find((e) => e.taunt) ?? null
 }
 

@@ -1,7 +1,9 @@
 import { Rarity, RARITY_INFO, SPECIES, rarityOf } from '../../data/species'
+import type { StarItem } from '../../data/starItems'
 import type { Rng } from '../core/random'
 import type { GameState } from '../core/state'
 import { addPieces } from './pieces'
+import { rollStarItem } from './starItems'
 
 /** Piezas que da cada tirada; cada una sortea su rareza y su especie por separado */
 export const PIECES_PER_PULL = 5
@@ -55,16 +57,21 @@ export interface PullResult {
   pieces: PieceDrop[]
   /** ₽ de cada casilla de dinero que salió (como mucho una por tirada) */
   money: number[]
+  /** Objetos estelares que salieron (como mucho uno por tirada, en otra casilla) */
+  starItems: StarItem[]
 }
 
-/** Gasta hasta `count` tickets (los que haya) y devuelve las piezas y el dinero obtenidos */
+/** Gasta hasta `count` tickets (los que haya) y devuelve las piezas, el dinero y los objetos estelares obtenidos */
 export function pull(s: GameState, count = 1, rng: Rng = Math.random): PullResult {
-  const result: PullResult = { pieces: [], money: [] }
+  const result: PullResult = { pieces: [], money: [], starItems: [] }
   for (; count > 0 && s.tickets > 0; count--) {
     s.tickets--
     const hasMoney = rng() < MONEY_SLOT_CHANCE
     if (hasMoney) result.money.push(rollMoney(rng))
-    for (let i = hasMoney ? 1 : 0; i < PIECES_PER_PULL; i++) result.pieces.push(rollPiece(rng))
+    const item = rollStarItem(s, rng)
+    if (item) result.starItems.push(item)
+    const prizeSlots = (hasMoney ? 1 : 0) + (item ? 1 : 0)
+    for (let i = prizeSlots; i < PIECES_PER_PULL; i++) result.pieces.push(rollPiece(rng))
   }
   for (const d of result.pieces) addPieces(s, d.speciesId, 1)
   for (const amount of result.money) s.money += amount

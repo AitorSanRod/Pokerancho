@@ -1,38 +1,51 @@
-import type { BattleMove } from '../../data/learnsets'
+import { EffectKind, hasArea, MoveClass, moveClass, STAT_NAME, type IncursionMove, type MoveEffect, type StatChange } from '../../data/incursionMoves'
 import { STATUS_INFO } from '../../data/passives'
-import { MoveKind, type BoostStat, type StatChange } from '../../data/supportMoves'
 
-// Cómo se cuenta en pantalla lo que hace cada movimiento de incursión.
+// Cómo se cuenta en pantalla lo que hace cada ataque de incursión, a partir de su clase, potencia y efectos.
 
-/** Papel que da cada efecto en el grupo */
-export const KIND_LABEL: Record<MoveKind, string> = {
-  [MoveKind.Damage]: 'Daño',
-  [MoveKind.Heal]: 'Curar',
-  [MoveKind.Taunt]: 'Provocar',
-  [MoveKind.Boost]: 'Apoyo',
-  [MoveKind.Debuff]: 'Debilitar',
-  [MoveKind.Inflict]: 'Estado',
+export const CLASS_LABEL: Record<MoveClass, string> = {
+  [MoveClass.Damage]: 'Daño',
+  [MoveClass.Heal]: 'Cura',
+  [MoveClass.Status]: 'Estado',
 }
 
-const STAT_NAME: Record<BoostStat, string> = { atk: 'Ataque', def: 'Defensa', spe: 'Velocidad' }
-
 const pct = (n: number) => `${Math.round(Math.abs(n) * 100)}%`
-const stats = (changes: StatChange[]) => changes.map((c) => `${STAT_NAME[c.stat]} ${pct(c.amount)}`).join(' y ')
-const accuracy = (mv: BattleMove) => (mv.accuracy < 100 ? ` · Prec. ${mv.accuracy}%` : '')
+const stats = (changes: StatChange[]) => changes.map((c) => `${STAT_NAME[c.stat]} ${c.stages > 0 ? '+' : '−'}${Math.abs(c.stages)}`).join(' y ')
 
-export function moveText(mv: BattleMove): string {
-  switch (mv.kind) {
-    case MoveKind.Damage:
-      return `Golpea al rival más débil a su tipo · Pot. ${mv.power}${accuracy(mv)}`
-    case MoveKind.Heal:
-      return `Cura un ${pct(mv.heal)} de los PS ${mv.area ? 'a todo el grupo' : 'al aliado con menos PS'}`
-    case MoveKind.Taunt:
-      return `Atrae los golpes ${mv.turns} turnos y recibe un ${pct(mv.guard)} menos`
-    case MoveKind.Boost:
-      return `Sube ${stats(mv.changes)} a todo el grupo, ${mv.turns} turnos`
-    case MoveKind.Debuff:
-      return `Baja ${stats(mv.changes)} ${mv.area ? 'a todos los rivales' : 'al rival con más PS'}, ${mv.turns} turnos${accuracy(mv)}`
-    case MoveKind.Inflict:
-      return `${STATUS_INFO[mv.status].name} ${mv.area ? 'a todos los rivales' : 'a un rival sin estado'}${accuracy(mv)}`
+function effectText(e: MoveEffect, area: boolean): string | null {
+  switch (e.kind) {
+    case EffectKind.Drain:
+      return `recupera el ${pct(e.fraction)} del daño`
+    case EffectKind.HealAlly:
+      return `cura al aliado con menos PS${e.fraction !== 1 ? ` (×${e.fraction})` : ''}`
+    case EffectKind.HealTeam:
+      return `cura a todo el grupo${e.fraction !== 1 ? ` (×${e.fraction})` : ''}`
+    case EffectKind.Inflict:
+      return `${e.chance < 1 ? `${pct(e.chance)} de ` : ''}${STATUS_INFO[e.status].name.toLowerCase()}${area ? ' a todos' : ''}`
+    case EffectKind.Raise:
+      return `sube ${stats(e.changes)} ${e.self ? 'a sí mismo' : 'al grupo'}`
+    case EffectKind.Lower:
+      return `baja ${stats(e.changes)}${area ? ' a todos los rivales' : ' a un rival'}`
+    case EffectKind.Taunt:
+      return `atrae los golpes ${e.turns} turnos y recibe un ${pct(e.guard)} menos`
+    case EffectKind.Area:
+      return null
   }
+}
+
+/** Lo que mejora al potenciarlo con los toques */
+function tapText(mv: IncursionMove): string {
+  const what = { [MoveClass.Damage]: 'daño', [MoveClass.Heal]: 'cura', [MoveClass.Status]: 'daño y cura del grupo' }[moveClass(mv)]
+  return `${mv.tapGoal} toques: +${pct(mv.tapBonus)} de ${what}`
+}
+
+export function moveText(mv: IncursionMove): string {
+  const area = hasArea(mv)
+  const cls = moveClass(mv)
+  const head = cls === MoveClass.Damage ? `Pot. ${mv.power}${area ? ' a todos los rivales' : ''}` : cls === MoveClass.Heal ? `Cura de pot. ${mv.power}` : ''
+  const effects = mv.effects.map((e) => effectText(e, area)).filter(Boolean)
+  const accuracy = mv.accuracy < 100 ? `Prec. ${mv.accuracy}%` : ''
+  const priority = mv.priority !== 0 ? `Prioridad ${mv.priority > 0 ? '+' : '−'}${Math.abs(mv.priority)}` : ''
+  const text = [head, ...effects, priority, accuracy, tapText(mv)].filter(Boolean).join(' · ')
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }

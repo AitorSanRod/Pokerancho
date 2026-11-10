@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { RoomKind } from '../../data/incursions'
-import { MoveKind } from '../../data/supportMoves'
-import { battleRoom, member, NO_TAPS, supportOf, testIncursion, weakFoe } from './incursion-test-utils'
+import { EffectKind } from '../../data/incursionMoves'
+import { battleRoom, member, moveWith, NO_TAPS, testIncursion, weakFoe } from './incursion-test-utils'
 import { IncursionOutcome, simulateIncursion } from './incursionRun'
 import { legDuration } from './incursionTimeline'
 
@@ -23,7 +23,7 @@ describe('incursión entera', () => {
   })
 
   it('al reorganizar, cada uno lucha el tramo siguiente con el movimiento que eligió', () => {
-    const other = supportOf(MoveKind.Taunt).id
+    const other = moveWith(EffectKind.Taunt).id
     const rec = simulateIncursion(inc, members, [{ seed: 1, moves: {}, turns: [] }, { seed: 2, moves: { a: other }, turns: [] }], null, NO_TAPS)
     expect(rec.legs[1].next.members.find((m) => m.id === 'a')?.moveId).toBe(other)
   })

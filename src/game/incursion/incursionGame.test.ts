@@ -12,6 +12,8 @@ import { eventStartMs, legDuration } from './incursionTimeline'
 import { PARTY_SIZE } from './party'
 import { noTurnOrders, TAP_WINDOW_MS } from './tapWindow'
 import { repertoire } from './repertoire'
+import { STAR_ITEM_IDS } from '../../data/starItems'
+import { starItemsOf } from '../collection/starItems'
 
 vi.mock('../../data/incursions', () => import('./incursion-test-mock'))
 
@@ -101,6 +103,7 @@ describe('incursión en curso', () => {
     expect(collectIncursion(s, finish - 1)).toBeNull()
     expect(collectIncursion(s, finish)).toEqual(earned)
     expect(s.money).toBe(money + boostedMoney(earned.money))
+    expect(starItemsOf(s, STAR_ITEM_IDS[0])).toBe(earned.starItems[STAR_ITEM_IDS[0]])
     expect(s.incursion).toBeNull()
     expect(monPlace(s, uid)).toBe(MonPlace.Ranch)
   })

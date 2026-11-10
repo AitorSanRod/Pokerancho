@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { IncursionId, MAX_KEYS } from '../../data/incursions'
 import { route, RouteId } from '../../data/maps'
 import { RanchTypeId } from '../../data/ranchTypes'
+import { STAR_ITEM_IDS, STAR_ITEMS } from '../../data/starItems'
 import { STARTERS } from '../../data/species'
 import { Stone } from '../../data/stones'
 import { startRun } from '../run/run'
@@ -80,6 +81,15 @@ describe('al actualizar el juego no se pierde nada', () => {
   it('las llaves de incursión se quedan si son de una incursión que existe y sin pasar del máximo', () => {
     const save = { ...fromOldVersion(advancedGame()), incursionKeys: { [IncursionId.CuevaHelada]: MAX_KEYS + 1, quitada: 1 } }
     expect(migrateSave(save)!.incursionKeys).toEqual({})
+  })
+
+  it('los objetos estelares y las garantías del gacha se quedan si son de un objeto que existe', () => {
+    const [withPity] = STAR_ITEM_IDS.filter((id) => STAR_ITEMS[id].pity !== null)
+    const [withoutPity] = STAR_ITEM_IDS.filter((id) => STAR_ITEMS[id].pity === null)
+    const save = { ...fromOldVersion(advancedGame()), starItems: { [withPity]: 2, quitado: 1 }, gachaPity: { [withPity]: 7, [withoutPity]: 3 } }
+    const s = migrateSave(save)!
+    expect(s.starItems).toEqual({ [withPity]: 2 })
+    expect(s.gachaPity).toEqual({ [withPity]: 7 })
   })
 
   it('la incursión en curso se descarta: el Pokémon vuelve al rancho', () => {

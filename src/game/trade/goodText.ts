@@ -1,4 +1,5 @@
 import { species } from '../../data/species'
+import { STAR_ITEMS } from '../../data/starItems'
 import { GoodKind, type TradeAsk, type TradeGood } from './tradeGoods'
 
 // Lo que cambia de manos, en palabras del jugador (anuncios, Notificaciones y avisos push)
@@ -13,6 +14,7 @@ export function goodText(good: TradeGood): string {
     return `${species(good.mon.speciesId).name} Nv. ${good.mon.level}${stars}`
   }
   if (good.kind === GoodKind.Pieces) return `${plural(good.count, 'ticket', 'tickets')} de ${species(good.speciesId).name}`
+  if (good.kind === GoodKind.StarItem) return plural(good.count, STAR_ITEMS[good.item].name, STAR_ITEMS[good.item].plural)
   if (good.kind === GoodKind.Shards) return plural(good.count, 'trozo de MissingNo', 'trozos de MissingNo')
   if (good.kind === GoodKind.Money) return `${amount(good.count)} ₽`
   return plural(good.count, 'ticket gacha', 'tickets gacha')

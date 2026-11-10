@@ -2,6 +2,7 @@ import { IncursionId, MAX_KEYS } from '../../data/incursions'
 import { route } from '../../data/maps'
 import { RANCH_TYPES } from '../../data/ranchTypes'
 import { SPECIES } from '../../data/species'
+import { isStarItem, STAR_ITEMS } from '../../data/starItems'
 import { Stone } from '../../data/stones'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
 import { SERVER_GIFT_ID } from '../collection/serverGifts'
@@ -102,6 +103,8 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   ranchNames: (v) =>
     isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([k, n]) => isRanch(k) && typeof n === 'string' && n === cleanRanchName(n) && n)) : undefined,
   stones: (v) => countsOf(v, (k) => (Object.values(Stone) as string[]).includes(k)),
+  starItems: (v) => countsOf(v, isStarItem),
+  gachaPity: (v) => countsOf(v, (k) => isStarItem(k) && STAR_ITEMS[k].pity !== null),
   incursionKeys: (v) => countsOf(v, (k) => (Object.values(IncursionId) as string[]).includes(k), MAX_KEYS),
   tutorial: (v) => (v === null || (Object.values(TutorialStep) as unknown[]).includes(v) ? v : undefined),
   unlockedRoutes: (v) => listOf(v, isRoute),

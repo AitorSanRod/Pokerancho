@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { species } from '../../data/species'
 import { isFavorite } from '../../game/collection/dex'
 import { piecesOf } from '../../game/collection/pieces'
+import { starItemsOf } from '../../game/collection/starItems'
 import type { GameState } from '../../game/core/state'
 import { givableMons, giveMonBlocker } from '../../game/trade/tradeGive'
 import { GoodKind, MAX_TRADE_COUNT, type OfferRequest } from '../../game/trade/tradeGoods'
@@ -9,10 +10,16 @@ import { Sprite } from '../shared/common'
 import { HeartIcon } from '../shared/HeartIcon'
 import { MonPicker } from '../shared/MonPicker'
 import { CountInput } from './CountInput'
+import { StarItemChoice } from './StarItemChoice'
 
 type OfferKind = OfferRequest['kind']
 
-const KIND_LABEL: Record<OfferKind, string> = { [GoodKind.Mon]: 'Pokémon', [GoodKind.Pieces]: 'Tickets', [GoodKind.Shards]: 'Trozos' }
+const KIND_LABEL: Record<OfferKind, string> = {
+  [GoodKind.Mon]: 'Pokémon',
+  [GoodKind.Pieces]: 'Tickets',
+  [GoodKind.Shards]: 'Trozos',
+  [GoodKind.StarItem]: 'Objetos',
+}
 
 interface Props {
   game: GameState
@@ -23,7 +30,7 @@ interface Props {
   onCorrected: () => void
 }
 
-/** Qué se pone a la venta: un Pokémon del rancho o la Caja, tickets de una especie o trozos de MissingNo */
+/** Qué se pone a la venta: un Pokémon del rancho o la Caja, tickets de una especie, trozos de MissingNo u objetos estelares */
 export function OfferPicker({ game, value, onChange, onInvalid, onCorrected }: Props) {
   const [kind, setKind] = useState<OfferKind>(value?.kind ?? GoodKind.Mon)
   const pick = (next: OfferKind) => {
@@ -77,6 +84,16 @@ export function OfferPicker({ game, value, onChange, onInvalid, onCorrected }: P
         ) : (
           <p className="small muted">No tienes trozos de MissingNo.</p>
         ))}
+      {kind === GoodKind.StarItem && (
+        <StarItemChoice
+          selected={value?.kind === GoodKind.StarItem ? value.item : null}
+          held={(item) => starItemsOf(game, item)}
+          onPick={(item) => onChange({ kind: GoodKind.StarItem, item, count: 1 })}
+        />
+      )}
+      {value?.kind === GoodKind.StarItem && (
+        <CountInput label="Objetos" value={value.count} max={Math.min(starItemsOf(game, value.item), MAX_TRADE_COUNT)} onChange={(count) => onChange({ ...value, count })} onInvalid={onInvalid} onCorrected={onCorrected} />
+      )}
     </>
   )
 }

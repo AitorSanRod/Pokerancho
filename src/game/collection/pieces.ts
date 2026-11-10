@@ -1,10 +1,12 @@
 import { RARITY_INFO, rarityOf, species } from '../../data/species'
+import type { StarItem } from '../../data/starItems'
 import { boostedMoney } from '../battle/rewards'
 import { TutorialStep, type GameState } from '../core/state'
 import { createMon, NEW_MON_LEVEL } from '../team/mons'
 import { ranchWithRoom } from '../team/ranches'
 import { MAX_STARS } from '../team/stats'
 import { isSeen, markCaught } from './dex'
+import { spendStarItem, starItemBlocker, starItemFor } from './starItems'
 
 /** Piezas iguales que se gastan en cada combinación: desbloquean el Pokémon o le dan una ★ */
 export const PIECES_PER_COMBINE = 5
@@ -42,6 +44,12 @@ export function combineKind(s: GameState, speciesId: number): CombineKind {
 /** ₽ por combinar tickets de un Pokémon que ya tiene las ★ al máximo */
 export const surplusMoney = (speciesId: number): number => boostedMoney(RARITY_INFO[rarityOf(species(speciesId))].surplusMoney)
 
+/** Objeto estelar que gasta combinar: solo al crear un Pokémon que no es común (fuera del tutorial); null si ninguno */
+export function combineStarItem(s: GameState, speciesId: number): StarItem | null {
+  if (combineKind(s, speciesId) !== CombineKind.Unlock || s.tutorial === TutorialStep.Combine) return null
+  return starItemFor(speciesId)
+}
+
 /** ₽ que cuesta combinar; el inicial del tutorial es gratis y cambiar piezas por ₽ no cuesta nada */
 export function combinePrice(s: GameState, speciesId: number): number {
   const kind = combineKind(s, speciesId)
@@ -55,6 +63,8 @@ export function combineBlocker(s: GameState, speciesId: number): string | null {
   if (!isSeen(s, speciesId)) return 'Encuéntralo antes en una ruta o en una expedición.'
   if (piecesOf(s, speciesId) < PIECES_PER_COMBINE) return `Faltan tickets: tienes ${piecesOf(s, speciesId)} de ${PIECES_PER_COMBINE}.`
   if (s.money < combinePrice(s, speciesId)) return `Necesitas ₽ ${combinePrice(s, speciesId)}.`
+  const missingItem = combineStarItem(s, speciesId) && starItemBlocker(s, speciesId)
+  if (missingItem) return missingItem
   if (combineKind(s, speciesId) === CombineKind.Unlock && ranchWithRoom(s, speciesId) === null)
     return 'No cabe en ningún rancho: libera espacio o guarda Pokémon en la Caja.'
   return null
@@ -74,6 +84,8 @@ export const combinableCount = (s: GameState): number => combinableIds(s).length
 export function combine(s: GameState, speciesId: number): CombineResult | null {
   if (!canCombine(s, speciesId)) return null
   const kind = combineKind(s, speciesId)
+  const item = combineStarItem(s, speciesId)
+  if (item) spendStarItem(s, item)
   s.money -= combinePrice(s, speciesId)
   s.pieces[speciesId] -= PIECES_PER_COMBINE
 

@@ -141,3 +141,11 @@
 .shred-confirm > .btn.small {
   align-self: center;
 }
+
+/* Objetos estelares: tres casillas en fila */
+.gacha-item-rates {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.gacha-item-rates strong {
+  font-size: 17px;
+}

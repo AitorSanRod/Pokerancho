@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { POKEMON } from '../../data/pokemon'
 import { Rarity, RARITY_INFO, rarityOf, species } from '../../data/species'
+import { starItemOfRarity } from '../../data/starItems'
 import { boostedMoney } from '../battle/rewards'
 import { initialState } from '../core/state'
 import { chooseStarter, speciesOfRarity } from '../core/test-utils'
@@ -9,6 +10,7 @@ import { RANCH_SLOTS, slotsOf, usedSlots } from '../team/ranches'
 import { MAX_STARS } from '../team/stats'
 import { pickStarter } from '../team/tutorial'
 import { markSeen } from './dex'
+import { addStarItems, starItemFor, starItemsOf } from './starItems'
 import {
   addPieces,
   canCombine,
@@ -79,8 +81,28 @@ describe('combine', () => {
       s.money = createPrice(id) - 1
       expect(combineBlocker(s, id)).toMatch(/₽/)
       s.money = createPrice(id)
+      const item = starItemFor(id)
+      if (item) addStarItems(s, item, 1)
       expect(combine(s, id)?.kind).toBe(CombineKind.Unlock)
       expect(s.money).toBe(0)
+    }
+  })
+
+  it('crear un Pokémon no común pide su objeto estelar y lo gasta; las ★ no lo piden', () => {
+    for (const rarity of Object.values(Rarity)) {
+      const item = starItemOfRarity(rarity)
+      if (!item) continue
+      const s = initialState()
+      s.tutorial = null
+      const id = speciesOfRarity(rarity)
+      readyToCombine(s, id)
+      s.money = createPrice(id) + STAR_PRICES[0]
+      expect(combineBlocker(s, id)).not.toBeNull()
+      addStarItems(s, item, 1)
+      expect(combine(s, id)?.kind).toBe(CombineKind.Unlock)
+      expect(starItemsOf(s, item)).toBe(0)
+      addPieces(s, id, PIECES_PER_COMBINE)
+      expect(combine(s, id)?.kind).toBe(CombineKind.Star)
     }
   })
 

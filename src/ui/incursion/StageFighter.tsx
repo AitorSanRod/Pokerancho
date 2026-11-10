@@ -3,20 +3,13 @@ import { STATUS_INFO } from '../../data/passives'
 import { EventKind } from '../../game/incursion/events'
 import { HitEffect } from '../route/HitEffect'
 import { statusClass } from '../route/battleFrame'
+import { BOSS_SPRITE_SIZE, ENEMY_SPRITE_SIZE } from '../route/spriteSizes'
 import { roundClass } from '../raid/roundClass'
 import { Sprite } from '../shared/common'
 import type { SceneMon, SceneState } from './sceneState'
 import { StagePop } from './StagePop'
+import type { Spot } from './stageSpots'
 
-/** Tamaño del sprite de cada uno: el tuyo algo mayor, los rivales como en la ruta y el jefe más grande */
-const SIZE = { party: 84, mine: 96, foe: 104, boss: 150 }
-
-export interface Spot {
-  left: number
-  rise: number
-  scale: number
-  z: number
-}
 
 interface Props {
   m: SceneMon
@@ -47,7 +40,7 @@ export function StageFighter({ m, spot, side, mine, scene, idleDelay }: Props) {
     ['--spot-scale' as string]: spot.scale,
     ['--idle-delay' as string]: `${idleDelay}s`,
   } as CSSProperties
-  const size = m.boss ? SIZE.boss : side === 'foe' ? SIZE.foe : mine ? SIZE.mine : SIZE.party
+  const size = m.boss ? BOSS_SPRITE_SIZE : ENEMY_SPRITE_SIZE
   const fallen = down ? (side === 'foe' ? 'fainted' : 'down') : ''
 
   return (

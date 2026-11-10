@@ -18,7 +18,7 @@ const SECTIONS: { title: string; text: string }[] = [
   },
   {
     title: 'Antes de entrar',
-    text: 'Eliges un Pokémon del rancho y un movimiento de su repertorio. Ese movimiento decide su papel: golpear, curar, provocar (atraer los golpes), subir stats al grupo, bajarlas a los rivales o poner estados. Después, el combate va solo, por turnos.',
+    text: 'Eliges un Pokémon del rancho y un movimiento de su repertorio. Ese movimiento decide su papel: golpear, curar, provocar (atraer los golpes), subir stats (al grupo o a sí mismo), bajarlas a los rivales o poner estados. Después, el combate va solo, por turnos: antes actúan los ataques con prioridad y luego los más rápidos. Las subidas y bajadas de stats van por etapas, como en los juegos (de −6 a +6), y duran hasta acabar la sala.',
   },
   {
     title: 'En plena pelea',
@@ -42,7 +42,7 @@ const SECTIONS: { title: string; text: string }[] = [
   },
   {
     title: 'Premios y retirada',
-    text: 'Cada sala de combate superada da ₽ y EXP, que te quedas pase lo que pase. Al terminar la incursión llega el premio final: ₽, EXP, tickets y tickets de Pokémon. El grupo puede retirarse votando (hace falta la mitad de los jugadores, redondeando hacia arriba): se acaba en ese momento y se cobra lo ganado hasta ahí.',
+    text: 'Cada sala de combate superada da ₽ y EXP, que te quedas pase lo que pase. Al terminar la incursión llega el premio final: ₽, EXP, tickets, tickets de Pokémon y, con suerte, objetos estelares (Polvo estelar, Trozo de estrella o Fragmento de cometa, los que piden crear y evolucionar a los Pokémon raros, épicos y legendarios). El grupo puede retirarse votando (hace falta la mitad de los jugadores, redondeando hacia arriba): se acaba en ese momento y se cobra lo ganado hasta ahí.',
   },
   {
     title: 'Mientras dura',

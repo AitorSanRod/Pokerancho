@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { species } from '../../data/species'
+import { STAR_ITEMS, type StarItem } from '../../data/starItems'
 import { boostedMoney } from '../../game/battle/rewards'
 import { act } from '../../game/core/store'
 import { collectIncursion } from '../../game/incursion/incursionGame'
@@ -25,6 +26,10 @@ function rewardItems(earned: Earned): RewardItem[] {
   if (earned.tickets > 0) items.push({ key: 'tickets', icon: <ItemIcon item={ICON.Ticket} size={96} />, title: `+${earned.tickets} tickets de gacha`, color: '#c04040' })
   for (const [id, n] of Object.entries(earned.pieces)) {
     items.push({ key: `piece-${id}`, icon: <Sprite id={Number(id)} size={160} />, title: `Ticket de ${species(Number(id)).name} ×${n}`, color: '#8a5ab0' })
+  }
+  for (const [item, n] of Object.entries(earned.starItems) as [StarItem, number][]) {
+    const info = STAR_ITEMS[item]
+    items.push({ key: `star-${item}`, icon: <ItemIcon item={info.item} size={96} />, title: `+${n} ${n === 1 ? info.name : info.plural}`, color: '#4a6ad0' })
   }
   return items
 }

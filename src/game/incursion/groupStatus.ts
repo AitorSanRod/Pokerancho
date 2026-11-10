@@ -63,10 +63,7 @@ export function endOfTurn(bf: Battlefield) {
   }
   for (const f of everyone.filter(isUp)) if (f.bonus.regen > 0) restore(bf, f, f.maxHp * f.bonus.regen)
   for (const f of everyone.filter((p) => isUp(p) && p.status)) wearOff(bf, f)
-  for (const f of everyone) {
-    f.changes = f.changes.map((c) => ({ ...c, turns: c.turns - 1 })).filter((c) => c.turns > 0)
-    if (f.taunt) f.taunt = f.taunt.turns > 1 ? { ...f.taunt, turns: f.taunt.turns - 1 } : null
-  }
+  for (const f of everyone) if (f.taunt) f.taunt = f.taunt.turns > 1 ? { ...f.taunt, turns: f.taunt.turns - 1 } : null
 }
 
 /** Gasta un turno del estado; al acabarse, se le pasa */

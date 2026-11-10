@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { DAILY_GIFTS, type DailyGift } from '../../data/dailyGifts'
-import { canClaimGift, giftAvailableAt, giftIndex } from '../../game/collection/dailyGift'
+import { STAR_ITEMS } from '../../data/starItems'
+import { canClaimGift, giftAvailableAt, giftIndex, giftStarItems } from '../../game/collection/dailyGift'
 import { AccountStatus, useAccount } from '../../net/account'
 import { claimDailyGift, giftNow, useDailyGift } from '../../net/dailyGift'
 import { AccountDialog } from '../account/AccountDialog'
@@ -90,6 +91,11 @@ function GiftDay({ day, gift, state }: { day: number; gift: DailyGift; state: Da
             <ItemIcon item={ICON.Ticket} size={22} /> ×{gift.tickets}
           </span>
         )}
+        {giftStarItems(gift).map(([id, count]) => (
+          <span key={id} className="small with-icon">
+            <ItemIcon item={STAR_ITEMS[id].item} size={22} /> ×{count}
+          </span>
+        ))}
       </div>
       {state === 'done' && <span className="tiny muted">Recogido</span>}
       {state === 'next' && <span className="tiny gift-next">Próximo</span>}

@@ -19,8 +19,9 @@ export function entryBlock(inc: Incursion, level: number): EntryBlock | null {
 
 export const canEnter = (inc: Incursion, level: number): boolean => entryBlock(inc, level) === null
 
-/** Nivel del rival más bajo y del más alto de la incursión (cada Pokémon lucha con su nivel, sin ajustes) */
+/** Nivel del rival más bajo y del más alto de la incursión (cada Pokémon lucha con su nivel, sin ajustes); sin rivales, los de entrada */
 export function foeLevels(inc: Incursion): [number, number] {
   const levels = inc.rooms.flatMap((room) => (room.kind === RoomKind.Battle ? room.foes.map((f) => f.level) : []))
+  if (levels.length === 0) return [inc.minLevel, inc.maxLevel]
   return [Math.min(...levels), Math.max(...levels)]
 }

@@ -1,5 +1,5 @@
 import { STATUS_INFO } from '../../data/passives'
-import { battleMove } from '../../data/learnsets'
+import { incursionMove } from '../../data/incursionMoves'
 import { isBot } from '../../game/incursion/party'
 import { Bar, Sprite } from '../shared/common'
 import type { SceneMon } from './sceneState'
@@ -19,7 +19,7 @@ export function IncursionRoster({ party, foes, moveOf, uid, nicknames }: Props) 
     <div className="incursion-roster">
       <div className="incursion-roster-col">
         {party.map((m) => (
-          <RosterLine key={m.id} m={m} note={m.id === uid ? 'Tú' : isBot(m.id) ? 'Bot' : (nicknames[m.id] ?? '')} move={battleMove(moveOf(m.id)).name} />
+          <RosterLine key={m.id} m={m} note={m.id === uid ? 'Tú' : isBot(m.id) ? 'Bot' : (nicknames[m.id] ?? '')} move={incursionMove(moveOf(m.id)).name} />
         ))}
       </div>
       {foes.length > 0 && (

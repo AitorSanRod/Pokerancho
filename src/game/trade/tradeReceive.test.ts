@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STARTERS } from '../../data/species'
+import { STAR_ITEM_IDS } from '../../data/starItems'
 import { initialState, type GameState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
 import { createMon } from '../team/mons'
@@ -58,6 +59,13 @@ describe('recibir', () => {
     receiveGood(s, { kind: GoodKind.Tickets, count: 2 })
     receiveGood(s, { kind: GoodKind.Shards, count: 7 })
     receiveGood(s, { kind: GoodKind.Pieces, speciesId: B, count: 4 })
-    expect(s).toMatchObject({ money: start.money + 50, tickets: start.tickets + 2, missingnoShards: 7, pieces: { [B]: 4 } })
+    receiveGood(s, { kind: GoodKind.StarItem, item: STAR_ITEM_IDS[0], count: 3 })
+    expect(s).toMatchObject({
+      money: start.money + 50,
+      tickets: start.tickets + 2,
+      missingnoShards: 7,
+      pieces: { [B]: 4 },
+      starItems: { [STAR_ITEM_IDS[0]]: 3 },
+    })
   })
 })

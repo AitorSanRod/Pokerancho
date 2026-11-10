@@ -1,5 +1,6 @@
 import type { Biome } from '../maps/mapCommon'
 import type { PassiveRef } from '../passives'
+import type { StarItem } from '../starItems'
 
 // Forma de una incursión: mazmorra de 5 jugadores con sus salas, rivales y premios (ver docs/incursiones.md). Cada
 // incursión va en su fichero de esta carpeta y se añade a la lista de index.ts.
@@ -23,20 +24,20 @@ export const MAX_KEYS = 10
 
 /** Mecánicas de jefe: lo que lo hace exigente */
 export interface BossMechanics {
-  /** Desde el turno `fromTurn`, cada `every` turnos su Ataque sube `atk` (0.2 = +20%), acumulado */
+  /** Desde el turno `fromTurn`, cada `every` turnos su Ataque sube `atk` etapas (hasta el tope, statStages.ts) */
   enrage?: { fromTurn: number; every: number; atk: number }
   /** Cada tantos turnos su golpe da a todo el grupo (con el daño rebajado, ver bossMechanics.ts) */
   areaEvery?: number
-  /** Por debajo de esa fracción de PS cambia a otro movimiento */
-  phase?: { belowHp: number; moveId: string }
+  /** Por debajo de esa fracción de PS cambia a otros ataques */
+  phase?: { belowHp: number; moveIds: string[] }
 }
 
 export interface IncursionFoe {
   speciesId: number
   /** Su nivel: cada Pokémon del grupo lucha con el suyo, así que uno de más nivel termina antes */
   level: number
-  /** Su movimiento (ver data/learnsets.ts › battleMove) */
-  moveId: string
+  /** Sus ataques (ver data/incursionMoves): en cada turno usa uno que tenga sentido (game/incursion/foeTactics.ts) */
+  moveIds: string[]
   /** Multiplicador de sus PS máximos (los jefes aguantan a 5) */
   hpMult?: number
   passives?: PassiveRef[]
@@ -53,14 +54,15 @@ export type IncursionRoom =
   /** Cada jugador puede cambiar su movimiento: cierra un tramo (ver incursionLeg.ts) */
   | { kind: typeof RoomKind.Regroup; name: string }
 
-/** Qué da una línea de premio final. `Pieces`: tickets de esa especie */
-export const IncursionPrizeKind = { Money: 'money', Exp: 'exp', Tickets: 'tickets', Pieces: 'pieces' } as const
+/** Qué da una línea de premio final. `Pieces`: tickets de esa especie. `StarItem`: objetos estelares (data/starItems.ts) */
+export const IncursionPrizeKind = { Money: 'money', Exp: 'exp', Tickets: 'tickets', Pieces: 'pieces', StarItem: 'starItem' } as const
 export type IncursionPrizeKind = (typeof IncursionPrizeKind)[keyof typeof IncursionPrizeKind]
 
 /** Una línea de premio: cada una se tira por separado con su probabilidad (0 a 1) */
 export type IncursionPrize =
   | { kind: typeof IncursionPrizeKind.Money | typeof IncursionPrizeKind.Exp | typeof IncursionPrizeKind.Tickets; amount: number; chance: number }
   | { kind: typeof IncursionPrizeKind.Pieces; speciesId: number; amount: number; chance: number }
+  | { kind: typeof IncursionPrizeKind.StarItem; item: StarItem; amount: number; chance: number }
 
 export interface Incursion {
   id: IncursionId
@@ -79,10 +81,10 @@ export interface Incursion {
   bots: number[]
 }
 
-/** Un rival de una sala: especie, nivel y movimiento (más jefe, pasivas o PS extra) */
-export const foe = (speciesId: number, level: number, moveId: string, extra: Partial<IncursionFoe> = {}): IncursionFoe => ({
+/** Un rival de una sala: especie, nivel y sus ataques (más jefe, pasivas o PS extra) */
+export const foe = (speciesId: number, level: number, moveIds: string[], extra: Partial<IncursionFoe> = {}): IncursionFoe => ({
   speciesId,
   level,
-  moveId,
+  moveIds,
   ...extra,
 })

@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { species } from '../../data/species'
+import { StarItem } from '../../data/starItems'
 import { GoodKind, MAX_ASKED_SPECIES, MAX_TRADE_COUNT, MAX_TRADE_MONEY, type TradeAsk } from '../../game/trade/tradeGoods'
 import { Sprite } from '../shared/common'
 import { CountInput } from './CountInput'
 import { SpeciesSearch } from './SpeciesSearch'
+import { StarItemChoice } from './StarItemChoice'
 
 type AskKind = TradeAsk['kind']
 
@@ -12,6 +14,7 @@ const KIND_LABEL: Record<AskKind, string> = {
   [GoodKind.Money]: 'Dinero',
   [GoodKind.Shards]: 'Trozos',
   [GoodKind.Tickets]: 'Tickets gacha',
+  [GoodKind.StarItem]: 'Objetos',
 }
 
 interface Props {
@@ -22,12 +25,14 @@ interface Props {
   onCorrected: () => void
 }
 
-/** Qué se pide a cambio: de 1 a MAX_ASKED_SPECIES especies (se entrega una), dinero, trozos o tickets de gacha */
+/** Qué se pide a cambio: de 1 a MAX_ASKED_SPECIES especies (se entrega una), dinero, trozos, tickets de gacha u objetos estelares */
 export function AskPicker({ value, onChange, onInvalid, onCorrected }: Props) {
   const [kind, setKind] = useState<AskKind>(value?.kind ?? GoodKind.Mon)
   const pick = (next: AskKind) => {
     setKind(next)
-    onChange(next === GoodKind.Mon ? null : { kind: next, count: 1 })
+    if (next === GoodKind.Mon) onChange(null)
+    else if (next === GoodKind.StarItem) onChange({ kind: next, item: StarItem.Stardust, count: 1 })
+    else onChange({ kind: next, count: 1 })
   }
   const chosen = value?.kind === GoodKind.Mon ? value.speciesIds : []
   const setSpecies = (ids: number[]) => onChange(ids.length ? { kind: GoodKind.Mon, speciesIds: ids } : null)
@@ -55,6 +60,7 @@ export function AskPicker({ value, onChange, onInvalid, onCorrected }: Props) {
           {chosen.length < MAX_ASKED_SPECIES && <SpeciesSearch placeholder="Buscar Pokémon" exclude={chosen} onPick={(id) => setSpecies([...chosen, id])} />}
         </>
       )}
+      {value?.kind === GoodKind.StarItem && <StarItemChoice selected={value.item} onPick={(item) => onChange({ ...value, item })} />}
       {value && value.kind !== GoodKind.Mon && (
         <CountInput
           label={KIND_LABEL[value.kind]}

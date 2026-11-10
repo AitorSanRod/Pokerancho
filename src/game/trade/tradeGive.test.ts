@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { Rarity, STARTERS } from '../../data/species'
+import { STAR_ITEM_IDS } from '../../data/starItems'
+import { starItemsOf } from '../collection/starItems'
 import { toggleFavorite, markSeen } from '../collection/dex'
 import { initialState, type GameState } from '../core/state'
 import { chooseStarter, speciesOfRarity } from '../core/test-utils'
@@ -87,5 +89,20 @@ describe('pagar un anuncio', () => {
     expect(payAsk(s, { kind: GoodKind.Shards, count: 5 }, null)).not.toBeNull()
     expect(payAsk(s, { kind: GoodKind.Tickets, count: 2 }, null)).not.toBeNull()
     expect(s).toMatchObject({ money: 0, missingnoShards: 0, tickets: 0 })
+  })
+})
+
+describe('objetos estelares', () => {
+  const ITEM = STAR_ITEM_IDS[0]
+
+  it('se ofrecen y se pagan solo si llegan', () => {
+    const s = game()
+    s.starItems[ITEM] = 3
+    expect(takeOffer(s, { kind: GoodKind.StarItem, item: ITEM, count: 4 })).toBeNull()
+    expect(takeOffer(s, { kind: GoodKind.StarItem, item: ITEM, count: 2 })).toEqual({ kind: GoodKind.StarItem, item: ITEM, count: 2 })
+    const ask: TradeAsk = { kind: GoodKind.StarItem, item: ITEM, count: 2 }
+    expect(canPay(s, ask)).toBe(false)
+    expect(payAsk(s, { ...ask, count: 1 }, null)).toEqual({ ...ask, count: 1 })
+    expect(starItemsOf(s, ITEM)).toBe(0)
   })
 })

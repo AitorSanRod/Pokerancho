@@ -3,6 +3,7 @@ import { restore, type Battlefield } from './battlefield'
 import { isUp } from './fighter'
 import { clearStatus } from './groupStatus'
 import { raise, resolveFallen } from './revives'
+import { noStages } from './statStages'
 
 // Lo que pasa en las salas sin combate y al salir de una sala de combate.
 
@@ -23,7 +24,7 @@ export function restRoom(bf: Battlefield, room: RestRoom) {
 export function leaveRoom(bf: Battlefield) {
   resolveFallen(bf)
   for (const f of bf.party) {
-    f.changes = []
+    f.stages = noStages()
     f.taunt = null
     clearStatus(f)
     f.target = null

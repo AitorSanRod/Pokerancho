@@ -8,13 +8,11 @@ import { BattleHud } from './BattleHud'
 import { BattlePop } from './BattlePop'
 import { fighterClass, statusClass, type BattleFrame } from './battleFrame'
 import { HitEffect } from './HitEffect'
+import { BOSS_SPRITE_SIZE, ENEMY_SPRITE_SIZE } from './spriteSizes'
 import './battle.css'
 import './battle-callouts.css'
 import './status-fx.css'
 
-const ENEMY_SPRITE_SIZE = 112
-/** El jefe se ve un 30% más grande que un salvaje */
-const BOSS_SPRITE_SIZE = Math.round(ENEMY_SPRITE_SIZE * 1.3)
 /** Eventos del combate durante los que se ve el aviso del jefe */
 const BOSS_WARNING_EVENTS = 2
 

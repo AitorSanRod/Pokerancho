@@ -74,10 +74,13 @@ export async function buildDemoSave(scenario) {
    * toques), `battle` (combatiendo en la primera sala), `regroup` (en la sala de reorganizar) o `finished` (superada). Prueba semillas hasta dar con una que llegue
    */
   async function setUpIncursion(s, uid, moment) {
+    /** En la captura «battle», ms de pelea desde que se cierra la primera ventana de toques */
+    const BATTLE_AFTER_TAP_MS = 2_000
     const { advanceIncursion, startIncursion } = await import('/src/game/incursion/incursionGame.ts')
     const { recordOf, startNextLeg, REGROUP_MS } = await import('/src/game/incursion/activeIncursion.ts')
     const { eventStartMs, legDuration } = await import('/src/game/incursion/incursionTimeline.ts')
     const { repertoire } = await import('/src/game/incursion/repertoire.ts')
+    const { TAP_SETTLE_MS, TAP_WINDOW_MS } = await import('/src/game/incursion/tapWindow.ts')
     const { seededRng } = await import('/src/game/core/random.ts')
     const now = Date.now()
     /** Juega el tramo sin tocar en sus ventanas (se cierran solas al pasar su hora) y lo devuelve terminado */
@@ -100,7 +103,11 @@ export async function buildDemoSave(scenario) {
         return
       }
       if (moment === 'battle') {
-        a.legStarts = [now - 20_000]
+        // Unos segundos después de cerrarse la primera ventana de toques, para que se vea la pelea sin ella
+        const waiting = recordOf(a).legs[0]
+        const closed = eventStartMs(waiting, waiting.events.length - 1) + TAP_WINDOW_MS + TAP_SETTLE_MS
+        advanceIncursion(s, a.legStarts[0] + closed)
+        a.legStarts = [now - closed - BATTLE_AFTER_TAP_MS]
         return
       }
       const first = playLeg(a, 0)

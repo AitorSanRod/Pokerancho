@@ -1,0 +1,84 @@
+/* Botón «i» junto al ataque de la ficha y el resumen de todos sus ataques */
+
+.move-with-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.move-with-info .move-chip {
+  flex: 1;
+}
+.move-info-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--text);
+  font-family: Georgia, serif;
+  font-size: 20px;
+  font-style: italic;
+  font-weight: 900;
+}
+
+.moves-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 64px - var(--safe-top) - var(--safe-bottom));
+}
+.moves-info h3,
+.moves-info p {
+  margin: 0;
+}
+.moves-info-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+.moves-info-body section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.moves-info-body h4 {
+  margin: 0;
+}
+.moves-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.moves-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-left: 5px solid var(--type-color);
+  border-radius: 8px;
+  background: var(--card);
+}
+.moves-info-row.held {
+  box-shadow: inset 0 0 0 2px var(--type-color);
+}
+.moves-info-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.moves-info-class {
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--type-color);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-shadow: 0 1px 0 #0006;
+}

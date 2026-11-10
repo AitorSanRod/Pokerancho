@@ -3,7 +3,8 @@ import { REGROUP_MS } from '../../../game/incursion/activeIncursion'
 import { QUEUE_MAX_MS } from '../../../game/incursion/online/protocol'
 import { PARTY_SIZE } from '../../../game/incursion/party'
 import { INCURSION_REVIVES } from '../../../game/incursion/revives'
-import { TAP_BONUS, TAP_GOAL, TAP_WINDOW_MS } from '../../../game/incursion/tapWindow'
+import { DEFAULT_TAP_BONUS, DEFAULT_TAP_GOAL } from '../../../data/incursionMoves'
+import { TAP_WINDOW_MS } from '../../../game/incursion/tapWindow'
 import { ICON } from '../../shared/icons'
 import { shot, type Guide } from './guide'
 
@@ -33,7 +34,7 @@ export const INCURSION_GUIDE: Guide = {
     {
       image: shot('inc-prep'),
       title: 'Prepara a tu Pokémon',
-      text: 'Elige un Pokémon del rancho con el nivel de la incursión y un movimiento de su repertorio. Ese movimiento decide su papel en el grupo: golpear, curar, provocar para llevarse los golpes, subir stats al grupo, bajarlas a los rivales o poner estados.',
+      text: 'Elige un Pokémon del rancho con el nivel de la incursión y un movimiento de su repertorio. Ese movimiento decide su papel en el grupo: golpear, curar, provocar para llevarse los golpes, subir stats (al grupo o a sí mismo), bajarlas a los rivales o poner estados.',
     },
     {
       image: shot('inc-queue'),
@@ -43,12 +44,12 @@ export const INCURSION_GUIDE: Guide = {
     {
       image: shot('inc-battle'),
       title: 'La incursión',
-      text: `El combate va solo, por turnos. Arriba a la derecha, los ${INCURSION_REVIVES} revivires del grupo: quien cae vuelve al turno siguiente mientras queden. Sin ellos, se queda mirando. Bajo la escena, «Tu ataque»: tócalo cuando quieras para cambiar el ataque y a quién va, desde el turno siguiente. Puedes cerrar la app: al volver, sigue por donde va.`,
+      text: `El combate va solo, por turnos. Arriba a la derecha, los ${INCURSION_REVIVES} revivires del grupo: quien cae vuelve al turno siguiente mientras queden. Sin ellos, se queda mirando. Bajo la escena, «Tu ataque»: tócalo cuando quieras para cambiar el ataque y a quién va, desde el turno siguiente. Debajo, los PS de todos; el detalle de cada uno, las pasivas y la retirada, plegados más abajo. Puedes cerrar la app: al volver, sigue por donde va.`,
     },
     {
       image: shot('inc-tap'),
-      title: 'Toca para pegar más',
-      text: `Antes de cada turno del grupo tienes ${seconds(TAP_WINDOW_MS)} para tocar la pantalla. Si llegas a ${TAP_GOAL} toques, tu Pokémon hace un ${Math.round(TAP_BONUS * 100)}% más de daño ese turno. Si no estás mirando, el turno sigue sin potenciar.`,
+      title: 'Toca para potenciar tu ataque',
+      text: `Antes de cada turno del grupo tienes ${seconds(TAP_WINDOW_MS)} para tocar la pantalla. Si llegas a los toques de tu ataque (${DEFAULT_TAP_GOAL} en casi todos), lo potencias ese turno (+${Math.round(DEFAULT_TAP_BONUS * 100)}%): los de daño pegan más, los de cura curan más y los de estado hacen que el resto del grupo pegue y cure más. Si no estás mirando, el turno sigue sin potenciar.`,
     },
     {
       image: shot('inc-regroup'),

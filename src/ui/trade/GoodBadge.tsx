@@ -1,4 +1,5 @@
 import type { Item } from '../../data/items'
+import { STAR_ITEMS } from '../../data/starItems'
 import { askText, goodText } from '../../game/trade/goodText'
 import { GoodKind, goodSpecies, type TradeAsk, type TradeGood } from '../../game/trade/tradeGoods'
 import { Sprite } from '../shared/common'
@@ -13,6 +14,7 @@ const COUNT_ICON: Record<typeof GoodKind.Shards | typeof GoodKind.Money | typeof
 
 function GoodIcon({ good }: { good: TradeGood }) {
   const speciesId = goodSpecies(good)
+  if (good.kind === GoodKind.StarItem) return <ItemIcon item={STAR_ITEMS[good.item].item} size={56} />
   if (speciesId === null) return <ItemIcon item={COUNT_ICON[good.kind as keyof typeof COUNT_ICON]} size={56} />
   return (
     <span className="trade-good-sprite">

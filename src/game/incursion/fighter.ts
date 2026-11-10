@@ -1,12 +1,13 @@
 import type { BossMechanics, IncursionFoe } from '../../data/incursions'
-import { battleMove, type BattleMove } from '../../data/learnsets'
+import { incursionMove, type IncursionMove } from '../../data/incursionMoves'
 import type { StatusId } from '../../data/passives'
 import { species } from '../../data/species'
-import type { BoostStat, StatChange } from '../../data/supportMoves'
+import type { BoostStat } from '../../data/incursionMoves'
 import type { PokeType } from '../../data/types'
 import type { DamageSide } from '../battle/attack'
 import { combineBonus, sumEffects, type CombatBonus } from '../battle/combatBonus'
 import { calcStats, type Stats } from '../team/stats'
+import { noStages, stageMult, type Stages } from './statStages'
 
 // Un combatiente de una incursión: del grupo (cinco, de sala en sala) o rival de una sala.
 
@@ -16,16 +17,10 @@ export type Team = (typeof Team)[keyof typeof Team]
 /** Multiplicador de los PS de todos los rivales de incursión: luchan contra cinco (los jefes llevan además su `hpMult`) */
 export const FOE_HP_MULT = 8
 /** Multiplicador del Ataque de los rivales de incursión: son varios a la vez y no deben tumbar al grupo de dos golpes */
-export const FOE_ATK_MULT = 0.67
+export const FOE_ATK_MULT = 0.85
 
-/** Lo menos que puede quedar una stat con los cambios a la baja (0.25 = un 25% de la suya) */
+/** Lo menos que puede quedar una stat con las pasivas a la baja (0.25 = un 25% de la suya); las etapas, aparte */
 export const MIN_STAT_MULT = 0.25
-
-/** Un cambio de stat que dura unos turnos; el mismo movimiento lo renueva en vez de sumarlo otra vez */
-export interface ActiveChange extends StatChange {
-  moveId: string
-  turns: number
-}
 
 export interface GroupFighter {
   id: string
@@ -38,7 +33,10 @@ export interface GroupFighter {
   base: Stats
   hp: number
   maxHp: number
-  move: BattleMove
+  /** El ataque que usa este turno */
+  move: IncursionMove
+  /** Los que lleva: el del grupo, uno; un rival, los suyos, entre los que elige cada turno */
+  moves: IncursionMove[]
   /** Pasivas: las del grupo (se recalculan cada turno) o las escritas en el rival */
   bonus: CombatBonus
   status: StatusId | null
@@ -46,7 +44,8 @@ export interface GroupFighter {
   frozenTurns: number
   /** Turnos que le quedan al estado alterado (ver groupStatus.ts › STATUS_MAX_TURNS) */
   statusTurns: number
-  changes: ActiveChange[]
+  /** Etapas que lleva subidas o bajadas cada stat (statStages.ts); se pierden al acabar la sala o al caer */
+  stages: Stages
   taunt: { turns: number; guard: number } | null
   /** Del grupo: a quién dirige su movimiento, elegido por el jugador (ver movePicks.ts); null, el que toque */
   target: string | null
@@ -55,8 +54,6 @@ export interface GroupFighter {
   /** Orden en que cayó (los revivires se gastan en ese orden); null si está en pie */
   fellAt: number | null
   boss: BossMechanics | null
-  /** Veces que le ha subido el Ataque la furia */
-  rage: number
 }
 
 /** Cómo entra un Pokémon del grupo en un tramo */
@@ -73,18 +70,19 @@ export interface MemberState {
   out: boolean
 }
 
-function fighter(id: string, team: Team, speciesId: number, level: number, base: Stats, moveId: string): GroupFighter {
+function fighter(id: string, team: Team, speciesId: number, level: number, base: Stats, moveIds: string[]): GroupFighter {
   const sp = species(speciesId)
+  const moves = moveIds.map(incursionMove)
   return {
     id, team, speciesId, name: sp.name, level, types: sp.types, base, hp: base.hp, maxHp: base.hp,
-    move: battleMove(moveId), bonus: sumEffects([]), status: null, frozenTurns: 0, statusTurns: 0, changes: [], taunt: null,
-    out: false, fellAt: null, boss: null, rage: 0, target: null,
+    move: moves[0], moves, bonus: sumEffects([]), status: null, frozenTurns: 0, statusTurns: 0, stages: noStages(), taunt: null,
+    out: false, fellAt: null, boss: null, target: null,
   }
 }
 
 /** Un Pokémon del grupo, con su nivel */
 export function partyFighter(m: MemberState): GroupFighter {
-  const f = fighter(m.id, Team.Party, m.speciesId, m.level, calcStats(m.speciesId, m.level, m.stars), m.moveId)
+  const f = fighter(m.id, Team.Party, m.speciesId, m.level, calcStats(m.speciesId, m.level, m.stars), [m.moveId])
   f.hp = m.out ? 0 : Math.round(m.hpFraction * f.maxHp)
   return { ...f, status: m.status, frozenTurns: m.frozenTurns, statusTurns: 0, out: m.out }
 }
@@ -94,7 +92,7 @@ export function foeFighter(foe: IncursionFoe, id: string): GroupFighter {
   const base = calcStats(foe.speciesId, foe.level)
   base.hp = Math.round(base.hp * FOE_HP_MULT * (foe.hpMult ?? 1))
   base.atk = Math.round(base.atk * FOE_ATK_MULT)
-  const f = fighter(id, Team.Foe, foe.speciesId, foe.level, base, foe.moveId)
+  const f = fighter(id, Team.Foe, foe.speciesId, foe.level, base, foe.moveIds)
   return { ...f, bonus: combineBonus(foe.passives ?? []), boss: foe.boss ?? null }
 }
 
@@ -110,11 +108,9 @@ export const memberState = (f: GroupFighter, m: MemberState): MemberState => ({
 
 export const isUp = (f: GroupFighter): boolean => f.hp > 0 && !f.out
 
-/** Stat con sus pasivas, sus cambios activos y, el Ataque de un jefe, su furia */
+/** Stat con sus pasivas y sus etapas */
 export function stat(f: GroupFighter, k: BoostStat): number {
-  const changes = f.changes.filter((c) => c.stat === k).reduce((sum, c) => sum + c.amount, 0)
-  const rage = k === 'atk' && f.boss?.enrage ? f.rage * f.boss.enrage.atk : 0
-  return Math.max(1, Math.round(f.base[k] * Math.max(MIN_STAT_MULT, 1 + f.bonus[k] + changes + rage)))
+  return Math.max(1, Math.round(f.base[k] * Math.max(MIN_STAT_MULT, 1 + f.bonus[k]) * stageMult(f.stages[k])))
 }
 
 /** El combatiente tal y como lo ve la fórmula de daño de siempre */

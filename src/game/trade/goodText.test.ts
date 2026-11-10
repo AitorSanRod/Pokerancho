@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { species, STARTERS } from '../../data/species'
+import { STAR_ITEM_IDS, STAR_ITEMS } from '../../data/starItems'
 import { askText, goodText } from './goodText'
 import { GoodKind } from './tradeGoods'
 
@@ -16,6 +17,9 @@ describe('textos de lo que cambia de manos', () => {
   it('cantidades en singular y plural', () => {
     expect(goodText({ kind: GoodKind.Tickets, count: 1 })).not.toBe(goodText({ kind: GoodKind.Tickets, count: 2 }).replace('2', '1'))
     expect(goodText({ kind: GoodKind.Pieces, speciesId: B, count: 3 })).toContain(species(B).name)
+    const item = STAR_ITEM_IDS[0]
+    expect(goodText({ kind: GoodKind.StarItem, item, count: 1 })).toContain(STAR_ITEMS[item].name)
+    expect(goodText({ kind: GoodKind.StarItem, item, count: 2 })).toContain(STAR_ITEMS[item].plural)
   })
 
   it('lo pedido: una especie, o varias unidas con «o»', () => {

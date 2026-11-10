@@ -1,5 +1,7 @@
 import { DAILY_GIFTS, type DailyGift } from '../../data/dailyGifts'
+import { STAR_ITEM_IDS, type StarItem } from '../../data/starItems'
 import type { GameState } from '../core/state'
+import { addStarItems } from './starItems'
 
 // Obsequio diario de cada cuenta: se recoge como mucho una vez cada DAILY_GIFT_INTERVAL_MS y cada vez toca el
 // siguiente de la lista (data/dailyGifts.ts), en ciclo. No se reinicia por pasar días sin entrar: siempre se recoge el
@@ -38,9 +40,19 @@ export function claimGift(st: DailyGiftState, now: number): DailyGift | null {
   return gift
 }
 
+/**
+ * Los objetos estelares del obsequio, del más valioso al menos. El obsequio llega del servidor: si es de una versión
+ * sin ellos (o con alguno que este móvil no conoce), se ignora lo que no encaje
+ */
+export function giftStarItems(gift: DailyGift): [StarItem, number][] {
+  const items = gift.starItems ?? {}
+  return STAR_ITEM_IDS.filter((id) => Number.isInteger(items[id]) && items[id]! > 0).map((id) => [id, items[id]!])
+}
+
 /** Suma el obsequio a la partida */
 export function applyGift(s: GameState, gift: DailyGift) {
   s.money += gift.money
   s.missingnoShards += gift.missingnoShards
   s.tickets += gift.tickets
+  for (const [id, count] of giftStarItems(gift)) addStarItems(s, id, count)
 }

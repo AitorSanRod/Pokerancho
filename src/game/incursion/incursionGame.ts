@@ -15,6 +15,8 @@ import { canLearn } from './repertoire'
 import { retreatPasses } from './retreatVote'
 import { pendingOrders } from './incursionPicks'
 import { settleTaps } from './tapSettle'
+import type { StarItem } from '../../data/starItems'
+import { addStarItems } from '../collection/starItems'
 
 // La incursión en la partida, sin servidor: el grupo se completa con bots al entrar y los tramos siguen solos con la
 // hora. Las salas de reorganizar duran REGROUP_MS o hasta que el jugador sigue; cada ventana de toques se cierra al
@@ -132,6 +134,7 @@ export function collectIncursion(s: GameState, now: number): Earned | null {
     markSeen(s, Number(id))
     addPieces(s, Number(id), n)
   }
+  for (const [item, n] of Object.entries(earned.starItems) as [StarItem, number][]) addStarItems(s, item, n)
   const mon = findMon(s, a.uid)
   if (mon) {
     mon.hp = Math.round(maxHp(mon) * finalHpFraction(a, p, a.uid))

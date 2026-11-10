@@ -1,5 +1,6 @@
 import { isFavorite } from '../collection/dex'
 import { piecesOf } from '../collection/pieces'
+import { starItemsOf } from '../collection/starItems'
 import { findMon, MonPlace, monPlace, type GameState, type OwnedMon } from '../core/state'
 import { GoodKind, type OfferRequest, type TradeAsk, type TradedMon, type TradeGood } from './tradeGoods'
 
@@ -50,9 +51,20 @@ export function takeOffer(s: GameState, offer: OfferRequest): TradeGood | null {
     s.pieces[offer.speciesId] -= offer.count
     return { ...offer }
   }
+  if (offer.kind === GoodKind.StarItem) {
+    if (starItemsOf(s, offer.item) < offer.count) return null
+    s.starItems[offer.item] = starItemsOf(s, offer.item) - offer.count
+    return { ...offer }
+  }
   if (s.missingnoShards < offer.count) return null
   s.missingnoShards -= offer.count
   return { ...offer }
+}
+
+/** Cuánto se tiene de lo que se pide por cantidad (dinero, trozos, tickets gacha u objetos estelares) */
+function countHeld(s: GameState, ask: Exclude<TradeAsk, { kind: typeof GoodKind.Mon }>): number {
+  if (ask.kind === GoodKind.StarItem) return starItemsOf(s, ask.item)
+  return ask.kind === GoodKind.Money ? s.money : ask.kind === GoodKind.Shards ? s.missingnoShards : s.tickets
 }
 
 /** Por qué no se puede pagar lo pedido (con el Pokémon `uid` si se pide uno); null si se puede */
@@ -62,8 +74,7 @@ export function payBlocker(s: GameState, ask: TradeAsk, uid: string | null): str
     if (!mon || !ask.speciesIds.includes(mon.speciesId)) return 'Elige uno de los Pokémon que se piden.'
     return giveMonBlocker(s, mon.uid)
   }
-  const has = ask.kind === GoodKind.Money ? s.money : ask.kind === GoodKind.Shards ? s.missingnoShards : s.tickets
-  return has >= ask.count ? null : 'No tienes suficiente.'
+  return countHeld(s, ask) >= ask.count ? null : 'No tienes suficiente.'
 }
 
 /** Los Pokémon de las especies pedidas que hay en el rancho o la Caja (también los favoritos, para enseñarlos apagados) */
@@ -78,6 +89,10 @@ export const canPay = (s: GameState, ask: TradeAsk): boolean =>
 export function payAsk(s: GameState, ask: TradeAsk, uid: string | null): TradeGood | null {
   if (payBlocker(s, ask, uid)) return null
   if (ask.kind === GoodKind.Mon) return { kind: GoodKind.Mon, mon: takeMon(s, uid!)! }
+  if (ask.kind === GoodKind.StarItem) {
+    s.starItems[ask.item] = starItemsOf(s, ask.item) - ask.count
+    return { ...ask }
+  }
   if (ask.kind === GoodKind.Money) s.money -= ask.count
   else if (ask.kind === GoodKind.Shards) s.missingnoShards -= ask.count
   else s.tickets -= ask.count

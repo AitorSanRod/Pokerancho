@@ -1,6 +1,8 @@
 import type { DailyGift } from '../../data/dailyGifts'
 import { incursion, type IncursionId } from '../../data/incursions'
-import { species } from '../../data/species'
+import { RARITY_INFO, species } from '../../data/species'
+import { STAR_ITEMS } from '../../data/starItems'
+import { giftStarItems } from '../../game/collection/dailyGift'
 import type { ServerGift } from '../../game/collection/serverGifts'
 import type { RaidPrize } from '../../game/raid/raidRoom'
 import { ROUTE_RAID_STREAK_RESET_MS } from '../../game/raid/routeRaidStreak'
@@ -87,11 +89,15 @@ export function repeatNote(mult: number): string {
   return `Repetida seguida: el jefe da el ${Math.round(mult * 100)}% de su dinero. Vuelve al 100% si pasan ${minutes} min sin derrotarlo.`
 }
 
-/** Lo que da un obsequio diario: ₽, tickets y trozos de MissingNo */
+/** Lo que da un obsequio diario: ₽, tickets, trozos de MissingNo y objetos estelares */
 export function giftRewards(gift: DailyGift): RewardItem[] {
   const items = moneyAndTickets(gift.money, gift.tickets)
   if (gift.missingnoShards > 0) {
     items.push({ key: 'shards', icon: <ItemIcon item={ICON.Shard} size={96} />, title: `+${gift.missingnoShards} trozos de MissingNo`, color: '#7a5ab0' })
+  }
+  for (const [id, count] of giftStarItems(gift)) {
+    const info = STAR_ITEMS[id]
+    items.push({ key: id, icon: <ItemIcon item={info.item} size={96} />, title: `+${count} ${count > 1 ? info.plural : info.name}`, color: RARITY_INFO[info.rarity].color })
   }
   return items
 }

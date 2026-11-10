@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { HIT, ally, enemy, field, supportOf } from './incursion-test-utils'
-import { MoveKind } from '../../data/supportMoves'
+import { HIT, ally, enemy, field, moveWith } from './incursion-test-utils'
+import { EffectKind } from '../../data/incursionMoves'
 import { bossTurnStart, isAreaTurn } from './bossMechanics'
 import { stat } from './fighter'
 
 const FROM = 3
 const EVERY = 2
-const RAGE = 0.2
+const RAGE = 1
 
 describe('mecánicas de jefe', () => {
   it('la furia sube su Ataque desde su turno y cada tantos turnos', () => {
@@ -14,13 +14,13 @@ describe('mecánicas de jefe', () => {
     const { bf } = field([ally('a')], [boss])
     const base = stat(boss, 'atk')
     for (bf.turn = 1; bf.turn <= FROM + EVERY; bf.turn++) bossTurnStart(bf, boss)
-    expect(boss.rage).toBe(2)
+    expect(boss.stages.atk).toBe(2 * RAGE)
     expect(stat(boss, 'atk')).toBeGreaterThan(base)
   })
 
   it('por debajo de su vida de fase cambia de movimiento', () => {
-    const other = supportOf(MoveKind.Taunt).id
-    const boss = enemy('j', { moveId: HIT, boss: { phase: { belowHp: 0.5, moveId: other } } })
+    const other = moveWith(EffectKind.Taunt).id
+    const boss = enemy('j', { moveIds: [HIT], boss: { phase: { belowHp: 0.5, moveIds: [other] } } })
     const { bf } = field([ally('a')], [boss])
     bossTurnStart(bf, boss)
     expect(boss.move.id).toBe(HIT)

@@ -1,28 +1,62 @@
 import { describe, expect, it } from 'vitest'
-import { MoveKind } from '../../data/supportMoves'
+import { drain, healAlly, healTeam, lower, move, raise, raiseSelf, taunt, type IncursionMove } from '../../data/incursionMoves'
 import { seqRng } from '../core/test-utils'
 import { EventKind } from './events'
-import { stat } from './fighter'
-import { ally, enemy, field, supportOf } from './incursion-test-utils'
+import { stat, type GroupFighter } from './fighter'
+import { healAmount } from './healing'
+import { ally, enemy, field } from './incursion-test-utils'
 import { AREA_DAMAGE_MULT, performMove } from './moveEffects'
+import { MAX_STAGES } from './statStages'
+
+// Ataques de prueba hechos con el mismo constructor que los de verdad, para no depender de los datos
+const POWER = 40
+const HEAL_ONE = move('prueba-cura', 'Cura', 'normal', POWER, [healAlly(1)])
+const HEAL_ALL = move('prueba-cura-grupo', 'Cura grupo', 'normal', POWER, [healTeam(1)])
+const DRAIN = move('prueba-absorber', 'Absorber', 'normal', POWER, [drain(0.5)])
+const TAUNT = move('prueba-provocar', 'Provocar', 'normal', 0, [taunt(0.3)])
+const RAISE = move('prueba-subir', 'Subir', 'normal', 0, [raise([{ stat: 'atk', stages: 1 }])])
+const LOWER = move('prueba-bajar', 'Bajar', 'normal', 0, [lower([{ stat: 'def', stages: -1 }])])
 
 const rng = seqRng(0.5)
+const using = (f: GroupFighter, mv: IncursionMove) => Object.assign(f, { move: mv })
+const hurtAlly = (id: string) => {
+  const f = ally(id)
+  f.hp = Math.round(f.maxHp / 3)
+  return f
+}
 
-describe('movimientos de incursión', () => {
-  it('curar va al aliado con menos PS en proporción', () => {
-    const heal = supportOf(MoveKind.Heal)
-    const healer = ally('h', heal.id)
-    const hurt = ally('x')
-    hurt.hp = Math.round(hurt.maxHp / 3)
-    const { bf } = field([healer, hurt], [enemy('e')])
+describe('ataques de incursión', () => {
+  it('uno de cura no pega: convierte su potencia en PS para el aliado con menos PS', () => {
+    const healer = using(ally('h'), HEAL_ONE)
+    const hurt = hurtAlly('x')
+    const foe = enemy('e')
+    const { bf } = field([healer, hurt], [foe])
     const before = hurt.hp
     performMove(bf, healer, rng)
-    expect(hurt.hp).toBeGreaterThan(before)
+    expect(hurt.hp).toBe(Math.min(hurt.maxHp, before + Math.ceil(healAmount(healer, POWER))))
+    expect(foe.hp).toBe(foe.maxHp)
+  })
+
+  it('uno de cura al grupo cura a todos', () => {
+    const healer = using(hurtAlly('h'), HEAL_ALL)
+    const other = hurtAlly('x')
+    const { bf } = field([healer, other], [enemy('e')])
+    const before = [healer.hp, other.hp]
+    performMove(bf, healer, rng)
+    expect([healer.hp, other.hp].every((hp, i) => hp > before[i])).toBe(true)
+  })
+
+  it('uno de daño que cura (como Absorber) pega y recupera la fracción del daño hecho', () => {
+    const a = using(hurtAlly('a'), DRAIN)
+    const { bf, events } = field([a], [enemy('e', { hpMult: 50 })])
+    const before = a.hp
+    performMove(bf, a, rng)
+    const dealt = events.find((e) => e.kind === EventKind.Hit)!.amount!
+    expect(a.hp).toBe(before + Math.ceil(dealt * 0.5))
   })
 
   it('quien provoca se lleva los golpes de los rivales y recibe menos', () => {
-    const taunt = supportOf(MoveKind.Taunt)
-    const tank = ally('t', taunt.id)
+    const tank = using(ally('t'), TAUNT)
     const other = ally('o')
     const foe = enemy('e')
     const { bf } = field([other, tank], [foe])
@@ -32,48 +66,73 @@ describe('movimientos de incursión', () => {
     expect(tank.hp).toBeLessThan(tank.maxHp)
   })
 
-  it('subir stats lo renueva el mismo movimiento en vez de sumarlo otra vez', () => {
-    const boost = supportOf(MoveKind.Boost)
-    const a = ally('a', boost.id)
-    const b = ally('b', boost.id)
-    const { bf } = field([a, b], [enemy('e')])
-    const k = boost.changes[0].stat
+  it('subir stats suma etapas a todo el grupo cada vez, hasta el tope; al tope no hace nada', () => {
+    const [a, b] = [using(ally('a'), RAISE), using(ally('b'), RAISE)]
+    const { bf, events } = field([a, b], [enemy('e')])
     performMove(bf, a, rng)
-    const once = stat(a, k)
+    const once = stat(a, 'atk')
     performMove(bf, b, rng)
-    expect(stat(a, k)).toBe(once)
-    expect(once).toBeGreaterThan(a.base[k])
+    expect(stat(a, 'atk')).toBeGreaterThan(once)
+    expect(once).toBeGreaterThan(a.base.atk)
+    for (let i = 0; i < MAX_STAGES; i++) performMove(bf, a, rng)
+    expect(a.stages.atk).toBe(MAX_STAGES)
+    expect(stat(a, 'atk')).toBe(a.base.atk * 4)
+    expect(events.at(-1)?.text).toContain('no puede subir más')
   })
 
-  it('bajar stats va al rival con más PS', () => {
-    const debuff = { ...supportOf(MoveKind.Debuff), area: false }
-    const a = ally('a')
-    a.move = debuff
+  it('una subida propia (como Danza Dragón) solo sube al que la usa', () => {
+    const dancer = using(ally('d'), move('prueba-danza', 'Danza', 'normal', 0, [raiseSelf([{ stat: 'atk', stages: 1 }])]))
+    const other = ally('o')
+    const { bf } = field([dancer, other], [enemy('e')])
+    performMove(bf, dancer, rng)
+    expect(dancer.stages.atk).toBe(1)
+    expect(other.stages.atk).toBe(0)
+  })
+
+  it('bajar stats a uno va al rival con más PS', () => {
+    const a = using(ally('a'), LOWER)
     const small = enemy('s')
     const big = enemy('b', { hpMult: 3 })
     const { bf } = field([a], [small, big])
     performMove(bf, a, rng)
-    expect(big.changes.length).toBe(1)
-    expect(small.changes.length).toBe(0)
+    expect(big.stages.def).toBeLessThan(0)
+    expect(small.stages.def).toBe(0)
   })
 
-  it('un ataque potenciado por los toques hace más daño y se anuncia', () => {
+  it('potenciado por los toques, uno de daño pega más y uno de cura cura más', () => {
     const strikeOn = (boosted: boolean) => {
       const a = ally('a')
-      const foe = enemy('e', { hpMult: 50 })
-      const { bf, events } = field([a], [foe])
+      const { bf, events } = field([a], [enemy('e', { hpMult: 50 })])
       if (boosted) bf.boosted = [a.id]
-      performMove(bf, a, seqRng(0.5))
+      performMove(bf, a, rng)
       return events.find((e) => e.kind === EventKind.Hit)!
     }
-    const plain = strikeOn(false)
-    const potent = strikeOn(true)
-    expect(potent.amount).toBeGreaterThan(plain.amount!)
-    expect(potent.potent).toBe(true)
-    expect(plain.potent).toBe(false)
+    expect(strikeOn(true).amount).toBeGreaterThan(strikeOn(false).amount!)
+    expect(strikeOn(true).potent).toBe(true)
+    const healOn = (boosted: boolean) => {
+      const healer = using(ally('h'), HEAL_ONE)
+      const hurt = hurtAlly('x')
+      const { bf } = field([healer, hurt], [enemy('e')])
+      if (boosted) bf.boosted = [healer.id]
+      performMove(bf, healer, rng)
+      return hurt.hp
+    }
+    expect(healOn(true)).toBeGreaterThan(healOn(false))
   })
 
-  it('un golpe en área da a todo el grupo con el daño rebajado', () => {
+  it('un compañero de estado potenciado hace que los demás peguen más', () => {
+    const strikeWith = (supportBoosted: boolean) => {
+      const a = ally('a')
+      const support = using(ally('s'), RAISE)
+      const { bf, events } = field([a, support], [enemy('e', { hpMult: 50 })])
+      if (supportBoosted) bf.boosted = [support.id]
+      performMove(bf, a, rng)
+      return events.find((e) => e.kind === EventKind.Hit)!.amount!
+    }
+    expect(strikeWith(true)).toBeGreaterThan(strikeWith(false))
+  })
+
+  it('un golpe en área de un jefe da a todo el grupo con el daño rebajado', () => {
     const party = [ally('a'), ally('b'), ally('c')]
     const foe = enemy('e')
     const single = field([ally('z')], [enemy('f')])

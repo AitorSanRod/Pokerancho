@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { INCURSIONS } from '../../data/incursions'
 import { RANCH_TYPE_IDS } from '../../data/ranchTypes'
+import { STAR_ITEM_IDS } from '../../data/starItems'
 import { STONE_IDS } from '../../data/stones'
 import { initialState } from '../core/state'
 import { bagContents, isBagEmpty } from './bag'
@@ -34,5 +35,12 @@ describe('mochila', () => {
     s.incursionKeys[id] = 3
     expect(bagContents(s).incursionKeys).toEqual([{ id, count: 3 }])
     expect(isBagEmpty(bagContents(s))).toBe(false)
+  })
+
+  it('guarda los objetos estelares sin gastar', () => {
+    const s = initialState()
+    const id = STAR_ITEM_IDS[0]
+    s.starItems[id] = 2
+    expect(bagContents(s).starItems).toEqual([{ id, count: 2 }])
   })
 })

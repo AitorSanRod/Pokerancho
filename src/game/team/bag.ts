@@ -1,6 +1,8 @@
 import { INCURSIONS, type IncursionId } from '../../data/incursions'
 import { RANCH_TYPE_IDS, type RanchTypeId } from '../../data/ranchTypes'
+import { STAR_ITEM_IDS, type StarItem } from '../../data/starItems'
 import { STONE_IDS, type Stone } from '../../data/stones'
+import { starItemsOf } from '../collection/starItems'
 import type { GameState } from '../core/state'
 import { keysOf } from '../incursion/keys'
 import { ranchTypeAvailable } from './ranchTypes'
@@ -11,8 +13,12 @@ export interface BagEntry<Id> {
   count: number
 }
 
-/** Lo comprado en la Tienda y aún sin usar: piedras sin gastar, tipos de rancho sin colocar y llaves de incursión */
+/**
+ * Lo comprado o ganado y aún sin usar: objetos estelares, piedras sin gastar, tipos de rancho sin colocar y llaves de
+ * incursión
+ */
 export interface Bag {
+  starItems: BagEntry<StarItem>[]
   stones: BagEntry<Stone>[]
   ranchTypes: BagEntry<RanchTypeId>[]
   incursionKeys: BagEntry<IncursionId>[]
@@ -23,10 +29,11 @@ const held = <Id>(ids: readonly Id[], countOf: (id: Id) => number): BagEntry<Id>
 
 export function bagContents(s: GameState): Bag {
   return {
+    starItems: held([...STAR_ITEM_IDS].reverse(), (id) => starItemsOf(s, id)),
     stones: held(STONE_IDS, (id) => stonesOf(s, id)),
     ranchTypes: held(RANCH_TYPE_IDS, (id) => ranchTypeAvailable(s, id)),
     incursionKeys: held(INCURSIONS.map((i) => i.id), (id) => keysOf(s, id)),
   }
 }
 
-export const isBagEmpty = (bag: Bag): boolean => bag.stones.length === 0 && bag.ranchTypes.length === 0 && bag.incursionKeys.length === 0
+export const isBagEmpty = (bag: Bag): boolean => Object.values(bag).every((entries) => entries.length === 0)

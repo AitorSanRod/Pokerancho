@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { EVOLVING_SPECIES, evolutionsOf, type Evolution } from '../../data/evolutions'
 import { RouteId } from '../../data/maps'
 import { SPECIES } from '../../data/species'
+import { addStarItems, starItemFor, starItemsOf } from '../collection/starItems'
 import { initialState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
 import { evolve, evolveBlocker, evolvePrice } from './evolution'
@@ -16,6 +17,8 @@ const firstEvolution = (match: (from: number, e: Evolution) => boolean) => {
 }
 const BY_LEVEL = firstEvolution((_, e) => e.level !== undefined)!
 const BY_STONE = firstEvolution((_, e) => e.stone !== undefined)
+/** Una evolución por nivel a una especie que pide objeto estelar */
+const TO_STAR_ITEM = firstEvolution((_, e) => e.level !== undefined && starItemFor(e.into) !== null)
 /** Una evolución por nivel que ocupa más espacios del rancho que el de antes */
 const GROWING = firstEvolution((from, e) => e.level !== undefined && slotsOf(e.into) > slotsOf(from))
 const BRANCHING = EVOLVING_SPECIES.find((id) => evolutionsOf(id).length > 1)
@@ -25,7 +28,7 @@ const INTO = BY_LEVEL.evo.into
 const LEVEL = BY_LEVEL.evo.level!
 const NOT_INTO = SPECIES.find((sp) => sp.id !== FROM && !evolutionsOf(FROM).some((e) => e.into === sp.id))!.id
 
-/** Partida con un Pokémon activo de `from` al nivel `level`, con ★ y PS a medias, y el dinero justo para evolucionar */
+/** Partida con un Pokémon activo de `from` al nivel `level`, con ★ y PS a medias, y el dinero y el objeto justos para evolucionar */
 function stateReady(from = FROM, level = LEVEL, into = INTO) {
   const s = initialState()
   chooseStarter(s, from)
@@ -33,6 +36,8 @@ function stateReady(from = FROM, level = LEVEL, into = INTO) {
   Object.assign(mon, { level, stars: 2, exp: 3 })
   mon.hp = Math.floor(maxHp(mon) / 2)
   s.money = evolvePrice(into)
+  const item = starItemFor(into)
+  if (item) addStarItems(s, item, 1)
   return { s, mon }
 }
 
@@ -124,5 +129,17 @@ describe('evolve', () => {
     if (last.stone) s.stones[last.stone] = 1
     expect(evolve(s, mon.uid, last.into)?.intoId).toBe(last.into)
     expect(mon.speciesId).toBe(last.into)
+  })
+
+  it.runIf(TO_STAR_ITEM)('a una especie no común pide su objeto estelar y lo gasta', () => {
+    const { from, evo } = TO_STAR_ITEM!
+    const { s, mon } = stateReady(from, evo.level!, evo.into)
+    const item = starItemFor(evo.into)!
+    s.starItems[item] = 0
+    expect(evolveBlocker(s, mon.uid, evo.into)).not.toBeNull()
+    expect(evolve(s, mon.uid, evo.into)).toBeNull()
+    s.starItems[item] = 1
+    expect(evolve(s, mon.uid, evo.into)).not.toBeNull()
+    expect(starItemsOf(s, item)).toBe(0)
   })
 })

@@ -2,13 +2,15 @@ import { evolutionTo, type Evolution } from '../../data/evolutions'
 import { RARITY_INFO, rarityOf, species } from '../../data/species'
 import { STONES } from '../../data/stones'
 import { markCaught } from '../collection/dex'
+import { spendStarItem, starItemBlocker, starItemFor } from '../collection/starItems'
 import { findMon, MonPlace, monPlace, type GameState, type OwnedMon } from '../core/state'
 import { fitsInRanch, ranchCount, slotsOf, type MonDestination } from './ranches'
 import { maxHp } from './stats'
 import { spendStone, stonesOf } from './stones'
 
 // Evolución desde la ficha: al llegar al nivel de su evolución o gastando una piedra, pagando según la rareza de la
-// evolución. Es el mismo Pokémon con otra especie: conserva nivel y EXP, pierde las ★ y queda con todos sus PS.
+// evolución (y su objeto estelar si no es común). Es el mismo Pokémon con otra especie: conserva nivel y EXP, pierde
+// las ★ y queda con todos sus PS.
 
 export interface EvolveResult {
   fromId: number
@@ -49,13 +51,15 @@ export function evolveBlocker(s: GameState, uid: string, intoId: number): string
   if (requirement) return requirement
   if (s.owned.some((m) => m.speciesId === intoId)) return `Ya tienes a ${species(intoId).name}.`
   if (s.money < evolvePrice(intoId)) return `Necesitas ₽ ${evolvePrice(intoId)}.`
+  const missingItem = starItemBlocker(s, intoId)
+  if (missingItem) return missingItem
   if (evolveDestination(s, mon, intoId) === undefined) return 'No hay hueco en ningún rancho: libera espacio o guarda Pokémon en la Caja.'
   return null
 }
 
 /**
- * Evoluciona: paga, gasta la piedra si hace falta y el Pokémon cambia de especie. En la Pokédex la especie de antes
- * sigue como capturada y se puede volver a crear con sus piezas
+ * Evoluciona: paga, gasta la piedra y el objeto estelar si hacen falta y el Pokémon cambia de especie. En la Pokédex
+ * la especie de antes sigue como capturada y se puede volver a crear con sus piezas
  */
 export function evolve(s: GameState, uid: string, intoId: number): EvolveResult | null {
   if (evolveBlocker(s, uid, intoId)) return null
@@ -64,6 +68,8 @@ export function evolve(s: GameState, uid: string, intoId: number): EvolveResult 
   const destination = evolveDestination(s, mon, intoId)!
   const fromId = mon.speciesId
   s.money -= evolvePrice(intoId)
+  const item = starItemFor(intoId)
+  if (item) spendStarItem(s, item)
   if (evo.stone !== undefined) spendStone(s, evo.stone)
   if (destination !== mon.ranch) mon.spot = null
   Object.assign(mon, { speciesId: intoId, stars: 0, ranch: destination })

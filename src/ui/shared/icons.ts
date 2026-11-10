@@ -14,7 +14,8 @@ export const ICON = {
   Ticket: ITEM.Pass,
   /** Ticket de un Pokémon (las piezas del juego) */
   Piece: ITEM.Coupon,
-  Shard: ITEM.CometShard,
+  /** Trozo de MissingNo */
+  Shard: ITEM.OddKeystone,
   Shredder: ITEM.DnaSplicers,
   Settings: ITEM.VsSeeker,
   Notify: ITEM.SootheBell,

@@ -24,7 +24,7 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
 | Pasivas | Propias de incursión y **de grupo**: se cuentan con los tipos de los 5 Pokémon, cada uno vale 1/2/3/4 según su rareza. Cuando se rehagan las de rancho, se unifican |
 | Retirada | Por votación de los jugadores (no bots): hace falta la mitad redondeada hacia arriba (1→1, 2→1, 3→2, 4→2, 5→3). Al retirarse (o perder) cada uno se queda con lo ganado por el camino |
 | Reorganizar | 1 min 30 s para cambiar de movimiento; quien no lo cambie sigue con el suyo |
-| Entrada | Solo Pokémon entre el nivel mínimo y el máximo de la incursión (Cueva Helada: 20–45). Los bots, del mínimo a +4, sin pasar del máximo |
+| Entrada | Solo Pokémon entre el nivel mínimo y el máximo de la incursión (Cueva Helada: 20–45). Los bots, algo por debajo del más alto del grupo, sin pasar del rival más alto (ver Bots) |
 | Nivel | Sin ajustes: cada Pokémon lucha con su nivel y cada rival tiene el suyo, escrito a mano y subiendo sala a sala (Cueva Helada: rivales de Nv. 20 a 37). Un Pokémon de nivel alto pega más y la incursión acaba antes |
 | Ataque y objetivo | En plena pelea, cuando quieras, cambias el ataque de tu Pokémon y a quién lo dirige (rival o aliado según el ataque, o automático). Vale desde la siguiente ventana de toques y sigue así hasta que lo cambies; si el elegido cae o cambia la sala, vuelve a automático |
 | Estados alterados | Duran como mucho 5 turnos (volver a ponerlo reinicia la cuenta) y se quitan al acabar cada sala |
@@ -191,25 +191,61 @@ de cueva helada (variante de `cave` o bioma nuevo, con la skill `fondos-pixel-ar
 
 ## Movimientos y repertorio
 
-Las rutas y raids siguen con su ataque único (`signatureMove`). En las incursiones, cada movimiento tiene un **efecto**
-(`data/supportMoves.ts › MoveKind`):
+Las rutas y raids siguen con su ataque único (`signatureMove`). Las incursiones tienen su propia lista de ataques
+(`data/incursionMoves/`, editable a mano; los de daño empezaron como copia de los de ruta). Cada ataque es una
+**potencia** y una lista de **efectos** hechos con funciones (`effects.ts`), además de su precisión y de sus toques:
+
+```ts
+Absorber: move('absorb', 'Absorber', 'grass', 40, [drain(0.5)])  // pega con potencia 40 y recupera la mitad del daño
+Deseo:    move('wish', 'Deseo', 'normal', 20, [healTeam(0.2)])  // no pega: cura a todo el grupo
+```
 
 | Efecto | Qué hace | A quién |
 |---|---|---|
-| `Damage` | Los ataques de daño de siempre (`data/moves.ts`) | Al rival más débil a su tipo (empate, al azar). Los rivales, a uno al azar |
-| `Heal` | Cura una fracción de los PS máximos | Al aliado con menos PS en proporción (o a todos, con `area`) |
-| `Taunt` | Atrae los golpes de los rivales unos turnos y recibe menos daño (`guard`) | A sí mismo |
-| `Boost` | Sube stats unos turnos | A todo el grupo |
-| `Debuff` | Baja stats unos turnos | Al rival con más PS (o a todos, con `area`) |
-| `Inflict` | Pone un estado alterado | A un rival sin estado (o a todos, con `area`) |
+| `drain(f)` | Recupera la fracción `f` del daño hecho | A sí mismo |
+| `healAlly(f)` | Convierte la potencia en PS (×`f`) | Al aliado con menos PS en proporción (o al elegido) |
+| `healTeam(f)` | Convierte la potencia en PS (×`f`) | A todo el grupo |
+| `inflict(estado, prob.)` | Pone un estado alterado | Al rival golpeado; sin potencia, a un rival sin estado |
+| `raise(etapas)` / `raiseSelf(etapas)` | Sube etapas de stats hasta acabar la sala | A todo el grupo / solo al que lo usa |
+| `lower(etapas)` | Baja etapas de stats hasta acabar la sala | Al rival golpeado; sin potencia, al de más PS |
+| `taunt(guard, turnos)` | Atrae los golpes y recibe un `guard` menos de daño | A sí mismo |
+| `area()` | Lo que va a un rival va a todos (el daño, al 60%) | Todos los rivales |
 
-Los golpes, bajadas y estados contra un solo rival van al que provoca, si hay alguno. El mismo movimiento renueva su
-cambio de stats en vez de sumarlo otra vez (cinco con Danza Dragón no la quintuplican).
+Cada ataque es de una de **tres clases** (`moveClass`): **cura** si lleva `healAlly` o `healTeam`; si no, **daño** si
+tiene potencia (aunque cure, como Absorber) y **estado** si no la tiene (estados alterados, subir o bajar stats y
+provocar).
+
+**La cura** (`game/incursion/healing.ts`) usa la fórmula del daño sin tipos, crítico ni azar: nivel, potencia y
+Ataque del curador, dividido entre la Defensa de una especie media de su nivel (la Defensa base media de todas las
+especies). En un Pokémon medio cura algo más que cuando era un % de los PS (Síntesis, potencia 115, ≈ el 55% de sus PS;
+Amortiguador, Pulso Cura y Luz Lunar, 70, ≈ el 35%; Acua Aro, 30 a todos, ≈ el 14%); a uno con muchos PS, en
+proporción, menos.
+
+**Toques**: cada ataque dice cuántos toques hacen falta (`tapGoal`, 100 en todos por ahora) y cuánto mejora
+(`tapBonus`, +10% en todos). Uno de daño potenciado pega más; uno de cura, cura más; uno de estado no mejora lo suyo,
+sino que suma su mejora al daño y a la cura de cada compañero ese turno (varios de estado potenciados se suman).
+
+Los golpes, bajadas y estados contra un solo rival van al que provoca, si hay alguno.
+
+**Etapas de stats** (`game/incursion/statStages.ts`), como en los juegos: Ataque, Defensa y Velocidad van de −6 a +6;
+cada uso suma sus etapas y, al tope, no hace nada («¡no puede subir más!»). +1 es ×1,5 y +6, ×4 (+300%); −1 es ×2/3 y
+−6, ×1/4. Duran hasta acabar la sala o hasta caer. Como en los juegos, Danza Dragón, Danza Aleteo y Corpulencia suben
+solo al que las usa (`raiseSelf`); Viento Afín (Velocidad +2) y Velo Aurora (Defensa +2), a todo el grupo. Ataque
+Arena baja −1 el Ataque de todos los rivales y Llanto Falso, −2 la Defensa de uno. La furia de los jefes también
+sube etapas de Ataque.
+
+**Prioridad** (`priority` de cada ataque), como en los juegos: en cada turno actúan antes los de más prioridad y, a
+igual prioridad, los más rápidos. Con prioridad: Sombra Vil, Ataque Rápido, Acua Jet, Canto Helado, Ultrapuño, Puño
+Bala y Golpe Bajo (+1) y Velocidad Extrema (+2). Hasta que haya MTs, para probarlos, ocupan el escalón de daño de su
+tipo: Ataque Rápido y Velocidad Extrema (común y raro de normal), Acua Jet, Canto Helado, Ultrapuño y Puño Bala (común
+de agua, hielo, lucha y acero) y Golpe Bajo (raro de siniestro). Los ataques a los que sustituyen siguen en la lista.
 
 **Repertorio** (`game/incursion/repertoire.ts`): como mucho **dos por tipo**. De cada uno de sus tipos, el ataque de
-daño del escalón más alto al que llega (sin pasar de su rareza y desde su nivel, `learnsets.ts › DAMAGE_TIER_LEVELS`) y
-el ataque de apoyo del tipo desde su nivel (`supportMoves.ts`, uno por tipo); además, los propios de su especie
-(`learnsets.ts › SPECIES_MOVES`). Las MTs, más adelante.
+daño del escalón más alto al que llega (sin pasar de su rareza y desde su nivel, `learnsets.ts › DAMAGE_TIER_LEVELS`,
+`incursionMoves/damage.ts › DAMAGE_BY_TYPE`) y el ataque de apoyo del tipo desde su nivel (`incursionMoves/support.ts
+› SUPPORT_BY_TYPE`, uno por tipo); además, los propios de su especie (`learnsets.ts › SPECIES_MOVES`). Las MTs, más
+adelante. En la ficha del Pokémon (rancho y Pokédex), la «i» junto a su ataque abre todos sus ataques: el de rutas y
+jefes y el repertorio de incursión nivel a nivel (`repertoire.ts › learnTimeline`).
 
 Cada tipo tiene su papel en el grupo por su ataque de apoyo (y sus pasivas de grupo van en la misma línea):
 
@@ -220,6 +256,20 @@ Cada tipo tiene su papel en el grupo por su ataque de apoyo (y sus pasivas de gr
 | Subir stats al grupo | Hielo (Defensa), lucha, bicho y dragón (Ataque y Velocidad), volador (Velocidad) |
 | Bajar stats a los rivales | Tierra (Ataque de todos), siniestro (Defensa de uno) |
 | Estados | Fuego (quemar), eléctrico (paralizar), veneno (envenenar), fantasma (confundir) |
+
+## Ataques de los rivales
+
+Cada rival lleva una lista de ataques (`moveIds` en `foe(especie, nivel, [ataques])`) y en cada turno usa uno que
+tenga sentido (`game/incursion/foeTactics.ts`):
+
+- Un ataque **sirve** si haría algo: los de daño siempre; los de cura, si a alguien de su bando le quedan menos de la
+  mitad de sus PS (`FOE_HEAL_BELOW`); poner un estado, si queda algún rival sin estado (o el que le provoca no lo tiene);
+  subir o bajar stats, si alguna no está ya al tope; provocar, si no provoca ya.
+- En un turno de golpe en área del jefe, usa uno de daño. Si a su bando le hace falta, cura. Si no, uno al azar (de la
+  semilla) entre los que sirven; si ninguno sirve, el primero.
+- Elige al empezar el turno (así cuenta su prioridad) y, si al llegarle su turno ya no sirve (otro se adelantó y, por
+  ejemplo, confundió al mismo), cambia a otro que sí.
+- La fase de un jefe cambia su lista entera (`phase.moveIds`).
 
 ## Pasivas de grupo
 
@@ -251,14 +301,25 @@ revivir deja de sumar. Cuando se rehagan las pasivas de rancho, se unifican con 
   KEY_PRICE`: fácil 10.000 ₽, media 30.000 ₽, difícil 50.000 ₽); como mucho 10 de cada una (`MAX_KEYS`).
 - **Por el camino**: cada sala de combate superada da su ₽ y EXP (`reward`), que se cobran aunque luego se pierda o se
   retire el grupo.
-- **Al terminarla**: la tabla `prizes` de la incursión (₽, EXP, tickets y tickets de especie; cada línea se tira por
-  separado).
+- **Al terminarla**: la tabla `prizes` de la incursión (₽, EXP, tickets, tickets de especie y objetos estelares,
+  `IncursionPrizeKind.StarItem`; cada línea se tira por separado). En la Cueva Helada: Polvo estelar al 30%, Trozo de
+  estrella al 5% y Fragmento de cometa al 0,5%; en la de prueba, Polvo estelar al 10%.
 
 ## Bots
 
 Están previstos desde el principio, aunque lo normal sea jugar con personas. Entran solo si la cola no se llena en
-60 s o sin servidor. Llevan una especie de la lista `bots` de la incursión, del nivel mínimo a +4, y un movimiento que
-cubre lo que le falte al grupo: si nadie cura, cura; si nadie provoca, provoca; si no, su golpe más fuerte. No votan.
+60 s o sin servidor (`game/incursion/party.ts`). No votan.
+
+- **Nivel**: el del Pokémon más alto del grupo menos 5 (y hasta 2 menos, al azar), sin bajar del mínimo de entrada ni
+  pasar del rival más alto de la incursión: en la Cueva Helada (entrada 20–45, rivales 20–37), con tu Pokémon a Nv. 45
+  los bots son de Nv. 37 como mucho.
+- **Especie**: de la lista `bots` de la incursión. Si nadie del grupo cura, uno que pueda curar; si nadie provoca, uno
+  que pueda provocar; el resto, al azar.
+- **Ataque**: si nadie cura, cura; si nadie provoca, provoca; si no, su golpe más fuerte.
+
+Tú solo con bots en la Cueva Helada (200 partidas por caso, sin tocar): con Raichu gana un 17% a Nv. 35, un 59% a
+Nv. 40 y un 97% a Nv. 45; con Venusaur (Síntesis), un 49% a Nv. 40 y un 56% a Nv. 45; con Golem (provoca), un 30% a
+Nv. 45: un tanque o un curador solo no tiran del grupo como uno que pega muy fuerte al jefe.
 
 ## Números
 
@@ -266,21 +327,34 @@ Simulado con la Cueva Helada (100 partidas por caso): un grupo bien montado (cur
 cobertura) gana un 60% a nivel 30 con un curador de planta (la dificultad buscada, por ahora); con uno de agua, un
 70%, y con uno que no sea de planta ni de agua, un 25%. Sin ajuste de nivel (rivales de Nv. 20 a 37), el mismo grupo
 de planta sin tocar nunca gana un 3% a Nv. 28, un 72% a Nv. 30 (17 min de combate) y siempre de Nv. 32 en adelante,
-cada vez más rápido (13 min a Nv. 35, 9 min a Nv. 45). Tocando, pega más. Cinco bots casi nunca ganan: están para
+cada vez más rápido (13 min a Nv. 35, 9 min a Nv. 45). Tocando, pega más. Al pasar la cura a potencia (60 partidas
+por nivel, sin tocar, el código anterior y el nuevo con el mismo grupo): Venusaur con Síntesis, Golem que provoca y
+Raichu, Magneton y Arcanine ganan un 7% a Nv. 30 en los dos, un 53% a Nv. 32 (antes, 62%) y siempre desde Nv. 35;
+con bots al azar sale casi igual que antes. Con las curas subidas (≈ +15%; 200 partidas por nivel), ese grupo gana
+un 13% a Nv. 30 (antes de subirlas, 8%) y un 59% a Nv. 32 (55%). Con etapas de stats, prioridad y la furia por etapas (+1 cada 6
+turnos): ese grupo, un 11% a Nv. 30, un 48% a Nv. 32 y siempre a Nv. 35; con bots al azar, un 14% a Nv. 32. Con
+varios ataques por rival (los de apoyo, uno por sala) y el Ataque de los rivales de ×0,67 a ×0,85: un 2% a Nv. 28,
+un 20% a Nv. 30, un 63% a Nv. 32 (21 min) y siempre desde Nv. 35 (17 min; 13 min a Nv. 40). Un jugador solo con los
+bots de verdad (Nv. 20–24) casi nunca gana, ni con su Pokémon a Nv. 45 (1%, cae hacia la sala 5): con un Raichu de
+Nv. 45, hacen falta bots de Nv. 35 (curador, tanque y dos de daño) para ganar la mitad de las veces y de Nv. 40 para
+ganar casi siempre (94%). Cinco bots casi nunca ganan: están para
 completar.
 
 | Qué | Valor | Dónde |
 |---|---|---|
 | PS de los rivales | ×8 (los jefes, además, su `hpMult`) | `game/incursion/fighter.ts › FOE_HP_MULT` |
-| Ataque de los rivales | ×0,67 | `fighter.ts › FOE_ATK_MULT` |
-| Bajada máxima de una stat | hasta el 25% de la suya | `fighter.ts › MIN_STAT_MULT` |
+| Ataque de los rivales | ×0,85 | `fighter.ts › FOE_ATK_MULT` |
+| Etapas de stats | de −6 (×1/4) a +6 (×4) | `statStages.ts › MAX_STAGES, stageMult` |
+| Bajada máxima de una stat por pasivas | hasta el 25% de la suya | `fighter.ts › MIN_STAT_MULT` |
+| Furia de los jefes | +1 etapa de Ataque cada 6 turnos desde el 15 (Cueva Helada) | `enrage` de cada jefe en `data/incursions/` |
 | Estados alterados | 5 turnos como mucho | `groupStatus.ts › STATUS_MAX_TURNS` |
 | Revivires | 3, vuelve con el 50% | `revives.ts › INCURSION_REVIVES, REVIVE_HP` |
 | Golpe en área de un jefe | 60% del daño a cada uno | `moveEffects.ts › AREA_DAMAGE_MULT` |
+| Un rival cura a su bando | si a alguno le queda menos del 50% | `foeTactics.ts › FOE_HEAL_BELOW` |
 | Turnos por sala | 80 como mucho (luego se pierde) | `groupBattle.ts › MAX_ROOM_TURNS` |
 | Confusión | se quita el 10% de sus PS | `groupStatus.ts › CONFUSION_SELF_HIT` |
-| Grupo y bots | 5; bots del mínimo a +4 | `party.ts › PARTY_SIZE, BOT_LEVEL_SPREAD` |
-| Toques | 5 s de ventana + 1,5 s de resultado; 50 toques dan +10% de daño ese turno; el servidor cierra a los 0,75 s | `tapWindow.ts › TAP_WINDOW_MS, TAP_SETTLE_MS, TAP_GOAL, TAP_BONUS`, `online/sharedIncursion.ts › TAP_CLOSE_DELAY_MS` |
+| Grupo y bots | 5; bots del más alto −5 (hasta −7), entre el mínimo de entrada y el rival más alto | `party.ts › PARTY_SIZE, BOT_LEVEL_GAP, BOT_LEVEL_SPREAD` |
+| Toques | 5 s de ventana + 1,5 s de resultado; cada ataque dice sus toques y su mejora (100 y +10% por defecto); el servidor cierra a los 0,75 s | `tapWindow.ts › TAP_WINDOW_MS, TAP_SETTLE_MS`, `data/incursionMoves/effects.ts › DEFAULT_TAP_GOAL, DEFAULT_TAP_BONUS`, `online/sharedIncursion.ts › TAP_CLOSE_DELAY_MS` |
 | Ritmo en pantalla | ms de cada evento | `incursionTimeline.ts › INCURSION_EVENT_MS` |
 | Pasivas | pesos 1/2/3/4, umbrales 3/6/10 | `data/incursionPassives.ts` |
 | Llaves | 10.000 / 30.000 / 50.000 ₽, máx. 10 | `data/incursions.ts › KEY_PRICE, MAX_KEYS` |
@@ -297,17 +371,21 @@ completar.
     incursions/              types (forma, llaves, `foe`), index (lista e `incursion(id)`), un fichero por incursión:
                              cuevaHelada, prueba (corta y de nivel bajo)
     incursionPassives.ts     pasivas de grupo por tipo, pesos por rareza y umbrales
-    supportMoves.ts          MoveKind y ataques de apoyo por tipo
-    learnsets.ts             escalones de daño por nivel, propios por especie, battleMove(id)
+    incursionMoves/          ataques de incursión: effects (efectos, clases, `move`), damage (daño por tipo y rareza),
+                             support (apoyo por tipo), index (`IMOVE`, `incursionMove(id)`)
+    learnsets.ts             escalones de daño por nivel y propios por especie
 
   src/game/incursion/        lógica pura, con un .test.ts por fichero (piezas comunes: incursion-test-utils.ts)
     incursionRun.ts          encadenar tramos con sus órdenes; corte por retirada
     incursionLeg.ts          un tramo: salas hasta la siguiente de reorganizar o el final
-    groupBattle.ts           un combate N contra M por turnos; refresca las pasivas
+    groupBattle.ts           un combate N contra M por turnos (orden: prioridad y Velocidad); refresca las pasivas
     battlefield.ts           los dos bandos, revivires, golpear, curar, quién gana la sala
-    fighter.ts               combatiente de incursión, stats con cambios y furia
-    moveEffects.ts           qué hace cada MoveKind
+    fighter.ts               combatiente de incursión y sus stats (pasivas y etapas)
+    statStages.ts            etapas de stats: tope, multiplicador y sumarlas
+    moveEffects.ts           qué hace cada ataque según su clase y sus efectos
+    healing.ts               potencia → PS de cura
     targeting.ts             a quién va cada movimiento
+    foeTactics.ts            qué ataque usa cada rival de los suyos
     groupStatus.ts           estados alterados y final de turno
     bossMechanics.ts         furia, área, fases
     revives.ts               revivires del grupo y caídos que se quedan mirando
@@ -315,7 +393,7 @@ completar.
     groupPassives.ts         sumar pesos por tipo → nivel de cada pasiva
     movePicks.ts             cambiar de ataque y objetivo en plena pelea (a quién puede ir cada ataque)
     incursionPicks.ts        en la partida: elegirlo y dejarlo pendiente hasta la próxima ventana
-    repertoire.ts            movimientos que puede llevar cada Pokémon
+    repertoire.ts            movimientos que puede llevar cada Pokémon; learnTimeline, todos por nivel
     party.ts                 completar con bots y su movimiento
     incursionRewards.ts      lo ganado por el camino y el premio final
     incursionTimeline.ts     cuánto dura cada evento en pantalla; ganado antes de un momento
@@ -328,8 +406,10 @@ completar.
 
   src/game/core/state.ts     incursion (la de ahora) e incursionKeys; MonPlace.Incursion
   src/ui/incursion/          IncursionScreen (pestaña), IncursionList + IncursionInfo + IncursionPrep, MovePicker,
-                             IncursionView (en curso): IncursionStage (escena), sceneState (estado en un momento),
-                             IncursionRoster, RegroupPanel, IncursionSummary
+                             IncursionView (en curso): IncursionStage (escena, stageSpots dónde va cada uno),
+                             sceneState (estado en un momento), IncursionStrip (franja con los PS), Fold (plegables:
+                             IncursionRoster, pasivas, RetreatVote), RegroupPanel, IncursionSummary
+  src/ui/shared/moveText.ts  cómo se cuenta cada ataque de incursión; sheet/MovesInfo, todos los ataques de una especie
   src/ui/shop/IncursionKeyShop.tsx, Mochila (game/team/bag.ts)
 
   src/game/incursion/online/ con otros jugadores

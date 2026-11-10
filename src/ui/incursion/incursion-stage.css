@@ -1,8 +1,9 @@
 /* Escena de la incursión, como un combate de ruta (route/battle.css): cada Pokémon en su columna, con el nombre del
    ataque y los números encima y el sprite abajo; los marcadores, a sus pies */
 
+/* Casi a pantalla completa: el alto que dejan libre las barras, la cabecera, tu ataque y la franja del grupo */
 .incursion-stage {
-  height: 330px;
+  height: max(340px, calc(100dvh - 420px - var(--safe-top) - var(--safe-bottom)));
   border-radius: var(--radius);
 }
 .incursion-fighter {

@@ -2,7 +2,8 @@ import type { Rng } from '../core/random'
 import { roomOutcome, type Battlefield } from './battlefield'
 import { bossesUp, bossTurnStart, isAreaTurn } from './bossMechanics'
 import { EventKind } from './events'
-import { isUp, stat, type GroupFighter } from './fighter'
+import { isUp, stat, Team, type GroupFighter } from './fighter'
+import { chooseFoeMove, stillUseful } from './foeTactics'
 import { applyGroupPassives, groupPassives, samePassives } from './groupPassives'
 import { endOfTurn, loseTurn } from './groupStatus'
 import { performMove } from './moveEffects'
@@ -26,10 +27,12 @@ export function refreshPassives(bf: Battlefield) {
   bf.log({ kind: EventKind.Passives, passives, text: 'Cambian las pasivas del grupo.' })
 }
 
-/** Orden del turno: por Velocidad (con sus cambios y pasivas); los empates, al azar */
-function turnOrder(bf: Battlefield, rng: Rng): GroupFighter[] {
+/** Orden del turno, como en los juegos: antes la prioridad de su ataque, luego la Velocidad (con etapas y pasivas); los empates, al azar */
+export function turnOrder(bf: Battlefield, rng: Rng): GroupFighter[] {
   const tiebreak = new Map([...bf.party, ...bf.foes].map((f) => [f, rng()]))
-  return [...bf.party, ...bf.foes].filter(isUp).sort((a, b) => stat(b, 'spe') - stat(a, 'spe') || tiebreak.get(a)! - tiebreak.get(b)!)
+  return [...bf.party, ...bf.foes]
+    .filter(isUp)
+    .sort((a, b) => b.move.priority - a.move.priority || stat(b, 'spe') - stat(a, 'spe') || tiebreak.get(a)! - tiebreak.get(b)!)
 }
 
 /**
@@ -46,8 +49,10 @@ export function fightRoom(bf: Battlefield, rng: Rng, tapWindow: () => TurnOrders
     if (!orders) return 'waiting'
     bf.boosted = orders.boosted
     applyPicks(bf, orders.picks)
+    for (const foe of bf.foes.filter(isUp)) foe.move = chooseFoeMove(bf, foe, rng, isAreaTurn(bf, foe))
     for (const f of turnOrder(bf, rng)) {
       if (!isUp(f) || loseTurn(bf, f, rng)) continue
+      if (f.team === Team.Foe) f.move = stillUseful(bf, f, rng, isAreaTurn(bf, f))
       performMove(bf, f, rng, isAreaTurn(bf, f))
       const outcome = roomOutcome(bf)
       if (outcome) return outcome

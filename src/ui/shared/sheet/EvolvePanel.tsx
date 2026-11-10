@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { evolutionsOf, evolutionTo, type Evolution } from '../../../data/evolutions'
 import { species } from '../../../data/species'
+import { STAR_ITEMS } from '../../../data/starItems'
 import { STONES } from '../../../data/stones'
+import { starItemFor, starItemsOf } from '../../../game/collection/starItems'
 import type { GameState, OwnedMon } from '../../../game/core/state'
 import { act } from '../../../game/core/store'
 import { evolve, evolveBlocker, evolveDestination, evolvePrice, type EvolveResult } from '../../../game/team/evolution'
@@ -50,7 +52,9 @@ function EvolveOption({ game, mon, evo, onPick }: { game: GameState; mon: OwnedM
         <span className="grow">
           Evolucionar a {species(evo.into).name}
           <span className="tiny muted evolve-requirement">
-            {stone ? `${stone.name} · tienes ${stonesOf(game, evo.stone!)}` : `A partir de Nv. ${evo.level}`}
+            {[stone ? `${stone.name} · tienes ${stonesOf(game, evo.stone!)}` : `A partir de Nv. ${evo.level}`, starItemText(game, evo.into)]
+              .filter(Boolean)
+              .join(' · ')}
           </span>
         </span>
         <span className="big-action-price">₽ {evolvePrice(evo.into)}</span>
@@ -63,7 +67,9 @@ function EvolveOption({ game, mon, evo, onPick }: { game: GameState; mon: OwnedM
 function confirmText(game: GameState, mon: OwnedMon, intoId: number): string {
   const name = species(mon.speciesId).name
   const stone = evolutionTo(mon.speciesId, intoId)?.stone
-  const cost = `₽ ${evolvePrice(intoId)}${stone ? ` y una ${STONES[stone].name}` : ''}`
+  const item = starItemFor(intoId)
+  const parts = [`₽ ${evolvePrice(intoId)}`, stone && `una ${STONES[stone].name}`, item && `un ${STAR_ITEMS[item].name}`].filter(Boolean)
+  const cost = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} y ${parts.at(-1)}` : parts[0]
   const destination = evolveDestination(game, mon, intoId)
   const moves = destination !== undefined && destination !== null && destination !== mon.ranch
   return [
@@ -73,4 +79,10 @@ function confirmText(game: GameState, mon: OwnedMon, intoId: number): string {
   ]
     .filter(Boolean)
     .join(' ')
+}
+
+/** El objeto estelar que pide la evolución y cuántos hay; null si no pide ninguno */
+function starItemText(game: GameState, intoId: number): string | null {
+  const item = starItemFor(intoId)
+  return item && `${STAR_ITEMS[item].name} · tienes ${starItemsOf(game, item)}`
 }

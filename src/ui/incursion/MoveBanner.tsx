@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import { battleMove } from '../../data/learnsets'
+import { incursionMove } from '../../data/incursionMoves'
 import { TYPE_INFO } from '../../data/types'
 import type { SceneState } from './sceneState'
 
@@ -10,7 +10,7 @@ const BANNER_EVENTS = 3
 export function MoveBanner({ scene }: { scene: SceneState }) {
   const { move, seq } = scene
   if (!move || seq - move.seq >= BANNER_EVENTS) return null
-  const mv = battleMove(move.moveId)
+  const mv = incursionMove(move.moveId)
   const user = [...scene.party, ...scene.foes].find((m) => m.id === move.actor)
   return (
     <div key={move.seq} className="incursion-move-banner" style={{ ['--type-color' as string]: TYPE_INFO[mv.type].color } as CSSProperties}>

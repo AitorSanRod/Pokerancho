@@ -1,7 +1,21 @@
 import { useState } from 'react'
 import { species } from '../../../data/species'
+import { STAR_ITEMS } from '../../../data/starItems'
 import { isSeen, knownName } from '../../../game/collection/dex'
-import { canCombine, combine, combineBlocker, CombineKind, combineKind, combinePrice, PIECES_PER_COMBINE, piecesOf, surplusMoney, type CombineResult } from '../../../game/collection/pieces'
+import {
+  canCombine,
+  combine,
+  combineBlocker,
+  CombineKind,
+  combineKind,
+  combinePrice,
+  combineStarItem,
+  PIECES_PER_COMBINE,
+  piecesOf,
+  surplusMoney,
+  type CombineResult,
+} from '../../../game/collection/pieces'
+import { starItemsOf } from '../../../game/collection/starItems'
 import { buyPiece, maxPiecesToBuy, pieceShardPrice } from '../../../game/collection/shredder'
 import { TutorialStep, type GameState } from '../../../game/core/state'
 import { act } from '../../../game/core/store'
@@ -30,6 +44,7 @@ export function TicketsSection({ game, speciesId }: { game: GameState; speciesId
   const guided = game.tutorial === TutorialStep.Combine && canCombine(game, speciesId)
   const price = kind === CombineKind.Money ? surplusMoney(speciesId) : combinePrice(game, speciesId)
   const shardPrice = pieceShardPrice(speciesId)
+  const starItem = combineStarItem(game, speciesId)
 
   return (
     <MonSection title="Tickets">
@@ -46,6 +61,11 @@ export function TicketsSection({ game, speciesId }: { game: GameState; speciesId
       {seen && blocker && pieces >= PIECES_PER_COMBINE && <p className="tiny muted center">{blocker}</p>}
       {guided && <TutorialHint>Junta los {PIECES_PER_COMBINE} tickets para conseguir a {species(speciesId).name}.</TutorialHint>}
 
+      {starItem && (
+        <p className="tiny muted center">
+          Crearlo gasta también un {STAR_ITEMS[starItem].name} (tienes {starItemsOf(game, starItem)}).
+        </p>
+      )}
       <BigAction
         icon={ICON.Piece}
         label={COMBINE_LABEL[kind]}

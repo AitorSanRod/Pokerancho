@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { battleMove } from '../../data/learnsets'
+import { incursionMove } from '../../data/incursionMoves'
 import { findMon, type GameState } from '../../game/core/state'
 import { act } from '../../game/core/store'
 import type { ActiveIncursion } from '../../game/incursion/activeIncursion'
@@ -33,7 +33,7 @@ export function PickDialog({ game, a, scene, current, onClose }: Props) {
   const [moveId, setMoveId] = useState(current.moveId)
   const [target, setTarget] = useState<string | null>(current.target)
   if (!mon) return null
-  const side = pickSide(battleMove(moveId))
+  const side = pickSide(incursionMove(moveId))
   const candidates = side === PickSide.Foes ? scene.foes.filter(up) : side === PickSide.Allies ? scene.party.filter(up) : []
   const chosen = candidates.some((c) => c.id === target) ? target : null
 

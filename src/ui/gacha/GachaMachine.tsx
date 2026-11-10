@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Rarity, RARITY_INFO } from '../../data/species'
+import { STAR_ITEMS, type StarItem } from '../../data/starItems'
 import { isSeen, knownName } from '../../game/collection/dex'
 import { buyTicket, maxTicketsToBuy, pull, TICKET_PRICE, type PieceDrop, type PullResult } from '../../game/collection/gacha'
 import type { GameState } from '../../game/core/state'
@@ -20,7 +21,7 @@ const MULTI_PULL = 10
 
 /** Máquina de tiradas: gasta tickets y abre la Pokéball con las piezas */
 export function GachaMachine({ game }: { game: GameState }) {
-  const [drops, setDrops] = useState<PullResult>({ pieces: [], money: [] })
+  const [drops, setDrops] = useState<PullResult>({ pieces: [], money: [], starItems: [] })
   const [phase, setPhase] = useState<Phase>('idle')
   // Al tirar tocando la Pokéball no hay caída: ya está ahí y empieza a balancearse
   const [fromBall, setFromBall] = useState(false)
@@ -31,7 +32,7 @@ export function GachaMachine({ game }: { game: GameState }) {
 
   const roll = (count: number, tappedBall = false) => {
     const res = act((s) => pull(s, count))
-    if (res.pieces.length === 0 && res.money.length === 0) return
+    if (res.pieces.length === 0 && res.money.length === 0 && res.starItems.length === 0) return
     setFromBall(tappedBall)
     setDrops(res)
     setPhase('capturing')
@@ -42,7 +43,7 @@ export function GachaMachine({ game }: { game: GameState }) {
       <div className="card gacha-machine">
         <div className="gacha-stage">
           {phase === 'capturing' ? (
-            <CaptureBall glow={RARITY_INFO[bestRarity(drops.pieces)].color} drop={!fromBall} onOpen={() => setPhase('rewards')} />
+            <CaptureBall glow={RARITY_INFO[bestRarity(drops)].color} drop={!fromBall} onOpen={() => setPhase('rewards')} />
           ) : (
             // Tocar la Pokéball equivale a «Tirar x1»; sin tickets se ve desactivada
             <button
@@ -87,12 +88,12 @@ export function GachaMachine({ game }: { game: GameState }) {
           }}
         />
       </div>
-      <GachaRates />
+      <GachaRates game={game} />
 
       {phase === 'rewards' && (
         <RewardOverlay
           title="¡Tickets conseguidos!"
-          items={[...moneyRewards(drops.money), ...pieceRewards(game, drops.pieces)]}
+          items={[...moneyRewards(drops.money), ...pieceRewards(game, drops.pieces), ...starItemRewards(drops.starItems)]}
           fadeIn={false}
           onClose={() => setPhase('idle')}
         />
@@ -101,8 +102,10 @@ export function GachaMachine({ game }: { game: GameState }) {
   )
 }
 
-function bestRarity(drops: PieceDrop[]): Rarity {
-  return drops.reduce<Rarity>((best, d) => (RARITY_INFO[d.rarity].rate < RARITY_INFO[best].rate ? d.rarity : best), Rarity.Common)
+/** La rareza más alta de lo que ha salido (piezas y objetos estelares): da el color de la Pokéball */
+function bestRarity({ pieces, starItems }: PullResult): Rarity {
+  const rarities = [...pieces.map((d) => d.rarity), ...starItems.map((id) => STAR_ITEMS[id].rarity)]
+  return rarities.reduce<Rarity>((best, r) => (RARITY_INFO[r].rate < RARITY_INFO[best].rate ? r : best), Rarity.Common)
 }
 
 /** Agrupa el dinero por premio («+₽ 250 ×2»), antes que las piezas */
@@ -128,5 +131,19 @@ function pieceRewards(game: GameState, drops: PieceDrop[]): RewardItem[] {
       icon: <Sprite id={d.speciesId} size={160} silhouette={!isSeen(game, d.speciesId)} />,
       title: `Ticket de ${knownName(game, d.speciesId)} ×${d.count}`,
       color: RARITY_INFO[d.rarity].color,
+    }))
+}
+
+/** Agrupa los objetos estelares («Trozo de estrella ×2»): salen los últimos, como lo más valioso */
+function starItemRewards(items: StarItem[]): RewardItem[] {
+  const counts = new Map<StarItem, number>()
+  for (const id of items) counts.set(id, (counts.get(id) ?? 0) + 1)
+  return [...counts]
+    .sort(([a], [b]) => RARITY_INFO[STAR_ITEMS[b].rarity].rate - RARITY_INFO[STAR_ITEMS[a].rarity].rate)
+    .map(([id, count]) => ({
+      key: id,
+      icon: <ItemIcon item={STAR_ITEMS[id].item} size={96} />,
+      title: count > 1 ? `${STAR_ITEMS[id].name} ×${count}` : STAR_ITEMS[id].name,
+      color: RARITY_INFO[STAR_ITEMS[id].rarity].color,
     }))
 }
