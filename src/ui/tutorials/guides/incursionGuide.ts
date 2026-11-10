@@ -43,7 +43,7 @@ export const INCURSION_GUIDE: Guide = {
     {
       image: shot('inc-battle'),
       title: 'La incursión',
-      text: `El combate va solo, por turnos. Arriba a la derecha, los ${INCURSION_REVIVES} revivires del grupo: quien cae vuelve al turno siguiente mientras queden. Sin ellos, se queda mirando. Puedes cerrar la app: al volver, sigue por donde va.`,
+      text: `El combate va solo, por turnos. Arriba a la derecha, los ${INCURSION_REVIVES} revivires del grupo: quien cae vuelve al turno siguiente mientras queden. Sin ellos, se queda mirando. Bajo la escena, «Tu ataque»: tócalo cuando quieras para cambiar el ataque y a quién va, desde el turno siguiente. Puedes cerrar la app: al volver, sigue por donde va.`,
     },
     {
       image: shot('inc-tap'),

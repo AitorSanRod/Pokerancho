@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { INCURSIONS, IncursionTier, RoomKind, type Incursion } from '../../data/incursions'
 import type { GameState } from '../../game/core/state'
+import { foeLevels } from '../../game/incursion/entry'
 import { keysOf } from '../../game/incursion/keys'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
@@ -40,7 +41,7 @@ function IncursionCard({ inc, keys, onEnter }: { inc: Incursion; keys: number; o
       <div className="incursion-card-body">
         <p className="small">{inc.description}</p>
         <p className="tiny muted">
-          Nv. {inc.minLevel}–{inc.maxLevel} · {inc.rooms.length} salas, {battles} de combate
+          Entran Nv. {inc.minLevel}–{inc.maxLevel} · Rivales Nv. {foeLevels(inc).join('–')} · {inc.rooms.length} salas, {battles} de combate
         </p>
         <div className="row gap incursion-card-actions">
           <span className="incursion-keys small">

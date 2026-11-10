@@ -16,7 +16,7 @@ export type Team = (typeof Team)[keyof typeof Team]
 /** Multiplicador de los PS de todos los rivales de incursión: luchan contra cinco (los jefes llevan además su `hpMult`) */
 export const FOE_HP_MULT = 8
 /** Multiplicador del Ataque de los rivales de incursión: son varios a la vez y no deben tumbar al grupo de dos golpes */
-export const FOE_ATK_MULT = 0.5
+export const FOE_ATK_MULT = 0.67
 
 /** Lo menos que puede quedar una stat con los cambios a la baja (0.25 = un 25% de la suya) */
 export const MIN_STAT_MULT = 0.25
@@ -44,8 +44,12 @@ export interface GroupFighter {
   status: StatusId | null
   /** Turnos que le quedan sin moverse por la congelación */
   frozenTurns: number
+  /** Turnos que le quedan al estado alterado (ver groupStatus.ts › STATUS_MAX_TURNS) */
+  statusTurns: number
   changes: ActiveChange[]
   taunt: { turns: number; guard: number } | null
+  /** Del grupo: a quién dirige su movimiento, elegido por el jugador (ver movePicks.ts); null, el que toque */
+  target: string | null
   /** Del grupo: cayó sin revivires que gastar. Sigue en la incursión, pero no actúa ni suma pasivas */
   out: boolean
   /** Orden en que cayó (los revivires se gastan en ese orden); null si está en pie */
@@ -59,7 +63,6 @@ export interface GroupFighter {
 export interface MemberState {
   id: string
   speciesId: number
-  /** Su nivel de verdad; lucha al sincronizado */
   level: number
   stars: number
   moveId: string
@@ -74,30 +77,31 @@ function fighter(id: string, team: Team, speciesId: number, level: number, base:
   const sp = species(speciesId)
   return {
     id, team, speciesId, name: sp.name, level, types: sp.types, base, hp: base.hp, maxHp: base.hp,
-    move: battleMove(moveId), bonus: sumEffects([]), status: null, frozenTurns: 0, changes: [], taunt: null,
-    out: false, fellAt: null, boss: null, rage: 0,
+    move: battleMove(moveId), bonus: sumEffects([]), status: null, frozenTurns: 0, statusTurns: 0, changes: [], taunt: null,
+    out: false, fellAt: null, boss: null, rage: 0, target: null,
   }
 }
 
-/** Un Pokémon del grupo luchando al nivel `level` (el sincronizado, ver levelSync.ts) */
-export function partyFighter(m: MemberState, level: number): GroupFighter {
-  const f = fighter(m.id, Team.Party, m.speciesId, level, calcStats(m.speciesId, level, m.stars), m.moveId)
+/** Un Pokémon del grupo, con su nivel */
+export function partyFighter(m: MemberState): GroupFighter {
+  const f = fighter(m.id, Team.Party, m.speciesId, m.level, calcStats(m.speciesId, m.level, m.stars), m.moveId)
   f.hp = m.out ? 0 : Math.round(m.hpFraction * f.maxHp)
-  return { ...f, status: m.status, frozenTurns: m.frozenTurns, out: m.out }
+  return { ...f, status: m.status, frozenTurns: m.frozenTurns, statusTurns: 0, out: m.out }
 }
 
-/** Un rival de una sala a su nivel ya calculado (ver levelSync.ts › foeLevel) */
-export function foeFighter(foe: IncursionFoe, id: string, level: number): GroupFighter {
-  const base = calcStats(foe.speciesId, level)
+/** Un rival de una sala, con su nivel */
+export function foeFighter(foe: IncursionFoe, id: string): GroupFighter {
+  const base = calcStats(foe.speciesId, foe.level)
   base.hp = Math.round(base.hp * FOE_HP_MULT * (foe.hpMult ?? 1))
   base.atk = Math.round(base.atk * FOE_ATK_MULT)
-  const f = fighter(id, Team.Foe, foe.speciesId, level, base, foe.moveId)
+  const f = fighter(id, Team.Foe, foe.speciesId, foe.level, base, foe.moveId)
   return { ...f, bonus: combineBonus(foe.passives ?? []), boss: foe.boss ?? null }
 }
 
 /** Lo que sale del tramo para el siguiente */
 export const memberState = (f: GroupFighter, m: MemberState): MemberState => ({
   ...m,
+  moveId: f.move.id,
   hpFraction: f.maxHp ? f.hp / f.maxHp : 0,
   status: f.status,
   frozenTurns: f.frozenTurns,

@@ -12,12 +12,11 @@ export const PRUEBA: Incursion = {
   tier: IncursionTier.Easy,
   minLevel: 5,
   maxLevel: 20,
-  levels: [5, 15],
   rooms: [
     {
       kind: RoomKind.Battle,
       name: 'Claro del bosque',
-      foes: [foe(POKEMON.Caterpie, 0, 'fury-cutter'), foe(POKEMON.Weedle, 0, 'fury-cutter')],
+      foes: [foe(POKEMON.Caterpie, 6, 'fury-cutter'), foe(POKEMON.Weedle, 6, 'fury-cutter')],
       reward: { money: 50, exp: 30 },
     },
     { kind: RoomKind.Heal, name: 'Fuente', heal: 0.5 },
@@ -26,7 +25,7 @@ export const PRUEBA: Incursion = {
     {
       kind: RoomKind.Battle,
       name: 'Guarida de Onix',
-      foes: [foe(POKEMON.Onix, 3, 'rock-throw', { hpMult: 3, boss: { enrage: { fromTurn: 8, every: 2, atk: 0.2 }, areaEvery: 3 } })],
+      foes: [foe(POKEMON.Onix, 12, 'rock-throw', { hpMult: 3, boss: { enrage: { fromTurn: 8, every: 2, atk: 0.2 }, areaEvery: 3 } })],
       reward: { money: 100, exp: 60 },
     },
   ],

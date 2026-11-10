@@ -10,7 +10,7 @@ import { PARTY_SIZE, freshMember } from '../party'
 import { repertoire } from '../repertoire'
 import { votesNeeded } from '../retreatVote'
 import { QUEUE_MAX_MS } from './protocol'
-import { advanceShared, chooseShared, formGroup, groupView, pickGroup, readyShared, TAP_CLOSE_DELAY_MS, tapShared, voteShared, type Queued } from './sharedIncursion'
+import { advanceShared, chooseShared, formGroup, groupView, pickGroup, pickShared, readyShared, TAP_CLOSE_DELAY_MS, tapShared, voteShared, type Queued } from './sharedIncursion'
 
 vi.mock('../../../data/incursions', () => import('../incursion-test-mock'))
 
@@ -93,11 +93,22 @@ describe('grupo de incursión', () => {
     tapShared(g, 'otro', 0, 0, end - 1)
     tapShared(g, 'jugador-1', 0, 5, end - 1)
     advanceShared(g, end)
-    expect(g.orders[0].taps).toEqual([])
+    expect(g.orders[0].turns).toEqual([])
     advanceShared(g, end + TAP_CLOSE_DELAY_MS)
-    expect(g.orders[0].taps[0]).toEqual(['mon0'])
+    expect(g.orders[0].turns[0].boosted).toEqual(['mon0'])
     tapShared(g, 'jugador-2', 0, 0, end + TAP_CLOSE_DELAY_MS + 1)
     expect(g.tapPending).toEqual([])
+  })
+
+  it('el cambio de ataque entra en la ventana que se cierra; uno que no conoce, no', () => {
+    const g = group(2)
+    const end = windowEndAt(g)
+    pickShared(g, 'jugador-0', { moveId: MOVES[1].id, target: null }, end - 1)
+    pickShared(g, 'jugador-1', { moveId: 'no-existe', target: null }, end - 1)
+    expect(groupView(g, 'jugador-0', end)?.yourPick).toEqual({ moveId: MOVES[1].id, target: null })
+    advanceShared(g, end + TAP_CLOSE_DELAY_MS)
+    expect(g.orders[0].turns[0].picks).toEqual({ mon0: { moveId: MOVES[1].id, target: null } })
+    expect(g.pickPending).toEqual({})
   })
 
   it('con los votos necesarios, la incursión acaba en ese momento; los votos se pueden quitar', () => {

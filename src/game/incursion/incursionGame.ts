@@ -13,6 +13,7 @@ import { keysOf, spendKey } from './keys'
 import { fillWithBots, freshMember } from './party'
 import { canLearn } from './repertoire'
 import { retreatPasses } from './retreatVote'
+import { pendingOrders } from './incursionPicks'
 import { settleTaps } from './tapSettle'
 
 // La incursión en la partida, sin servidor: el grupo se completa con bots al entrar y los tramos siguen solos con la
@@ -48,9 +49,10 @@ export function startIncursion(s: GameState, id: IncursionId, uid: string, moveI
     incursionId: id,
     uid,
     members: fillWithBots(incursion(id), [player], rng),
-    orders: [{ seed: newSeed(rng), moves: {}, taps: [] }],
+    orders: [{ seed: newSeed(rng), moves: {}, turns: [] }],
     legStarts: [now],
     nextMove: null,
+    pendingPick: null,
     retreat: null,
     online: null,
   }
@@ -70,20 +72,25 @@ export function advanceIncursion(s: GameState, now: number) {
   const a = s.incursion
   if (!a || a.online) return
   for (;;) {
-    settleTaps(a, now, 0, [])
+    if (settleTaps(a, now, 0, pendingOrders(a, false))) a.pendingPick = null
     const p = incursionProgress(a, now)
     if (p.phase !== IncursionPhase.Regroup || p.regroupMsLeft > 0) return
     nextLeg(a, regroupEnd(a, p))
   }
 }
 
-/** Sin servidor: el jugador ha llegado a los toques en la ventana abierta y su Pokémon pega más este turno */
+/**
+ * Sin servidor: el jugador ha llegado a los toques en la ventana abierta y su Pokémon pega más este turno (la ventana
+ * se cierra ya, con el cambio de ataque que tuviera pendiente)
+ */
 export function boostIncursionTap(s: GameState, now: number) {
   const a = s.incursion
   if (!a || a.online) return
   const p = incursionProgress(a, now)
-  const taps = a.orders[p.leg].taps
-  if (p.phase === IncursionPhase.Tap && p.tap && taps.length === p.tap.turn) taps.push([a.uid])
+  const turns = a.orders[p.leg].turns
+  if (p.phase !== IncursionPhase.Tap || !p.tap || turns.length !== p.tap.turn) return
+  turns.push(pendingOrders(a, true))
+  a.pendingPick = null
 }
 
 /** En la sala de reorganizar: elige el movimiento para el tramo siguiente */

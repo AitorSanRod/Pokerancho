@@ -1,6 +1,7 @@
 import type { IncursionId } from '../../../data/incursions'
 import type { MemberState } from '../fighter'
 import type { LegOrders, Retreat } from '../incursionRun'
+import type { MovePick } from '../tapWindow'
 
 // Lo que se dicen el juego y el servidor de incursiones (worker/incursion.ts). El jugador va por su id (el mismo de los
 // raids, ver net/identity.ts) y su apodo.
@@ -27,6 +28,8 @@ export const IncursionAction = {
   Vote: 'vote',
   /** Ha llegado a los toques en una ventana (ver tapWindow.ts) */
   Tap: 'tap',
+  /** Cambia el ataque de su Pokémon y a quién lo dirige, desde la próxima ventana */
+  Pick: 'pick',
 } as const
 export type IncursionAction = (typeof IncursionAction)[keyof typeof IncursionAction]
 
@@ -66,7 +69,13 @@ export interface TapRequest extends GroupRequestBase {
   leg: number
   turn: number
 }
-export type GroupRequest = SyncRequest | MoveRequest | ReadyRequest | VoteRequest | TapRequest
+export interface PickRequest extends GroupRequestBase {
+  action: typeof IncursionAction.Pick
+  moveId: string
+  /** Id del rival o aliado; null: el que toque */
+  target: string | null
+}
+export type GroupRequest = SyncRequest | MoveRequest | ReadyRequest | VoteRequest | TapRequest | PickRequest
 export type IncursionRequest = QueueRequest | LeaveRequest | GroupRequest
 
 /** En la cola: cuántos esperan esa incursión (con él) y desde cuándo espera él */
@@ -89,6 +98,8 @@ export interface GroupView {
   votes: string[]
   ready: string[]
   nextMoves: Record<string, string>
+  /** El cambio de ataque de quien pregunta que aún no ha llegado a una ventana */
+  yourPick: MovePick | null
   /** El Pokémon de quien pregunta */
   you: string
   serverNow: number

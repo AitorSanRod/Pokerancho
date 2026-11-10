@@ -14,6 +14,7 @@ const PLAYER_ID = /^[A-Za-z0-9-]{8,64}$/
 const MON_UID = /^[A-Za-z0-9_-]{1,32}$/
 export const GROUP_ID = /^[a-f0-9]{8,32}$/
 const MOVE_ID = /^[a-z0-9-]{1,40}$/
+const TARGET_ID = /^[A-Za-z0-9_-]{1,40}$/
 /** Tramos y ventanas de toques por tramo que se aceptan como mucho (de sobra para cualquier incursión) */
 const MAX_LEGS = 50
 const MAX_TURNS = 5000
@@ -54,6 +55,10 @@ export function parseIncursionRequest(body: unknown): IncursionRequest | null {
   if (body.action === IncursionAction.Move) return matches(body.moveId, MOVE_ID) ? { action: IncursionAction.Move, ...group, moveId: body.moveId } : null
   if (body.action === IncursionAction.Tap) {
     return isInt(body.leg, 0, MAX_LEGS) && isInt(body.turn, 0, MAX_TURNS) ? { action: IncursionAction.Tap, ...group, leg: body.leg, turn: body.turn } : null
+  }
+  if (body.action === IncursionAction.Pick) {
+    const target = body.target === null ? null : matches(body.target, TARGET_ID) ? body.target : undefined
+    return matches(body.moveId, MOVE_ID) && target !== undefined ? { action: IncursionAction.Pick, ...group, moveId: body.moveId, target } : null
   }
   if (body.action === IncursionAction.Vote) return typeof body.retreat === 'boolean' ? { action: IncursionAction.Vote, ...group, retreat: body.retreat } : null
   return null

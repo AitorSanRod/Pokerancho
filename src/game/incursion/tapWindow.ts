@@ -18,11 +18,28 @@ export const TAP_GOAL = 50
 /** Daño de más del ataque potenciado ese turno (0.1 = +10%) */
 export const TAP_BONUS = 0.1
 
+/** El ataque que usará un Pokémon del grupo desde ese turno y a quién (null: el que elija solo, como siempre) */
+export interface MovePick {
+  moveId: string
+  target: string | null
+}
+
 /**
- * Quiénes han potenciado su ataque en la ventana `turn` del tramo `leg` (por el id de su Pokémon), sabiendo que la
- * ventana acaba a los `windowEndMs` de empezar el tramo; undefined si aún no se sabe (la simulación se para ahí)
+ * Lo que se decide en una ventana, por el id de cada Pokémon: quiénes potenciaron su ataque con los toques y quiénes
+ * cambiaron de ataque u objetivo (sigue así hasta que lo vuelvan a cambiar)
  */
-export type TapResolver = (leg: number, turn: number, windowEndMs: number) => string[] | undefined
+export interface TurnOrders {
+  boosted: string[]
+  picks: Record<string, MovePick>
+}
+
+export const noTurnOrders = (): TurnOrders => ({ boosted: [], picks: {} })
+
+/**
+ * Las órdenes de la ventana `turn` del tramo `leg`, sabiendo que acaba a los `windowEndMs` de empezar el tramo;
+ * undefined si aún no se saben (la simulación se para ahí)
+ */
+export type TapResolver = (leg: number, turn: number, windowEndMs: number) => TurnOrders | undefined
 
 /** Hay ventana de toques si queda en pie algún Pokémon de un jugador (los bots no tocan) */
 export const anyPlayerUp = (bf: Battlefield): boolean => bf.party.some((f) => isUp(f) && !isBot(f.id))

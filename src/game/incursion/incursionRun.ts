@@ -4,20 +4,20 @@ import { LegOutcome, simulateLeg, type LegResult, type LegStart } from './incurs
 import { addEarnings, noEarnings, type Earned } from './incursionRewards'
 import { earnedBefore } from './incursionTimeline'
 import { INCURSION_REVIVES } from './revives'
-import type { TapResolver } from './tapWindow'
+import type { TapResolver, TurnOrders } from './tapWindow'
 
 // Una incursión entera: los tramos uno tras otro, cada uno con su semilla, los movimientos que se eligieron al
 // reorganizar y quién potenció su ataque en cada ventana de toques. Es lo que guardan el servidor y la partida; los
 // eventos se recalculan siempre igual a partir de esto.
 
 /**
- * Lo que decide cada tramo: su semilla, los movimientos que cambiaron al reorganizar (id → movimiento) y, por cada
- * ventana de toques ya cerrada, quiénes potenciaron su ataque
+ * Lo que decide cada tramo: su semilla, los movimientos que cambiaron al reorganizar (id → movimiento) y las órdenes
+ * de cada ventana de toques ya cerrada
  */
 export interface LegOrders {
   seed: number
   moves: Record<string, string>
-  taps: string[][]
+  turns: TurnOrders[]
 }
 
 /** Retirada votada: en qué tramo y a cuántos ms de empezarlo se alcanzaron los votos */
@@ -45,15 +45,15 @@ const withMoves = (start: LegStart, moves: Record<string, string>): LegStart => 
   members: start.members.map((m) => ({ ...m, moveId: moves[m.id] ?? m.moveId })),
 })
 
-/** Lo que dicen las órdenes: los toques de las ventanas ya cerradas */
-export const tapsFromOrders = (orders: LegOrders[]): TapResolver => (leg, turn) => orders[leg]?.taps?.[turn]
+/** Lo que dicen las órdenes: las de las ventanas ya cerradas */
+export const turnsFromOrders = (orders: LegOrders[]): TapResolver => (leg, turn) => orders[leg]?.turns?.[turn]
 
 export function simulateIncursion(
   inc: Incursion,
   members: MemberState[],
   orders: LegOrders[],
   retreat: Retreat | null = null,
-  resolveTaps: TapResolver = tapsFromOrders(orders),
+  resolveTaps: TapResolver = turnsFromOrders(orders),
 ): IncursionRecord {
   const legs: LegResult[] = []
   let start: LegStart = { room: 0, members, revives: INCURSION_REVIVES }

@@ -6,6 +6,7 @@ import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { IncursionRoster } from './IncursionRoster'
 import { IncursionStage } from './IncursionStage'
+import { PickButton } from './PickButton'
 import { TapPad } from './TapPad'
 import { IncursionSummary } from './IncursionSummary'
 import { RegroupPanel } from './RegroupPanel'
@@ -19,7 +20,7 @@ export function IncursionView({ game, a }: { game: GameState; a: ActiveIncursion
   const p = incursionProgress(a, game.lastTick)
   const scene = sceneAt(a, p)
   const members = p.record.legs[p.leg].next.members
-  const moveOf = (id: string) => members.find((m) => m.id === id)?.moveId ?? ''
+  const moveOf = (id: string) => scene.party.find((m) => m.id === id)?.moveId ?? ''
   const room = inc.rooms[scene.room]
   const mine = scene.party.find((m) => m.id === a.uid)
   const myMonUp = !!mine && mine.hp > 0 && !mine.out
@@ -49,6 +50,7 @@ export function IncursionView({ game, a }: { game: GameState; a: ActiveIncursion
       )}
       <IncursionStage biome={inc.biome} scene={scene} uid={a.uid} overlay={p.tap && myMonUp && <TapPad a={a} leg={p.leg} turn={p.tap.turn} msLeft={p.tap.msLeft} />} />
       {p.phase === IncursionPhase.Waiting && <p className="small muted center">Esperando a los toques del grupo…</p>}
+      {myMonUp && p.phase !== IncursionPhase.Finished && <PickButton game={game} a={a} scene={scene} />}
       {p.phase === IncursionPhase.Regroup && <RegroupPanel game={game} a={a} members={members} msLeft={p.regroupMsLeft} />}
       {p.phase === IncursionPhase.Finished && <IncursionSummary outcome={p.record.outcome} earned={p.record.earned} />}
       <IncursionRoster party={scene.party} foes={scene.foes} moveOf={moveOf} uid={a.uid} nicknames={a.online?.nicknames ?? {}} />

@@ -8,6 +8,7 @@ import type { Battlefield } from './battlefield'
 import type { IncursionEvent } from './events'
 import { foeFighter, partyFighter, type GroupFighter, type MemberState } from './fighter'
 import { freshMember } from './party'
+import { noTurnOrders, type TurnOrders } from './tapWindow'
 
 // Piezas para los tests de incursiones, sin depender de las incursiones ni de los números reales.
 
@@ -24,10 +25,10 @@ export function supportOf<K extends SupportMove['kind']>(kind: K): Extract<Suppo
 export const member = (id: string, moveId = HIT, speciesId: number = POKEMON.Snorlax, level = LEVEL): MemberState =>
   freshMember({ id, speciesId, level, stars: 0, moveId })
 
-export const ally = (id: string, moveId = HIT, speciesId?: number): GroupFighter => partyFighter(member(id, moveId, speciesId), LEVEL)
+export const ally = (id: string, moveId = HIT, speciesId?: number): GroupFighter => partyFighter(member(id, moveId, speciesId))
 
 export const enemy = (id: string, extra: Partial<IncursionFoe> = {}): GroupFighter =>
-  foeFighter({ speciesId: POKEMON.Rattata, levelDelta: 0, moveId: HIT, ...extra }, id, LEVEL)
+  foeFighter({ speciesId: POKEMON.Rattata, level: LEVEL, moveId: HIT, ...extra }, id)
 
 export function field(party: GroupFighter[], foes: GroupFighter[], revives = 0): { bf: Battlefield; events: IncursionEvent[] } {
   const events: IncursionEvent[] = []
@@ -35,7 +36,7 @@ export function field(party: GroupFighter[], foes: GroupFighter[], revives = 0):
 }
 
 /** Ventanas de toques que se cierran sin que nadie potencie su ataque */
-export const NO_TAPS = (): string[] => []
+export const NO_TAPS = (): TurnOrders => noTurnOrders()
 
 export const battleRoom = (foes: IncursionFoe[], money = 10, exp = 20): IncursionRoom => ({
   kind: RoomKind.Battle,
@@ -45,7 +46,7 @@ export const battleRoom = (foes: IncursionFoe[], money = 10, exp = 20): Incursio
 })
 
 /** Un rival que cae de un golpe y apenas pega */
-export const weakFoe = (): IncursionFoe => ({ speciesId: POKEMON.Caterpie, levelDelta: -LEVEL + 1, moveId: supportOf(MoveKind.Boost).id })
+export const weakFoe = (): IncursionFoe => ({ speciesId: POKEMON.Caterpie, level: 1, moveId: supportOf(MoveKind.Boost).id })
 
 export const testIncursion = (rooms: IncursionRoom[], prizes: Incursion['prizes'] = []): Incursion => ({
   id: IncursionId.CuevaHelada,
@@ -55,7 +56,6 @@ export const testIncursion = (rooms: IncursionRoom[], prizes: Incursion['prizes'
   tier: IncursionTier.Easy,
   minLevel: 1,
   maxLevel: 100,
-  levels: [1, 100],
   rooms,
   prizes,
   bots: [POKEMON.Snorlax],

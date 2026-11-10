@@ -5,6 +5,10 @@
   flex-direction: column;
   gap: 8px;
 }
+/* La pantalla hace scroll: que no encoja a nadie para que quepa */
+.incursion-view > * {
+  flex-shrink: 0;
+}
 .incursion-head {
   display: flex;
   align-items: center;
@@ -133,4 +137,51 @@
   color: var(--hp-ok);
   font-style: normal;
   font-weight: 800;
+}
+
+/* Tu ataque y cambiarlo en plena pelea */
+.incursion-pick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 44px;
+  text-align: left;
+}
+.incursion-pick-next {
+  color: var(--accent);
+  font-weight: 800;
+}
+.incursion-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 64px - var(--safe-top) - var(--safe-bottom));
+  overflow-y: auto;
+}
+.incursion-pick h3,
+.incursion-pick p {
+  margin: 0;
+}
+.incursion-pick-targets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.incursion-pick-target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 6px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+}
+.incursion-pick-target.selected {
+  border-color: var(--accent);
+  background: #fff;
 }

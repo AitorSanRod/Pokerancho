@@ -23,7 +23,20 @@ type Save = Record<string, unknown>
  * Pasos de migración: SAVE_MIGRATIONS[v] convierte una partida de la versión v en una de la v + 1. Solo hace falta
  * cuando un campo cambia de nombre o de significado; los campos nuevos o quitados ya los resuelve el rescate
  */
-export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {}
+export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {
+  // 37 → 38: las incursiones cambian (sin nivel sincronizado, órdenes por turno): la que estaba en curso se descarta
+  // y se devuelve su llave
+  37: refundIncursionKey,
+}
+
+/** La incursión en curso se va a descartar: su llave vuelve a la Mochila (sin pasar del máximo) */
+function refundIncursionKey(save: Save) {
+  const id = isRecord(save.incursion) ? save.incursion.incursionId : null
+  if (typeof id !== 'string') return
+  const keys = isRecord(save.incursionKeys) ? save.incursionKeys : {}
+  keys[id] = Math.min(MAX_KEYS, (isInt(keys[id]) ? keys[id] : 0) + 1)
+  save.incursionKeys = keys
+}
 
 /** Lo que se descarta al cambiar de versión: la ruta, la sala de raid y la incursión en curso o en cola (el Pokémon vuelve al rancho) */
 const IN_PROGRESS: (keyof GameState)[] = ['run', 'raids', 'raidServer', 'incursion', 'incursionQueue', 'timeScale']

@@ -65,6 +65,7 @@ export function applyGroupView(s: GameState, view: GroupView, now: number): bool
     legStarts: view.legStarts.map((t) => t + offset),
     retreat: view.retreat,
     nextMove: view.nextMoves[view.you] ?? null,
+    pendingPick: view.yourPick ?? null,
     online: { groupId: view.groupId, nicknames: view.nicknames, votes: view.votes, ready: view.ready, nextMoves: view.nextMoves },
   }
   return true

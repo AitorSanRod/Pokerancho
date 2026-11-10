@@ -1,4 +1,4 @@
-import type { Incursion } from '../../data/incursions'
+import { RoomKind, type Incursion } from '../../data/incursions'
 
 // Quién puede entrar en una incursión: Pokémon entre su nivel mínimo y su nivel máximo, ambos incluidos.
 
@@ -18,3 +18,9 @@ export function entryBlock(inc: Incursion, level: number): EntryBlock | null {
 }
 
 export const canEnter = (inc: Incursion, level: number): boolean => entryBlock(inc, level) === null
+
+/** Nivel del rival más bajo y del más alto de la incursión (cada Pokémon lucha con su nivel, sin ajustes) */
+export function foeLevels(inc: Incursion): [number, number] {
+  const levels = inc.rooms.flatMap((room) => (room.kind === RoomKind.Battle ? room.foes.map((f) => f.level) : []))
+  return [Math.min(...levels), Math.max(...levels)]
+}

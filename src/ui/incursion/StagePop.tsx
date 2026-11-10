@@ -34,6 +34,8 @@ function popContent(e: IncursionEvent): ReactNode {
       return e.status ? `¡${STATUS_INFO[e.status].name}!` : null
     case EventKind.Revive:
       return '¡Vuelve!'
+    case EventKind.Recover:
+      return e.status ? `Sin ${STATUS_INFO[e.status].name.toLowerCase()}` : null
     case EventKind.Taunt:
       return 'Provoca'
     default:
@@ -43,7 +45,7 @@ function popContent(e: IncursionEvent): ReactNode {
 
 /** Clase del número: los golpes fuertes, más grandes; los poco eficaces, más pequeños; curas en verde y estados en violeta */
 function popClass(e: IncursionEvent): string {
-  if (e.kind === EventKind.Heal || e.kind === EventKind.Revive) return 'heal'
+  if (e.kind === EventKind.Heal || e.kind === EventKind.Revive || e.kind === EventKind.Recover) return 'heal'
   if (e.kind === EventKind.Status) return 'status'
   if (e.kind !== EventKind.Hit) return 'miss'
   return isHeavy(e) ? 'hit heavy' : (e.eff ?? 1) < 1 ? 'hit weak' : 'hit'

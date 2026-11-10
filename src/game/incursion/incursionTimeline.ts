@@ -16,6 +16,7 @@ export const INCURSION_EVENT_MS: Record<EventKind, number> = {
   [EventKind.Status]: 1100,
   [EventKind.Heal]: 900,
   [EventKind.Change]: 900,
+  [EventKind.Recover]: 900,
   [EventKind.Taunt]: 1000,
   [EventKind.Revive]: 1200,
   [EventKind.Out]: 1200,

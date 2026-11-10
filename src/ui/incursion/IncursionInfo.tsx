@@ -3,8 +3,8 @@ import { GROUP_PASSIVE_THRESHOLDS, RARITY_WEIGHT } from '../../data/incursionPas
 import { MAX_KEYS } from '../../data/incursions'
 import { RARITY_INFO, Rarity } from '../../data/species'
 import { REGROUP_MS } from '../../game/incursion/activeIncursion'
-import { LEVEL_SYNC_KEEP } from '../../game/incursion/levelSync'
 import { PARTY_SIZE } from '../../game/incursion/party'
+import { STATUS_MAX_TURNS } from '../../game/incursion/groupStatus'
 import { INCURSION_REVIVES, REVIVE_HP } from '../../game/incursion/revives'
 import '../shared/overlays.css'
 
@@ -21,8 +21,12 @@ const SECTIONS: { title: string; text: string }[] = [
     text: 'Eliges un Pokémon del rancho y un movimiento de su repertorio. Ese movimiento decide su papel: golpear, curar, provocar (atraer los golpes), subir stats al grupo, bajarlas a los rivales o poner estados. Después, el combate va solo, por turnos.',
   },
   {
+    title: 'En plena pelea',
+    text: `Cuando quieras, cambia el ataque de tu Pokémon y a quién lo dirige (un rival o un aliado, según el ataque, o automático). Vale desde el turno siguiente y sigue así hasta que lo vuelvas a cambiar. Los estados alterados duran como mucho ${STATUS_MAX_TURNS} turnos (volver a ponerlos reinicia la cuenta) y se quitan al acabar cada sala.`,
+  },
+  {
     title: 'Nivel',
-    text: `Cada incursión tiene un nivel mínimo y uno máximo para entrar. Dentro se lucha al nivel del Pokémon más alto del grupo, sin salir de la franja de la incursión, y cada uno pelea a un nivel acercado a ese, conservando el ${pct(LEVEL_SYNC_KEEP)} de su diferencia: el de más nivel se sigue notando.`,
+    text: 'Cada incursión tiene un nivel mínimo y uno máximo para entrar, y sus rivales tienen su propio nivel, que sube sala a sala. Cada Pokémon lucha con el nivel que tiene: uno de nivel alto pega más fuerte y la incursión acaba antes.',
   },
   {
     title: 'Pasivas de grupo',

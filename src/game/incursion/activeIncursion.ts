@@ -4,7 +4,7 @@ import { IncursionOutcome, simulateIncursion, type IncursionRecord, type LegOrde
 import { EventKind } from './events'
 import type { LegResult } from './incursionLeg'
 import { eventStartMs, eventsStarted, legDuration } from './incursionTimeline'
-import { TAP_WINDOW_MS } from './tapWindow'
+import { TAP_WINDOW_MS, type MovePick } from './tapWindow'
 
 // Una incursión tal y como se guarda (en la partida y en el servidor): quién entró, las órdenes de cada tramo y cuándo
 // empezó cada uno. Lo demás (combates, PS, premios) se recalcula siempre igual a partir de esto y de la hora.
@@ -42,6 +42,8 @@ export interface ActiveIncursion extends IncursionPlan {
   uid: string
   /** Movimiento elegido en la sala de reorganizar en curso, para el tramo siguiente; null si no lo ha cambiado */
   nextMove: string | null
+  /** Ataque y objetivo elegidos en plena pelea que aún no han llegado a una ventana de toques (ver incursionPicks.ts) */
+  pendingPick: MovePick | null
   /** Con otros jugadores, lo que dice el servidor (él decide cuándo empieza cada tramo); null: en local, con bots */
   online: OnlineIncursion | null
 }
@@ -117,7 +119,7 @@ export function finalHpFraction(a: IncursionPlan, p: IncursionProgress, id: stri
  */
 export function startNextLeg(a: IncursionPlan, at: number, moves: Record<string, string>) {
   const seed = (a.orders[0].seed + a.orders.length * 7919) % 2 ** 31
-  a.orders.push({ seed, moves, taps: [] })
+  a.orders.push({ seed, moves, turns: [] })
   a.legStarts.push(at)
 }
 

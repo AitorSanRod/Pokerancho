@@ -10,7 +10,7 @@ import { advanceIncursion, boostIncursionTap, chooseIncursionMove, collectIncurs
 import { LegOutcome } from './incursionLeg'
 import { eventStartMs, legDuration } from './incursionTimeline'
 import { PARTY_SIZE } from './party'
-import { TAP_WINDOW_MS } from './tapWindow'
+import { noTurnOrders, TAP_WINDOW_MS } from './tapWindow'
 import { repertoire } from './repertoire'
 
 vi.mock('../../data/incursions', () => import('./incursion-test-mock'))
@@ -112,16 +112,16 @@ describe('incursión en curso', () => {
     const opens = openWindowAt(0)
     expect(incursionProgress(s.incursion!, opens + 1).phase).toBe(IncursionPhase.Tap)
     advanceIncursion(s, opens + TAP_WINDOW_MS)
-    expect(s.incursion!.orders[0].taps[0]).toEqual([])
+    expect(s.incursion!.orders[0].turns[0]).toEqual(noTurnOrders())
   })
 
   it('al llegar a los toques en la ventana abierta, su Pokémon queda potenciado ese turno', () => {
     start()
     const opens = openWindowAt(0)
     boostIncursionTap(s, opens - 1)
-    expect(s.incursion!.orders[0].taps).toEqual([])
+    expect(s.incursion!.orders[0].turns).toEqual([])
     boostIncursionTap(s, opens + 1)
-    expect(s.incursion!.orders[0].taps[0]).toEqual([uid])
+    expect(s.incursion!.orders[0].turns[0].boosted).toEqual([uid])
   })
 
   it('al retirarse se termina en ese momento, con lo ganado hasta entonces', () => {

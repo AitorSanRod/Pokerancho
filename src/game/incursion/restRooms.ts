@@ -1,6 +1,7 @@
 import { RoomKind, type IncursionRoom } from '../../data/incursions'
 import { restore, type Battlefield } from './battlefield'
 import { isUp } from './fighter'
+import { clearStatus } from './groupStatus'
 import { raise, resolveFallen } from './revives'
 
 // Lo que pasa en las salas sin combate y al salir de una sala de combate.
@@ -17,13 +18,15 @@ export function restRoom(bf: Battlefield, room: RestRoom) {
 
 /**
  * Al ganar una sala: vuelven los caídos que aún tienen revivir (no se quedan a 0 entre salas) y se pierden los cambios
- * de stats y la provocación. Los estados alterados siguen
+ * de stats, la provocación y los estados alterados
  */
 export function leaveRoom(bf: Battlefield) {
   resolveFallen(bf)
   for (const f of bf.party) {
     f.changes = []
     f.taunt = null
+    clearStatus(f)
+    f.target = null
   }
   bf.foes = []
 }

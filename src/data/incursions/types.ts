@@ -33,8 +33,8 @@ export interface BossMechanics {
 
 export interface IncursionFoe {
   speciesId: number
-  /** Niveles por encima (o por debajo) del nivel de la incursión (ver game/incursion/levelSync.ts) */
-  levelDelta: number
+  /** Su nivel: cada Pokémon del grupo lucha con el suyo, así que uno de más nivel termina antes */
+  level: number
   /** Su movimiento (ver data/learnsets.ts › battleMove) */
   moveId: string
   /** Multiplicador de sus PS máximos (los jefes aguantan a 5) */
@@ -72,11 +72,6 @@ export interface Incursion {
   minLevel: number
   /** Nivel por encima del cual un Pokémon ya no puede entrar */
   maxLevel: number
-  /**
-   * Franja del nivel de la incursión: el del Pokémon más alto del grupo, sin salir de ella. Los rivales se escriben
-   * respecto a ese nivel
-   */
-  levels: [number, number]
   rooms: IncursionRoom[]
   /** Premio al terminarla, para cada uno */
   prizes: IncursionPrize[]
@@ -84,10 +79,10 @@ export interface Incursion {
   bots: number[]
 }
 
-/** Un rival de una sala: especie, niveles sobre el de la incursión y movimiento (más jefe, pasivas o PS extra) */
-export const foe = (speciesId: number, levelDelta: number, moveId: string, extra: Partial<IncursionFoe> = {}): IncursionFoe => ({
+/** Un rival de una sala: especie, nivel y movimiento (más jefe, pasivas o PS extra) */
+export const foe = (speciesId: number, level: number, moveId: string, extra: Partial<IncursionFoe> = {}): IncursionFoe => ({
   speciesId,
-  levelDelta,
+  level,
   moveId,
   ...extra,
 })

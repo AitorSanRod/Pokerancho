@@ -10,18 +10,17 @@ export const CUEVA_HELADA: Incursion = {
   tier: IncursionTier.Easy,
   minLevel: 20,
   maxLevel: 45,
-  levels: [15, 30],
   rooms: [
     {
       kind: RoomKind.Battle,
       name: 'Entrada helada',
-      foes: [foe(POKEMON.Seel, 0, 'water-gun'), foe(POKEMON.Shellder, 0, 'powder-snow'), foe(POKEMON.Zubat, -1, 'gust')],
+      foes: [foe(POKEMON.Seel, 21, 'water-gun'), foe(POKEMON.Shellder, 21, 'powder-snow'), foe(POKEMON.Zubat, 20, 'gust')],
       reward: { money: 300, exp: 150 },
     },
     {
       kind: RoomKind.Battle,
       name: 'Galería de cristal',
-      foes: [foe(POKEMON.Dewgong, 2, 'ice-beam'), foe(POKEMON.Jynx, 1, 'confuse-ray'), foe(POKEMON.Golbat, 1, 'fly')],
+      foes: [foe(POKEMON.Dewgong, 26, 'ice-beam'), foe(POKEMON.Jynx, 25, 'confuse-ray'), foe(POKEMON.Golbat, 25, 'fly')],
       reward: { money: 400, exp: 200 },
     },
     { kind: RoomKind.Heal, name: 'Manantial templado', heal: 0.4 },
@@ -29,9 +28,9 @@ export const CUEVA_HELADA: Incursion = {
       kind: RoomKind.Battle,
       name: 'Guardián de hielo',
       foes: [
-        foe(POKEMON.Cloyster, 5, 'blizzard', { hpMult: 2.5, boss: { areaEvery: 4 } }),
-        foe(POKEMON.Shellder, 1, 'aurora-veil'),
-        foe(POKEMON.Shellder, 1, 'powder-snow'),
+        foe(POKEMON.Cloyster, 31, 'blizzard', { hpMult: 2.5, boss: { areaEvery: 4 } }),
+        foe(POKEMON.Shellder, 28, 'aurora-veil'),
+        foe(POKEMON.Shellder, 28, 'powder-snow'),
       ],
       reward: { money: 600, exp: 300 },
     },
@@ -39,14 +38,14 @@ export const CUEVA_HELADA: Incursion = {
     {
       kind: RoomKind.Battle,
       name: 'Orilla del lago',
-      foes: [foe(POKEMON.Seadra, 3, 'surf'), foe(POKEMON.Tentacool, 1, 'toxic'), foe(POKEMON.Golbat, 2, 'bite')],
+      foes: [foe(POKEMON.Seadra, 34, 'surf'), foe(POKEMON.Tentacool, 33, 'toxic'), foe(POKEMON.Golbat, 34, 'bite')],
       reward: { money: 500, exp: 250 },
     },
     {
       kind: RoomKind.Battle,
       name: 'Lago subterráneo',
       foes: [
-        foe(POKEMON.Gyarados, 6, 'surf', {
+        foe(POKEMON.Gyarados, 37, 'surf', {
           hpMult: 6,
           boss: { enrage: { fromTurn: 15, every: 3, atk: 0.2 }, areaEvery: 4, phase: { belowHp: 0.5, moveId: 'hydro-pump' } },
         }),

@@ -44,7 +44,7 @@ src/
     incursion/        Incursiones (mazmorras de 5; ver docs/incursiones.md): incursionRun (tramos encadenados, retirada),
                       incursionLeg (un tramo: salas hasta reorganizar o el final), groupBattle (combate N contra M),
                       moveEffects + targeting (qué hace cada movimiento y a quién), groupStatus, bossMechanics, revives,
-                      groupPassives, levelSync (nivel de la incursión y sincronizado), repertoire, party (bots),
+                      groupPassives, movePicks + incursionPicks (cambiar ataque y objetivo en plena pelea), repertoire, party (bots),
                       incursionRewards, incursionTimeline, retreatVote, entry (nivel mínimo y máximo para entrar), keys, activeIncursion (lo guardado y por dónde va) e incursionGame (en la partida, sin servidor); online/ (protocolo, validar, el grupo en el servidor y la partida enlazada)
     trade/            Intercambios: tradeGoods (qué se ofrece y pide, límites, validar), tradeGive (lo que sale de la
                       partida), tradeReceive (lo que entra; repetidos), tradeOps (operaciones que aplican servidor y móvil),

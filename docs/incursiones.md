@@ -25,8 +25,9 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
 | Retirada | Por votación de los jugadores (no bots): hace falta la mitad redondeada hacia arriba (1→1, 2→1, 3→2, 4→2, 5→3). Al retirarse (o perder) cada uno se queda con lo ganado por el camino |
 | Reorganizar | 1 min 30 s para cambiar de movimiento; quien no lo cambie sigue con el suyo |
 | Entrada | Solo Pokémon entre el nivel mínimo y el máximo de la incursión (Cueva Helada: 20–45). Los bots, del mínimo a +4, sin pasar del máximo |
-| Nivel | El de la incursión es el del Pokémon más alto del grupo, sin salir de su franja (p. ej. 15–30: con uno a Nv. 40, va a 30). Los rivales se escriben como diferencia sobre ese nivel |
-| Nivel sincronizado | Cada Pokémon lucha a un nivel acercado al de la incursión, conservando el 30% de su diferencia (Nv. 40 en una de 30 → 33; Nv. 20 → 27): se mezclan niveles y el más alto se sigue notando |
+| Nivel | Sin ajustes: cada Pokémon lucha con su nivel y cada rival tiene el suyo, escrito a mano y subiendo sala a sala (Cueva Helada: rivales de Nv. 20 a 37). Un Pokémon de nivel alto pega más y la incursión acaba antes |
+| Ataque y objetivo | En plena pelea, cuando quieras, cambias el ataque de tu Pokémon y a quién lo dirige (rival o aliado según el ataque, o automático). Vale desde la siguiente ventana de toques y sigue así hasta que lo cambies; si el elegido cae o cambia la sala, vuelve a automático |
+| Estados alterados | Duran como mucho 5 turnos (volver a ponerlo reinicia la cuenta) y se quitan al acabar cada sala |
 | Duración | 15–25 min, según los niveles del grupo (cuanto más fuerte, antes caen los rivales) |
 | Pokémon dentro | Sale del rancho como en una expedición; vuelve al terminar con los PS que le queden |
 | Acceso | Con una **llave** de esa incursión, comprada en la Tienda (fácil 10.000 ₽, media 30.000 ₽, difícil 50.000 ₽; como mucho 10 de cada una); se gasta al formarse el grupo |
@@ -263,15 +264,17 @@ cubre lo que le falte al grupo: si nadie cura, cura; si nadie provoca, provoca; 
 
 Simulado con la Cueva Helada (100 partidas por caso): un grupo bien montado (curador, tanque y tres de daño con
 cobertura) gana un 60% a nivel 30 con un curador de planta (la dificultad buscada, por ahora); con uno de agua, un
-70%, y con uno que no sea de planta ni de agua, un 25%, con 2–3 revivires gastados, y unos 14 min de combate (más 1:30 de reorganizar). Con
-uno de nivel 40 (sincronizado a 33) gana casi siempre. Cinco bots casi nunca ganan: están para completar.
+70%, y con uno que no sea de planta ni de agua, un 25%. Sin ajuste de nivel (rivales de Nv. 20 a 37), el mismo grupo
+de planta sin tocar nunca gana un 3% a Nv. 28, un 72% a Nv. 30 (17 min de combate) y siempre de Nv. 32 en adelante,
+cada vez más rápido (13 min a Nv. 35, 9 min a Nv. 45). Tocando, pega más. Cinco bots casi nunca ganan: están para
+completar.
 
 | Qué | Valor | Dónde |
 |---|---|---|
 | PS de los rivales | ×8 (los jefes, además, su `hpMult`) | `game/incursion/fighter.ts › FOE_HP_MULT` |
-| Ataque de los rivales | ×0,5 | `fighter.ts › FOE_ATK_MULT` |
+| Ataque de los rivales | ×0,67 | `fighter.ts › FOE_ATK_MULT` |
 | Bajada máxima de una stat | hasta el 25% de la suya | `fighter.ts › MIN_STAT_MULT` |
-| Nivel sincronizado | conserva el 30% de la diferencia | `levelSync.ts › LEVEL_SYNC_KEEP` |
+| Estados alterados | 5 turnos como mucho | `groupStatus.ts › STATUS_MAX_TURNS` |
 | Revivires | 3, vuelve con el 50% | `revives.ts › INCURSION_REVIVES, REVIVE_HP` |
 | Golpe en área de un jefe | 60% del daño a cada uno | `moveEffects.ts › AREA_DAMAGE_MULT` |
 | Turnos por sala | 80 como mucho (luego se pierde) | `groupBattle.ts › MAX_ROOM_TURNS` |
@@ -310,7 +313,8 @@ uno de nivel 40 (sincronizado a 33) gana casi siempre. Cinco bots casi nunca gan
     revives.ts               revivires del grupo y caídos que se quedan mirando
     restRooms.ts             salas de curar y revivir; salir de una sala
     groupPassives.ts         sumar pesos por tipo → nivel de cada pasiva
-    levelSync.ts             nivel de la incursión, sincronizado y de los rivales
+    movePicks.ts             cambiar de ataque y objetivo en plena pelea (a quién puede ir cada ataque)
+    incursionPicks.ts        en la partida: elegirlo y dejarlo pendiente hasta la próxima ventana
     repertoire.ts            movimientos que puede llevar cada Pokémon
     party.ts                 completar con bots y su movimiento
     incursionRewards.ts      lo ganado por el camino y el premio final
@@ -341,7 +345,7 @@ uno de nivel 40 (sincronizado a 33) gana casi siempre. Cinco bots casi nunca gan
 ## Plan por fases
 
 1. ~~**Datos**: `MoveKind`, movimientos de apoyo, repertorios, pasivas de grupo y la Cueva Helada.~~ Hecho.
-2. ~~**Motor puro**: combate de grupo, revivires, pasivas, salas, jefe, tramos, retirada, nivel sincronizado, premios y
+2. ~~**Motor puro**: combate de grupo, revivires, pasivas, salas, jefe, tramos, retirada, premios y
    línea de tiempo.~~ Hecho, con tests que no fijan contenido.
 3. ~~**Partida**: estado, `MonPlace.Incursion`, llaves en la Tienda y la Mochila, aplicar premios, migración del
    guardado.~~ Hecho: jugable en local con 4 bots.

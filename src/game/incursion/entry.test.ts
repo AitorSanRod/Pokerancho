@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { INCURSIONS } from '../../data/incursions'
-import { canEnter, EntryBlock, entryBlock } from './entry'
+import { canEnter, EntryBlock, entryBlock, foeLevels } from './entry'
 import { testIncursion } from './incursion-test-utils'
 
 const MIN = 10
@@ -16,6 +16,11 @@ describe('entrar en una incursión', () => {
   it('dice por qué no puede entrar uno de menos o de más nivel', () => {
     expect(entryBlock(inc, MIN - 1)).toBe(EntryBlock.TooLow)
     expect(entryBlock(inc, MAX + 1)).toBe(EntryBlock.TooHigh)
+  })
+
+  it('la franja de nivel de los rivales va del más bajo al más alto de todas sus salas', () => {
+    const levels = INCURSIONS[0].rooms.flatMap((r) => ('foes' in r ? r.foes.map((f) => f.level) : []))
+    expect(foeLevels(INCURSIONS[0])).toEqual([Math.min(...levels), Math.max(...levels)])
   })
 
   it('en todas las incursiones el máximo no baja del mínimo', () => {

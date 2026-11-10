@@ -6,9 +6,8 @@ import { foeFighter, memberState, partyFighter, type MemberState } from './fight
 import { fightRoom, refreshPassives } from './groupBattle'
 import { addEarnings, noEarnings, rollPrizes, type Earned } from './incursionRewards'
 import { eventMs } from './incursionTimeline'
-import { foeLevel, incursionLevel, syncedLevel } from './levelSync'
 import { leaveRoom, restRoom } from './restRooms'
-import { TAP_WINDOW_MS } from './tapWindow'
+import { TAP_WINDOW_MS, type TurnOrders } from './tapWindow'
 
 // Un tramo de incursión: las salas desde `start.room` hasta la siguiente de reorganizar o el final. Lo único que se
 // decide dentro son los toques de antes de cada turno: la simulación se para en la primera ventana de la que aún no se
@@ -25,8 +24,8 @@ export interface LegStart {
 export const LegOutcome = { Regroup: 'regroup', Win: 'win', Lose: 'lose', Waiting: 'waiting' } as const
 export type LegOutcome = (typeof LegOutcome)[keyof typeof LegOutcome]
 
-/** Quiénes potenciaron su ataque en la ventana `turn` del tramo, que acaba a los `windowEndMs`; undefined: aún no se sabe */
-export type LegTaps = (turn: number, windowEndMs: number) => string[] | undefined
+/** Las órdenes de la ventana `turn` del tramo, que acaba a los `windowEndMs`; undefined: aún no se saben */
+export type LegTaps = (turn: number, windowEndMs: number) => TurnOrders | undefined
 
 export interface LegResult {
   events: IncursionEvent[]
@@ -37,35 +36,34 @@ export interface LegResult {
   earned: Earned
   /** Premio final: solo con `Win` */
   prize: Earned | null
-  /** Quiénes potenciaron su ataque en cada ventana jugada del tramo, en orden */
-  taps: string[][]
+  /** Las órdenes de cada ventana jugada del tramo, en orden */
+  turns: TurnOrders[]
 }
 
-function battlefield(inc: Incursion, start: LegStart, log: (e: IncursionEvent) => void): { bf: Battlefield; level: number } {
-  const level = incursionLevel(inc, start.members.map((m) => m.level))
-  const party = start.members.map((m) => partyFighter(m, syncedLevel(m.level, level)))
+function battlefield(start: LegStart, log: (e: IncursionEvent) => void): Battlefield {
+  const party = start.members.map(partyFighter)
   const bf: Battlefield = { party, foes: [], revives: start.revives, turn: 0, falls: 0, passives: [], boosted: [], log }
   refreshPassives(bf)
-  return { bf, level }
+  return bf
 }
 
 export function simulateLeg(inc: Incursion, start: LegStart, seed: number, resolveTaps: LegTaps): LegResult {
   const rng: Rng = seededRng(seed)
   const events: IncursionEvent[] = []
-  const taps: string[][] = []
+  const turns: TurnOrders[] = []
   let elapsedMs = 0
   const log = (e: IncursionEvent) => {
     events.push(e)
     elapsedMs += eventMs(e)
   }
-  const { bf, level } = battlefield(inc, start, log)
-  /** Abre la ventana de toques del turno y dice quiénes potenciaron su ataque (undefined: aún no se sabe) */
+  const bf = battlefield(start, log)
+  /** Abre la ventana de toques del turno y da sus órdenes (undefined: aún no se saben) */
   const tapWindow = () => {
-    const turn = taps.length
-    const boosted = resolveTaps(turn, elapsedMs + TAP_WINDOW_MS)
+    const turn = turns.length
+    const orders = resolveTaps(turn, elapsedMs + TAP_WINDOW_MS)
     log({ kind: EventKind.TapWindow, turn, text: '¡Toca para potenciar tu ataque!' })
-    if (boosted) taps.push(boosted)
-    return boosted
+    if (orders) turns.push(orders)
+    return orders
   }
   let earned = noEarnings()
   const result = (outcome: LegOutcome, room: number, prize: Earned | null = null): LegResult => ({
@@ -73,7 +71,7 @@ export function simulateLeg(inc: Incursion, start: LegStart, seed: number, resol
     outcome,
     earned,
     prize,
-    taps,
+    turns,
     next: { room, revives: bf.revives, members: start.members.map((m, i) => memberState(bf.party[i], m)) },
   })
 
@@ -88,7 +86,7 @@ export function simulateLeg(inc: Incursion, start: LegStart, seed: number, resol
       restRoom(bf, room)
       continue
     }
-    bf.foes = room.foes.map((f, i) => foeFighter(f, `foe-${r}-${i}`, foeLevel(f, level)))
+    bf.foes = room.foes.map((f, i) => foeFighter(f, `foe-${r}-${i}`))
     log({ kind: EventKind.Room, room: r, text: room.name, fighters: [...bf.party, ...bf.foes].map(view) })
     const outcome = fightRoom(bf, rng, tapWindow)
     if (outcome === 'waiting') return result(LegOutcome.Waiting, r)

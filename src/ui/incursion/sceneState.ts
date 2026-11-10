@@ -21,6 +21,8 @@ export interface SceneMon {
   out: boolean
   status: StatusId | null
   boss: boolean
+  /** Del grupo: el ataque que lleva (cambia si el jugador lo cambia en plena pelea) */
+  moveId?: string
 }
 
 export interface SceneState {
@@ -46,19 +48,23 @@ function partyAtStart(a: ActiveIncursion, p: IncursionProgress): SceneMon[] {
   const members = p.leg === 0 ? a.members : p.record.legs[p.leg - 1].next.members
   return members.map((m) => ({
     id: m.id, team: Team.Party, speciesId: m.speciesId, name: species(m.speciesId).name, level: m.level,
-    hp: Math.round(m.hpFraction * 100), maxHp: 100, out: m.out, status: m.status, boss: false,
+    hp: Math.round(m.hpFraction * 100), maxHp: 100, out: m.out, status: m.status, boss: false, moveId: m.moveId,
   }))
 }
 
 function apply(scene: SceneState, e: IncursionEvent, seq: number) {
-  if (e.kind === EventKind.Move && e.actor && e.moveId) scene.move = { actor: e.actor, moveId: e.moveId, seq }
+  if (e.kind === EventKind.Move && e.actor && e.moveId) {
+    scene.move = { actor: e.actor, moveId: e.moveId, seq }
+    const user = scene.party.find((p) => p.id === e.actor)
+    if (user) user.moveId = e.moveId
+  }
   if (e.kind === EventKind.Room) {
     Object.assign(scene, { room: e.room ?? scene.room, roomSeq: seq, move: null, focusFoe: null })
     scene.foes = []
     for (const f of e.fighters ?? []) {
       const mon: SceneMon = { ...f, status: null }
       if (f.team === Team.Foe) scene.foes.push(mon)
-      else scene.party = scene.party.map((p) => (p.id === f.id ? { ...mon, status: p.status } : p))
+      else scene.party = scene.party.map((p) => (p.id === f.id ? { ...mon, status: p.status, moveId: p.moveId } : p))
     }
   }
   const foe = scene.foes.find((m) => m.id === e.target || (e.kind === EventKind.Move && m.id === e.actor))
@@ -69,7 +75,8 @@ function apply(scene: SceneState, e: IncursionEvent, seq: number) {
   if (!target) return
   if (e.hp !== undefined) Object.assign(target, { hp: e.hp, maxHp: e.maxHp ?? target.maxHp })
   if (e.kind === EventKind.Status && e.status) target.status = e.status
-  if (e.kind === EventKind.Revive) Object.assign(target, { out: false, status: null })
+  if (e.kind === EventKind.Revive || e.kind === EventKind.Recover) target.status = null
+  if (e.kind === EventKind.Revive) target.out = false
   if (e.kind === EventKind.Out) target.out = true
 }
 

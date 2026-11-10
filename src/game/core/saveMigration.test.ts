@@ -68,8 +68,12 @@ const KEPT: (keyof GameState)[] = [
   'stones', 'incursionKeys', 'claimedServerGifts', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'lastTick',
 ]
 
+/** El paso de verdad de la versión anterior, que algún test sustituye por uno de prueba */
+const REAL_STEP = SAVE_MIGRATIONS[OLD]
+
 afterEach(() => {
-  delete SAVE_MIGRATIONS[OLD]
+  if (REAL_STEP) SAVE_MIGRATIONS[OLD] = REAL_STEP
+  else delete SAVE_MIGRATIONS[OLD]
 })
 
 describe('al actualizar el juego no se pierde nada', () => {
@@ -164,6 +168,14 @@ describe('al actualizar el juego no se pierde nada', () => {
     const save = fromOldVersion(advancedGame())
     save.dinero = 50
     expect(migrateSave(save)!.money).toBe(100)
+  })
+
+  it('de la 37 a la 38, la incursión en curso se descarta y se devuelve su llave', () => {
+    const s = advancedGame()
+    const save = { ...fromOldVersion(s, 37), incursion: { incursionId: IncursionId.CuevaHelada, uid: s.owned[0].uid } }
+    const migrated = migrateSave(save)!
+    expect(migrated.incursion).toBeNull()
+    expect(migrated.incursionKeys[IncursionId.CuevaHelada]).toBe(Math.min(MAX_KEYS, (s.incursionKeys[IncursionId.CuevaHelada] ?? 0) + 1))
   })
 
   it('si la partida guardada está rota, el equipo sale de su copia', () => {

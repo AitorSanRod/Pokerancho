@@ -18,6 +18,8 @@ export const EventKind = {
   Heal: 'heal',
   /** Le sube o baja una stat */
   Change: 'change',
+  /** Se le pasa el estado alterado (ver groupStatus.ts › STATUS_MAX_TURNS) */
+  Recover: 'recover',
   Taunt: 'taunt',
   Revive: 'revive',
   /** Cayó sin revivires: se queda mirando */
