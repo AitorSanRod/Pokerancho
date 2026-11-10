@@ -3,6 +3,7 @@ import { RouteId } from '../../data/maps'
 import { POKEMON } from '../../data/pokemon'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
 import { createMon } from '../team/mons'
+import { RANCH_EXPANSION_MAX, RANCH_EXPANSION_SLOTS } from '../team/ranchExpansion'
 import { ranchCount } from '../team/ranches'
 import { MAX_LEVEL } from '../team/stats'
 import { activeMon, initialState, TutorialStep } from './state'
@@ -81,6 +82,26 @@ describe('copia del equipo', () => {
     restoreTeam(s, roundTrip(backupTeam(team))!)
     expect(s.owned.map((m) => m.ranch)).toEqual([null, 1])
     expect(ranchCount(s)).toBe(2)
+  })
+
+  it('recupera las ampliaciones de cada rancho (y el rancho ampliado, aunque esté vacío)', () => {
+    const team = stateWithTeam()
+    team.upgrades.ranches = 1
+    team.ranchExtraSlots = { 0: RANCH_EXPANSION_SLOTS, 1: RANCH_EXPANSION_MAX * RANCH_EXPANSION_SLOTS }
+    const s = initialState()
+    restoreTeam(s, roundTrip(backupTeam(team))!)
+    expect(s.ranchExtraSlots).toEqual(team.ranchExtraSlots)
+    expect(ranchCount(s)).toBe(2)
+  })
+
+  it('descarta las ampliaciones que no encajan; las copias de antes, sin ellas, quedan sin ampliar', () => {
+    const extra = { 0: RANCH_EXPANSION_SLOTS, 1: RANCH_EXPANSION_SLOTS + 1, 999: RANCH_EXPANSION_SLOTS, 2: -RANCH_EXPANSION_SLOTS }
+    const backup = { ...backupTeam(stateWithTeam()), ranchExtraSlots: extra }
+    expect(roundTrip(backup)!.ranchExtraSlots).toEqual({ 0: RANCH_EXPANSION_SLOTS })
+    const { ranchExtraSlots: _, ...old } = backupTeam(stateWithTeam())
+    const s = initialState()
+    restoreTeam(s, roundTrip(old as TeamBackup)!)
+    expect(s.ranchExtraSlots).toEqual({})
   })
 
   it('descarta las copias del formato anterior, sin ranchos', () => {

@@ -106,10 +106,10 @@ describe('sala enlazada al servidor', () => {
     const { s, mon, room } = linkedTab()
     const other = createMon(mon.speciesId, mon.level)
     s.owned.push(other)
-    const second = linkInto(s, other, RaidRotation.Random)
+    const second = linkInto(s, other, RaidRotation.Hard)
     expect(monPlace(s, other.uid)).toBe(MonPlace.Raid)
     expect(roomRequest(s, RaidRotation.Ordered)).toMatchObject({ action: RaidAction.Sync, roomId: room.id, mon: { uid: mon.uid } })
-    expect(roomRequest(s, RaidRotation.Random)).toMatchObject({ action: RaidAction.Sync, roomId: second.id, mon: { uid: other.uid } })
+    expect(roomRequest(s, RaidRotation.Hard)).toMatchObject({ action: RaidAction.Sync, roomId: second.id, mon: { uid: other.uid } })
     leaveRaid(s, other.uid)
     expect(monPlace(s, other.uid)).toBe(MonPlace.Ranch)
     expect(monPlace(s, mon.uid)).toBe(MonPlace.Raid)
@@ -117,8 +117,8 @@ describe('sala enlazada al servidor', () => {
 
   it('el mismo Pokémon no puede estar en las dos rotaciones', () => {
     const { s, mon } = linkedTab()
-    const { rooms } = serverFront(RaidRotation.Random)
-    expect(raidBlocker(s, mon.uid, RaidRotation.Random, viewFor(rooms[0], ME).raid)).not.toBeNull()
+    const { rooms } = serverFront(RaidRotation.Hard)
+    expect(raidBlocker(s, mon.uid, RaidRotation.Hard, viewFor(rooms[0], ME).raid)).not.toBeNull()
   })
 
   it('el Pokémon gana la EXP de las rondas que el servidor le ha contado desde la última vez', () => {

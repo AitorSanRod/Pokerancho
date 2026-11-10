@@ -27,9 +27,9 @@ function memberFighter(m: RaidMember, passives: PassiveRef[]): Fighter {
   return f
 }
 
-/** El jefe con su ataque rebajado y la vida compartida de la sala en vez de la suya */
-function bossFighter(raid: Raid): Fighter {
-  const boss = makeFighter('enemy', raid.boss.speciesId, raid.boss.level)
+/** El jefe con sus stats por su `statMult`, su ataque rebajado y la vida compartida de la sala en vez de la suya */
+export function bossFighter(raid: Raid): Fighter {
+  const boss = makeFighter('enemy', raid.boss.speciesId, raid.boss.level, { statMult: raid.boss.statMult })
   boss.stats.atk = Math.max(1, Math.round(boss.stats.atk * RAID_BOSS_ATK_MULT))
   return { ...boss, hp: raid.hp, maxHp: raid.maxHp }
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { GameState } from '../../game/core/state'
-import { raidBossAt, tabRaidRotations } from '../../game/raid/raid'
+import { tabRaidRotations } from '../../game/raid/raid'
+import { rotationBoss } from '../../game/raid/rotationBosses'
 import { RAID_ROTATIONS, roomRotation, type RaidRotation } from '../../game/raid/online/protocol'
 import { useRaidFeed, type FeedState } from '../../net/raidFeed'
 import { Sprite } from '../shared/common'
@@ -49,7 +50,7 @@ export function RaidScreen({ game }: { game: GameState }) {
             const boss = boards.find((b) => b.rotation === rotation)
             return (
               <button key={rotation} className={tab === rotation ? 'active' : ''} onClick={() => setTab(rotation)}>
-                {boss && <Sprite id={raidBossAt(boss.bossIndex).speciesId} size={TAB_SPRITE_SIZE} animated={false} />}
+                {boss && <Sprite id={rotationBoss(rotation, boss.bossIndex).speciesId} size={TAB_SPRITE_SIZE} animated={false} />}
                 {ROTATION_LABEL[rotation]}
               </button>
             )

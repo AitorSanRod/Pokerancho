@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { RAID_BOSSES } from '../../../data/raidBosses'
+import { HARD_RAID_BOSSES, HARD_RAID_STAT_MULT, RAID_BOSSES } from '../../../data/raidBosses'
 import { newId, player, rng, seatPlayers, snap, T0 } from './online-test-utils'
 import { seqRng } from '../../core/test-utils'
 import { CyclePhase, RAID_ROTATIONS, RaidAction, RaidRotation, RoomSlot } from './protocol'
 import { newBossPush } from './raidPushes'
+import { rotationBosses } from '../rotationBosses'
 import {
   CYCLE_COOLDOWN_MS,
   CYCLE_MAX_EXTRA_MS,
@@ -140,7 +141,8 @@ describe('ciclo del jefe de la pestaña Raids', () => {
 })
 
 describe('rotaciones de jefes', () => {
-  const all = RAID_BOSSES.map((_, i) => i)
+  const hard = rotationBosses(RaidRotation.Hard)
+  const hardSpecies = hard.map((b) => b.speciesId)
 
   it('la ordenada sigue la lista y al acabarla vuelve al primero', () => {
     const cycle = firstCycle(RaidRotation.Ordered)
@@ -149,33 +151,47 @@ describe('rotaciones de jefes', () => {
     expect(followingBoss(RaidRotation.Ordered, RAID_BOSSES.length - 1, [], rng)).toBe(0)
   })
 
-  it('la de azar no repite su jefe ni coge los de la otra rotación mientras quede alguno', () => {
+  it('la de difíciles elige de su propia lista sin repetir su jefe ni coger especies de la otra mientras quede alguna', () => {
+    const taken = [hard[1 % hard.length].speciesId]
     for (const roll of [0, 0.5, 0.99]) {
-      const next = followingBoss(RaidRotation.Random, 0, [1], seqRng(roll))
-      expect(next).not.toBe(0)
-      if (RAID_BOSSES.length > 2) expect(next).not.toBe(1)
-      // Si la otra rotación los tiene todos, al menos no repite el suyo
-      expect(followingBoss(RaidRotation.Random, 0, all, seqRng(roll))).not.toBe(0)
+      const next = followingBoss(RaidRotation.Hard, 0, taken, seqRng(roll))
+      expect(next).toBeGreaterThanOrEqual(0)
+      expect(next).toBeLessThan(hard.length)
+      if (hard.length > 1) expect(next).not.toBe(0)
+      if (new Set(hardSpecies).size > 2) expect(taken).not.toContain(hard[next].speciesId)
+      // Si la otra rotación las tiene todas, al menos no repite el suyo
+      if (hard.length > 1) expect(followingBoss(RaidRotation.Hard, 0, hardSpecies, seqRng(roll))).not.toBe(0)
     }
   })
 
-  it('la de azar empieza con un jefe distinto de los de la otra', () => {
+  it('la de difíciles empieza con un jefe de otra especie que los de la otra', () => {
     const ordered = firstCycle(RaidRotation.Ordered)
-    const random = firstCycle(RaidRotation.Random, cycleBosses(ordered), seqRng(0))
-    if (RAID_BOSSES.length > 2) expect(cycleBosses(ordered)).not.toContain(cycleBossIndex(random))
+    const cycle = firstCycle(RaidRotation.Hard, cycleBosses(ordered), seqRng(0))
+    if (hardSpecies.some((id) => !cycleBosses(ordered).includes(id))) expect(cycleBosses(ordered)).not.toContain(cycleBoss(cycle).speciesId)
+  })
+
+  it('los de difíciles son los de su lista con las stats multiplicadas', () => {
+    expect(hard).toEqual(HARD_RAID_BOSSES.map((b) => ({ ...b, statMult: (b.statMult ?? 1) * HARD_RAID_STAT_MULT })))
+  })
+
+  it('cada rotación saca sus jefes de su propia lista', () => {
+    expect(cycleBoss(firstCycle(RaidRotation.Ordered))).toEqual(RAID_BOSSES[0])
+    const cycle = firstCycle(RaidRotation.Hard, [], seqRng(0))
+    expect(cycleBoss(cycle)).toEqual(hard[cycleBossIndex(cycle)])
+    expect(cycleBosses(cycle)).toEqual([cycleBossIndex(cycle), nextCycleBossIndex(cycle)].map((i) => hard[i].speciesId))
   })
 
   it('al pasar de ciclo sale el jefe que se anunciaba como siguiente, con sus salas en la carpeta de la rotación', () => {
-    const cycle = firstCycle(RaidRotation.Random, [], seqRng(0))
+    const cycle = firstCycle(RaidRotation.Hard, [], seqRng(0))
     const announced = nextCycleBossIndex(cycle)
     const { rooms } = updateCycle(cycle, [], [], T0, rng, newId)
     fall(cycle, rooms, rooms[0], T0)
     const next = updateCycle(cycle, rooms, [], T0 + CYCLE_COOLDOWN_MS, rng, newId)
     expect(cycle.number).toBe(1)
     expect(cycleBossIndex(cycle)).toBe(announced)
-    expect(nextCycleBossIndex(cycle)).not.toBe(announced)
-    expect(next.rooms[0].raid.boss).toEqual(RAID_BOSSES[announced])
-    expect(next.rooms[0].channel).toEqual({ slot: RoomSlot.Tab, rotation: RaidRotation.Random, cycle: 1 })
+    if (hard.length > 1) expect(nextCycleBossIndex(cycle)).not.toBe(announced)
+    expect(next.rooms[0].raid.boss).toEqual(hard[announced])
+    expect(next.rooms[0].channel).toEqual({ slot: RoomSlot.Tab, rotation: RaidRotation.Hard, cycle: 1 })
   })
 
   it('cada rotación avisa de su jefe nuevo con su propia clave', () => {

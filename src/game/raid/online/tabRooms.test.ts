@@ -20,7 +20,7 @@ const join = (n: number, targetRoomId: string | null = null): JoinRequest => ({
 
 /** Las dos rotaciones recién empezadas, cada una con su sala principal (con ids como los del servidor) */
 function boards() {
-  return [RaidRotation.Ordered, RaidRotation.Random].map((rotation) => {
+  return [RaidRotation.Ordered, RaidRotation.Hard].map((rotation) => {
     const cycle = firstCycle(rotation)
     const roomId = () => `${channelKey(cycleChannel(cycle))}/${newId()}`
     return { cycle, rooms: updateCycle(cycle, [], [], T0, rng, roomId).rooms }
@@ -34,13 +34,13 @@ describe('entrar en una rotación de la pestaña Raids', () => {
 
   it('con una sala elegida, se entra en su rotación', () => {
     const [, random] = boards()
-    expect(joinRotation(boards(), join(1, random.rooms[0].id))).toBe(RaidRotation.Random)
+    expect(joinRotation(boards(), join(1, random.rooms[0].id))).toBe(RaidRotation.Hard)
   })
 
   it('sin elegir, se vuelve a la rotación en la que ya estuvo; si no estuvo en ninguna, la ordenada', () => {
     const all = boards()
     seatPlayers(all[1].rooms[0], 1, 7)
-    expect(joinRotation(all, join(7))).toBe(RaidRotation.Random)
+    expect(joinRotation(all, join(7))).toBe(RaidRotation.Hard)
     expect(joinRotation(all, join(8))).toBe(RaidRotation.Ordered)
   })
 

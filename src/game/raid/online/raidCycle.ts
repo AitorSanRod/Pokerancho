@@ -1,5 +1,6 @@
-import { RAID_BOSSES, type RaidBoss } from '../../../data/raidBosses'
+import type { RaidBoss } from '../../../data/raidBosses'
 import type { Rng } from '../../core/random'
+import { rotationBoss, rotationBosses } from '../rotationBosses'
 import { RAID_COOLDOWN_MS } from '../raid'
 import { CyclePhase, RaidRotation, RoomSlot, type TabChannel } from './protocol'
 import { playersIn, type SharedRoom } from './sharedRoom'
@@ -17,16 +18,17 @@ export const CYCLE_COOLDOWN_MS = RAID_COOLDOWN_MS
  */
 export const CYCLE_MAX_EXTRA_MS = 60 * 60_000
 
-// Hay una rotación de ciclos de cada RaidRotation a la vez, cada una con su jefe: la ordenada sigue la lista de
-// RAID_BOSSES y la de azar elige uno que no esté ya en la otra (ni repita el suyo) para que haya donde escoger.
+// Hay una rotación de ciclos de cada RaidRotation a la vez, cada una con su jefe y su lista (rotationBosses.ts): la
+// ordenada sigue RAID_BOSSES y la de difíciles elige al azar de HARD_RAID_BOSSES uno cuya especie no esté ya en la otra
+// (ni repita su jefe) para que haya donde escoger.
 
 export interface RaidCycle {
   rotation: RaidRotation
   /** Ciclos de la rotación desde el principio; nombra la carpeta de sus salas */
   number: number
-  /** Posición en RAID_BOSSES del jefe del ciclo (se lee con módulo, por si la lista se acorta) */
+  /** Posición en la lista de su rotación del jefe del ciclo (se lee con módulo, por si la lista se acorta) */
   bossIndex: number
-  /** Posición en RAID_BOSSES del jefe del ciclo siguiente: se sabe antes para enseñarlo durante la espera */
+  /** Posición en la lista de su rotación del jefe del ciclo siguiente: se sabe antes para enseñarlo durante la espera */
   nextBossIndex: number
   /** Hora real (ms) a la que cayó el primer jefe del ciclo; null mientras ninguno ha caído */
   closingSince: number | null
@@ -34,35 +36,37 @@ export interface RaidCycle {
   mainRoomId: string | null
 }
 
-const bossSlot = (index: number) => index % RAID_BOSSES.length
+const bossSlot = (rotation: RaidRotation, index: number) => index % rotationBosses(rotation).length
 
 /**
- * El jefe que sigue a `current` en la rotación: el siguiente de la lista o, al azar, uno distinto de `current` y de los
- * de `taken` (los de la otra rotación); si no queda ninguno así, al menos distinto de `current`
+ * El jefe que sigue a `current` en la rotación: el siguiente de la lista o, al azar, uno distinto de `current` y cuya
+ * especie no esté en `taken` (las de la otra rotación); si no queda ninguno así, al menos distinto de `current`
  */
 export function followingBoss(rotation: RaidRotation, current: number, taken: number[], rng: Rng): number {
-  if (rotation === RaidRotation.Ordered) return bossSlot(current + 1)
-  const all = RAID_BOSSES.map((_, i) => i)
-  const fresh = all.filter((i) => i !== bossSlot(current) && !taken.includes(i))
-  const pool = fresh.length > 0 ? fresh : all.filter((i) => i !== bossSlot(current))
+  if (rotation === RaidRotation.Ordered) return bossSlot(rotation, current + 1)
+  const bosses = rotationBosses(rotation)
+  const others = bosses.map((_, i) => i).filter((i) => i !== bossSlot(rotation, current))
+  const fresh = others.filter((i) => !taken.includes(bosses[i].speciesId))
+  const pool = fresh.length > 0 ? fresh : others
   return pool.length > 0 ? pool[Math.floor(rng() * pool.length)] : 0
 }
 
-/** Primer ciclo de la rotación; `taken`, los jefes de la otra (ver followingBoss) */
+/** Primer ciclo de la rotación; `taken`, las especies de los jefes de la otra (ver followingBoss) */
 export function firstCycle(rotation: RaidRotation, taken: number[] = [], rng: Rng = Math.random): RaidCycle {
   const bossIndex = rotation === RaidRotation.Ordered ? 0 : followingBoss(rotation, -1, taken, rng)
   const nextBossIndex = followingBoss(rotation, bossIndex, taken, rng)
   return { rotation, number: 0, bossIndex, nextBossIndex, closingSince: null, mainRoomId: null }
 }
 
-export const cycleBossIndex = (c: RaidCycle): number => bossSlot(c.bossIndex)
+export const cycleBossIndex = (c: RaidCycle): number => bossSlot(c.rotation, c.bossIndex)
 
-export const nextCycleBossIndex = (c: RaidCycle): number => bossSlot(c.nextBossIndex)
+export const nextCycleBossIndex = (c: RaidCycle): number => bossSlot(c.rotation, c.nextBossIndex)
 
-/** Los jefes que tiene la rotación, el de ahora y el siguiente: la otra no los elige si puede evitarlo */
-export const cycleBosses = (c: RaidCycle): number[] => [cycleBossIndex(c), nextCycleBossIndex(c)]
+/** Las especies de los jefes que tiene la rotación, el de ahora y el siguiente: la otra no las elige si puede evitarlo */
+export const cycleBosses = (c: RaidCycle): number[] =>
+  [cycleBossIndex(c), nextCycleBossIndex(c)].map((i) => rotationBoss(c.rotation, i).speciesId)
 
-export const cycleBoss = (c: RaidCycle): RaidBoss => RAID_BOSSES[cycleBossIndex(c)]
+export const cycleBoss = (c: RaidCycle): RaidBoss => rotationBoss(c.rotation, cycleBossIndex(c))
 
 /** La carpeta de las salas del ciclo */
 export const cycleChannel = (c: RaidCycle): TabChannel => ({ slot: RoomSlot.Tab, rotation: c.rotation, cycle: c.number })

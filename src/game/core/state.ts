@@ -177,7 +177,7 @@ export const SAVE_VERSION = 39
 export type TabRaids = Record<RaidRotation, Raid | null>
 
 /** Ninguna sala en la pestaña Raids */
-export const noTabRaids = (): TabRaids => ({ [RaidRotation.Ordered]: null, [RaidRotation.Random]: null })
+export const noTabRaids = (): TabRaids => ({ [RaidRotation.Ordered]: null, [RaidRotation.Hard]: null })
 
 export function initialState(): GameState {
   return {

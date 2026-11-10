@@ -25,12 +25,12 @@ export const PLAYER_TRAINER = 'Tú'
 
 /**
  * Vida del jefe: la que quitaría en `soloMinutes` (o RAID_SOLO_MINUTES) un Pokémon de su nivel con un ataque de
- * referencia. Así lo que tarda depende de quién luche: uno de nivel mucho más alto lo tira en minutos
+ * referencia, por su `statMult`. Así lo que tarda depende de quién luche: uno de nivel mucho más alto lo tira en minutos
  */
-export function raidBossHp(boss: Pick<RaidBoss, 'level' | 'soloMinutes'>): number {
+export function raidBossHp(boss: Pick<RaidBoss, 'level' | 'soloMinutes' | 'statMult'>): number {
   const hit = (((2 * boss.level) / 5 + 2) * REFERENCE_POWER) / 50 + 2
   const minutes = boss.soloMinutes ?? RAID_SOLO_MINUTES
-  return Math.round(hit * REFERENCE_UPTIME * ((minutes * 60_000) / RAID_ROUND_MS))
+  return Math.round(hit * REFERENCE_UPTIME * ((minutes * 60_000) / RAID_ROUND_MS) * (boss.statMult ?? 1))
 }
 
 /** Sala nueva y vacía con el jefe entero; `startsInMs` es lo que tarda en aparecer (0, ya está) */

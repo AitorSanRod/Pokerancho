@@ -74,6 +74,16 @@ export function GachaMachine({ game }: { game: GameState }) {
           className="primary"
           onClick={() => roll(MULTI_PULL)}
         />
+        {/* Gasta de una vez todos los tickets que haya */}
+        <BigAction
+          icon={ICON.Gacha}
+          label="Abrir todos"
+          price={Math.max(1, game.tickets)}
+          priceIcon={ICON.Ticket}
+          disabled={!canPullOne}
+          className="primary"
+          onClick={() => roll(game.tickets)}
+        />
         <StepperAction
           icon={ICON.Ticket}
           label={(n) => (n > 0 ? `Comprar ${n} ${n === 1 ? 'ticket' : 'tickets'}` : 'Comprar tickets')}

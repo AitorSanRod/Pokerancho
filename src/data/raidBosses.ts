@@ -5,7 +5,7 @@ import { POKEMON } from './pokemon'
 // Este fichero es para editarlo a mano: jefes, tablas de premios y nombres de los entrenadores bot.
 
 /** Categoría de premios de un jefe comunitario: elige su tabla en RAID_PRIZE_TABLES */
-export const RaidTier = { Low: 'low', Mid: 'mid', High: 'high' } as const
+export const RaidTier = { Low: 'low', Mid: 'mid', High: 'high', LowHard: 'lowHard' } as const
 export type RaidTier = (typeof RaidTier)[keyof typeof RaidTier]
 
 export interface RaidBoss {
@@ -17,8 +17,16 @@ export interface RaidBoss {
   soloMinutes?: number
   /** Tabla de premios que da al caer */
   tier: RaidTier
+  /** Multiplica las cantidades de su tabla de premios (₽, tickets, tickets del jefe y EXP); sin él, ×1 */
+  prizeMult?: number
+  /** Multiplica todas sus stats (PS, Ataque, Defensa y Velocidad): su vida en la sala y sus golpes; sin él, ×1 */
+  statMult?: number
 }
 
+/** Multiplicador de todas las stats de los jefes de la rotación «Difíciles» (HARD_RAID_BOSSES) */
+export const HARD_RAID_STAT_MULT = 1.5
+
+/** Jefes de la rotación «En orden» de la pestaña Raids (y de la pestaña sin servidor), en este orden */
 export const RAID_BOSSES: RaidBoss[] = [
   { speciesId: POKEMON.Eevee, level: 15, minLevel: 10, tier: RaidTier.Low },
   { speciesId: POKEMON.Vaporeon, level: 20, minLevel: 10, tier: RaidTier.Low },
@@ -29,6 +37,16 @@ export const RAID_BOSSES: RaidBoss[] = [
   { speciesId: POKEMON.Leafeon, level: 20, minLevel: 12, tier: RaidTier.Low },
   { speciesId: POKEMON.Espeon, level: 25, minLevel: 18, tier: RaidTier.Mid },
   { speciesId: POKEMON.Flareon, level: 15, minLevel: 12, tier: RaidTier.Low },
+]
+
+/**
+ * Jefes de la rotación «Difíciles» de la pestaña Raids (solo con servidor; sale uno al azar cada vez): más nivel (y
+ * por tanto más vida) que los de RAID_BOSSES y mejores premios (`prizeMult` multiplica las cantidades de su tabla)
+ */
+export const HARD_RAID_BOSSES: RaidBoss[] = [
+  { speciesId: POKEMON.Charizard, level: 60, minLevel: 55, tier: RaidTier.LowHard, prizeMult: 2 },
+  { speciesId: POKEMON.Venusaur, level: 60, minLevel: 55, tier: RaidTier.LowHard, prizeMult: 2 },
+  { speciesId: POKEMON.Blastoise, level: 60, minLevel: 55, tier: RaidTier.LowHard, prizeMult: 2 },
 ]
 
 /** Qué da una línea de premio: `Exp` es EXP para el Pokémon que luchó contra el jefe (además de la que gana por minuto) */
@@ -79,6 +97,12 @@ export const RAID_PRIZE_TABLES: Record<RaidTier, RaidPrizeRoll[]> = {
     { kind: RaidPrizeKind.Tickets, amount: 2, chance: 1 },
     { kind: RaidPrizeKind.BossPieces, amount: 1, chance: 0.5 },
     { kind: RaidPrizeKind.BossPieces, amount: 2, chance: 0.1 },
+  ],
+  [RaidTier.LowHard]: [
+    { kind: RaidPrizeKind.Money, amount: 1000, chance: 0.5 },
+    { kind: RaidPrizeKind.Exp, amount: 800, chance: 1 },
+    { kind: RaidPrizeKind.Exp, amount: 1500, chance: 0.3 },
+    { kind: RaidPrizeKind.Tickets, amount: 2, chance: 1 },
   ],
 }
 

@@ -23,7 +23,10 @@ export const presentEnough = (m: RaidMember, fightMs: number): boolean => m.pres
 export const earnsPrize = (m: RaidMember, fightMs: number): boolean =>
   !m.left || (!outOfLives(m) && presentEnough(m, fightMs))
 
-/** Tira cada línea de la tabla de premios de la categoría del jefe por separado; la EXP es para el Pokémon `uid` */
+/**
+ * Tira cada línea de la tabla de premios de la categoría del jefe por separado, con sus cantidades por el `prizeMult`
+ * del jefe; la EXP es para el Pokémon `uid`
+ */
 export function rollPrize(boss: RaidBoss, uid: string, rng: Rng): RaidPrize {
   const prize: RaidPrize = { bossSpeciesId: boss.speciesId, uid, money: 0, tickets: 0, pieces: 0, exp: 0 }
   const field: Record<RaidPrizeKind, 'money' | 'tickets' | 'pieces' | 'exp'> = {
@@ -32,7 +35,8 @@ export function rollPrize(boss: RaidBoss, uid: string, rng: Rng): RaidPrize {
     [RaidPrizeKind.BossPieces]: 'pieces',
     [RaidPrizeKind.Exp]: 'exp',
   }
-  for (const roll of RAID_PRIZE_TABLES[boss.tier]) if (rng() < roll.chance) prize[field[roll.kind]] += roll.amount
+  const mult = boss.prizeMult ?? 1
+  for (const roll of RAID_PRIZE_TABLES[boss.tier]) if (rng() < roll.chance) prize[field[roll.kind]] += Math.round(roll.amount * mult)
   prize.money = boostedMoney(prize.money)
   return prize
 }

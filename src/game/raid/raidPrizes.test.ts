@@ -60,6 +60,15 @@ describe('premio del jefe', () => {
     }
   })
 
+  it('el prizeMult del jefe multiplica las cantidades de su tabla', () => {
+    const mult = 3
+    const prize = rollPrize({ ...raidBossAt(0), prizeMult: mult }, UID, seqRng(0))
+    expect(prize.money).toBe(boostedMoney(sumOf(RaidPrizeKind.Money) * mult))
+    expect(prize.tickets).toBe(sumOf(RaidPrizeKind.Tickets) * mult)
+    expect(prize.pieces).toBe(sumOf(RaidPrizeKind.BossPieces) * mult)
+    expect(prize.exp).toBe(sumOf(RaidPrizeKind.Exp) * mult)
+  })
+
   it('con la peor tirada solo salen las líneas seguras', () => {
     const prize = rollPrize(raidBossAt(0), UID, seqRng(0.9999))
     expect(prize.money).toBe(boostedMoney(sumOf(RaidPrizeKind.Money, 1)))

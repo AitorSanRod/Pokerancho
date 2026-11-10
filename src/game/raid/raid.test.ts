@@ -34,6 +34,11 @@ describe('jefe comunitario', () => {
     expect(raidBossHp({ level, soloMinutes: RAID_SOLO_MINUTES })).toBe(raidBossHp({ level }))
   })
 
+  it('el statMult del jefe multiplica su vida', () => {
+    const level = raidBossAt(0).level
+    expect(raidBossHp({ level, statMult: 2 })).toBeCloseTo(raidBossHp({ level }) * 2, -1)
+  })
+
   it('el Pokémon enviado está contra el jefe y no puede salir de ruta', () => {
     const { s, mon } = raidState()
     joinRaid(s, mon.uid)

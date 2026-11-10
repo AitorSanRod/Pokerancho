@@ -5,7 +5,7 @@ import { initialState, MonPlace, monPlace } from '../core/state'
 import { chooseStarter, seqRng } from '../core/test-utils'
 import { startRun } from '../run/run'
 import { createMon, NEW_MON_LEVEL } from './mons'
-import { BOX_SLOTS, boxedMons, fitsInRanch, moveBlocker, moveMon, placeMon, RANCH_SLOTS, ranchCount, ranchWithRoom, slotsOf, usedSlots } from './ranches'
+import { BOX_SLOTS, boxedMons, fitsInRanch, moveBlocker, moveMon, placeMon, RANCH_SLOTS, ranchCapacity, ranchCount, ranchWithRoom, rehomeOverflow, slotsOf, usedSlots } from './ranches'
 
 const [ONE_SLOT, BIG] = [SPECIES.find((sp) => slotsOf(sp.id) === 1)!.id, SPECIES.find((sp) => slotsOf(sp.id) > 1)!.id]
 
@@ -103,6 +103,39 @@ describe('moveMon', () => {
     moveMon(s, mon.uid, null)
     expect(moveMon(s, mon.uid, 0)).toBe(true)
     expect(monPlace(s, mon.uid)).toBe(MonPlace.Ranch)
+  })
+})
+
+describe('rehomeOverflow', () => {
+  /** Rancho 0 con `over` espacios de más que su capacidad */
+  function overfull(over: number) {
+    const s = stateWithTeam(0)
+    fillRanch(s)
+    for (let i = 0; i < over; i++) s.owned.push(createMon(ONE_SLOT, NEW_MON_LEVEL))
+    return s
+  }
+
+  it('sin ranchos de más, no toca nada', () => {
+    const s = stateWithTeam(2)
+    expect(rehomeOverflow(s)).toBe(0)
+    expect(s.owned.every((m) => m.ranch === 0)).toBe(true)
+  })
+
+  it('lo que sobra va al siguiente rancho con hueco, empezando por los últimos', () => {
+    const s = overfull(2)
+    s.upgrades.ranches = 1
+    const last = s.owned.slice(-2)
+    expect(rehomeOverflow(s)).toBe(2)
+    expect(usedSlots(s, 0)).toBe(ranchCapacity(s, 0))
+    expect(last.map((m) => m.ranch)).toEqual([1, 1])
+  })
+
+  it('sin hueco en ningún rancho, a la Caja aunque se pase de su límite; el activo no se mueve', () => {
+    const s = overfull(BOX_SLOTS + 1)
+    rehomeOverflow(s)
+    expect(usedSlots(s, 0)).toBe(ranchCapacity(s, 0))
+    expect(boxedMons(s)).toHaveLength(BOX_SLOTS + 1)
+    expect(s.owned[0].ranch).toBe(0)
   })
 })
 

@@ -1,5 +1,6 @@
 import { markEvolutionLines } from '../collection/dex'
 import { unlockReachedRoutes } from '../run/routeUnlocks'
+import { rehomeOverflow } from '../team/ranches'
 import { migrateSave } from './saveMigration'
 import { backupTeam, parseTeamBackup, restoreTeam, type TeamBackup } from './teamBackup'
 import { initialState, restoreState, TutorialStep, type GameState } from './state'
@@ -50,12 +51,13 @@ export const cloudUpload = (s: GameState) => ({ save: s, team: backupTeam(s) })
  * La partida guardada: si es de esta versión, tal cual; si es de otra, pasada a esta sin perder nada de lo que siga
  * existiendo (saveMigration.ts). Si la partida no se puede leer o se ha quedado sin Pokémon, el equipo sale de su copia.
  * En las dos se abren las rutas que tocan por las ya completadas (rutas añadidas después) y se da por capturada la
- * línea evolutiva anterior de lo capturado
+ * línea evolutiva anterior de lo capturado. Lo que no cabe en su rancho se recoloca (ranches.ts › rehomeOverflow)
  */
 export function stateFromSaved(saved: unknown, team: unknown): GameState {
   const s = (saved && typeof saved === 'object' ? restoreState(saved as GameState) : null) ?? salvaged(saved, team)
   unlockReachedRoutes(s)
   markEvolutionLines(s)
+  rehomeOverflow(s)
   return s
 }
 

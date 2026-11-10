@@ -4,6 +4,7 @@ import { cloudUpload } from '../src/game/core/cloudSave'
 import { initialState } from '../src/game/core/state'
 import { chooseStarter } from '../src/game/core/test-utils'
 import { RAID_ROTATIONS, RaidAction, RaidRotation, RoomSlot } from '../src/game/raid/online/protocol'
+import { rotationBoss } from '../src/game/raid/rotationBosses'
 import { stopChannel } from '../src/game/raid/online/online-test-utils'
 import { ROOM_MAX_CATCHUP_MS } from '../src/game/raid/online/sharedRoom'
 import { deleteIdleStopRooms } from './db/rooms'
@@ -69,7 +70,7 @@ describe('salas compartidas', () => {
     expect(f.rotations.map((b: { rotation: string }) => b.rotation)).toEqual(RAID_ROTATIONS)
     const [ordered, random] = f.rotations
     expect(ordered).toMatchObject({ bossIndex: 0, phase: 'active', nextAt: null })
-    expect(random.bossIndex).not.toBe(ordered.bossIndex)
+    expect(rotationBoss(RaidRotation.Hard, random.bossIndex).speciesId).not.toBe(rotationBoss(RaidRotation.Ordered, ordered.bossIndex).speciesId)
     for (const b of f.rotations) {
       expect(b.rooms).toHaveLength(1)
       expect(b.featured.roomId).toBe(b.rooms[0].roomId)
@@ -88,10 +89,10 @@ describe('salas compartidas', () => {
 
   it('quien elige una sala de la rotación al azar entra en ella', async () => {
     const api = testWorker()
-    const front = (await board(api, RaidRotation.Random)).featured
+    const front = (await board(api, RaidRotation.Hard)).featured
     const view = (await api.call('/api/raid', { body: { ...join('player-aaaa', 'a1'), targetRoomId: front.roomId } })).data.view
     expect(view.roomId).toBe(front.roomId)
-    expect((await board(api, RaidRotation.Random)).rooms).toMatchObject([{ roomId: front.roomId, players: 1 }])
+    expect((await board(api, RaidRotation.Hard)).rooms).toMatchObject([{ roomId: front.roomId, players: 1 }])
     expect((await board(api, RaidRotation.Ordered)).rooms).toMatchObject([{ players: 0 }])
   })
 

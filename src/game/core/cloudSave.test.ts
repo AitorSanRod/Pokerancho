@@ -3,6 +3,9 @@ import { route, RouteId } from '../../data/maps'
 import { EVOLVING_SPECIES, evolutionsOf } from '../../data/evolutions'
 import { STARTERS } from '../../data/species'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
+import { createMon, NEW_MON_LEVEL } from '../team/mons'
+import { RANCH_EXPANSION_SLOTS } from '../team/ranchExpansion'
+import { ranchCapacity, usedSlots } from '../team/ranches'
 import { CloudAction, cloudAction, cloudUpload, parseUpload, saveSummary, stateFromSaved, withEvolutionLines } from './cloudSave'
 import { initialState, SAVE_VERSION } from './state'
 import { backupTeam } from './teamBackup'
@@ -72,6 +75,15 @@ describe('partida en la nube', () => {
     const cloud = { ...cloudUpload(s), revision: 1, updatedAt: 0 }
     expect(stateFromSaved(JSON.parse(JSON.stringify(s)), cloud.team).caught).toContain(from)
     expect(withEvolutionLines(JSON.parse(JSON.stringify(cloud))).save.caught).toContain(from)
+  })
+
+  it('al cargar, ningún rancho queda con más ocupado que espacios (p. ej. una copia del equipo sin las ampliaciones)', () => {
+    const s = playedGame()
+    s.ranchExtraSlots[0] = RANCH_EXPANSION_SLOTS
+    while (usedSlots(s, 0) < ranchCapacity(s, 0)) s.owned.push(createMon(STARTERS[0], NEW_MON_LEVEL))
+    const restored = stateFromSaved(null, backupTeam(s))
+    expect(usedSlots(restored, 0)).toBeLessThanOrEqual(ranchCapacity(restored, 0))
+    expect(restored.owned).toHaveLength(s.owned.length)
   })
 
   it('si la partida guardada no se puede leer, el equipo sale de su copia', () => {

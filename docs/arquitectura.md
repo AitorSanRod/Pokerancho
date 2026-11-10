@@ -145,6 +145,7 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `game/raid/raidRoom.ts` | Tipos de la sala (`Raid`, `RaidMember`, `RaidPrize`) y quién está dentro |
 | `game/raid/raidCombat.ts` | Una ronda: todos pegan al jefe con la fórmula de siempre y el jefe pega a uno; revivir |
 | `game/raid/raidBots.ts` | Bots que entran y salen de la sala (en local y en el servidor) |
+| `game/raid/rotationBosses.ts` | La lista de jefes de cada rotación de la pestaña Raids (`RAID_BOSSES`; `HARD_RAID_BOSSES` con las stats ×`HARD_RAID_STAT_MULT`) y el jefe de una posición (`rotationBoss`) |
 | `game/raid/raidEstimate.ts` | Tiempo que tardará en caer el jefe: simula rondas sobre una copia de la sala con un azar de semilla fija |
 | `game/raid/raidPrizes.ts` | Quién cobra (presencia mínima o seguir dentro), tirada de la tabla y recogida |
 | `game/raid/raidLives.ts` | Vidas contra los jefes de la pestaña Raids: al gastarlas sale de la sala y cobra en el acto, sin volver contra ese jefe en ninguna de sus salas (el servidor lo comprueba en `tabRooms.joinTabRoom` y al consultar no vuelve a sentar a quien las ha gastado, tampoco en las paradas) |
@@ -155,7 +156,7 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `game/raid/online/roomServer.ts` | Las acciones del servidor: elegir sala (`pickRoom`), entrar y ponerse al día; caducidad |
 | `game/raid/online/requests.ts` | Validación de lo que llega al servidor y limpieza del apodo |
 | `net/raidSync.ts` | Bucle que entra, consulta y avisa de las salas dejadas; cada cuánto se consulta |
-| `game/raid/online/raidCycle.ts` | Los jefes de la pestaña Raids por rotaciones (en orden y al azar) y ciclos: qué jefe sigue, cuándo se cierra, cuándo pasa al siguiente (con tope), qué sala va al frontal |
+| `game/raid/online/raidCycle.ts` | Los jefes de la pestaña Raids por rotaciones (en orden y difíciles) y ciclos: qué jefe sigue, cuándo se cierra, cuándo pasa al siguiente (con tope), qué sala va al frontal |
 | `game/raid/online/tabRooms.ts` | Las salas de la pestaña Raids en el servidor: ponerlas al día con su ciclo, sala principal, en qué rotación entra el jugador y su parte de la respuesta `feed` |
 | `net/raidFeed.ts` | La pestaña Raids según el servidor: jefe, frontal, lista de salas y hora del servidor |
 | `game/raid/online/skipAhead.ts` | Resumir de golpe lo que una sala lleva sin consultar (el Worker tiene poca CPU por petición) |
@@ -206,7 +207,7 @@ En los tests se pasa un rng determinista. Una función nueva con azar **debe** s
 - Cualquier cambio en la forma de `GameState`, `OwnedMon`, `Run` o `Expedition` obliga a subir la versión. Si un
   campo cambia de nombre o de significado, se añade su paso en `SAVE_MIGRATIONS` con su test.
 - **Red de seguridad**: cada guardado escribe también `pokerancho-team` (`teamBackup.ts`: los Pokémon, el activo,
-  sus expediciones y la hora). Solo se usa si la partida guardada no se puede leer o se ha quedado sin Pokémon.
+  sus expediciones, las ampliaciones de los ranchos y la hora). Solo se usa si la partida guardada no se puede leer o se ha quedado sin Pokémon.
   Reiniciar desde ⚙️ guarda la copia vacía y se empieza de verdad desde el tutorial. Lo que se le añada a
   `TeamBackup` va opcional para que las copias ya guardadas sigan valiendo.
 
@@ -295,8 +296,10 @@ Paso a paso del despliegue y del consumo del plan gratuito: [servidor.md](servid
 - **Pestaña Raids por ciclos** (`raidCycle.ts`, `tabRooms.ts`, `worker/raidTab.ts`, tabla `raid_cycles`): los jefes los
   decide el servidor, iguales para todos; los móviles no simulan nada de la pestaña (`GameState.raidServer`) salvo su
   propia sala. Hay dos rotaciones a la vez (`RaidRotation`), cada una con sus ciclos y sus salas (carpeta
-  `tab/<rotación>/<ciclo>`): la ordenada sigue `RAID_BOSSES` y la de azar elige uno que no repita el suyo ni coincida
-  con los de la otra (`followingBoss`). Cada ciclo sabe ya su jefe siguiente (`nextBossIndex`), para enseñarlo en la
+  `tab/<rotación>/<ciclo>`): la ordenada sigue `RAID_BOSSES` y la de difíciles (`RaidRotation.Hard`, que guarda el valor `random` de
+  cuando era «Al azar») elige al azar de su propia lista, `HARD_RAID_BOSSES`, uno que no repita el suyo ni sea de la especie
+  de los de la otra (`followingBoss`). Cada rotación lee su lista con `rotationBosses.ts › rotationBoss` (lo usan
+  `cycleBoss`, la espera del frontal y las pestañas). Cada ciclo sabe ya su jefe siguiente (`nextBossIndex`), para enseñarlo en la
   espera. Un jugador solo tiene un Pokémon en la pestaña, en una de las dos. En cada ciclo hay un jefe, una sala principal (con bots, aunque no juegue nadie)
   y las que se abran al llenarse. Cuando cae en la primera sala, el ciclo se cierra: empieza la espera
   (`CYCLE_COOLDOWN_MS`), ya no se abren salas (solo se puede entrar en las que aún pelean con jugadores) y el frontal

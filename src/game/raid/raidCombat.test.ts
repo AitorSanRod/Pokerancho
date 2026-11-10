@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { seqRng } from '../core/test-utils'
 import { calcStats } from '../team/stats'
-import { elapseRound, playRound, RAID_BOSS_MAX_HIT, RAID_REVIVE_MS, RAID_ROUND_MS } from './raidCombat'
+import { makeFighter } from '../battle/battle'
+import { bossFighter, elapseRound, playRound, RAID_BOSS_MAX_HIT, RAID_REVIVE_MS, RAID_ROUND_MS } from './raidCombat'
 import { BOSS_ID, newMember, RaidMemberKind, type Raid } from './raidRoom'
 import { raidState, sparringSpecies } from './raid-test-utils'
 
@@ -47,6 +48,17 @@ describe('rondas contra el jefe', () => {
     playRound(raid, noPassives, seqRng(0))
     expect(Math.round((1 - m.hpFraction) * maxHp)).toBe(Math.ceil(maxHp * RAID_BOSS_MAX_HIT))
     expect(m.downMs).toBe(0)
+  })
+
+  it('el statMult del jefe multiplica sus stats en la pelea', () => {
+    const raid = soloRaid()
+    const statMult = 1.5
+    raid.boss = { ...raid.boss, statMult }
+    const boosted = makeFighter('enemy', raid.boss.speciesId, raid.boss.level, { statMult })
+    const boss = bossFighter(raid)
+    expect(boss.stats.def).toBe(boosted.stats.def)
+    expect(boss.stats.spe).toBe(boosted.stats.spe)
+    expect(boss.stats.atk).toBeGreaterThan(bossFighter({ ...raid, boss: { ...raid.boss, statMult: 1 } }).stats.atk)
   })
 
   it('un debilitado no pega', () => {

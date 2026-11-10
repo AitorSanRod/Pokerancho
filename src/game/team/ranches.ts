@@ -68,6 +68,36 @@ export function moveMon(s: GameState, uid: string, to: MonDestination, rng: Rng 
   return true
 }
 
+/** Los que sobran de un rancho por encima de su capacidad, empezando por los últimos en llegar y sin tocar al activo */
+function overflowOf(s: GameState, ranch: number) {
+  const movable = s.owned.filter((m) => m.ranch === ranch && m.uid !== s.activeUid).reverse()
+  const extra: typeof movable = []
+  let used = usedSlots(s, ranch)
+  for (const mon of movable) {
+    if (used <= ranchCapacity(s, ranch)) break
+    extra.push(mon)
+    used -= slotsOf(mon.speciesId)
+  }
+  return extra
+}
+
+/**
+ * Arregla los ranchos que tienen más ocupado que espacios (partidas de antes de los espacios, copias del equipo sin
+ * las ampliaciones…): lo que sobra va al primer rancho con hueco y, si no cabe en ninguno, a la Caja, aunque se pase
+ * de su límite, para no perder ningún Pokémon. Devuelve cuántos ha movido
+ */
+export function rehomeOverflow(s: GameState): number {
+  let moved = 0
+  for (let ranch = 0; ranch < ranchCount(s); ranch++) {
+    for (const mon of overflowOf(s, ranch)) {
+      mon.ranch = ranchWithRoom(s, mon.speciesId)
+      mon.spot = null
+      moved++
+    }
+  }
+  return moved
+}
+
 /** Deja al Pokémon donde se ha soltado al arrastrarlo, dentro del prado (0–100 %) */
 export function placeMon(s: GameState, uid: string, spot: RanchSpot) {
   const mon = findMon(s, uid)

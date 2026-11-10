@@ -11,12 +11,14 @@ export type RoomSlot = (typeof RoomSlot)[keyof typeof RoomSlot]
 
 /**
  * Rotaciones de jefes de la pestaña Raids, a la vez y cada una con su ciclo (ver raidCycle.ts): una sigue el orden de
- * RAID_BOSSES y la otra elige al azar, para que el jugador pueda escoger entre dos jefes
+ * RAID_BOSSES y la de difíciles elige al azar de HARD_RAID_BOSSES (más nivel y mejores premios, ver rotationBosses.ts),
+ * para que el jugador pueda escoger entre dos jefes. `Hard` conserva el valor 'random' de cuando era «Al azar»: con
+ * él se guardan las partidas, los ciclos y los ids de las salas
  */
-export const RaidRotation = { Ordered: 'ordered', Random: 'random' } as const
+export const RaidRotation = { Ordered: 'ordered', Hard: 'random' } as const
 export type RaidRotation = (typeof RaidRotation)[keyof typeof RaidRotation]
 /** Las rotaciones en el orden en que se enseñan */
-export const RAID_ROTATIONS: RaidRotation[] = [RaidRotation.Ordered, RaidRotation.Random]
+export const RAID_ROTATIONS: RaidRotation[] = [RaidRotation.Ordered, RaidRotation.Hard]
 
 export type RouteChannel = { slot: typeof RoomSlot.Route; routeId: RouteId; nodeId: string }
 
@@ -115,9 +117,9 @@ export type CyclePhase = (typeof CyclePhase)[keyof typeof CyclePhase]
 /** Una rotación de la pestaña Raids según el servidor */
 export interface RotationFeed {
   rotation: RaidRotation
-  /** Posición en RAID_BOSSES del jefe del ciclo actual */
+  /** Posición en la lista de la rotación (ver rotationBosses.ts) del jefe del ciclo actual */
   bossIndex: number
-  /** Posición en RAID_BOSSES del jefe que vendrá después */
+  /** Posición en la lista de la rotación del jefe que vendrá después */
   nextBossIndex: number
   phase: CyclePhase
   /** Cerrándose: hora real a partir de la cual puede aparecer el siguiente jefe (si ya no quedan salas pendientes) */
@@ -161,4 +163,4 @@ export const channelKey = (c: RoomChannel): string =>
  * las rotaciones, la ordenada
  */
 export const roomRotation = (roomId: string | null): RaidRotation =>
-  roomId?.startsWith(`tab/${RaidRotation.Random}/`) ? RaidRotation.Random : RaidRotation.Ordered
+  roomId?.startsWith(`tab/${RaidRotation.Hard}/`) ? RaidRotation.Hard : RaidRotation.Ordered

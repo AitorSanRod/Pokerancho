@@ -23,7 +23,7 @@ describe('peticiones al servidor de salas', () => {
   })
 
   it('entrar en la pestaña Raids puede decir la rotación; una que no existe se ignora', () => {
-    const random = { slot: RoomSlot.Tab, rotation: RaidRotation.Random }
+    const random = { slot: RoomSlot.Tab, rotation: RaidRotation.Hard }
     expect(parseRequest(join({ channel: random }))).toMatchObject({ channel: random })
     const unknown = parseRequest(join({ channel: { slot: RoomSlot.Tab, rotation: 'otra' } })) as JoinRequest
     expect(unknown.channel).toEqual({ slot: RoomSlot.Tab })

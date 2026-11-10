@@ -1,6 +1,7 @@
 import type { GameState } from '../../game/core/state'
 import { act } from '../../game/core/store'
-import { joinServerRaid, raidBossAt } from '../../game/raid/raid'
+import { rotationBoss } from '../../game/raid/rotationBosses'
+import { joinServerRaid } from '../../game/raid/raid'
 import { newRaid } from '../../game/raid/raidEngine'
 import { CyclePhase, type RotationFeed } from '../../game/raid/online/protocol'
 import { presentMembers, RAID_ROOM_SIZE, type Raid } from '../../game/raid/raidRoom'
@@ -18,7 +19,7 @@ const msToNext = (state: FeedState, board: RotationFeed) => Math.max(0, (board.n
 /** Sin ninguna sala en pie: la espera del siguiente jefe, contada con la hora del servidor (igual para todos) */
 function waitingRaid(state: FeedState, board: RotationFeed): Raid {
   const next = board.phase === CyclePhase.Closing ? board.nextBossIndex : board.bossIndex
-  return newRaid(raidBossAt(next), null, { startsInMs: msToNext(state, board) })
+  return newRaid(rotationBoss(board.rotation, next), null, { startsInMs: msToNext(state, board) })
 }
 
 /**

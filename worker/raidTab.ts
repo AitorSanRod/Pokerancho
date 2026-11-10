@@ -48,7 +48,7 @@ async function loadBoards(db: D1Database, now: number): Promise<Board[]> {
   return Promise.all(cycles.map((stored) => loadBoard(db, stored, now)))
 }
 
-/** Los jefes de las otras rotaciones: al elegir el siguiente al azar se evitan */
+/** Las especies de los jefes de las otras rotaciones: al elegir el siguiente al azar se evitan */
 const takenBy = (boards: Board[], board: Board) => boards.filter((b) => b !== board).flatMap((b) => cycleBosses(b.stored.cycle))
 
 /**

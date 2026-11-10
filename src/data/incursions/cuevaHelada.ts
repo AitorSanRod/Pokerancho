@@ -25,12 +25,16 @@ export const CUEVA_HELADA: Incursion = {
       foes: [foe(POKEMON.Dewgong, 26, [IMOVE.IceBeam.id, IMOVE.AquaRing.id]), foe(POKEMON.Jynx, 25, [IMOVE.Confusion.id, IMOVE.PowderSnow.id, IMOVE.FakeTears.id]), foe(POKEMON.Golbat, 25, [IMOVE.Fly.id, IMOVE.Bite.id])],
       reward: { money: 400, exp: 200 },
     },
-    { kind: RoomKind.Heal, name: 'Manantial templado', heal: 0.4 },
+    { 
+      kind: RoomKind.Heal, 
+      name: 'Manantial templado', 
+      heal: 0.5 
+    },
     {
       kind: RoomKind.Battle,
       name: 'Guardián de hielo',
       foes: [
-        foe(POKEMON.Cloyster, 31, [IMOVE.Blizzard.id, IMOVE.IceShard.id], { hpMult: 2.5, boss: { areaEvery: 4 } }),
+        foe(POKEMON.Cloyster, 31, [IMOVE.Blizzard.id, IMOVE.IceShard.id], { hpMult: 2, boss: { areaEvery: 4 } }),
         foe(POKEMON.Shellder, 28, [IMOVE.PowderSnow.id, IMOVE.AuroraVeil.id]),
         foe(POKEMON.Shellder, 28, [IMOVE.IceShard.id, IMOVE.PowderSnow.id]),
       ],

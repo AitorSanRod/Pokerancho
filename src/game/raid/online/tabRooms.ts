@@ -49,7 +49,7 @@ function roomsToCatchUp(rooms: SharedRoom[], focusIds: (string | null)[]): Share
 
 /**
  * Pone al día el ciclo: las salas pedidas, las caídas (el ciclo se cierra), el paso al siguiente jefe y la sala
- * principal (con el ciclo abierto, siempre hay una). `taken`: los jefes de la otra rotación (ver followingBoss)
+ * principal (con el ciclo abierto, siempre hay una). `taken`: las especies de los jefes de la otra rotación (ver followingBoss)
  */
 export function updateCycle(
   c: RaidCycle,

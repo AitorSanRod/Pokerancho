@@ -5,6 +5,7 @@ import { SPECIES } from '../../data/species'
 import { markCaught } from '../collection/dex'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
 import { createMon } from '../team/mons'
+import { RANCH_EXPANSION_MAX, RANCH_EXPANSION_SLOTS } from '../team/ranchExpansion'
 import { expToNext, MAX_LEVEL, MAX_STARS } from '../team/stats'
 import { UPGRADES } from '../team/upgrades'
 import type { GameState } from './state'
@@ -44,9 +45,11 @@ export interface TeamBackup {
   expeditions?: BackedUpExpedition[]
   /** Hora real de la copia: al rehacer la partida, el tiempo que pasó desde entonces cuenta como con la app cerrada */
   savedAt?: number
+  /** Espacios de más de cada rancho por sus ampliaciones (las copias de antes no los tienen) */
+  ranchExtraSlots?: Partial<Record<number, number>>
 }
 
-/** Lo mínimo para rehacer el equipo: especie, nivel, EXP, estrellas, dónde vive, quién es el activo y las expediciones */
+/** Lo mínimo para rehacer el equipo: especie, nivel, EXP, estrellas, dónde vive, quién es el activo, las expediciones y las ampliaciones de los ranchos */
 export function backupTeam(s: GameState): TeamBackup {
   const indexOf = (uid: string | null) => s.owned.findIndex((m) => m.uid === uid)
   const active = indexOf(s.activeUid)
@@ -58,6 +61,7 @@ export function backupTeam(s: GameState): TeamBackup {
       .map(({ uid, routeId, durationMin, elapsedMin }) => ({ monIndex: indexOf(uid), routeId, durationMin, elapsedMin }))
       .filter((e) => e.monIndex >= 0),
     savedAt: s.lastTick,
+    ranchExtraSlots: { ...s.ranchExtraSlots },
   }
 }
 
@@ -92,10 +96,20 @@ function parseExpeditions(raw: unknown, mons: number): BackedUpExpedition[] {
   })
 }
 
+/** Ampliaciones de la copia que encajan: rancho que puede existir y espacios enteros de ampliaciones completas */
+function parseExtraSlots(raw: unknown): Partial<Record<number, number>> {
+  if (typeof raw !== 'object' || raw === null) return {}
+  const valid = Object.entries(raw).filter(
+    ([ranch, slots]) =>
+      isInt(Number(ranch), 0, MAX_RANCHES - 1) && isInt(slots, 0, RANCH_EXPANSION_MAX * RANCH_EXPANSION_SLOTS) && slots % RANCH_EXPANSION_SLOTS === 0,
+  )
+  return Object.fromEntries(valid)
+}
+
 /** Lee una copia guardada; descarta los Pokémon que no sean válidos y devuelve null si no se reconoce el formato */
 export function parseTeamBackup(raw: unknown): TeamBackup | null {
   if (typeof raw !== 'object' || raw === null) return null
-  const { format, activeIndex, mons, expeditions, savedAt } = raw as Partial<TeamBackup>
+  const { format, activeIndex, mons, expeditions, savedAt, ranchExtraSlots } = raw as Partial<TeamBackup>
   if (format !== TEAM_BACKUP_FORMAT || !Array.isArray(mons)) return null
   const valid = mons.filter(
     (m): m is BackedUpMon =>
@@ -116,12 +130,13 @@ export function parseTeamBackup(raw: unknown): TeamBackup | null {
     mons: valid,
     expeditions: intact ? parseExpeditions(expeditions, valid.length) : [],
     savedAt: Number.isFinite(savedAt) ? savedAt : undefined,
+    ranchExtraSlots: parseExtraSlots(ranchExtraSlots),
   }
 }
 
 /**
  * Rehace el equipo en una partida nueva (solo si aún no tiene Pokémon). Llegan con los PS al máximo, cuentan como
- * capturados y, como el jugador ya tenía equipo, se salta el tutorial. Se recuperan los ranchos que usaban y las
+ * capturados y, como el jugador ya tenía equipo, se salta el tutorial. Se recuperan los ranchos que usaban, sus ampliaciones y las
  * expediciones que estaban en curso; el tiempo desde la copia cuenta como con la app cerrada (lo aplica el primer tick)
  */
 export function restoreTeam(s: GameState, backup: TeamBackup) {
@@ -133,7 +148,9 @@ export function restoreTeam(s: GameState, backup: TeamBackup) {
     s.owned.push(mon)
     markCaught(s, saved.speciesId)
   }
-  const lastRanch = Math.max(0, ...backup.mons.map((m) => m.ranch ?? 0))
+  s.ranchExtraSlots = { ...backup.ranchExtraSlots }
+  const expanded = Object.keys(s.ranchExtraSlots).map(Number)
+  const lastRanch = Math.max(0, ...expanded, ...backup.mons.map((m) => m.ranch ?? 0))
   if (lastRanch > 0) s.upgrades.ranches = lastRanch
   // Sin activo fiable, el primero que no esté en la Caja
   const active = backup.activeIndex !== null ? s.owned[backup.activeIndex] : s.owned.find((m) => m.ranch !== null)
