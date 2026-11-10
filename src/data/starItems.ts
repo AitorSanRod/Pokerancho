@@ -29,7 +29,7 @@ export const STAR_ITEMS: Record<StarItem, StarItemInfo> = {
     item: ITEM.CometShard,
     rarity: Rarity.Legendary,
     gachaChance: 0.0025,
-    pity: 300,
+    pity: 5000,
   },
   [StarItem.StarPiece]: {
     name: 'Trozo de estrella',
@@ -37,7 +37,7 @@ export const STAR_ITEMS: Record<StarItem, StarItemInfo> = {
     item: ITEM.StarPiece,
     rarity: Rarity.Epic,
     gachaChance: 0.015,
-    pity: 60,
+    pity: 300,
   },
   [StarItem.Stardust]: {
     name: 'Polvo estelar',
