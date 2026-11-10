@@ -37,6 +37,14 @@ describe('recuento de daño de la incursión', () => {
     expect(damageOf(progress(1, 0), 'a')).toBe(hitsBy('a', 1))
   })
 
+  it('no cuenta el daño que se hacen entre ellos (los de área que dan a todos)', () => {
+    const [first, ...rest] = record.legs
+    const friendlyHit = { kind: EventKind.Hit, actor: 'a', target: 'b', amount: 1000, text: '' }
+    const withFriendly = { ...record, legs: [{ ...first, events: [...first.events, friendlyHit] }, ...rest] }
+    const end = { ...progress(1, legDuration(record.legs[1])), record: withFriendly }
+    expect(damageOf(end, 'a')).toBe(hitsBy('a', 2))
+  })
+
   it('va de más a menos daño', () => {
     const lines = partyDamage(progress(1, legDuration(record.legs[1])))
     expect(lines.map((l) => l.id).sort()).toEqual(['a', 'b'])

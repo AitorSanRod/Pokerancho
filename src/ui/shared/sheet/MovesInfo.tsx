@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom'
-import { moveClass } from '../../../data/incursionMoves'
+import { incursionMove, moveClass, type IncursionMove } from '../../../data/incursionMoves'
 import { signatureMove } from '../../../data/moves'
+import type { Tm } from '../../../data/tms'
 import { TYPE_INFO } from '../../../data/types'
 import { learnTimeline, type LearnStep } from '../../../game/incursion/repertoire'
 import { MoveChip } from '../common'
@@ -12,14 +13,16 @@ interface Props {
   speciesId: number
   /** Nivel del Pokémon, si lo tienes: marca lo que ya lleva */
   level: number | null
+  /** Lo que ha aprendido con MTs, si lo tienes */
+  tmMoves?: Tm[]
   onClose: () => void
 }
 
 /**
  * Todos los ataques de una especie y para qué sirve cada uno: el de rutas y jefes comunitarios (siempre el mismo) y el
- * repertorio de las incursiones, nivel a nivel
+ * repertorio de las incursiones, nivel a nivel, más lo aprendido con MTs
  */
-export function MovesInfo({ speciesId, level, onClose }: Props) {
+export function MovesInfo({ speciesId, level, tmMoves = [], onClose }: Props) {
   const signature = signatureMove(speciesId)
   return createPortal(
     <div className="confirm-overlay" onClick={onClose}>
@@ -38,6 +41,9 @@ export function MovesInfo({ speciesId, level, onClose }: Props) {
               {learnTimeline(speciesId).map((step) => (
                 <LearnRow key={step.move.id} step={step} level={level} />
               ))}
+              {tmMoves.map((id) => (
+                <MoveRow key={id} move={incursionMove(id)} when="Con MT" held />
+              ))}
             </ul>
           </section>
         </div>
@@ -53,7 +59,10 @@ export function MovesInfo({ speciesId, level, onClose }: Props) {
 function LearnRow({ step, level }: { step: LearnStep; level: number | null }) {
   const { move, from, until } = step
   const held = level !== null && from <= level && (until === null || until >= level)
-  const when = until === null ? `Desde Nv. ${from}` : `Nv. ${from}–${until}`
+  return <MoveRow move={move} when={until === null ? `Desde Nv. ${from}` : `Nv. ${from}–${until}`} held={held} />
+}
+
+function MoveRow({ move, when, held }: { move: IncursionMove; when: string; held: boolean }) {
   return (
     <li className={`moves-info-row ${held ? 'held' : ''}`} style={{ ['--type-color' as string]: TYPE_INFO[move.type].color }}>
       <span className="moves-info-head">

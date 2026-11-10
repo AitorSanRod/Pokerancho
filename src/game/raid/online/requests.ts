@@ -2,6 +2,7 @@ import { NodeKind, node, route } from '../../../data/maps'
 import type { PassiveRef } from '../../../data/passives'
 import { species } from '../../../data/species'
 import { TYPE_INFO, type PokeType } from '../../../data/types'
+import { isNature } from '../../team/natures'
 import { DEFAULT_NICKNAME, NICKNAME_MAX, RAID_ROTATIONS, RaidAction, RoomSlot, type JoinChannel, type RaidRotation, type MonSnapshot, type RaidRequest } from './protocol'
 
 // Lo que llega al servidor viene de cualquiera: se comprueba todo y se descarta lo que no encaje.
@@ -48,7 +49,7 @@ function parseMon(v: unknown): MonSnapshot | null {
   if (!isInt(v.level, 1, MAX_LEVEL) || !isInt(v.stars, 0, MAX_STARS)) return null
   if (typeof v.hpFraction !== 'number' || !(v.hpFraction >= 0 && v.hpFraction <= 1)) return null
   const passives = parsePassives(v.passives)
-  return passives && { uid: v.uid, speciesId: v.speciesId, level: v.level, stars: v.stars, hpFraction: v.hpFraction, passives }
+  return passives && { uid: v.uid, speciesId: v.speciesId, level: v.level, stars: v.stars, nature: isNature(v.nature) ? v.nature : undefined, hpFraction: v.hpFraction, passives }
 }
 
 /** Parada de ruta que existe y tiene jefe comunitario */

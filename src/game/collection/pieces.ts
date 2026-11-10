@@ -1,8 +1,11 @@
+import type { Nature } from '../../data/natures'
 import { RARITY_INFO, rarityOf, species } from '../../data/species'
 import type { StarItem } from '../../data/starItems'
 import { boostedMoney } from '../battle/rewards'
 import { ownedOfSpecies, TutorialStep, type GameState } from '../core/state'
+import type { Rng } from '../core/random'
 import { createMon, NEW_MON_LEVEL } from '../team/mons'
+import { randomNature } from '../team/natures'
 import { ranchWithRoom } from '../team/ranches'
 import { MAX_STARS } from '../team/stats'
 import { isSeen, markCaught } from './dex'
@@ -24,6 +27,8 @@ export interface CombineResult {
   kind: CombineKind
   speciesId: number
   level?: number
+  /** La naturaleza con la que sale al crearlo */
+  nature?: Nature
   stars?: number
   money?: number
 }
@@ -81,7 +86,7 @@ export const combinableIds = (s: GameState): number[] =>
 
 export const combinableCount = (s: GameState): number => combinableIds(s).length
 
-export function combine(s: GameState, speciesId: number): CombineResult | null {
+export function combine(s: GameState, speciesId: number, rng: Rng = Math.random): CombineResult | null {
   if (!canCombine(s, speciesId)) return null
   const kind = combineKind(s, speciesId)
   const item = combineStarItem(s, speciesId)
@@ -90,13 +95,13 @@ export function combine(s: GameState, speciesId: number): CombineResult | null {
   s.pieces[speciesId] -= PIECES_PER_COMBINE
 
   if (kind === CombineKind.Unlock) {
-    const mon = createMon(speciesId, NEW_MON_LEVEL, ranchWithRoom(s, speciesId))
+    const mon = createMon(speciesId, NEW_MON_LEVEL, ranchWithRoom(s, speciesId), randomNature(rng))
     s.owned.push(mon)
     markCaught(s, speciesId)
     // El primer Pokémon (el inicial del tutorial) sale directamente como activo
     s.activeUid ??= mon.uid
     if (s.tutorial === TutorialStep.Combine) s.tutorial = TutorialStep.Route
-    return { kind, speciesId, level: mon.level }
+    return { kind, speciesId, level: mon.level, nature: mon.nature }
   }
   if (kind === CombineKind.Star) {
     const mon = ownedOfSpecies(s, speciesId)!

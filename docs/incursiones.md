@@ -14,7 +14,7 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
 | Tema | Decisión |
 |---|---|
 | Ritmo | Por turnos y automático. Lo que se decide (movimiento) se elige antes de entrar o en las salas de reorganizar |
-| Ataques | Uno por Pokémon (más adelante, varios con condiciones). Cada Pokémon tiene su **repertorio**: como mucho dos por tipo (su mejor ataque de daño y el de apoyo del tipo) más los propios de la especie. MTs: previstas, pero no se usan aún |
+| Ataques | Uno por Pokémon (más adelante, varios con condiciones). Cada Pokémon tiene su **repertorio**: como mucho dos por tipo (su mejor ataque de daño y el de apoyo del tipo) más los propios de la especie y lo aprendido con **MTs** |
 | Roles | Libres: el papel lo da el movimiento elegido (daño, curar, provocar, apoyo) |
 | Grupo | Cola automática de 5. Si en **1 min** no se llena, se completa con bots |
 | Salas | Escritas a mano en cada incursión: combate, curar, revivir, reorganizar ataques, jefe. PS y estados se arrastran entre salas |
@@ -193,7 +193,11 @@ de cueva helada (variante de `cave` o bioma nuevo, con la skill `fondos-pixel-ar
 ## Movimientos y repertorio
 
 Las rutas y raids siguen con su ataque único (`signatureMove`). Las incursiones tienen su propia lista de ataques
-(`data/incursionMoves/`, editable a mano; los de daño empezaron como copia de los de ruta). Cada ataque es una
+(`data/incursionMoves/`, editable a mano; los de daño empezaron como copia de los de ruta). Además de los que tocan a
+cada tipo y rareza hay un **catálogo** (`incursionMoves/catalog/`, un fichero por tipo, unos 300) con los de los juegos
+que encajan aquí, para los repertorios a mano: sin OHKO, golpes múltiples, daño fijo, potencia variable ni efectos que
+no existen (los de probabilidad que no hay se quitan y queda el golpe; Ataque y Defensa Especial cuentan como Ataque y
+Defensa). Se escriben con la precisión de los juegos y `catalogMove` le suma +10 (+5 si era 90; como mucho 100). Cada ataque es una
 **potencia** y una lista de **efectos** hechos con funciones (`effects.ts`), además de su precisión y de sus toques:
 
 ```ts
@@ -210,7 +214,8 @@ Deseo:    move('wish', 'Deseo', 'normal', 20, [healTeam(0.2)])  // no pega: cura
 | `raise(etapas)` / `raiseSelf(etapas)` | Sube etapas de stats hasta acabar la sala | A todo el grupo / solo al que lo usa |
 | `lower(etapas)` | Baja etapas de stats hasta acabar la sala | Al rival golpeado; sin potencia, al de más PS |
 | `taunt(guard, turnos)` | Atrae los golpes y recibe un `guard` menos de daño | A sí mismo |
-| `area()` | Lo que va a un rival va a todos (el daño, al 60%) | Todos los rivales |
+| `area()` | Lo que va a un rival va a todos (el daño, al 60%), como Avalancha | Todos los rivales |
+| `areaAll()` | Como `area()`, pero da también a sus compañeros, como Terremoto: daño, estado y bajadas (drenar, solo de los rivales; ese daño no cuenta en el recuento ni en el ranking). Los bots no lo eligen si tienen otro de daño | Todos los rivales y sus compañeros, nunca a sí mismo |
 
 Cada ataque es de una de **tres clases** (`moveClass`): **cura** si lleva `healAlly` o `healTeam`; si no, **daño** si
 tiene potencia (aunque cure, como Absorber) y **estado** si no la tiene (estados alterados, subir o bajar stats y
@@ -244,8 +249,15 @@ de agua, hielo, lucha y acero) y Golpe Bajo (raro de siniestro). Los ataques a l
 **Repertorio** (`game/incursion/repertoire.ts`): como mucho **dos por tipo**. De cada uno de sus tipos, el ataque de
 daño del escalón más alto al que llega (sin pasar de su rareza y desde su nivel, `learnsets.ts › DAMAGE_TIER_LEVELS`,
 `incursionMoves/damage.ts › DAMAGE_BY_TYPE`) y el ataque de apoyo del tipo desde su nivel (`incursionMoves/support.ts
-› SUPPORT_BY_TYPE`, uno por tipo); además, los propios de su especie (`learnsets.ts › SPECIES_MOVES`). Las MTs, más
-adelante. En la ficha del Pokémon (rancho y Pokédex), la «i» junto a su ataque abre todos sus ataques: el de rutas y
+› SUPPORT_BY_TYPE`, uno por tipo); además, los propios de su especie (`learnsets.ts › SPECIES_MOVES`). Una especie o
+una forma (p. ej. Rotom Lavado) puede llevar un **repertorio a mano** (`learnsets.ts › CUSTOM_MOVESETS`): exactamente
+esos movimientos, cada uno desde su nivel, en lugar de todo lo anterior. Además, cada Pokémon lleva lo que ha aprendido
+con **MTs** (`data/tms.ts`, `game/incursion/tms.ts`): objetos de un solo uso que enseñan un ataque para siempre a un
+Pokémon de los tipos que dice cada una (a cualquier nivel, aunque evolucione, y se lo lleva si se intercambia). No se
+compran: salen como premio final de incursión (`IncursionPrizeKind.Tm`, con poca probabilidad) y se intercambian
+entre jugadores. Se enseñan en la ficha, en la sección «MT», que solo sale si tienes alguna que ese Pokémon pueda
+aprender. El servidor no ve las MTs de cada Pokémon: acepta el ataque de una MT en cualquiera que pueda aprenderla
+(`tms.ts › mayKnow`), igual que se fía de su nivel. En la ficha del Pokémon (rancho y Pokédex), la «i» junto a su ataque abre todos sus ataques: el de rutas y
 jefes y el repertorio de incursión nivel a nivel (`repertoire.ts › learnTimeline`).
 
 Cada tipo tiene su papel en el grupo por su ataque de apoyo (y sus pasivas de grupo van en la misma línea):
@@ -316,7 +328,7 @@ Están previstos desde el principio, aunque lo normal sea jugar con personas. En
   los bots son de Nv. 37 como mucho.
 - **Especie**: de la lista `bots` de la incursión. Si nadie del grupo cura, uno que pueda curar; si nadie provoca, uno
   que pueda provocar; el resto, al azar.
-- **Ataque**: si nadie cura, cura; si nadie provoca, provoca; si no, su golpe más fuerte.
+- **Ataque**: si nadie cura, cura; si nadie provoca, provoca; si no, su golpe más fuerte (uno que dé también a su grupo, como Terremoto, solo si no tiene otro de daño).
 
 Tú solo con bots en la Cueva Helada (200 partidas por caso, sin tocar): con Raichu gana un 17% a Nv. 35, un 59% a
 Nv. 40 y un 97% a Nv. 45; con Venusaur (Síntesis), un 49% a Nv. 40 y un 56% a Nv. 45; con Golem (provoca), un 30% a
@@ -356,6 +368,7 @@ completar.
 | Confusión | se quita el 10% de sus PS | `groupStatus.ts › CONFUSION_SELF_HIT` |
 | Grupo y bots | 5; bots del más alto −5 (hasta −7), entre el mínimo de entrada y el rival más alto | `party.ts › PARTY_SIZE, BOT_LEVEL_GAP, BOT_LEVEL_SPREAD` |
 | Toques | 5 s de ventana + 1,5 s de resultado; cada ataque dice sus toques y su mejora (100 y +10% por defecto); el servidor cierra a los 0,75 s | `tapWindow.ts › TAP_WINDOW_MS, TAP_SETTLE_MS`, `data/incursionMoves/effects.ts › DEFAULT_TAP_GOAL, DEFAULT_TAP_BONUS`, `online/sharedIncursion.ts › TAP_CLOSE_DELAY_MS` |
+| Catálogo de ataques | +10 de precisión a la de los juegos (+5 si era 90; hasta 100); curas de 70 a uno y 30 al grupo; los que atraen golpes, −40% de daño | `data/incursionMoves/catalog/catalogMove.ts › CATALOG_ACCURACY_BONUS, CATALOG_ACCURACY_BONUS_AT_90, SINGLE_HEAL_POWER, TEAM_HEAL_POWER, REDIRECT_GUARD` |
 | Ritmo en pantalla | ms de cada evento | `incursionTimeline.ts › INCURSION_EVENT_MS` |
 | Pasivas | pesos 1/2/3/4, umbrales 3/6/10 | `data/incursionPassives.ts` |
 | Llaves | 10.000 / 30.000 / 50.000 ₽, máx. 10 | `data/incursions.ts › KEY_PRICE, MAX_KEYS` |
@@ -373,8 +386,9 @@ completar.
                              cuevaHelada, prueba (corta y de nivel bajo)
     incursionPassives.ts     pasivas de grupo por tipo, pesos por rareza y umbrales
     incursionMoves/          ataques de incursión: effects (efectos, clases, `move`), damage (daño por tipo y rareza),
-                             support (apoyo por tipo), index (`IMOVE`, `incursionMove(id)`)
-    learnsets.ts             escalones de daño por nivel y propios por especie
+                             support (apoyo por tipo), catalog/ (catálogo por tipo y `catalogMove`), index (`IMOVE`,
+                             `incursionMove(id)`)
+    learnsets.ts             escalones de daño por nivel, propios por especie y repertorios a mano
 
   src/game/incursion/        lógica pura, con un .test.ts por fichero (piezas comunes: incursion-test-utils.ts)
     incursionRun.ts          encadenar tramos con sus órdenes; corte por retirada

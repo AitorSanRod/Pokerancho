@@ -1,7 +1,25 @@
-export type PokeType =
-  | 'normal' | 'fire' | 'water' | 'electric' | 'grass' | 'ice'
-  | 'fighting' | 'poison' | 'ground' | 'flying' | 'psychic' | 'bug'
-  | 'rock' | 'ghost' | 'dragon' | 'dark' | 'steel' | 'fairy'
+/** Los tipos de Pokémon por su nombre en el código (p. ej. `PokeType.Fire`): así no se escriben strings sueltos */
+export const PokeType = {
+  Normal: 'normal',
+  Fire: 'fire',
+  Water: 'water',
+  Electric: 'electric',
+  Grass: 'grass',
+  Ice: 'ice',
+  Fighting: 'fighting',
+  Poison: 'poison',
+  Ground: 'ground',
+  Flying: 'flying',
+  Psychic: 'psychic',
+  Bug: 'bug',
+  Rock: 'rock',
+  Ghost: 'ghost',
+  Dragon: 'dragon',
+  Dark: 'dark',
+  Steel: 'steel',
+  Fairy: 'fairy',
+} as const
+export type PokeType = (typeof PokeType)[keyof typeof PokeType]
 
 export const TYPE_INFO: Record<PokeType, { name: string; color: string }> = {
   normal: { name: 'Normal', color: '#a8a878' },

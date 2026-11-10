@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import { Nature } from '../../data/natures'
 import { POKEMON } from '../../data/pokemon'
 import { Rarity, RARITY_INFO, rarityOf, species } from '../../data/species'
 import { starItemOfRarity } from '../../data/starItems'
 import { boostedMoney } from '../battle/rewards'
 import { initialState } from '../core/state'
-import { chooseStarter, speciesOfRarity } from '../core/test-utils'
+import { chooseStarter, seqRng, speciesOfRarity } from '../core/test-utils'
 import { createMon, NEW_MON_LEVEL } from '../team/mons'
 import { RANCH_SLOTS, slotsOf, usedSlots } from '../team/ranches'
 import { MAX_STARS } from '../team/stats'
@@ -69,6 +70,14 @@ describe('combine', () => {
     expect(s.owned.find((m) => m.speciesId === POKEMON.Pidgey)?.level).toBe(NEW_MON_LEVEL)
     expect(s.caught).toContain(POKEMON.Pidgey)
     expect(piecesOf(s, POKEMON.Pidgey)).toBe(2)
+  })
+
+  it('el Pokémon creado sale con una naturaleza al azar', () => {
+    const s = stateWithStarter()
+    readyToCombine(s, POKEMON.Pidgey)
+    const last = Object.values(Nature).at(-1)
+    expect(combine(s, POKEMON.Pidgey, seqRng(0.999))).toMatchObject({ nature: last })
+    expect(s.owned.find((m) => m.speciesId === POKEMON.Pidgey)?.nature).toBe(last)
   })
 
   it('crear cuesta según la rareza y no se puede sin dinero', () => {

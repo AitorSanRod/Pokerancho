@@ -4,6 +4,7 @@ import { isFavorite } from '../../game/collection/dex'
 import { piecesOf } from '../../game/collection/pieces'
 import { starItemsOf } from '../../game/collection/starItems'
 import type { GameState } from '../../game/core/state'
+import { tmsOf } from '../../game/incursion/tms'
 import { givableMons, giveMonBlocker } from '../../game/trade/tradeGive'
 import { GoodKind, MAX_TRADE_COUNT, type OfferRequest } from '../../game/trade/tradeGoods'
 import { Sprite } from '../shared/common'
@@ -11,6 +12,7 @@ import { HeartIcon } from '../shared/HeartIcon'
 import { MonPicker } from '../shared/MonPicker'
 import { CountInput } from './CountInput'
 import { StarItemChoice } from './StarItemChoice'
+import { TmChoice } from './TmChoice'
 
 type OfferKind = OfferRequest['kind']
 
@@ -19,6 +21,7 @@ const KIND_LABEL: Record<OfferKind, string> = {
   [GoodKind.Pieces]: 'Tickets',
   [GoodKind.Shards]: 'Trozos',
   [GoodKind.StarItem]: 'Objetos',
+  [GoodKind.Tm]: 'MT',
 }
 
 interface Props {
@@ -30,7 +33,7 @@ interface Props {
   onCorrected: () => void
 }
 
-/** Qué se pone a la venta: un Pokémon del rancho o la Caja, tickets de una especie, trozos de MissingNo u objetos estelares */
+/** Qué se pone a la venta: un Pokémon del rancho o la Caja, tickets de una especie, trozos de MissingNo, objetos estelares o MTs */
 export function OfferPicker({ game, value, onChange, onInvalid, onCorrected }: Props) {
   const [kind, setKind] = useState<OfferKind>(value?.kind ?? GoodKind.Mon)
   const pick = (next: OfferKind) => {
@@ -93,6 +96,12 @@ export function OfferPicker({ game, value, onChange, onInvalid, onCorrected }: P
       )}
       {value?.kind === GoodKind.StarItem && (
         <CountInput label="Objetos" value={value.count} max={Math.min(starItemsOf(game, value.item), MAX_TRADE_COUNT)} onChange={(count) => onChange({ ...value, count })} onInvalid={onInvalid} onCorrected={onCorrected} />
+      )}
+      {kind === GoodKind.Tm && (
+        <TmChoice selected={value?.kind === GoodKind.Tm ? value.tm : null} held={(tm) => tmsOf(game, tm)} onPick={(tm) => onChange({ kind: GoodKind.Tm, tm, count: 1 })} />
+      )}
+      {value?.kind === GoodKind.Tm && (
+        <CountInput label="MT" value={value.count} max={Math.min(tmsOf(game, value.tm), MAX_TRADE_COUNT)} onChange={(count) => onChange({ ...value, count })} onInvalid={onInvalid} onCorrected={onCorrected} />
       )}
     </>
   )

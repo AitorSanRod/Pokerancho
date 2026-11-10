@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { Rarity, STARTERS } from '../../data/species'
 import { STAR_ITEM_IDS } from '../../data/starItems'
+import { TM_IDS } from '../../data/tms'
 import { starItemsOf } from '../collection/starItems'
+import { tmsOf } from '../incursion/tms'
 import { toggleFavorite, markSeen } from '../collection/dex'
 import { initialState, type GameState } from '../core/state'
 import { chooseStarter, speciesOfRarity } from '../core/test-utils'
@@ -40,7 +42,7 @@ describe('dar Pokémon', () => {
   it('al anunciar un Pokémon sale de la partida tal cual estaba', () => {
     const s = game()
     const good = takeOffer(s, { kind: GoodKind.Mon, uid: uidOf(s, B) })
-    expect(good).toEqual({ kind: GoodKind.Mon, mon: { speciesId: B, level: 12, exp: 7, stars: 2 } })
+    expect(good).toMatchObject({ kind: GoodKind.Mon, mon: { speciesId: B, level: 12, exp: 7, stars: 2, tmMoves: [] } })
     expect(s.owned.some((m) => m.speciesId === B)).toBe(false)
   })
 })
@@ -104,5 +106,27 @@ describe('objetos estelares', () => {
     expect(canPay(s, ask)).toBe(false)
     expect(payAsk(s, { ...ask, count: 1 }, null)).toEqual({ ...ask, count: 1 })
     expect(starItemsOf(s, ITEM)).toBe(0)
+  })
+})
+
+describe('MTs', () => {
+  const [TM] = TM_IDS
+
+  it('se ofrecen y se pagan solo si llegan', () => {
+    const s = game()
+    s.tms[TM] = 3
+    expect(takeOffer(s, { kind: GoodKind.Tm, tm: TM, count: 4 })).toBeNull()
+    expect(takeOffer(s, { kind: GoodKind.Tm, tm: TM, count: 2 })).toEqual({ kind: GoodKind.Tm, tm: TM, count: 2 })
+    const ask: TradeAsk = { kind: GoodKind.Tm, tm: TM, count: 2 }
+    expect(canPay(s, ask)).toBe(false)
+    expect(payAsk(s, { ...ask, count: 1 }, null)).toEqual({ ...ask, count: 1 })
+    expect(tmsOf(s, TM)).toBe(0)
+  })
+
+  it('un Pokémon se va con lo que aprendió con MTs', () => {
+    const s = game()
+    s.owned.find((m) => m.speciesId === B)!.tmMoves = [TM]
+    const good = takeOffer(s, { kind: GoodKind.Mon, uid: uidOf(s, B) })
+    expect(good).toMatchObject({ mon: { tmMoves: [TM] } })
   })
 })

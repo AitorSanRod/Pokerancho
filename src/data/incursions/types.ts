@@ -1,6 +1,7 @@
 import type { Biome } from '../maps/mapCommon'
 import type { PassiveRef } from '../passives'
 import type { StarItem } from '../starItems'
+import type { Tm } from '../tms'
 
 // Forma de una incursión: mazmorra de 5 jugadores con sus salas, rivales y premios (ver docs/incursiones.md). Cada
 // incursión va en su fichero de esta carpeta y se añade a la lista de index.ts.
@@ -54,8 +55,11 @@ export type IncursionRoom =
   /** Cada jugador puede cambiar su movimiento: cierra un tramo (ver incursionLeg.ts) */
   | { kind: typeof RoomKind.Regroup; name: string }
 
-/** Qué da una línea de premio final. `Pieces`: tickets de esa especie. `StarItem`: objetos estelares (data/starItems.ts) */
-export const IncursionPrizeKind = { Money: 'money', Exp: 'exp', Tickets: 'tickets', Pieces: 'pieces', StarItem: 'starItem' } as const
+/**
+ * Qué da una línea de premio final. `Pieces`: tickets de esa especie. `StarItem`: objetos estelares (data/starItems.ts).
+ * `Tm`: MTs (data/tms.ts)
+ */
+export const IncursionPrizeKind = { Money: 'money', Exp: 'exp', Tickets: 'tickets', Pieces: 'pieces', StarItem: 'starItem', Tm: 'tm' } as const
 export type IncursionPrizeKind = (typeof IncursionPrizeKind)[keyof typeof IncursionPrizeKind]
 
 /** Una línea de premio: cada una se tira por separado con su probabilidad (0 a 1) */
@@ -63,6 +67,7 @@ export type IncursionPrize =
   | { kind: typeof IncursionPrizeKind.Money | typeof IncursionPrizeKind.Exp | typeof IncursionPrizeKind.Tickets; amount: number; chance: number }
   | { kind: typeof IncursionPrizeKind.Pieces; speciesId: number; amount: number; chance: number }
   | { kind: typeof IncursionPrizeKind.StarItem; item: StarItem; amount: number; chance: number }
+  | { kind: typeof IncursionPrizeKind.Tm; tm: Tm; amount: number; chance: number }
 
 export interface Incursion {
   id: IncursionId

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { SPECIES, STARTERS } from '../../data/species'
 import { STAR_ITEM_IDS } from '../../data/starItems'
+import { TM_IDS } from '../../data/tms'
 import { GoodKind, MAX_ASKED_SPECIES, MAX_TRADE_COUNT, MAX_TRADE_MONEY, parseAsk, parseOffer } from './tradeGoods'
 
 const [A, B, C] = STARTERS
@@ -42,5 +43,15 @@ describe('objetos estelares', () => {
     expect(parseOffer({ ...good, item: 'nope' })).toBeNull()
     expect(parseAsk({ ...good, count: 0 })).toBeNull()
     expect(parseAsk({ ...good, count: MAX_TRADE_COUNT + 1 })).toBeNull()
+  })
+})
+
+describe('MTs', () => {
+  it('se pueden ofrecer y pedir una de las que existen, en cantidad válida', () => {
+    const good = { kind: GoodKind.Tm, tm: TM_IDS[0], count: 2 }
+    expect(parseOffer(good)).toEqual(good)
+    expect(parseAsk(good)).toEqual(good)
+    expect(parseOffer({ ...good, tm: 'nope' })).toBeNull()
+    expect(parseAsk({ ...good, count: 0 })).toBeNull()
   })
 })

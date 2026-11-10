@@ -10,11 +10,13 @@ import { entryBlock, EntryBlock } from './entry'
 import type { Earned } from './incursionRewards'
 import { keysOf, spendKey } from './keys'
 import { fillWithBots, freshMember } from './party'
-import { canLearn } from './repertoire'
+import { monKnows } from './repertoire'
 import { retreatPasses } from './retreatVote'
 import { pendingOrders } from './incursionPicks'
 import { settleTaps } from './tapSettle'
+import { addTms } from './tms'
 import type { StarItem } from '../../data/starItems'
+import type { Tm } from '../../data/tms'
 import { addStarItems } from '../collection/starItems'
 
 // La incursión en la partida, sin servidor: el grupo se completa con bots al entrar y los tramos siguen solos con la
@@ -34,7 +36,7 @@ export function incursionBlocker(s: GameState, id: IncursionId, uid: string, mov
   if (block === EntryBlock.TooLow) return `Hace falta Nv. ${inc.minLevel} para entrar.`
   if (block === EntryBlock.TooHigh) return `No pueden entrar Pokémon de más de Nv. ${inc.maxLevel}.`
   if (mon.hp < 1) return `${species(mon.speciesId).name} está debilitado.`
-  if (!canLearn(mon.speciesId, mon.level, moveId)) return 'No conoce ese movimiento.'
+  if (!monKnows(mon, moveId)) return 'No conoce ese movimiento.'
   return null
 }
 
@@ -45,7 +47,7 @@ export function startIncursion(s: GameState, id: IncursionId, uid: string, moveI
   if (incursionBlocker(s, id, uid, moveId)) return
   const mon = findMon(s, uid)!
   spendKey(s, id)
-  const player = { ...freshMember({ id: uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, moveId }), hpFraction: mon.hp / maxHp(mon) }
+  const player = { ...freshMember({ id: uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, moveId }), hpFraction: mon.hp / maxHp(mon) }
   s.incursion = {
     incursionId: id,
     uid,
@@ -99,7 +101,7 @@ export function chooseIncursionMove(s: GameState, moveId: string, now: number) {
   const a = s.incursion
   const mon = a && findMon(s, a.uid)
   if (!a || !mon || incursionProgress(a, now).phase !== IncursionPhase.Regroup) return
-  if (canLearn(mon.speciesId, mon.level, moveId)) a.nextMove = moveId
+  if (monKnows(mon, moveId)) a.nextMove = moveId
 }
 
 /** En la sala de reorganizar: sigue ya, sin esperar al plazo (sin servidor, el único jugador es él; con él, se avisa al servidor) */
@@ -131,6 +133,7 @@ export function collectIncursion(s: GameState, now: number): Earned | null {
   s.tickets += earned.tickets
   for (const [id, n] of Object.entries(earned.pieces)) addPieces(s, Number(id), n)
   for (const [item, n] of Object.entries(earned.starItems) as [StarItem, number][]) addStarItems(s, item, n)
+  for (const [tm, n] of Object.entries(earned.tms) as [Tm, number][]) addTms(s, tm, n)
   const mon = findMon(s, a.uid)
   if (mon) {
     mon.hp = Math.round(maxHp(mon) * finalHpFraction(a, p, a.uid))

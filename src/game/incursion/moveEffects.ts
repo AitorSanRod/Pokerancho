@@ -1,4 +1,4 @@
-import { EffectKind, effectOf, hasArea, MoveClass, moveClass, STAT_NAME, type IncursionMove, type StatChange } from '../../data/incursionMoves'
+import { EffectKind, effectOf, hasArea, hitsAllies, MoveClass, moveClass, STAT_NAME, type IncursionMove, type StatChange } from '../../data/incursionMoves'
 import type { MissReason } from '../battle/battle'
 import type { Rng } from '../core/random'
 import { damage } from '../battle/attack'
@@ -12,8 +12,9 @@ import { tapMult } from './tapWindow'
 import { debuffTarget, healTarget, inflictTarget, strikeTarget } from './targeting'
 
 // Qué hace cada movimiento en una incursión según su clase (data/incursionMoves): los de daño golpean y luego aplican
-// sus efectos al golpeado, los de cura convierten su potencia en PS y los de estado aplican sus efectos. `bossArea`: el
-// golpe de un jefe que da a todo el grupo (bossMechanics.ts).
+// sus efectos al golpeado (los de área, a todos los rivales y, como Terremoto, también a sus compañeros), los de cura
+// convierten su potencia en PS y los de estado aplican sus efectos. `bossArea`: el golpe de un jefe que da a todo el
+// grupo (bossMechanics.ts).
 
 /** Fracción del daño normal que hace a cada uno un golpe en área */
 export const AREA_DAMAGE_MULT = 0.6
@@ -28,7 +29,10 @@ function miss(bf: Battlefield, actor: GroupFighter, target: GroupFighter, reason
   return 0
 }
 
-/** Un golpe a un rival: puede fallar, esquivarlo o salir un crítico; quien provoca recibe menos. Devuelve el daño hecho */
+/**
+ * Un golpe a un rival (o a un compañero, con los de área que dan a todos): puede fallar, esquivarlo o salir un crítico;
+ * quien provoca recibe menos. Las pasivas que drenan o ponen estados solo cuentan contra rivales. Devuelve el daño hecho
+ */
 function strike(bf: Battlefield, actor: GroupFighter, target: GroupFighter, mv: IncursionMove, mult: number, rng: Rng): number {
   if (!hits(rng, mv.accuracy)) return miss(bf, actor, target, 'miss')
   if (target.bonus.dodge > 0 && rng() < target.bonus.dodge) return miss(bf, actor, target, 'dodge')
@@ -38,6 +42,7 @@ function strike(bf: Battlefield, actor: GroupFighter, target: GroupFighter, mv: 
   const taken = Math.max(1, Math.floor(dealt * mult * boost * (1 - (target.taunt?.guard ?? 0))))
   const note = [crit ? '¡Crítico!' : '', eff > 1 ? '¡Es muy eficaz!' : eff < 1 ? 'No es muy eficaz…' : ''].filter(Boolean).join(' ')
   hurt(bf, target, taken, { kind: EventKind.Hit, actor: actor.id, crit, eff, potent: boost > 1, type: mv.type, text: note })
+  if (target.team === actor.team) return taken
   if (actor.bonus.drain > 0) restore(bf, actor, taken * actor.bonus.drain)
   if (isUp(target)) for (const { status, chance } of actor.bonus.inflicts) if (rng() < chance) inflict(bf, target, status)
   return taken
@@ -76,15 +81,21 @@ function onFoe(bf: Battlefield, mv: IncursionMove, foe: GroupFighter, rng: Rng):
   return inflicted || !!lower
 }
 
+/** A quién da un ataque de área: a todos los rivales y, si da también a los suyos, a sus compañeros (nunca a sí mismo) */
+function areaTargets(bf: Battlefield, actor: GroupFighter, mv: IncursionMove): GroupFighter[] {
+  const mates = hitsAllies(mv) ? allies(bf, actor).filter((f) => f !== actor) : []
+  return [...enemies(bf, actor), ...mates]
+}
+
 function damageMove(bf: Battlefield, actor: GroupFighter, mv: IncursionMove, rng: Rng, bossArea: boolean) {
   const area = bossArea || hasArea(mv)
-  const targets = area ? enemies(bf, actor) : [strikeTarget(bf, actor, mv.type, rng)]
+  const targets = area ? areaTargets(bf, actor, mv) : [strikeTarget(bf, actor, mv.type, rng)]
   const drain = effectOf(mv, EffectKind.Drain)
   for (const t of targets) {
     if (!t) continue
     const dealt = strike(bf, actor, t, mv, area ? AREA_DAMAGE_MULT : 1, rng)
     if (dealt === 0) continue
-    if (drain) restore(bf, actor, dealt * drain.fraction)
+    if (drain && t.team !== actor.team) restore(bf, actor, dealt * drain.fraction)
     onFoe(bf, mv, t, rng)
   }
   ownSideEffects(bf, actor, mv)
@@ -106,7 +117,7 @@ function statusMove(bf: Battlefield, actor: GroupFighter, mv: IncursionMove, rng
   if (!inflicts && !effectOf(mv, EffectKind.Lower)) return
   if (!hits(rng, mv.accuracy)) return void miss(bf, actor, actor, 'miss')
   const single = inflicts ? inflictTarget(bf, actor, rng) : debuffTarget(bf, actor)
-  const targets = hasArea(mv) ? enemies(bf, actor) : single ? [single] : []
+  const targets = hasArea(mv) ? areaTargets(bf, actor, mv) : single ? [single] : []
   if (!targets.filter((t) => onFoe(bf, mv, t, rng)).length) miss(bf, actor, actor, 'miss')
 }
 

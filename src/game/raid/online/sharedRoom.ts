@@ -123,7 +123,7 @@ function makeRoomFor(raid: Raid): boolean {
 /** Nivel, ★, pasivas y apodo de ahora (pueden cambiar mientras lucha) */
 function refreshSeat(room: SharedRoom, seat: Seat, nickname: string, mon: MonSnapshot) {
   seat.passives = mon.passives
-  Object.assign(memberOf(room, seat), { trainer: nickname, speciesId: mon.speciesId, level: mon.level, stars: mon.stars })
+  Object.assign(memberOf(room, seat), { trainer: nickname, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature })
 }
 
 /** Ese Pokémon del jugador ha gastado sus vidas en esta sala */
@@ -156,7 +156,7 @@ export function seatPlayer(room: SharedRoom, playerId: string, nickname: string,
   else {
     const memberId = `p${room.nextSeat++}`
     room.seats[key] = { playerId, uid: mon.uid, memberId, passives: [], expRounds: 0 }
-    const who = { id: memberId, kind: RaidMemberKind.Player, trainer: nickname, speciesId: mon.speciesId, level: mon.level, stars: mon.stars }
+    const who = { id: memberId, kind: RaidMemberKind.Player, trainer: nickname, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature }
     room.raid.members.push({ ...newMember(who, mon.hpFraction), lives })
   }
   refreshSeat(room, room.seats[key], nickname, mon)

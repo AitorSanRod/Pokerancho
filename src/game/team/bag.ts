@@ -3,9 +3,11 @@ import { INCURSIONS, type IncursionId } from '../../data/incursions'
 import { RANCH_TYPE_IDS, type RanchTypeId } from '../../data/ranchTypes'
 import { STAR_ITEM_IDS, type StarItem } from '../../data/starItems'
 import { STONE_IDS, type Stone } from '../../data/stones'
+import { TM_IDS, type Tm } from '../../data/tms'
 import { starItemsOf } from '../collection/starItems'
 import type { GameState } from '../core/state'
 import { keysOf } from '../incursion/keys'
+import { tmsOf } from '../incursion/tms'
 import { hasFormItem } from './forms'
 import { ranchTypeAvailable } from './ranchTypes'
 import { stonesOf } from './stones'
@@ -17,7 +19,7 @@ export interface BagEntry<Id> {
 
 /**
  * Lo comprado o ganado y aún sin usar: objetos estelares, objetos evolutivos sin gastar, objetos de forma (no se gastan),
- * tipos de rancho sin colocar y llaves de incursión
+ * tipos de rancho sin colocar, llaves de incursión y MTs
  */
 export interface Bag {
   starItems: BagEntry<StarItem>[]
@@ -25,6 +27,7 @@ export interface Bag {
   formItems: BagEntry<FormItem>[]
   ranchTypes: BagEntry<RanchTypeId>[]
   incursionKeys: BagEntry<IncursionId>[]
+  tms: BagEntry<Tm>[]
 }
 
 const held = <Id>(ids: readonly Id[], countOf: (id: Id) => number): BagEntry<Id>[] =>
@@ -37,6 +40,7 @@ export function bagContents(s: GameState): Bag {
     formItems: held(FORM_ITEM_IDS, (id) => (hasFormItem(s, id) ? 1 : 0)),
     ranchTypes: held(RANCH_TYPE_IDS, (id) => ranchTypeAvailable(s, id)),
     incursionKeys: held(INCURSIONS.map((i) => i.id), (id) => keysOf(s, id)),
+    tms: held(TM_IDS, (id) => tmsOf(s, id)),
   }
 }
 

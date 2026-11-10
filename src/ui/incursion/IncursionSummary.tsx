@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { species } from '../../data/species'
 import { STAR_ITEMS, type StarItem } from '../../data/starItems'
+import { tmName, TMS, type Tm } from '../../data/tms'
 import { boostedMoney } from '../../game/battle/rewards'
 import { act } from '../../game/core/store'
 import { collectIncursion } from '../../game/incursion/incursionGame'
@@ -30,6 +31,9 @@ function rewardItems(earned: Earned): RewardItem[] {
   for (const [item, n] of Object.entries(earned.starItems) as [StarItem, number][]) {
     const info = STAR_ITEMS[item]
     items.push({ key: `star-${item}`, icon: <ItemIcon item={info.item} size={96} />, title: `+${n} ${n === 1 ? info.name : info.plural}`, color: '#4a6ad0' })
+  }
+  for (const [tm, n] of Object.entries(earned.tms) as [Tm, number][]) {
+    items.push({ key: `tm-${tm}`, icon: <ItemIcon item={TMS[tm].item} size={96} />, title: `+${n} ${tmName(tm)}`, color: '#a8a878' })
   }
   return items
 }

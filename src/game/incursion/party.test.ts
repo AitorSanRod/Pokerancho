@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { EffectKind, effectOf, incursionMove, MoveClass, moveClass, taunt } from '../../data/incursionMoves'
+import { areaAll, EffectKind, effectOf, hitsAllies, incursionMove, move, MoveClass, moveClass, taunt } from '../../data/incursionMoves'
+import { CUSTOM_MOVESETS } from '../../data/learnsets'
 import { SPECIES } from '../../data/species'
 import { seqRng } from '../core/test-utils'
 import { battleRoom, member, testIncursion } from './incursion-test-utils'
@@ -70,9 +71,24 @@ describe('grupo de incursión', () => {
     const heal = repertoire(healer.id, LEVEL).find((mv) => moveClass(mv) === MoveClass.Heal)!
     const tank = { ...heal, effects: [taunt(0)] }
     const chosen = incursionMove(botMove(healer.id, LEVEL, [heal, tank]))
-    const strongest = Math.max(...repertoire(healer.id, LEVEL).map((mv) => (moveClass(mv) === MoveClass.Damage ? mv.power : 0)))
+    const clean = repertoire(healer.id, LEVEL).filter((mv) => moveClass(mv) === MoveClass.Damage && !hitsAllies(mv))
+    const strongest = Math.max(...clean.map((mv) => mv.power))
     expect(moveClass(chosen)).toBe(MoveClass.Damage)
     expect(chosen.power).toBe(strongest)
     expect(effectOf(chosen, EffectKind.Taunt)).toBeUndefined()
+  })
+
+  it('no usa uno que dé también a su grupo si tiene otro de daño, aunque pegue menos', () => {
+    const id = striker.id
+    const friendly = move('prueba-terremoto', 'Terremoto', 'ground', 100, [areaAll()])
+    const weak = move('prueba-placaje', 'Placaje', 'normal', 40)
+    CUSTOM_MOVESETS[id] = [{ move: friendly, level: 1 }, { move: weak, level: 1 }]
+    try {
+      expect(botMove(id, LEVEL, [])).toBe(weak.id)
+      CUSTOM_MOVESETS[id] = [{ move: friendly, level: 1 }]
+      expect(botMove(id, LEVEL, [])).toBe(friendly.id)
+    } finally {
+      delete CUSTOM_MOVESETS[id]
+    }
   })
 })

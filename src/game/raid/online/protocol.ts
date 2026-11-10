@@ -1,4 +1,5 @@
 import type { RouteId } from '../../../data/maps'
+import type { Nature } from '../../../data/natures'
 import type { PassiveRef } from '../../../data/passives'
 import type { Raid, RaidPlace } from '../raidRoom'
 
@@ -44,6 +45,8 @@ export interface MonSnapshot {
   speciesId: number
   level: number
   stars: number
+  /** Sin ella (clientes de antes de las naturalezas), neutra */
+  nature?: Nature
   /** PS con los que entra, como fracción de los máximos */
   hpFraction: number
   /** Pasivas de su rancho */

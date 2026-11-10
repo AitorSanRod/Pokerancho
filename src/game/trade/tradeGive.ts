@@ -2,6 +2,7 @@ import { baseSpeciesOf } from '../../data/species'
 import { isFavorite } from '../collection/dex'
 import { piecesOf } from '../collection/pieces'
 import { starItemsOf } from '../collection/starItems'
+import { tmsOf } from '../incursion/tms'
 import { findMon, MonPlace, monPlace, type GameState, type OwnedMon } from '../core/state'
 import { GoodKind, type OfferRequest, type TradeAsk, type TradedMon, type TradeGood } from './tradeGoods'
 
@@ -26,7 +27,7 @@ export function givableMons(s: GameState): OwnedMon[] {
 }
 
 /** El Pokémon tal como sale en un intercambio: en la forma normal de su especie (los objetos de forma no se dan) */
-export const tradedMon = (m: OwnedMon): TradedMon => ({ speciesId: baseSpeciesOf(m.speciesId), level: m.level, exp: m.exp, stars: m.stars })
+export const tradedMon = (m: OwnedMon): TradedMon => ({ speciesId: baseSpeciesOf(m.speciesId), level: m.level, exp: m.exp, stars: m.stars, nature: m.nature, tmMoves: [...m.tmMoves] })
 
 /** Quita el Pokémon de la partida si se puede dar y devuelve cómo viaja */
 export function takeMon(s: GameState, uid: string): TradedMon | null {
@@ -58,14 +59,20 @@ export function takeOffer(s: GameState, offer: OfferRequest): TradeGood | null {
     s.starItems[offer.item] = starItemsOf(s, offer.item) - offer.count
     return { ...offer }
   }
+  if (offer.kind === GoodKind.Tm) {
+    if (tmsOf(s, offer.tm) < offer.count) return null
+    s.tms[offer.tm] = tmsOf(s, offer.tm) - offer.count
+    return { ...offer }
+  }
   if (s.missingnoShards < offer.count) return null
   s.missingnoShards -= offer.count
   return { ...offer }
 }
 
-/** Cuánto se tiene de lo que se pide por cantidad (dinero, trozos, tickets gacha u objetos estelares) */
+/** Cuánto se tiene de lo que se pide por cantidad (dinero, trozos, tickets gacha, objetos estelares o MTs) */
 function countHeld(s: GameState, ask: Exclude<TradeAsk, { kind: typeof GoodKind.Mon }>): number {
   if (ask.kind === GoodKind.StarItem) return starItemsOf(s, ask.item)
+  if (ask.kind === GoodKind.Tm) return tmsOf(s, ask.tm)
   return ask.kind === GoodKind.Money ? s.money : ask.kind === GoodKind.Shards ? s.missingnoShards : s.tickets
 }
 
@@ -93,6 +100,10 @@ export function payAsk(s: GameState, ask: TradeAsk, uid: string | null): TradeGo
   if (ask.kind === GoodKind.Mon) return { kind: GoodKind.Mon, mon: takeMon(s, uid!)! }
   if (ask.kind === GoodKind.StarItem) {
     s.starItems[ask.item] = starItemsOf(s, ask.item) - ask.count
+    return { ...ask }
+  }
+  if (ask.kind === GoodKind.Tm) {
+    s.tms[ask.tm] = tmsOf(s, ask.tm) - ask.count
     return { ...ask }
   }
   if (ask.kind === GoodKind.Money) s.money -= ask.count

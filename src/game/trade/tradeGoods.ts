@@ -1,5 +1,7 @@
+import type { Nature } from '../../data/natures'
 import { SPECIES } from '../../data/species'
 import { isStarItem, type StarItem } from '../../data/starItems'
+import { isTm, type Tm } from '../../data/tms'
 
 // Intercambios entre jugadores (worker/trade.ts): qué se puede poner a la venta, qué se puede pedir a cambio y sus
 // límites. Lo comparten la web y el servidor, que comprueba todo lo que le llega con estas mismas reglas.
@@ -10,12 +12,12 @@ export const MAX_OPEN_LISTINGS = 3
 export const LISTING_MS = 24 * 60 * 60 * 1000
 /** Especies que se pueden pedir a cambio de un anuncio (el comprador entrega solo una de ellas) */
 export const MAX_ASKED_SPECIES = 3
-/** Tickets, trozos, tickets gacha u objetos estelares como mucho en un anuncio (ofrecidos o pedidos) */
+/** Tickets, trozos, tickets gacha, objetos estelares o MTs como mucho en un anuncio (ofrecidos o pedidos) */
 export const MAX_TRADE_COUNT = 999
 /** ₽ como mucho que se pueden pedir por un anuncio */
 export const MAX_TRADE_MONEY = 1_000_000
 
-export const GoodKind = { Mon: 'mon', Pieces: 'pieces', Shards: 'shards', Money: 'money', Tickets: 'tickets', StarItem: 'starItem' } as const
+export const GoodKind = { Mon: 'mon', Pieces: 'pieces', Shards: 'shards', Money: 'money', Tickets: 'tickets', StarItem: 'starItem', Tm: 'tm' } as const
 export type GoodKind = (typeof GoodKind)[keyof typeof GoodKind]
 
 /** Un Pokémon que cambia de dueño: llega tal cual estaba (nivel, EXP y ★), con los PS al máximo */
@@ -24,6 +26,10 @@ export interface TradedMon {
   level: number
   exp: number
   stars: number
+  /** Sin ella (anuncios de antes de las naturalezas), neutra */
+  nature?: Nature
+  /** Lo aprendido con MTs: se lo lleva. Puede faltar en lo anunciado antes de que existieran */
+  tmMoves?: Tm[]
 }
 
 /** Cantidades sueltas: trozos de MissingNo, dinero o tickets de gacha */
@@ -32,12 +38,16 @@ type CountKind = typeof GoodKind.Shards | typeof GoodKind.Money | typeof GoodKin
 /** Objetos estelares de un tipo (se pueden intercambiar, no vender) */
 type StarItems = { kind: typeof GoodKind.StarItem; item: StarItem; count: number }
 
+/** MTs de un tipo (se pueden intercambiar, no comprar ni vender) */
+type Tms = { kind: typeof GoodKind.Tm; tm: Tm; count: number }
+
 /** Algo que cambia de manos: lo anunciado, lo pagado o lo que se devuelve */
 export type TradeGood =
   | { kind: typeof GoodKind.Mon; mon: TradedMon }
   | { kind: typeof GoodKind.Pieces; speciesId: number; count: number }
   | { kind: CountKind; count: number }
   | StarItems
+  | Tms
 
 /** Lo que el vendedor quiere poner a la venta: un Pokémon suyo, tickets de una especie, trozos de MissingNo u objetos estelares */
 export type OfferRequest =
@@ -45,9 +55,10 @@ export type OfferRequest =
   | { kind: typeof GoodKind.Pieces; speciesId: number; count: number }
   | { kind: typeof GoodKind.Shards; count: number }
   | StarItems
+  | Tms
 
 /** Lo que pide a cambio, de un solo tipo: un Pokémon de una de las especies, dinero, trozos, tickets de gacha u objetos estelares */
-export type TradeAsk = { kind: typeof GoodKind.Mon; speciesIds: number[] } | { kind: CountKind; count: number } | StarItems
+export type TradeAsk = { kind: typeof GoodKind.Mon; speciesIds: number[] } | { kind: CountKind; count: number } | StarItems | Tms
 
 const SPECIES_IDS = new Set(SPECIES.map((sp) => sp.id))
 export const isSpeciesId = (v: unknown): v is number => SPECIES_IDS.has(v as number)
@@ -57,6 +68,9 @@ const isCount = (v: unknown, max = MAX_TRADE_COUNT): v is number => Number.isInt
 const parseStarItems = (v: Record<string, unknown>): StarItems | null =>
   isStarItem(v.item) && isCount(v.count) ? { kind: GoodKind.StarItem, item: v.item, count: v.count } : null
 
+/** MTs con la forma y los límites de un anuncio; si no, null */
+const parseTms = (v: Record<string, unknown>): Tms | null => (isTm(v.tm) && isCount(v.count) ? { kind: GoodKind.Tm, tm: v.tm, count: v.count } : null)
+
 /** Lo que se quiere anunciar, si tiene la forma y los límites de un anuncio; si no, null */
 export function parseOffer(v: unknown): OfferRequest | null {
   if (!v || typeof v !== 'object') return null
@@ -65,6 +79,7 @@ export function parseOffer(v: unknown): OfferRequest | null {
   if (o.kind === GoodKind.Pieces) return isSpeciesId(o.speciesId) && isCount(o.count) ? { kind: GoodKind.Pieces, speciesId: o.speciesId, count: o.count } : null
   if (o.kind === GoodKind.Shards) return isCount(o.count) ? { kind: GoodKind.Shards, count: o.count } : null
   if (o.kind === GoodKind.StarItem) return parseStarItems(o)
+  if (o.kind === GoodKind.Tm) return parseTms(o)
   return null
 }
 
@@ -80,6 +95,7 @@ export function parseAsk(v: unknown): TradeAsk | null {
   if (a.kind === GoodKind.Money) return isCount(a.count, MAX_TRADE_MONEY) ? { kind: GoodKind.Money, count: a.count } : null
   if (a.kind === GoodKind.Shards || a.kind === GoodKind.Tickets) return isCount(a.count) ? { kind: a.kind, count: a.count } : null
   if (a.kind === GoodKind.StarItem) return parseStarItems(a)
+  if (a.kind === GoodKind.Tm) return parseTms(a)
   return null
 }
 

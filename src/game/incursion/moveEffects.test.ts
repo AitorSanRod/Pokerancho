@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { drain, healAlly, healTeam, lower, move, raise, raiseSelf, taunt, type IncursionMove } from '../../data/incursionMoves'
+import { area, areaAll, drain, healAlly, healTeam, lower, move, raise, raiseSelf, taunt, type IncursionMove } from '../../data/incursionMoves'
 import { seqRng } from '../core/test-utils'
 import { EventKind } from './events'
 import { stat, type GroupFighter } from './fighter'
@@ -16,6 +16,8 @@ const DRAIN = move('prueba-absorber', 'Absorber', 'normal', POWER, [drain(0.5)])
 const TAUNT = move('prueba-provocar', 'Provocar', 'normal', 0, [taunt(0.3)])
 const RAISE = move('prueba-subir', 'Subir', 'normal', 0, [raise([{ stat: 'atk', stages: 1 }])])
 const LOWER = move('prueba-bajar', 'Bajar', 'normal', 0, [lower([{ stat: 'def', stages: -1 }])])
+const AREA = move('prueba-avalancha', 'Avalancha', 'normal', POWER, [area()])
+const AREA_ALL = move('prueba-terremoto', 'Terremoto', 'normal', POWER, [drain(0.5), areaAll()])
 
 const rng = seqRng(0.5)
 const using = (f: GroupFighter, mv: IncursionMove) => Object.assign(f, { move: mv })
@@ -130,6 +132,30 @@ describe('ataques de incursión', () => {
       return events.find((e) => e.kind === EventKind.Hit)!.amount!
     }
     expect(strikeWith(true)).toBeGreaterThan(strikeWith(false))
+  })
+
+  it('uno de área da a todos los rivales y no toca a los suyos', () => {
+    const user = using(ally('u'), AREA)
+    const mate = ally('m')
+    const foes = [enemy('e'), enemy('f')]
+    const { bf } = field([user, mate], foes)
+    performMove(bf, user, rng)
+    expect(foes.every((f) => f.hp < f.maxHp)).toBe(true)
+    expect(mate.hp).toBe(mate.maxHp)
+  })
+
+  it('uno de área que da a todos golpea también a sus compañeros, nunca a sí mismo, y solo drena de los rivales', () => {
+    const user = using(hurtAlly('u'), AREA_ALL)
+    const mate = ally('m')
+    const foe = enemy('e')
+    const { bf, events } = field([user, mate], [foe])
+    const before = user.hp
+    performMove(bf, user, rng)
+    expect(foe.hp).toBeLessThan(foe.maxHp)
+    expect(mate.hp).toBeLessThan(mate.maxHp)
+    const drained = (foe.maxHp - foe.hp) * 0.5
+    expect(user.hp - before).toBeLessThanOrEqual(Math.ceil(drained))
+    expect(events.some((e) => e.kind === EventKind.Hit && e.target === user.id)).toBe(false)
   })
 
   it('un golpe en área de un jefe da a todo el grupo con el daño rebajado', () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { RouteId } from '../../data/maps'
+import { Nature, NEUTRAL_NATURE } from '../../data/natures'
 import { POKEMON } from '../../data/pokemon'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
 import { createMon } from '../team/mons'
@@ -36,6 +37,19 @@ describe('copia del equipo', () => {
       [POKEMON.Charmander, 12, 0, 0],
     ])
     expect(activeMon(s)?.speciesId).toBe(POKEMON.Charmander)
+  })
+
+  it('recupera la naturaleza de cada uno; en una copia de antes de las naturalezas, neutra', () => {
+    const team = stateWithTeam()
+    team.owned[0].nature = Nature.Bold
+    const s = initialState()
+    restoreTeam(s, roundTrip(backupTeam(team))!)
+    expect(s.owned.map((m) => m.nature)).toEqual([Nature.Bold, NEUTRAL_NATURE])
+    const old = backupTeam(team)
+    for (const m of old.mons) delete m.nature
+    const fromOld = initialState()
+    restoreTeam(fromOld, roundTrip(old)!)
+    expect(fromOld.owned.every((m) => m.nature === NEUTRAL_NATURE)).toBe(true)
   })
 
   it('al recuperar el equipo se salta el tutorial y cuentan como capturados', () => {

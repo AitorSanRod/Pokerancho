@@ -1,11 +1,12 @@
 import { INCURSIONS, type IncursionId } from '../../../data/incursions'
 import { isKnownSpecies } from '../../../data/species'
+import { isNature } from '../../team/natures'
 import { MAX_STARS } from '../../team/stats'
 import { cleanNickname } from '../../raid/online/requests'
 import { canEnter } from '../entry'
 import type { MemberState } from '../fighter'
 import { freshMember } from '../party'
-import { canLearn } from '../repertoire'
+import { mayKnow } from '../tms'
 import { IncursionAction, type IncursionRequest } from './protocol'
 
 // Lo que llega al servidor de incursiones viene de cualquiera: se comprueba todo y se descarta lo que no encaje.
@@ -33,8 +34,8 @@ function parseMember(incursionId: IncursionId, v: unknown): MemberState | null {
   if (!isInt(v.level, 1, inc.maxLevel) || !canEnter(inc, v.level) || !isInt(v.stars, 0, MAX_STARS)) return null
   if (typeof v.hpFraction !== 'number' || !(v.hpFraction > 0 && v.hpFraction <= 1)) return null
   const speciesId = v.speciesId as number
-  if (!canLearn(speciesId, v.level, v.moveId)) return null
-  return { ...freshMember({ id: v.id, speciesId, level: v.level, stars: v.stars, moveId: v.moveId }), hpFraction: v.hpFraction }
+  if (!mayKnow(speciesId, v.level, v.moveId)) return null
+  return { ...freshMember({ id: v.id, speciesId, level: v.level, stars: v.stars, nature: isNature(v.nature) ? v.nature : undefined, moveId: v.moveId }), hpFraction: v.hpFraction }
 }
 
 /** La petición si es válida; null si falta o sobra algo */

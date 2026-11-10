@@ -53,6 +53,7 @@ export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng) 
   const player = makeFighter('player', mon.speciesId, mon.level, {
     hp: Math.floor(mon.hp),
     stars: mon.stars,
+    nature: mon.nature,
     passives: ranchPassives(s, mon.ranch!),
   })
   const result = simulateBattle(player, enemy, rng)

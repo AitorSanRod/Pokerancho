@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { signatureMove } from '../../../data/moves'
+import { NATURE_STAT_NAMES, NATURES, type Nature } from '../../../data/natures'
 import { RARITY_INFO, rarityOf, species } from '../../../data/species'
 import { isCaughtByLine, isSeen } from '../../../game/collection/dex'
 import { MonPlace, monPlace, type GameState, type OwnedMon } from '../../../game/core/state'
+import { NATURE_MOD } from '../../../game/team/natures'
 import { REGEN_PER_MIN } from '../../../game/team/ranch'
 import { calcStats, maxHp, stepsPerMinute } from '../../../game/team/stats'
 import { MoveChip, TypeBadge } from '../common'
@@ -19,7 +21,27 @@ const PLACE_LABEL: Record<MonPlace, string> = {
 }
 
 function statLine(mon: OwnedMon, level: number): StatLine {
-  return { stats: calcStats(mon.speciesId, level, mon.stars), stepsPerMin: stepsPerMinute({ ...mon, level }) }
+  return { stats: calcStats(mon.speciesId, level, mon.stars, mon.nature), stepsPerMin: stepsPerMinute({ ...mon, level }) }
+}
+
+/** Lo útil de la naturaleza: qué stat sube y cuál baja (el nombre, al lado) */
+function NatureLine({ nature }: { nature: Nature }) {
+  const { name, up, down } = NATURES[nature]
+  const pct = Math.round(NATURE_MOD * 100)
+  return (
+    <p className="tiny center nature-line">
+      {up && down ? (
+        <>
+          <span className="nature-up">▲ {NATURE_STAT_NAMES[up]} +{pct}%</span>
+          {' '}
+          <span className="nature-down">▼ {NATURE_STAT_NAMES[down]} −{pct}%</span>
+        </>
+      ) : (
+        'Sin cambios en sus stats'
+      )}
+      <span className="muted"> · Naturaleza {name}</span>
+    </p>
+  )
 }
 
 /**
@@ -50,7 +72,10 @@ export function MonOverview({ game, speciesId, mon, previewLevel = null }: { gam
         <p className="tiny muted center">Descansando: +{REGEN_PER_MIN * 100}% PS por minuto</p>
       )}
       {mon ? (
-        <MonStats now={statLine(mon, mon.level)} next={previewLevel ? statLine(mon, previewLevel) : null} />
+        <>
+          <MonStats now={statLine(mon, mon.level)} next={previewLevel ? statLine(mon, previewLevel) : null} nature={mon.nature} />
+          <NatureLine nature={mon.nature} />
+        </>
       ) : (
         seen && <p className="tiny muted center">Sus stats se ven cuando lo tengas.</p>
       )}
@@ -63,7 +88,7 @@ export function MonOverview({ game, speciesId, mon, previewLevel = null }: { gam
           </button>
         </div>
       )}
-      {movesOpen && <MovesInfo speciesId={sp.id} level={mon?.level ?? null} onClose={() => setMovesOpen(false)} />}
+      {movesOpen && <MovesInfo speciesId={sp.id} level={mon?.level ?? null} tmMoves={mon?.tmMoves} onClose={() => setMovesOpen(false)} />}
     </MonSection>
   )
 }

@@ -3,7 +3,7 @@ import type { Rng } from '../../core/random'
 import { incursionProgress, IncursionPhase, regroupEnd, startNextLeg, type IncursionPlan } from '../activeIncursion'
 import type { MemberState } from '../fighter'
 import { fillWithBots, PARTY_SIZE } from '../party'
-import { canLearn } from '../repertoire'
+import { mayKnow } from '../tms'
 import { retreatPasses } from '../retreatVote'
 import { settleTaps } from '../tapSettle'
 import { TAP_SETTLE_MS, type MovePick } from '../tapWindow'
@@ -120,7 +120,7 @@ export function tapShared(g: SharedIncursion, playerId: string, leg: number, tur
 export function pickShared(g: SharedIncursion, playerId: string, pick: MovePick, now: number) {
   const member = g.members.find((m) => m.id === seatOf(g, playerId)?.memberId)
   if (!member || incursionProgress(g, now).phase === IncursionPhase.Finished) return
-  if (canLearn(member.speciesId, member.level, pick.moveId)) g.pickPending = { ...g.pickPending, [member.id]: pick }
+  if (mayKnow(member.speciesId, member.level, pick.moveId)) g.pickPending = { ...g.pickPending, [member.id]: pick }
 }
 
 const inRegroup = (g: SharedIncursion, now: number) => incursionProgress(g, now).phase === IncursionPhase.Regroup
@@ -128,7 +128,7 @@ const inRegroup = (g: SharedIncursion, now: number) => incursionProgress(g, now)
 /** En la sala de reorganizar: el movimiento del jugador para el tramo siguiente, si lo conoce */
 export function chooseShared(g: SharedIncursion, playerId: string, moveId: string, now: number) {
   const member = g.members.find((m) => m.id === seatOf(g, playerId)?.memberId)
-  if (member && inRegroup(g, now) && canLearn(member.speciesId, member.level, moveId)) g.nextMoves[member.id] = moveId
+  if (member && inRegroup(g, now) && mayKnow(member.speciesId, member.level, moveId)) g.nextMoves[member.id] = moveId
 }
 
 /** En la sala de reorganizar: el jugador ya está; cuando lo están todos, empieza el tramo siguiente */

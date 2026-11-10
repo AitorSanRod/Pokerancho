@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { Nature, NEUTRAL_NATURE } from '../../data/natures'
 import { STARTERS } from '../../data/species'
 import { STAR_ITEM_IDS } from '../../data/starItems'
+import { TM_IDS } from '../../data/tms'
 import { initialState, type GameState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
 import { createMon } from '../team/mons'
@@ -31,6 +33,33 @@ describe('recibir', () => {
     expect(mon).toMatchObject({ level: 20, exp: 4, stars: 1, ranch: 0 })
     expect(mon.hp).toBeGreaterThan(0)
     expect(s.caught).toContain(B)
+  })
+
+  it('el Pokémon llega con su naturaleza; si el anuncio es de antes de las naturalezas, neutra', () => {
+    const s = game()
+    const good: TradeGood = { kind: GoodKind.Mon, mon: { speciesId: B, level: 20, exp: 4, stars: 0, nature: Nature.Timid } }
+    receiveGood(s, good)
+    expect(s.owned.find((m) => m.speciesId === B)?.nature).toBe(Nature.Timid)
+    const [, , C] = STARTERS
+    receiveGood(s, monGood(C))
+    expect(s.owned.find((m) => m.speciesId === C)?.nature).toBe(NEUTRAL_NATURE)
+  })
+
+  it('un Pokémon llega con lo que aprendió con MTs; uno anunciado antes de las MTs, sin ninguna', () => {
+    const [tm] = TM_IDS
+    const s = game()
+    receiveGood(s, { kind: GoodKind.Mon, mon: { speciesId: B, level: 20, exp: 0, stars: 0, tmMoves: [tm] } })
+    expect(s.owned.find((m) => m.speciesId === B)!.tmMoves).toEqual([tm])
+    const old = game()
+    receiveGood(old, monGood(B))
+    expect(old.owned.find((m) => m.speciesId === B)!.tmMoves).toEqual([])
+  })
+
+  it('las MTs se suman a las que se tienen', () => {
+    const [tm] = TM_IDS
+    const s = game()
+    receiveGood(s, { kind: GoodKind.Tm, tm, count: 2 })
+    expect(s.tms[tm]).toBe(2)
   })
 
   it('un Pokémon repetido se cambia por tickets de su especie (más por cada ★) y dinero', () => {

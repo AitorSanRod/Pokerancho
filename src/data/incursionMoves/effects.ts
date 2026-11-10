@@ -20,7 +20,7 @@ export const EffectKind = {
   Lower: 'lower',
   /** Atrae los golpes de los rivales unos turnos y recibe menos daño */
   Taunt: 'taunt',
-  /** El ataque va a todos los rivales */
+  /** El ataque va a todos los rivales y, con `allies`, también a sus compañeros (nunca a sí mismo) */
   Area: 'area',
 } as const
 export type EffectKind = (typeof EffectKind)[keyof typeof EffectKind]
@@ -43,7 +43,7 @@ export type MoveEffect =
   | { kind: typeof EffectKind.Raise; changes: StatChange[]; self: boolean }
   | { kind: typeof EffectKind.Lower; changes: StatChange[] }
   | { kind: typeof EffectKind.Taunt; turns: number; guard: number }
-  | { kind: typeof EffectKind.Area }
+  | { kind: typeof EffectKind.Area; allies: boolean }
 
 export const drain = (fraction: number): MoveEffect => ({ kind: EffectKind.Drain, fraction })
 export const healAlly = (fraction: number): MoveEffect => ({ kind: EffectKind.HealAlly, fraction })
@@ -54,7 +54,10 @@ export const raise = (changes: StatChange[]): MoveEffect => ({ kind: EffectKind.
 export const raiseSelf = (changes: StatChange[]): MoveEffect => ({ kind: EffectKind.Raise, changes, self: true })
 export const lower = (changes: StatChange[]): MoveEffect => ({ kind: EffectKind.Lower, changes })
 export const taunt = (guard: number, turns = 3): MoveEffect => ({ kind: EffectKind.Taunt, turns, guard })
-export const area = (): MoveEffect => ({ kind: EffectKind.Area })
+/** Como Avalancha: a todos los rivales */
+export const area = (): MoveEffect => ({ kind: EffectKind.Area, allies: false })
+/** Como Terremoto: a todos los rivales y también a sus compañeros */
+export const areaAll = (): MoveEffect => ({ kind: EffectKind.Area, allies: true })
 
 /** Toques que hacen falta en la ventana de toques para potenciar un ataque, si no dice otra cosa */
 export const DEFAULT_TAP_GOAL = 100
@@ -107,6 +110,9 @@ export const effectOf = <K extends EffectKind>(mv: IncursionMove, kind: K): Extr
   mv.effects.find((e) => e.kind === kind) as Extract<MoveEffect, { kind: K }> | undefined
 
 export const hasArea = (mv: IncursionMove): boolean => !!effectOf(mv, EffectKind.Area)
+
+/** Si el ataque da también a los compañeros del que lo usa (como Terremoto) */
+export const hitsAllies = (mv: IncursionMove): boolean => !!effectOf(mv, EffectKind.Area)?.allies
 
 /**
  * Clase del ataque: de cura si su potencia se convierte en cura (a un aliado o al grupo); si no, de daño si tiene

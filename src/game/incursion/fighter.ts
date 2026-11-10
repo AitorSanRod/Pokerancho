@@ -1,5 +1,6 @@
 import type { BossMechanics, IncursionFoe } from '../../data/incursions'
 import { incursionMove, type IncursionMove } from '../../data/incursionMoves'
+import type { Nature } from '../../data/natures'
 import type { StatusId } from '../../data/passives'
 import { species } from '../../data/species'
 import type { BoostStat } from '../../data/incursionMoves'
@@ -62,6 +63,8 @@ export interface MemberState {
   speciesId: number
   level: number
   stars: number
+  /** Sin ella (bots y clientes de antes de las naturalezas), neutra */
+  nature?: Nature
   moveId: string
   /** PS como fracción de los máximos */
   hpFraction: number
@@ -82,7 +85,7 @@ function fighter(id: string, team: Team, speciesId: number, level: number, base:
 
 /** Un Pokémon del grupo, con su nivel */
 export function partyFighter(m: MemberState): GroupFighter {
-  const f = fighter(m.id, Team.Party, m.speciesId, m.level, calcStats(m.speciesId, m.level, m.stars), [m.moveId])
+  const f = fighter(m.id, Team.Party, m.speciesId, m.level, calcStats(m.speciesId, m.level, m.stars, m.nature), [m.moveId])
   f.hp = m.out ? 0 : Math.round(m.hpFraction * f.maxHp)
   return { ...f, status: m.status, frozenTurns: m.frozenTurns, statusTurns: 0, out: m.out }
 }

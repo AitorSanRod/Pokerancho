@@ -1,10 +1,12 @@
 import type { FormItem } from '../../data/forms'
 import type { IncursionId } from '../../data/incursions'
+import type { Nature } from '../../data/natures'
 import { RouteId } from '../../data/maps'
 import type { Potion } from '../../data/potions'
 import type { RanchTypeId } from '../../data/ranchTypes'
 import { baseSpeciesOf } from '../../data/species'
 import type { StarItem } from '../../data/starItems'
+import type { Tm } from '../../data/tms'
 import type { Stone } from '../../data/stones'
 import type { BattleRecord } from '../battle/battle'
 import type { ActiveIncursion } from '../incursion/activeIncursion'
@@ -22,10 +24,14 @@ export interface OwnedMon {
   hp: number
   /** Estrellas conseguidas combinando piezas en la Pokédex */
   stars: number
+  /** Sube una stat y baja otra (ver team/natures.ts); los de antes de las naturalezas, neutra */
+  nature: Nature
   /** Índice del rancho al que pertenece (aunque esté fuera, su hueco sigue ocupado); null si está en la Caja */
   ranch: number | null
   /** Posición en la hierba elegida arrastrándolo, en % del prado; null para la que sale de su uid */
   spot: RanchSpot | null
+  /** Ataques de incursión aprendidos con una MT (ver incursion/tms.ts): los tiene para siempre */
+  tmMoves: Tm[]
 }
 
 export interface RanchSpot {
@@ -139,6 +145,8 @@ export interface GameState {
   starItems: Partial<Record<StarItem, number>>
   /** Tiradas seguidas del gacha sin que haya salido cada objeto estelar con garantía */
   gachaPity: Partial<Record<StarItem, number>>
+  /** MTs sin usar (ver incursion/tms.ts) */
+  tms: Partial<Record<Tm, number>>
   /** Llaves de incursión compradas y aún sin gastar, por incursión */
   incursionKeys: Partial<Record<IncursionId, number>>
   /** La incursión en la que está un Pokémon del jugador (ver incursion/incursionGame.ts); null si ninguna */
@@ -178,7 +186,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 41
+export const SAVE_VERSION = 42
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 
@@ -206,6 +214,7 @@ export function initialState(): GameState {
     formItems: [],
     starItems: {},
     gachaPity: {},
+    tms: {},
     incursionKeys: {},
     incursion: null,
     incursionQueue: null,

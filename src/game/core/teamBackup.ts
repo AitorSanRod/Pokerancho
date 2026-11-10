@@ -1,10 +1,12 @@
 // Copia del equipo (los Pokémon y sus expediciones en curso), aparte de la partida: es la red de seguridad si la
 // partida guardada no se puede leer. Normalmente una partida de otra versión se migra entera (saveMigration.ts).
 import { route } from '../../data/maps'
+import type { Nature } from '../../data/natures'
 import { isKnownSpecies } from '../../data/species'
 import { markCaught } from '../collection/dex'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
 import { createMon } from '../team/mons'
+import { isNature } from '../team/natures'
 import { RANCH_EXPANSION_MAX, RANCH_EXPANSION_SLOTS } from '../team/ranchExpansion'
 import { expToNext, MAX_LEVEL, MAX_STARS } from '../team/stats'
 import { UPGRADES } from '../team/upgrades'
@@ -24,6 +26,8 @@ interface BackedUpMon {
   level: number
   exp: number
   stars: number
+  /** Las copias de antes de las naturalezas no la tienen: neutra */
+  nature?: Nature
   /** Rancho al que pertenece, o null si está en la Caja */
   ranch: number | null
 }
@@ -49,14 +53,14 @@ export interface TeamBackup {
   ranchExtraSlots?: Partial<Record<number, number>>
 }
 
-/** Lo mínimo para rehacer el equipo: especie, nivel, EXP, estrellas, dónde vive, quién es el activo, las expediciones y las ampliaciones de los ranchos */
+/** Lo mínimo para rehacer el equipo: especie, nivel, EXP, estrellas, naturaleza, dónde vive, quién es el activo, las expediciones y las ampliaciones de los ranchos */
 export function backupTeam(s: GameState): TeamBackup {
   const indexOf = (uid: string | null) => s.owned.findIndex((m) => m.uid === uid)
   const active = indexOf(s.activeUid)
   return {
     format: TEAM_BACKUP_FORMAT,
     activeIndex: active >= 0 ? active : null,
-    mons: s.owned.map(({ speciesId, level, exp, stars, ranch }) => ({ speciesId, level, exp, stars, ranch })),
+    mons: s.owned.map(({ speciesId, level, exp, stars, nature, ranch }) => ({ speciesId, level, exp, stars, nature, ranch })),
     expeditions: s.expeditions
       .map(({ uid, routeId, durationMin, elapsedMin }) => ({ monIndex: indexOf(uid), routeId, durationMin, elapsedMin }))
       .filter((e) => e.monIndex >= 0),
@@ -118,6 +122,7 @@ export function parseTeamBackup(raw: unknown): TeamBackup | null {
       isInt(m.level, 1, MAX_LEVEL) &&
       isInt(m.exp, 0, Number.MAX_SAFE_INTEGER) &&
       isInt(m.stars, 0, MAX_STARS) &&
+      (m.nature === undefined || isNature(m.nature)) &&
       (m.ranch === null || isInt(m.ranch, 0, MAX_RANCHES - 1)),
   )
   // Si se descartó alguno, las posiciones (del activo y de las expediciones) ya no son fiables
@@ -141,7 +146,7 @@ export function parseTeamBackup(raw: unknown): TeamBackup | null {
 export function restoreTeam(s: GameState, backup: TeamBackup) {
   if (s.owned.length > 0 || backup.mons.length === 0) return
   for (const saved of backup.mons) {
-    const mon = createMon(saved.speciesId, saved.level, saved.ranch)
+    const mon = createMon(saved.speciesId, saved.level, saved.ranch, saved.nature)
     mon.exp = Math.min(saved.exp, expToNext(saved.level) - 1)
     mon.stars = saved.stars
     s.owned.push(mon)

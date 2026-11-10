@@ -31,7 +31,8 @@
 ## Nombres
 
 - Identificadores en **inglés**, `camelCase` para valores y funciones, `PascalCase` para tipos y componentes y
-  `UPPER_SNAKE` para constantes de módulo.
+  `UPPER_SNAKE` para constantes de módulo. Excepción: las claves de los ataques de incursión (`IMOVE.Rayo`) y de las MT (`Tm.Senuelo`), en español
+  como se ven en el juego y sin tildes ni ñ; su id (lo que se guarda) sigue en inglés.
 - Funciones con verbo (`startRun`, `gainExp`). Booleanos con `is/has/can`.
 - Textos visibles, comentarios y documentación en **español**.
 

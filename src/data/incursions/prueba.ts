@@ -18,7 +18,7 @@ export const PRUEBA: Incursion = {
     {
       kind: RoomKind.Battle,
       name: 'Claro del bosque',
-      foes: [foe(POKEMON.Caterpie, 6, [IMOVE.Tackle.id]), foe(POKEMON.Weedle, 6, [IMOVE.FuryCutter.id, IMOVE.Toxic.id])],
+      foes: [foe(POKEMON.Caterpie, 6, [IMOVE.Placaje.id]), foe(POKEMON.Weedle, 6, [IMOVE.CorteFuria.id, IMOVE.Toxico.id])],
       reward: { money: 50, exp: 30 },
     },
     { kind: RoomKind.Heal, name: 'Fuente', heal: 0.5 },
@@ -27,7 +27,7 @@ export const PRUEBA: Incursion = {
     {
       kind: RoomKind.Battle,
       name: 'Guarida de Onix',
-      foes: [foe(POKEMON.Onix, 12, [IMOVE.RockThrow.id, IMOVE.SandAttack.id], { hpMult: 3, boss: { enrage: { fromTurn: 8, every: 4, atk: 1 }, areaEvery: 3 } })],
+      foes: [foe(POKEMON.Onix, 12, [IMOVE.Lanzarrocas.id, IMOVE.AtaqueArena.id], { hpMult: 3, boss: { enrage: { fromTurn: 8, every: 4, atk: 1 }, areaEvery: 3 } })],
       reward: { money: 100, exp: 60 },
     },
   ],

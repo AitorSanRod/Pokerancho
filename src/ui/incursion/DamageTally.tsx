@@ -1,7 +1,7 @@
 import type { IncursionProgress } from '../../game/incursion/activeIncursion'
 import { partyDamage } from '../../game/incursion/damageTally'
 import { Bar, Sprite } from '../shared/common'
-import { memberNote } from './IncursionRoster'
+import { memberNote } from './memberNote'
 import type { SceneMon } from './sceneState'
 
 interface Props {

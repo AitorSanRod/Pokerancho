@@ -1,13 +1,16 @@
 import { IncursionId, MAX_KEYS } from '../../data/incursions'
 import { route } from '../../data/maps'
+import { NEUTRAL_NATURE } from '../../data/natures'
 import { RANCH_TYPES } from '../../data/ranchTypes'
 import { isFormItem } from '../../data/forms'
 import { baseSpeciesOf, isKnownSpecies, SPECIES } from '../../data/species'
 import { isStarItem, STAR_ITEMS } from '../../data/starItems'
 import { Stone } from '../../data/stones'
+import { isTm } from '../../data/tms'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
 import { SERVER_GIFT_ID } from '../collection/serverGifts'
 import { createMon } from '../team/mons'
+import { isNature } from '../team/natures'
 import { RANCH_EXPANSION_MAX, RANCH_EXPANSION_SLOTS } from '../team/ranchExpansion'
 import { cleanRanchName } from '../team/ranchNames'
 import { expToNext, MAX_LEVEL, MAX_STARS, maxHp } from '../team/stats'
@@ -75,8 +78,11 @@ function salvageMon(v: unknown): OwnedMon | null {
   for (const key of Object.keys(mon)) if (typeof v[key] === typeof mon[key] && v[key] !== null) mon[key] = v[key]
   mon.exp = isInt(v.exp) ? Math.min(v.exp, expToNext(mon.level) - 1) : 0
   mon.stars = isInt(v.stars, 0, MAX_STARS) ? v.stars : 0
+  // Los de antes de las naturalezas (o con una que ya no existe), neutra
+  mon.nature = isNature(v.nature) ? v.nature : NEUTRAL_NATURE
   mon.hp = typeof v.hp === 'number' && v.hp >= 0 ? Math.min(v.hp, maxHp(mon)) : maxHp(mon)
   mon.spot = isRecord(v.spot) && typeof v.spot.x === 'number' && typeof v.spot.y === 'number' ? { x: v.spot.x, y: v.spot.y } : null
+  mon.tmMoves = listOf(v.tmMoves, isTm) ?? []
   return mon
 }
 
@@ -106,6 +112,7 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   stones: (v) => countsOf(v, (k) => (Object.values(Stone) as string[]).includes(k)),
   formItems: (v) => listOf(v, isFormItem),
   starItems: (v) => countsOf(v, isStarItem),
+  tms: (v) => countsOf(v, isTm),
   gachaPity: (v) => countsOf(v, (k) => isStarItem(k) && STAR_ITEMS[k].pity !== null),
   incursionKeys: (v) => countsOf(v, (k) => (Object.values(IncursionId) as string[]).includes(k), MAX_KEYS),
   tutorial: (v) => (v === null || (Object.values(TutorialStep) as unknown[]).includes(v) ? v : undefined),

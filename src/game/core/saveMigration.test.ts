@@ -2,8 +2,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { FORM_ITEM_IDS, FORM_ITEMS } from '../../data/forms'
 import { IncursionId, MAX_KEYS } from '../../data/incursions'
 import { route, RouteId, wildSpecies } from '../../data/maps'
+import { Nature, NEUTRAL_NATURE } from '../../data/natures'
 import { RanchTypeId } from '../../data/ranchTypes'
 import { STAR_ITEM_IDS, STAR_ITEMS } from '../../data/starItems'
+import { TM_IDS } from '../../data/tms'
 import { STARTERS } from '../../data/species'
 import { Stone } from '../../data/stones'
 import { startRun } from '../run/run'
@@ -92,6 +94,33 @@ describe('al actualizar el juego no se pierde nada', () => {
     const s = migrateSave(save)!
     expect(s.starItems).toEqual({ [withPity]: 2 })
     expect(s.gachaPity).toEqual({ [withPity]: 7 })
+  })
+
+  it('las MTs y lo aprendido con ellas se quedan si son de una MT que existe', () => {
+    const [tm] = TM_IDS
+    const game = advancedGame()
+    const saved = fromOldVersion(game) as { owned: Record<string, unknown>[] }
+    saved.owned[0] = { ...saved.owned[0], tmMoves: [tm, 'quitada'] }
+    const s = migrateSave({ ...saved, tms: { [tm]: 2, quitada: 1 } })!
+    expect(s.tms).toEqual({ [tm]: 2 })
+    expect(s.owned[0].tmMoves).toEqual([tm])
+  })
+
+  it('un Pokémon de antes de las MTs no ha aprendido ninguna', () => {
+    const saved = fromOldVersion(advancedGame()) as { owned: Record<string, unknown>[] }
+    for (const mon of saved.owned) delete mon.tmMoves
+    expect(migrateSave(saved)!.owned.every((m) => m.tmMoves.length === 0)).toBe(true)
+  })
+
+  it('un Pokémon de antes de las naturalezas (o con una que no existe) es neutro; el que tiene una la conserva', () => {
+    const saved = fromOldVersion(advancedGame()) as { owned: Record<string, unknown>[] }
+    const [, , kept] = Object.values(Nature)
+    saved.owned = [{ ...saved.owned[0], nature: kept }, { ...saved.owned[1], nature: 'inventada' }]
+    const s = migrateSave(saved)!
+    expect(s.owned.map((m) => m.nature)).toEqual([kept, NEUTRAL_NATURE])
+    const older = fromOldVersion(advancedGame()) as { owned: Record<string, unknown>[] }
+    for (const mon of older.owned) delete mon.nature
+    expect(migrateSave(older)!.owned.every((m) => m.nature === NEUTRAL_NATURE)).toBe(true)
   })
 
   it('los objetos de forma se quedan si existen y un Pokémon con otra forma la conserva', () => {

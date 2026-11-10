@@ -1,5 +1,7 @@
+import type { Nature, NatureStat } from '../../data/natures'
 import { species } from '../../data/species'
 import type { OwnedMon } from '../core/state'
+import { natureMult } from './natures'
 
 export interface Stats {
   hp: number
@@ -13,15 +15,16 @@ export const MAX_STARS = 5
 /** Cada estrella (duplicado del gacha) da +4% a todas las stats */
 export const STAR_BONUS = 0.04
 
-export function calcStats(speciesId: number, level: number, stars = 0): Stats {
+/** Stats a ese nivel, con sus ★ y su naturaleza (sin ella, neutra) */
+export function calcStats(speciesId: number, level: number, stars = 0, nature?: Nature): Stats {
   const b = species(speciesId).base
   const mult = 1 + stars * STAR_BONUS
-  const stat = (base: number) => Math.floor(((2 * base * level) / 100 + 5) * mult)
+  const stat = (key: NatureStat) => Math.floor(((2 * b[key] * level) / 100 + 5) * mult * natureMult(nature, key))
   return {
     hp: Math.floor(((2 * b.hp * level) / 100 + level + 10) * mult),
-    atk: stat(b.atk),
-    def: stat(b.def),
-    spe: stat(b.spe),
+    atk: stat('atk'),
+    def: stat('def'),
+    spe: stat('spe'),
   }
 }
 

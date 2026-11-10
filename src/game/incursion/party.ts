@@ -1,6 +1,6 @@
 import type { Incursion } from '../../data/incursions'
 import { incursionMove, type IncursionMove } from '../../data/incursionMoves'
-import { EffectKind, effectOf, MoveClass, moveClass } from '../../data/incursionMoves'
+import { EffectKind, effectOf, hitsAllies, MoveClass, moveClass } from '../../data/incursionMoves'
 import { randInt, type Rng } from '../core/random'
 import { foeLevels } from './entry'
 import type { MemberState } from './fighter'
@@ -21,7 +21,7 @@ const BOT_PREFIX = 'bot-'
 export const isBot = (id: string): boolean => id.startsWith(BOT_PREFIX)
 
 /** Un Pokémon entra en la incursión con todos sus PS y sin estado */
-export const freshMember = (m: Pick<MemberState, 'id' | 'speciesId' | 'level' | 'stars' | 'moveId'>): MemberState => ({
+export const freshMember = (m: Pick<MemberState, 'id' | 'speciesId' | 'level' | 'stars' | 'nature' | 'moveId'>): MemberState => ({
   ...m,
   hpFraction: 1,
   status: null,
@@ -29,7 +29,10 @@ export const freshMember = (m: Pick<MemberState, 'id' | 'speciesId' | 'level' | 
   out: false,
 })
 
-/** El movimiento de un bot: cura si nadie cura, provoca si nadie provoca; si no, su golpe más fuerte */
+/**
+ * El movimiento de un bot: cura si nadie cura, provoca si nadie provoca; si no, su golpe más fuerte. Los que dan también
+ * a su grupo (como Terremoto), solo si no tiene otro de daño
+ */
 export function botMove(speciesId: number, level: number, taken: IncursionMove[]): string {
   const moves = repertoire(speciesId, level)
   for (const role of [heals, taunts]) {
@@ -41,7 +44,7 @@ export function botMove(speciesId: number, level: number, taken: IncursionMove[]
 
 const heals = (mv: IncursionMove) => moveClass(mv) === MoveClass.Heal
 const taunts = (mv: IncursionMove) => !!effectOf(mv, EffectKind.Taunt)
-const power = (mv: IncursionMove) => (moveClass(mv) === MoveClass.Damage ? mv.power : 0)
+const power = (mv: IncursionMove) => (moveClass(mv) !== MoveClass.Damage ? 0 : hitsAllies(mv) ? 1 : mv.power)
 
 /**
  * Nivel de un bot: el del Pokémon más alto del grupo menos BOT_LEVEL_GAP (y hasta BOT_LEVEL_SPREAD menos, al azar), sin

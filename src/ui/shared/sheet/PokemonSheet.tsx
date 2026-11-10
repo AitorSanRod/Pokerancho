@@ -18,6 +18,7 @@ import { MovePanel } from './MovePanel'
 import { RanchSlotsBadge } from './RanchSlotsBadge'
 import { SpeciesHero } from './SpeciesHero'
 import { TicketsSection } from './TicketsSection'
+import { TmPanel } from './TmPanel'
 
 /**
  * Ficha de un Pokémon a pantalla completa: la misma desde el rancho y desde la Pokédex. Si lo tienes, todas sus
@@ -52,6 +53,7 @@ export function PokemonSheet({ game, speciesId: shownId, onClose }: { game: Game
       <TicketsSection game={game} speciesId={speciesId} />
       {mon && <EvolvePanel game={game} mon={mon} onEvolved={setEvolution} />}
       {mon && <FormPanel game={game} mon={mon} />}
+      {mon && <TmPanel game={game} mon={mon} />}
       {mon && <MovePanel game={game} mon={mon} />}
     </MonSheet>
   )

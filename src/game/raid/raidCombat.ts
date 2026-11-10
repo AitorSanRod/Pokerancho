@@ -22,7 +22,7 @@ const silent = () => {}
 const isFighting = (m: RaidMember) => !m.left && m.downMs === 0
 
 function memberFighter(m: RaidMember, passives: PassiveRef[]): Fighter {
-  const f = makeFighter('player', m.speciesId, m.level, { stars: m.stars, passives })
+  const f = makeFighter('player', m.speciesId, m.level, { stars: m.stars, nature: m.nature, passives })
   f.hp = Math.round(f.maxHp * m.hpFraction)
   return f
 }

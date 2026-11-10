@@ -1,6 +1,6 @@
 import { findMon, type GameState } from '../core/state'
 import { incursionProgress, IncursionPhase, type ActiveIncursion } from './activeIncursion'
-import { canLearn } from './repertoire'
+import { monKnows } from './repertoire'
 import type { MovePick, TurnOrders } from './tapWindow'
 
 // Elegir en plena pelea el ataque de tu Pokémon y a quién lo dirige: se puede cambiar cuantas veces se quiera y vale
@@ -11,7 +11,7 @@ export function setIncursionPick(s: GameState, pick: MovePick, now: number): boo
   const a = s.incursion
   const mon = a && findMon(s, a.uid)
   if (!a || !mon || incursionProgress(a, now).phase === IncursionPhase.Finished) return false
-  if (!canLearn(mon.speciesId, mon.level, pick.moveId)) return false
+  if (!monKnows(mon, pick.moveId)) return false
   a.pendingPick = { moveId: pick.moveId, target: pick.target }
   return true
 }

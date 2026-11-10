@@ -1,4 +1,5 @@
 import { signatureMove, type Move } from '../../data/moves'
+import type { Nature } from '../../data/natures'
 import type { PassiveRef, StatusId } from '../../data/passives'
 import { species } from '../../data/species'
 import type { PokeType } from '../../data/types'
@@ -74,11 +75,11 @@ export function makeFighter(
   side: Side,
   speciesId: number,
   level: number,
-  opts: { hp?: number; stars?: number; statMult?: number; passives?: PassiveRef[] } = {},
+  opts: { hp?: number; stars?: number; nature?: Nature; statMult?: number; passives?: PassiveRef[] } = {},
 ): Fighter {
   const sp = species(speciesId)
   const bonus = combineBonus(opts.passives ?? [])
-  const stats = calcStats(speciesId, level, opts.stars ?? 0)
+  const stats = calcStats(speciesId, level, opts.stars ?? 0, opts.nature)
   for (const k of Object.keys(stats) as (keyof Stats)[]) {
     stats[k] = Math.max(1, Math.round(stats[k] * (opts.statMult ?? 1) * (1 + bonus[k])))
   }

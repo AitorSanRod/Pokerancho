@@ -10,6 +10,7 @@ const pewterCity = asset(new URL('../../assets/routes/pewter-city.webp', import.
 const route3 = asset(new URL('../../assets/routes/route-3.webp', import.meta.url))
 const mtMoon = asset(new URL('../../assets/routes/mt-moon.webp', import.meta.url))
 const ruta4 = asset(new URL('../../assets/routes/route-4.webp', import.meta.url))
+const ciudadCeleste = asset(new URL('../../assets/routes/cerulean-city.webp', import.meta.url))
 
 export const KANTO: GameMap = {
   id: 'kanto',
@@ -207,6 +208,7 @@ export const KANTO: GameMap = {
       biome: Biome.Meadow,
       backdrop: { image: ruta4, focusY: 15 },
       levels: [36, 40],
+      unlocks: RouteId.CiudadCeleste,
       encounters: enc([POKEMON.Staryu, 10], [POKEMON.Tynamo, 5], [POKEMON.Spearow, 25], [POKEMON.Venonat, 15], [POKEMON.Doduo, 20], [POKEMON.Abra, 5], [POKEMON.Grimer, 10], [POKEMON.Cottonee, 5], [POKEMON.Tauros, 5]),
       reward: { tickets: 5, money: 5000, exp: 2000 },
       nodes: chain(
@@ -225,6 +227,7 @@ export const KANTO: GameMap = {
       name: 'Ciudad Celeste',
       description: 'Gimnasio de tipo agua.',
       biome: Biome.CeruleanCity,
+      backdrop: { image: ciudadCeleste, focusY: 45 },
       levels: [36, 42],
       encounters: enc([POKEMON.Starmie, 100]),
       reward: { tickets: 5, money: 5000, exp: 2100 },

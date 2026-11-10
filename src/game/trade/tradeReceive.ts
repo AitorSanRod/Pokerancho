@@ -1,6 +1,8 @@
 import { markCaught } from '../collection/dex'
 import { addPieces } from '../collection/pieces'
+import { isTm } from '../../data/tms'
 import { addStarItems } from '../collection/starItems'
+import { addTms } from '../incursion/tms'
 import { ownedOfSpecies, type GameState } from '../core/state'
 import { createMon } from '../team/mons'
 import { BOX_SLOTS, boxedMons, ranchWithRoom } from '../team/ranches'
@@ -58,8 +60,9 @@ function receiveMon(s: GameState, traded: TradedMon): DuplicateRefund | null {
     s.money += refund.money
     return refund
   }
-  const mon = { ...createMon(traded.speciesId, traded.level, destinationOf(s, traded.speciesId)), exp: traded.exp, stars: traded.stars }
+  const mon = { ...createMon(traded.speciesId, traded.level, destinationOf(s, traded.speciesId), traded.nature), exp: traded.exp, stars: traded.stars }
   mon.hp = maxHp(mon)
+  mon.tmMoves = (traded.tmMoves ?? []).filter(isTm)
   s.owned.push(mon)
   markCaught(s, traded.speciesId)
   return null
@@ -73,6 +76,7 @@ export function receiveGood(s: GameState, good: TradeGood): ReceiveResult | null
   else if (good.kind === GoodKind.Pieces) addPieces(s, good.speciesId, good.count)
   else if (good.kind === GoodKind.Shards) s.missingnoShards += good.count
   else if (good.kind === GoodKind.StarItem) addStarItems(s, good.item, good.count)
+  else if (good.kind === GoodKind.Tm) addTms(s, good.tm, good.count)
   else if (good.kind === GoodKind.Money) s.money += good.count
   else s.tickets += good.count
   return { good, duplicate }

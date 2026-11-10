@@ -1,6 +1,6 @@
 import { STATUS_INFO } from '../../data/passives'
 import { incursionMove } from '../../data/incursionMoves'
-import { isBot } from '../../game/incursion/party'
+import { memberNote } from './memberNote'
 import { Bar, Sprite } from '../shared/common'
 import type { SceneMon } from './sceneState'
 
@@ -13,10 +13,6 @@ interface Props {
   /** Apodos de los demás jugadores, por su Pokémon */
   nicknames: Record<string, string>
 }
-
-/** Quién lleva a un Pokémon del grupo: tú, un bot o el apodo de otro jugador */
-export const memberNote = (id: string, uid: string, nicknames: Record<string, string>) =>
-  id === uid ? 'Tú' : isBot(id) ? 'Bot' : (nicknames[id] ?? '')
 
 export function IncursionRoster({ party, foes, moveOf, uid, nicknames }: Props) {
   return (

@@ -53,6 +53,7 @@ export const ITEM = {
   SecretKey: 'secret-key',
   EscapeRope: 'escape-rope',
   Revive: 'revive',
+  TmNormal: 'tm-normal',
 } as const
 export type Item = (typeof ITEM)[keyof typeof ITEM]
 

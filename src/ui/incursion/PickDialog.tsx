@@ -6,7 +6,7 @@ import { act } from '../../game/core/store'
 import type { ActiveIncursion } from '../../game/incursion/activeIncursion'
 import { setIncursionPick } from '../../game/incursion/incursionPicks'
 import { PickSide, pickSide } from '../../game/incursion/movePicks'
-import { repertoire } from '../../game/incursion/repertoire'
+import { monRepertoire } from '../../game/incursion/repertoire'
 import { sendIncursionPick } from '../../net/incursionSync'
 import { Bar, Sprite } from '../shared/common'
 import { MovePicker } from './MovePicker'
@@ -47,7 +47,7 @@ export function PickDialog({ game, a, scene, current, onClose }: Props) {
     <div className="confirm-overlay" onClick={onClose}>
       <div className="card incursion-pick" role="dialog" aria-modal="true" aria-label="Cambiar ataque" onClick={(e) => e.stopPropagation()}>
         <h3>Cambiar ataque</h3>
-        <MovePicker moves={repertoire(mon.speciesId, mon.level)} selectedId={moveId} onSelect={setMoveId} />
+        <MovePicker moves={monRepertoire(mon)} selectedId={moveId} onSelect={setMoveId} />
         {side && (
           <>
             <div className="label">{side === PickSide.Foes ? '¿A qué rival?' : '¿A qué aliado?'}</div>

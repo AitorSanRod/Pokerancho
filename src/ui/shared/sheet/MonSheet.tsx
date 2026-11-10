@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Item } from '../../../data/items'
+import { NATURES, type Nature, type NatureStat } from '../../../data/natures'
 import type { Stats } from '../../../game/team/stats'
 import { ItemIcon } from '../ItemIcon'
 import './mon-sheet.css'
@@ -57,25 +58,34 @@ export interface StatLine {
   stepsPerMin: number
 }
 
-const STAT_ROWS: [string, (l: StatLine) => number][] = [
+/** Nombre, valor y, si la naturaleza puede tocarla, qué stat es */
+const STAT_ROWS: [string, (l: StatLine) => number, NatureStat?][] = [
   ['PS', (l) => l.stats.hp],
-  ['Ataque', (l) => l.stats.atk],
-  ['Defensa', (l) => l.stats.def],
-  ['Velocidad', (l) => l.stats.spe],
+  ['Ataque', (l) => l.stats.atk, 'atk'],
+  ['Defensa', (l) => l.stats.def, 'def'],
+  ['Velocidad', (l) => l.stats.spe, 'spe'],
   ['Pasos/min', (l) => l.stepsPerMin],
 ]
 
-/** Stats del Pokémon; con `next` (entrenamiento que sube de nivel, sin aceptar) cada una dice en amarillo cuánto sube */
-export function MonStats({ now, next = null }: { now: StatLine; next?: StatLine | null }) {
+/**
+ * Stats del Pokémon; con `next` (entrenamiento que sube de nivel, sin aceptar) cada una dice en amarillo cuánto sube.
+ * Con `nature`, la stat que sube lleva ▲ y la que baja ▼
+ */
+export function MonStats({ now, next = null, nature }: { now: StatLine; next?: StatLine | null; nature?: Nature }) {
+  const { up, down } = nature ? NATURES[nature] : { up: null, down: null }
   return (
     <div className="mon-stats">
-      {STAT_ROWS.map(([label, value]) => {
+      {STAT_ROWS.map(([label, value, key]) => {
         const gain = next ? value(next) - value(now) : 0
         return (
           <div key={label} className="mon-stat">
             <strong>{value(now)}</strong>
             {gain > 0 && <span className="level-gain stat-gain tiny">+{gain}</span>}
-            <span className="tiny muted">{label}</span>
+            <span className="tiny muted">
+              {key && key === up && <span className="nature-up">▲ </span>}
+              {key && key === down && <span className="nature-down">▼ </span>}
+              {label}
+            </span>
           </div>
         )
       })}

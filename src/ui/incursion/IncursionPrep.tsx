@@ -10,7 +10,7 @@ import { canEnter } from '../../game/incursion/entry'
 import { incursionBlocker } from '../../game/incursion/incursionGame'
 import { keysOf } from '../../game/incursion/keys'
 import { enterQueue } from '../../game/incursion/online/linkedIncursion'
-import { repertoire } from '../../game/incursion/repertoire'
+import { monRepertoire } from '../../game/incursion/repertoire'
 import { Sprite } from '../shared/common'
 import { MonPicker } from '../shared/MonPicker'
 import { HeroLayout } from '../shared/sheet/HeroLayout'
@@ -27,7 +27,7 @@ export function IncursionPrep({ game, inc, onClose }: { game: GameState; inc: In
   const [uid, setUid] = useState(mons.find((m) => usable(inc, m))?.uid)
   const [moveId, setMoveId] = useState<string | null>(null)
   const mon = mons.find((m) => m.uid === uid)
-  const moves = mon ? repertoire(mon.speciesId, mon.level) : []
+  const moves = mon ? monRepertoire(mon) : []
   const move = moves.find((mv) => mv.id === moveId) ?? moves[0]
   const blocker = !mon || !move ? 'Ninguno de tus Pokémon del rancho tiene el nivel para entrar.' : incursionBlocker(game, inc.id, mon.uid, move.id)
 
