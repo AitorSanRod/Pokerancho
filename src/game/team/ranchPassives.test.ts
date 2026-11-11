@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { RouteId } from '../../data/maps'
 import { PASSIVE_THRESHOLDS } from '../../data/passives'
 import { RANCH_TYPE_IDS, RANCH_TYPE_THRESHOLD_DISCOUNT, RANCH_TYPES } from '../../data/ranchTypes'
-import { SPECIES } from '../../data/species'
+import { Rarity, rarityOf, SPECIES } from '../../data/species'
 import type { PokeType } from '../../data/types'
 import { initialState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
@@ -54,6 +54,15 @@ describe('ranchPassives', () => {
     placeRanchType(s, 0, id)
     expect(passiveThreshold(s, 0, 'water', 2)).toBe(LEVEL_2 - RANCH_TYPE_THRESHOLD_DISCOUNT)
     expect(ranchPassives(s, 0)).toEqual([{ type: 'water', level: 1 }])
+  })
+
+  it('un legendario sube él solo la pasiva de sus tipos al nivel máximo, y no las de otros tipos', () => {
+    const legendary = SPECIES.find((sp) => rarityOf(sp) === Rarity.Legendary)!
+    const other = (['normal', 'fire', 'water', 'grass'] as PokeType[]).find((t) => !legendary.types.includes(t))!
+    const s = ranchWith(other, 1)
+    s.owned.push(createMon(legendary.id, NEW_MON_LEVEL))
+    expect(ranchPassives(s, 0)).toEqual(legendary.types.map((type) => ({ type, level: 2 })))
+    expect(ranchPassives(s, 1)).toEqual([])
   })
 
   it('el tipo de rancho no rebaja los tipos que no favorece', () => {

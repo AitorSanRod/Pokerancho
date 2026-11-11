@@ -1,7 +1,7 @@
 import type { PassiveLevel } from '../../data/passives'
 import type { PokeType } from '../../data/types'
 import type { GameState } from '../../game/core/state'
-import { passiveThreshold, ranchPassives, ranchTypeCounts } from '../../game/team/ranchPassives'
+import { legendaryTypes, passiveThreshold, ranchPassives, ranchTypeCounts } from '../../game/team/ranchPassives'
 import { TypeBadge } from '../shared/common'
 import { passiveText } from '../shared/passiveText'
 
@@ -17,6 +17,9 @@ export function PassiveList({ game, ranch }: { game: GameState; ranch: number })
   if (counts.length === 0) return <p className="small muted">Sin Pokémon en este rancho.</p>
   return (
     <div className="passive-list">
+      {legendaryTypes(game, ranch).size > 0 && (
+        <p className="tiny muted">Un legendario sube la pasiva de sus tipos al nivel máximo.</p>
+      )}
       {counts.map(([type, count]) => {
         const level = active.get(type)
         const next = (level === 2 ? null : level === 1 ? 2 : 1) as PassiveLevel | null

@@ -1,6 +1,6 @@
 import { PASSIVE_THRESHOLDS, type PassiveLevel, type PassiveRef } from '../../data/passives'
 import { RANCH_TYPE_THRESHOLD_DISCOUNT, RANCH_TYPES } from '../../data/ranchTypes'
-import { species } from '../../data/species'
+import { Rarity, rarityOf, species } from '../../data/species'
 import type { PokeType } from '../../data/types'
 import type { GameState } from '../core/state'
 
@@ -23,12 +23,19 @@ export function passiveThreshold(s: GameState, ranch: number, type: PokeType, le
   return PASSIVE_THRESHOLDS[level - 1] - (favored ? RANCH_TYPE_THRESHOLD_DISCOUNT : 0)
 }
 
-/** Pasivas que da el rancho: por cada tipo, el nivel más alto alcanzado */
+/** Tipos de los legendarios del rancho: cada legendario sube él solo la pasiva de sus tipos al nivel máximo */
+export function legendaryTypes(s: GameState, ranch: number): Set<PokeType> {
+  const legendaries = s.owned.filter((m) => m.ranch === ranch && rarityOf(species(m.speciesId)) === Rarity.Legendary)
+  return new Set(legendaries.flatMap((m) => species(m.speciesId).types))
+}
+
+/** Pasivas que da el rancho: por cada tipo, el nivel más alto alcanzado (los de un legendario, al máximo) */
 export function ranchPassives(s: GameState, ranch: number): PassiveRef[] {
   const counts = ranchTypeCounts(s, ranch)
+  const maxed = legendaryTypes(s, ranch)
   const passives: PassiveRef[] = []
   for (const [type, count] of Object.entries(counts) as [PokeType, number][]) {
-    if (count >= passiveThreshold(s, ranch, type, 2)) passives.push({ type, level: 2 })
+    if (maxed.has(type) || count >= passiveThreshold(s, ranch, type, 2)) passives.push({ type, level: 2 })
     else if (count >= passiveThreshold(s, ranch, type, 1)) passives.push({ type, level: 1 })
   }
   return passives
