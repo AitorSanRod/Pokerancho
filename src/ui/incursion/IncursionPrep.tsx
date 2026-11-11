@@ -8,7 +8,8 @@ import { MonPlace, monPlace, type GameState, type OwnedMon } from '../../game/co
 import { act } from '../../game/core/store'
 import { canEnter } from '../../game/incursion/entry'
 import { incursionBlocker } from '../../game/incursion/incursionGame'
-import { keysOf } from '../../game/incursion/keys'
+import { freePrizeSpent } from '../../game/incursion/freeIncursions'
+import { keysOf, needsKey } from '../../game/incursion/keys'
 import { enterQueue } from '../../game/incursion/online/linkedIncursion'
 import { monRepertoire } from '../../game/incursion/repertoire'
 import { Sprite } from '../shared/common'
@@ -54,7 +55,8 @@ export function IncursionPrep({ game, inc, onClose }: { game: GameState; inc: In
             </>
           )}
           <p className="tiny muted">
-            Llaves: {keysOf(game, inc.id)}. Se gasta una al formarse el grupo: se busca a otros entrenadores durante un minuto y, si no llegan a cinco, se completa con bots.
+            {needsKey(inc.id) ? `Llaves: ${keysOf(game, inc.id)}. Se gasta una al formarse el grupo: ` : `${entryNote(game, inc)} `}
+            se busca a otros entrenadores durante un minuto y, si no llegan a cinco, se completa con bots.
           </p>
           {blocker && <p className="notice small">{blocker}</p>}
           <div className="row gap confirm-actions">
@@ -71,6 +73,12 @@ export function IncursionPrep({ game, inc, onClose }: { game: GameState; inc: In
     document.body,
   )
 }
+
+/** Aviso de una incursión gratuita: si aún da premios o ya no */
+const entryNote = (game: GameState, inc: Incursion) =>
+  freePrizeSpent(game, inc.id)
+    ? 'Gratis, pero sus premios ya los cobraste: ahora es solo para practicar. Al entrar,'
+    : 'Gratis: no pide llave, y sus premios solo se cobran la primera vez. Al entrar,'
 
 /** Lo que aporta a las pasivas de grupo: el peso de su rareza en cada uno de sus tipos */
 function PassiveShare({ mon }: { mon: OwnedMon }) {

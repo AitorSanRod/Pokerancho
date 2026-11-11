@@ -1,4 +1,4 @@
-/* Panel del rancho (RanchSlots): tipo de rancho y pasivas */
+/* Panel del rancho (RanchSlots): fondo, tipo de rancho y pasivas */
 
 /* Etiqueta de pasivas activas en el botón del rancho */
 .ranch-passive-count {
@@ -37,4 +37,32 @@
 }
 .passive-row .type-badge {
   flex-shrink: 0;
+}
+/* Fondos del rancho (RanchBackdropPicker): una miniatura vertical de cada uno; el puesto, marcado */
+.ranch-backdrops {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.ranch-backdrop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+}
+.ranch-backdrop.selected {
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.ranch-backdrop-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1.4;
+  border-radius: 6px;
+  background: center / cover no-repeat;
+  image-rendering: pixelated;
 }

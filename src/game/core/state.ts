@@ -3,6 +3,7 @@ import type { IncursionId } from '../../data/incursions'
 import type { Nature } from '../../data/natures'
 import { RouteId } from '../../data/maps'
 import type { Potion } from '../../data/potions'
+import type { RanchBackdrop } from '../../data/ranchBackdrops'
 import type { RanchTypeId } from '../../data/ranchTypes'
 import { baseSpeciesOf } from '../../data/species'
 import type { StarItem } from '../../data/starItems'
@@ -137,6 +138,8 @@ export interface GameState {
   ranchExtraSlots: Partial<Record<number, number>>
   /** Nombre que el jugador ha puesto a cada rancho, por su índice; sin entrada, «Rancho N» (ver ranchNames.ts) */
   ranchNames: Partial<Record<number, string>>
+  /** Fondo que el jugador ha elegido para cada rancho, por su índice; sin entrada, el de por defecto (ver ranchBackdrops.ts) */
+  ranchBackdropOf: Partial<Record<number, RanchBackdrop>>
   /** Objetos evolutivos (piedras y otros) comprados y aún sin gastar */
   stones: Partial<Record<Stone, number>>
   /** Objetos de forma comprados (ver team/forms.ts): no se gastan, se usan siempre que se quiera */
@@ -151,6 +154,8 @@ export interface GameState {
   tms: Partial<Record<Tm, number>>
   /** Llaves de incursión compradas y aún sin gastar, por incursión */
   incursionKeys: Partial<Record<IncursionId, number>>
+  /** Incursiones gratuitas cuyo premio ya se cobró: las siguientes veces no dan nada (ver incursion/freeIncursions.ts) */
+  freeIncursionsPlayed: IncursionId[]
   /** La incursión en la que está un Pokémon del jugador (ver incursion/incursionGame.ts); null si ninguna */
   incursion: ActiveIncursion | null
   /** Regalos del servidor ya recogidos, por su id (ver collection/serverGifts.ts) */
@@ -188,7 +193,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 43
+export const SAVE_VERSION = 46
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 
@@ -212,6 +217,7 @@ export function initialState(): GameState {
     ranchTypeOf: {},
     ranchExtraSlots: {},
     ranchNames: {},
+    ranchBackdropOf: {},
     stones: {},
     formItems: [],
     mints: 0,
@@ -219,6 +225,7 @@ export function initialState(): GameState {
     gachaPity: {},
     tms: {},
     incursionKeys: {},
+    freeIncursionsPlayed: [],
     incursion: null,
     incursionQueue: null,
     claimedServerGifts: [],

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { INCURSIONS, MAX_KEYS, type Incursion } from '../../data/incursions'
 import type { GameState } from '../../game/core/state'
 import { act } from '../../game/core/store'
-import { buyKey, buyKeyBlocker, keyPrice, keysOf } from '../../game/incursion/keys'
+import { buyKey, buyKeyBlocker, keyPrice, keysOf, needsKey } from '../../game/incursion/keys'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { BuyButton } from './BuyButton'
@@ -30,7 +30,7 @@ export function IncursionKeyShop({ game }: { game: GameState }) {
       tone="shop-fold-keys"
       hint={`Cada incursión pide su llave, y se gasta una al formarse el grupo. Puedes tener hasta ${MAX_KEYS} de cada una.`}
     >
-      {INCURSIONS.map((inc) => (
+      {INCURSIONS.filter((inc) => needsKey(inc.id)).map((inc) => (
         <KeyTile key={inc.id} game={game} inc={inc} />
       ))}
     </ShopSection>

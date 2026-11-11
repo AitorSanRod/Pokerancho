@@ -55,14 +55,14 @@ export function nodeCard(n: NodeDraft, i: number, count: number, biome: string) 
   const landmarks = landmarksOf(biome)
   const landmarkOpts: [string, string][] = landmarks.map((k) => [k, k])
   if (n.landmark && !landmarks.includes(n.landmark)) landmarkOpts.push([n.landmark, `${n.landmark} (no está en este bioma)`])
-  const move = `data-index="${i}"`
+  const move = `data-list="nodes" data-index="${i}"`
   return `<article class="node kind-${n.kind}">
     <header>
       <b>${i + 1}</b>
       ${select(`${p}.kind`, n.kind, Object.keys(KIND_LABELS).map((k) => [k, KIND_LABELS[k]]))}
       <span class="spacer"></span>
       ${button('up', '↑', move, 'icon')}${button('down', '↓', move, 'icon')}
-      ${button('duplicate', 'Duplicar', move)}${count > 1 ? button('remove', '×', `data-list="nodes" ${move}`, 'icon danger') : ''}
+      ${button('duplicate', 'Duplicar', move)}${count > 1 ? button('remove', '×', move, 'icon danger') : ''}
     </header>
     <div class="grid">
       ${label('Id', textInput(`${p}.id`, n.id, 'a'))}

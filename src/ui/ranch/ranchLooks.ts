@@ -1,9 +1,18 @@
+import type { CSSProperties } from 'react'
+import { DEFAULT_RANCH_BACKDROP, RanchBackdrop } from '../../data/ranchBackdrops'
 import { RanchTypeId } from '../../data/ranchTypes'
 
+/** Imagen de cada fondo de rancho (recortes de mapas de los juegos, alineados a sus casillas) */
+export const RANCH_BACKDROP_IMAGES: Record<RanchBackdrop, string> = {
+  [RanchBackdrop.Meadow]: new URL('../../assets/ranches/meadow.jpg', import.meta.url).href,
+  [RanchBackdrop.Desert]: new URL('../../assets/ranches/desert.webp', import.meta.url).href,
+  [RanchBackdrop.Beach]: new URL('../../assets/ranches/beach.webp', import.meta.url).href,
+  [RanchBackdrop.Forest]: new URL('../../assets/ranches/forest.webp', import.meta.url).href,
+}
+
 /**
- * Aspecto de cada rancho. PROVISIONAL: todos usan la misma imagen con otro tono hasta tener un fondo propio para cada
- * uno. Un rancho con tipo se ve con el tono de su tipo; si no, con el de su posición (si hay más ranchos que tonos, se
- * repiten).
+ * Tono del fondo por defecto: un rancho con tipo se ve con el tono de su tipo; si no, con el de su posición (si hay más
+ * ranchos que tonos, se repiten). Los fondos elegidos por el jugador se ven tal cual.
  */
 const RANCH_FILTERS = ['none', 'hue-rotate(-35deg) saturate(1.2)', 'hue-rotate(160deg) saturate(0.8)', 'sepia(0.6) hue-rotate(-20deg)']
 
@@ -26,4 +35,10 @@ const RANCH_TYPE_FILTERS: Record<RanchTypeId, string> = {
   [RanchTypeId.Meadow]: 'hue-rotate(-20deg) saturate(1.3) brightness(1.1)',
 }
 
-export const ranchFilter = (ranch: number, type?: RanchTypeId): string => (type ? RANCH_TYPE_FILTERS[type] : RANCH_FILTERS[ranch % RANCH_FILTERS.length])
+const ranchFilter = (ranch: number, type?: RanchTypeId): string => (type ? RANCH_TYPE_FILTERS[type] : RANCH_FILTERS[ranch % RANCH_FILTERS.length])
+
+/** Estilo del suelo del rancho: su imagen y, solo con el fondo por defecto, el tono de su tipo o posición */
+export const ranchGroundStyle = (ranch: number, backdrop: RanchBackdrop, type?: RanchTypeId): CSSProperties => ({
+  backgroundImage: `url(${RANCH_BACKDROP_IMAGES[backdrop]})`,
+  filter: backdrop === DEFAULT_RANCH_BACKDROP ? ranchFilter(ranch, type) : 'none',
+})

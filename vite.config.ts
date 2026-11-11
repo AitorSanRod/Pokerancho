@@ -1,12 +1,16 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { incursionWriter } from './vite-plugins/incursionWriter.ts'
+import { printToolUrls } from './vite-plugins/toolUrls.ts'
 
 // https://vite.dev/config/
 export default defineConfig({
   server: { host: true },
   plugins: [
     react(),
+    printToolUrls(),
+    incursionWriter(),
     VitePWA({
       // La versión nueva espera a que el jugador acepte recargar (net/appUpdate.ts y ui/shared/UpdatePrompt.tsx)
       registerType: 'prompt',

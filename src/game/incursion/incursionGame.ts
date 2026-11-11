@@ -8,7 +8,8 @@ import { gainExp, maxHp } from '../team/stats'
 import { finalHpFraction, incursionProgress, IncursionPhase, regroupEnd, startNextLeg, type ActiveIncursion } from './activeIncursion'
 import { entryBlock, EntryBlock } from './entry'
 import type { Earned } from './incursionRewards'
-import { keysOf, spendKey } from './keys'
+import { markFreePlayed, payableEarnings } from './freeIncursions'
+import { canAffordEntry, spendKey } from './keys'
 import { fillWithBots, freshMember } from './party'
 import { monKnows } from './repertoire'
 import { retreatPasses } from './retreatVote'
@@ -30,7 +31,7 @@ export function incursionBlocker(s: GameState, id: IncursionId, uid: string, mov
   const inc = incursion(id)
   if (s.incursion) return 'Ya estás en una incursión.'
   if (s.incursionQueue) return 'Ya estás buscando grupo.'
-  if (keysOf(s, id) < 1) return 'Necesitas una llave de esta incursión. Se compran en la Tienda.'
+  if (!canAffordEntry(s, id)) return 'Necesitas una llave de esta incursión. Se compran en la Tienda.'
   if (monPlace(s, uid) !== MonPlace.Ranch) return 'Tiene que estar en el rancho.'
   const block = entryBlock(inc, mon.level)
   if (block === EntryBlock.TooLow) return `Hace falta Nv. ${inc.minLevel} para entrar.`
@@ -42,7 +43,7 @@ export function incursionBlocker(s: GameState, id: IncursionId, uid: string, mov
 
 const newSeed = (rng: Rng) => Math.floor(rng() * 2 ** 31)
 
-/** Entra en la incursión: gasta la llave, completa el grupo con bots y empieza el primer tramo */
+/** Entra en la incursión: gasta la llave (si la pide), completa el grupo con bots y empieza el primer tramo */
 export function startIncursion(s: GameState, id: IncursionId, uid: string, moveId: string, now: number, rng: Rng = Math.random) {
   if (incursionBlocker(s, id, uid, moveId)) return
   const mon = findMon(s, uid)!
@@ -122,13 +123,14 @@ export function retreatIncursion(s: GameState, now: number) {
   a.retreat = { leg: p.leg, atMs: p.legMs }
 }
 
-/** Al terminar: cobra lo ganado (las piezas no descubren la especie), el Pokémon vuelve al rancho con los PS que le queden y se cierra la incursión */
+/** Al terminar: cobra lo ganado (las gratuitas, solo la primera vez; las piezas no descubren la especie), el Pokémon vuelve al rancho con los PS que le queden y se cierra la incursión */
 export function collectIncursion(s: GameState, now: number): Earned | null {
   const a = s.incursion
   if (!a) return null
   const p = incursionProgress(a, now)
   if (p.phase !== IncursionPhase.Finished) return null
-  const { earned } = p.record
+  const earned = payableEarnings(s, a.incursionId, p.record.earned)
+  markFreePlayed(s, a.incursionId)
   s.money += boostedMoney(earned.money)
   s.tickets += earned.tickets
   for (const [id, n] of Object.entries(earned.pieces)) addPieces(s, Number(id), n)

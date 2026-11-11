@@ -28,8 +28,8 @@ export interface Affliction {
   status: StatusId
   /** Turnos que le quedan (ver groupStatus.ts › STATUS_MAX_TURNS) */
   turns: number
-  /** Turnos que le quedan sin moverse por la congelación */
-  frozenTurns: number
+  /** Turnos que lleva ya sin moverse por el sueño o la congelación (groupStatus.ts › HOLDS) */
+  heldTurns: number
 }
 
 export interface GroupFighter {
@@ -75,7 +75,8 @@ export interface MemberState {
   /** PS como fracción de los máximos */
   hpFraction: number
   status: StatusId | null
-  frozenTurns: number
+  /** Turnos que lleva ya dormido o congelado; sin él (partidas de antes), 0 */
+  heldTurns?: number
   out: boolean
 }
 
@@ -94,7 +95,7 @@ export function partyFighter(m: MemberState): GroupFighter {
   const f = fighter(m.id, Team.Party, m.speciesId, m.level, calcStats(m.speciesId, m.level, m.stars, m.nature), [m.moveId])
   f.hp = m.out ? 0 : Math.round(m.hpFraction * f.maxHp)
   // El estado que trae del tramo anterior se le pasa al acabar el primer turno
-  const statuses = m.status ? [{ status: m.status, turns: 1, frozenTurns: m.frozenTurns }] : []
+  const statuses = m.status ? [{ status: m.status, turns: 1, heldTurns: m.heldTurns ?? 0 }] : []
   return { ...f, statuses, out: m.out }
 }
 
@@ -113,7 +114,7 @@ export const memberState = (f: GroupFighter, m: MemberState): MemberState => ({
   moveId: f.move.id,
   hpFraction: f.maxHp ? f.hp / f.maxHp : 0,
   status: f.statuses[0]?.status ?? null,
-  frozenTurns: f.statuses[0]?.frozenTurns ?? 0,
+  heldTurns: f.statuses[0]?.heldTurns ?? 0,
   out: f.out,
 })
 

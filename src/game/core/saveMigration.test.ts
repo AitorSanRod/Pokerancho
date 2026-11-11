@@ -3,6 +3,7 @@ import { FORM_ITEM_IDS, FORM_ITEMS } from '../../data/forms'
 import { IncursionId, MAX_KEYS } from '../../data/incursions'
 import { route, RouteId, wildSpecies } from '../../data/maps'
 import { Nature, NEUTRAL_NATURE } from '../../data/natures'
+import { DEFAULT_RANCH_BACKDROP, RanchBackdrop } from '../../data/ranchBackdrops'
 import { RanchTypeId } from '../../data/ranchTypes'
 import { STAR_ITEM_IDS, STAR_ITEMS } from '../../data/starItems'
 import { TM_IDS } from '../../data/tms'
@@ -22,6 +23,7 @@ vi.mock('../../data/maps/kantoMaps', () => import('./test-map'))
 const OLD = SAVE_VERSION - 1
 const [A, B, C] = STARTERS
 const UNKNOWN_SPECIES = -7
+const OTHER_BACKDROP = Object.values(RanchBackdrop).find((b) => b !== DEFAULT_RANCH_BACKDROP)!
 
 /** Una partida avanzada, con algo en cada campo que se guarda */
 function advancedGame(): GameState {
@@ -45,9 +47,11 @@ function advancedGame(): GameState {
     ranchTypeOf: { 1: Object.values(RanchTypeId)[0] },
     ranchExtraSlots: { 1: 5 },
     ranchNames: { 0: 'Prado' },
+    ranchBackdropOf: { 1: OTHER_BACKDROP },
     stones: { [Stone.Fire]: 1, [Stone.Moon]: 3 },
     formItems: [FORM_ITEM_IDS[0]],
     incursionKeys: { [IncursionId.CuevaHelada]: 2 },
+    freeIncursionsPlayed: [IncursionId.Prueba],
     claimedServerGifts: ['regalo-1'],
     // Coherente: con Pueblo Paleta completada, también abierta la ruta que desbloquea
     unlockedRoutes: [RouteId.PuebloPaleta, route(RouteId.PuebloPaleta).unlocks!, RouteId.BosqueVerde],
@@ -69,8 +73,8 @@ function advancedGame(): GameState {
 const fromOldVersion = (s: GameState, version = OLD) => JSON.parse(JSON.stringify({ ...s, version }))
 
 const KEPT: (keyof GameState)[] = [
-  'money', 'tickets', 'missingnoShards', 'seen', 'caught', 'favorites', 'pieces', 'upgrades', 'ranchTypeItems', 'ranchTypeOf', 'ranchExtraSlots', 'ranchNames',
-  'stones', 'formItems', 'incursionKeys', 'claimedServerGifts', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'lastTick',
+  'money', 'tickets', 'missingnoShards', 'seen', 'caught', 'favorites', 'pieces', 'upgrades', 'ranchTypeItems', 'ranchTypeOf', 'ranchExtraSlots', 'ranchNames', 'ranchBackdropOf',
+  'stones', 'formItems', 'incursionKeys', 'freeIncursionsPlayed', 'claimedServerGifts', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'lastTick',
 ]
 
 /** El paso de verdad de la versión anterior, que algún test sustituye por uno de prueba */
@@ -93,6 +97,11 @@ describe('al actualizar el juego no se pierde nada', () => {
   it('las llaves de incursión se quedan si son de una incursión que existe y sin pasar del máximo', () => {
     const save = { ...fromOldVersion(advancedGame()), incursionKeys: { [IncursionId.CuevaHelada]: MAX_KEYS + 1, quitada: 1 } }
     expect(migrateSave(save)!.incursionKeys).toEqual({})
+  })
+
+  it('las incursiones gratuitas ya cobradas se quedan si existen', () => {
+    const save = { ...fromOldVersion(advancedGame()), freeIncursionsPlayed: [IncursionId.Prueba, 'quitada'] }
+    expect(migrateSave(save)!.freeIncursionsPlayed).toEqual([IncursionId.Prueba])
   })
 
   it('los objetos estelares y las garantías del gacha se quedan si son de un objeto que existe', () => {
@@ -179,6 +188,7 @@ describe('al actualizar el juego no se pierde nada', () => {
     save.upgrades.ranches = 999
     save.ranchNames = { 0: 'Prado', 1: '   ', 2: 7, 999: 'Lejos' }
     save.ranchExtraSlots = { 1: 5, 999: 5, 0: -5 }
+    save.ranchBackdropOf = { 0: 'luna', 1: OTHER_BACKDROP, 999: OTHER_BACKDROP }
     save.owned.push({ ...save.owned[0], uid: 'raro', speciesId: UNKNOWN_SPECIES })
     save.expeditions.push({ ...save.expeditions[0], uid: 'nadie' })
     const migrated = migrateSave(save)!
@@ -189,6 +199,7 @@ describe('al actualizar el juego no se pierde nada', () => {
     expect(migrated.upgrades.ranches).toBeLessThanOrEqual(UPGRADES.ranches.prices.length)
     expect(migrated.ranchNames).toEqual({ 0: 'Prado' })
     expect(migrated.ranchExtraSlots).toEqual({ 1: 5 })
+    expect(migrated.ranchBackdropOf).toEqual({ 1: OTHER_BACKDROP })
     expect(migrated.owned).toHaveLength(2)
     expect(migrated.expeditions).toHaveLength(2)
   })

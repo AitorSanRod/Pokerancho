@@ -23,7 +23,7 @@ src/
   main.tsx            Arranque: estilos base, service worker (net/appUpdate.ts) y <App> dentro del ErrorBoundary
   App.tsx             Bucle de tiempo, menú inferior y pantalla de cada pestaña
   index.css           Entrada de los estilos base (src/styles/: variables, estructura y piezas comunes)
-  assets/             Imágenes propias (fondo del rancho)
+  assets/             Imágenes (fondos de rancho en ranches/, recortes de mapas de los juegos)
   data/               species, pokemon (ids por nombre), pokedexes (regionales y Nacional), types, moves,
                       evolutions, stones + pokemon.json
     maps/             kantoMaps (una por región), mapCommon, index (regiones y route)

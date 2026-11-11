@@ -9,7 +9,7 @@ export const PASSIVE_THRESHOLDS = [3, 5] as const
 /** Nivel de una pasiva: 1 o 2 */
 export type PassiveLevel = 1 | 2
 
-export const StatusId = { Burn: 'burn', Poison: 'poison', Paralysis: 'paralysis', Freeze: 'freeze', Confusion: 'confusion' } as const
+export const StatusId = { Burn: 'burn', Poison: 'poison', Paralysis: 'paralysis', Freeze: 'freeze', Confusion: 'confusion', Sleep: 'sleep' } as const
 export type StatusId = (typeof StatusId)[keyof typeof StatusId]
 
 interface StatusInfo {
@@ -32,13 +32,15 @@ interface StatusInfo {
   selfHitChance?: number
 }
 
-/** Estados alterados que pueden infligir las pasivas; duran todo el combate salvo la congelación */
+/** Estados alterados de pasivas y ataques; en las rutas duran todo el combate salvo la congelación (en incursiones, ver groupStatus.ts) */
 export const STATUS_INFO: Record<StatusId, StatusInfo> = {
   [StatusId.Burn]: { name: 'Quemadura', short: 'QUE', type: 'fire', verb: 'se quemó', damagePerTurn: 0.06, atkMult: 0.75 },
   [StatusId.Poison]: { name: 'Veneno', short: 'ENV', type: 'poison', verb: 'fue envenenado', damagePerTurn: 0.08 },
   [StatusId.Paralysis]: { name: 'Parálisis', short: 'PAR', type: 'electric', verb: 'quedó paralizado', skipChance: 0.25 },
   [StatusId.Freeze]: { name: 'Congelación', short: 'CON', type: 'ice', verb: 'quedó congelado', skipTurns: 1 },
   [StatusId.Confusion]: { name: 'Confusión', short: 'CNF', type: 'psychic', verb: 'quedó confuso', selfHitChance: 0.33 },
+  // Solo lo ponen ataques de incursión; cuándo se despierta, en game/incursion/groupStatus.ts › SLEEP_WAKE_CHANCES
+  [StatusId.Sleep]: { name: 'Sueño', short: 'DOR', type: 'normal', verb: 'se durmió' },
 }
 
 /**

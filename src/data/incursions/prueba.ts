@@ -4,12 +4,14 @@ import { POKEMON } from '../pokemon'
 import { foe, IncursionId, IncursionPrizeKind, IncursionTier, RoomKind, type Incursion } from './types'
 import { StarItem } from '../starItems'
 
-// Incursión de prueba: corta, de nivel bajo y con una sala de cada tipo, para probar el modo entero sin esperar.
+// Incursión de prueba: corta, de nivel bajo y con una sala de cada tipo, para probar el modo entero sin esperar. Gratuita:
+// sin llave, y lo ganado solo se cobra la primera vez.
 
 export const PRUEBA: Incursion = {
   id: IncursionId.Prueba,
   name: 'Incursión de prueba',
-  description: 'Corta y de nivel bajo, con una sala de cada tipo. Para probar el modo.',
+  description: 'Corta y de nivel bajo, con una sala de cada tipo. Para probar el modo: no pide llave, y los premios solo se cobran la primera vez.',
+  free: true,
   biome: Biome.Forest,
   tier: IncursionTier.Easy,
   minLevel: 5,

@@ -10,6 +10,7 @@ import { Sprite } from '../shared/common'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { PassiveList } from './PassiveList'
+import { RanchBackdropPicker } from './RanchBackdropPicker'
 import { RanchRenameDialog } from './RanchRenameDialog'
 import { RanchTypeSection } from './RanchTypeSection'
 import './ranch-info.css'
@@ -23,7 +24,7 @@ const OUT_LABEL: Partial<Record<MonPlace, { icon: Item; text: string }>> = {
 
 /**
  * Botón del rancho (arriba a la izquierda) con su nombre, sus espacios y cuántas pasivas da; al tocarlo sube el panel
- * con el nombre (y cambiarlo), el tipo de rancho, las pasivas y quién está fuera guardando su hueco.
+ * con el nombre (y cambiarlo), el fondo, el tipo de rancho, las pasivas y quién está fuera guardando su hueco.
  */
 export function RanchSlots({ game, ranch }: { game: GameState; ranch: number }) {
   const [open, setOpen] = useState(false)
@@ -58,6 +59,8 @@ export function RanchSlots({ game, ranch }: { game: GameState; ranch: number }) 
                 Cambiar nombre
               </button>
             </div>
+            <div className="label">Fondo</div>
+            <RanchBackdropPicker game={game} ranch={ranch} />
             <div className="label">Tipo de rancho</div>
             <RanchTypeSection game={game} ranch={ranch} />
             <div className="label">Pasivas para el Pokémon que sale de ruta</div>

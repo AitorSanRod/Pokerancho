@@ -14,6 +14,8 @@ import { noTurnOrders, TAP_WINDOW_MS } from './tapWindow'
 import { repertoire } from './repertoire'
 import { STAR_ITEM_IDS } from '../../data/starItems'
 import { starItemsOf } from '../collection/starItems'
+import { TEST_INCURSION } from './incursion-test-mock'
+import { noEarnings } from './incursionRewards'
 
 vi.mock('../../data/incursions', () => import('./incursion-test-mock'))
 
@@ -106,6 +108,25 @@ describe('incursión en curso', () => {
     expect(starItemsOf(s, STAR_ITEM_IDS[0])).toBe(earned.starItems[STAR_ITEM_IDS[0]])
     expect(s.incursion).toBeNull()
     expect(monPlace(s, uid)).toBe(MonPlace.Ranch)
+  })
+
+  it('una gratuita entra sin llave y solo paga la primera vez', () => {
+    TEST_INCURSION.free = true
+    try {
+      s.incursionKeys[ID] = 0
+      const play = () => {
+        start()
+        continueIncursion(s, endOfLeg(0))
+        return collectIncursion(s, endOfLeg(1))
+      }
+      const first = play()!
+      expect(first.money).toBeGreaterThan(0)
+      const money = s.money
+      expect(play()).toEqual(noEarnings())
+      expect(s.money).toBe(money)
+    } finally {
+      delete TEST_INCURSION.free
+    }
   })
 
   it('las piezas que da no descubren la especie', () => {

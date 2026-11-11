@@ -27,14 +27,14 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
 | Entrada | Solo Pokémon entre el nivel mínimo y el máximo de la incursión (Cueva Helada: 20–45). Los bots, algo por debajo del más alto del grupo, sin pasar del rival más alto (ver Bots) |
 | Nivel | Sin ajustes: cada Pokémon lucha con su nivel y cada rival tiene el suyo, escrito a mano y subiendo sala a sala (Cueva Helada: rivales de Nv. 20 a 37). Un Pokémon de nivel alto pega más y la incursión acaba antes |
 | Ataque y objetivo | En plena pelea, cuando quieras, cambias el ataque de tu Pokémon y a quién lo dirige (rival o aliado según el ataque, o automático). Vale desde la siguiente ventana de toques y sigue así hasta que lo cambies; si el elegido cae o cambia la sala, vuelve a automático |
-| Estados alterados | Duran como mucho 5 turnos (volver a ponerlo reinicia la cuenta) y se quitan al acabar cada sala |
+| Estados alterados | Duran como mucho 5 turnos (volver a ponerlo reinicia la cuenta) y se quitan al acabar cada sala. Uno a la vez; los jefes, hasta 3 distintos. **Sueño** (solo en incursiones): el 1.er turno no se despierta, el 2.º con un 25%, el 3.º con un 75% y el 4.º seguro; al despertarse ataca ese mismo turno. **Congelación**: pierde de 1 a 3 turnos al azar (en las rutas, 1) |
 | Duración | 15–25 min, según los niveles del grupo (cuanto más fuerte, antes caen los rivales) |
 | Pokémon dentro | Sale del rancho como en una expedición; vuelve al terminar con los PS que le queden |
-| Acceso | Con una **llave** de esa incursión, comprada en la Tienda (fácil 10.000 ₽, media 30.000 ₽, difícil 50.000 ₽; como mucho 10 de cada una); se gasta al formarse el grupo |
+| Acceso | Con una **llave** de esa incursión, comprada en la Tienda (muy fácil 5.000 ₽, fácil 10.000 ₽, media 30.000 ₽, difícil 50.000 ₽; como mucho 10 de cada una); se gasta al formarse el grupo |
 | Información | Un apartado en la pestaña que explica cómo funciona todo (grupo, movimientos, pasivas, revivires, nivel, retirada, llaves) |
 | Premios | Escritos a mano: ₽ y EXP en cada sala de combate superada; al terminar, ₽, EXP, tickets y **tickets de cualquier Pokémon** que elijamos |
 | Dónde | Nueva pestaña **Incursiones** arriba en Ruta, junto a Rutas y Raids |
-| Primera incursión | **Cueva Helada**, jefe final **Gyarados**. Además, una **Incursión de prueba** (Nv. 5–20, cinco salas, una de cada tipo, unos 6 min) para probar el modo |
+| Incursiones | **Bosque Verde** (Nv. 15–30, rivales 15–30, jefes finales **Nidoking** y **Nidoqueen**) y **Cueva Helada** (jefe final **Gyarados**). Además, una **Incursión de prueba** (Nv. 5–20, cinco salas, una de cada tipo, unos 6 min) para probar el modo |
 
 ## Recorrido del jugador
 
@@ -311,7 +311,11 @@ revivir deja de sumar. Cuando se rehagan las pasivas de rancho, se unifican con 
 
 - **Llave de incursión**: un objeto por incursión que se compra en la Tienda y se guarda en la Mochila. Se gasta al
   formarse el grupo; si se cancela la cola, no. Precio según la dificultad de la incursión (`data/incursions.ts ›
-  KEY_PRICE`: fácil 10.000 ₽, media 30.000 ₽, difícil 50.000 ₽); como mucho 10 de cada una (`MAX_KEYS`).
+  KEY_PRICE`: muy fácil 5.000 ₽, fácil 10.000 ₽, media 30.000 ₽, difícil 50.000 ₽); como mucho 10 de cada una (`MAX_KEYS`).
+- **Gratuitas** (`free` en la ficha de la incursión; ahora, la de prueba): se entra sin llave y no se vende la suya,
+  pero lo ganado (₽ y EXP de las salas y premio final) solo se cobra la primera vez que se termina, se gane, se pierda o
+  se retire el grupo; las siguientes son para practicar. La partida apunta cuáles ya se cobraron en
+  `freeIncursionsPlayed` (`game/incursion/freeIncursions.ts`).
 - **Por el camino**: cada sala de combate superada da su ₽ y EXP (`reward`), que se cobran aunque luego se pierda o se
   retire el grupo.
 - **Al terminarla**: la tabla `prizes` de la incursión (₽, EXP, tickets, tickets de especie y objetos estelares,
@@ -361,7 +365,10 @@ completar.
 | Bajada máxima de una stat por pasivas | hasta el 25% de la suya | `fighter.ts › MIN_STAT_MULT` |
 | Furia de los jefes | +1 etapa de Ataque cada 6 turnos desde el 15 (Cueva Helada) | `enrage` de cada jefe en `data/incursions/` |
 | Estados alterados | 5 turnos como mucho | `groupStatus.ts › STATUS_MAX_TURNS` |
+| Sueño | despertarse: 0% · 25% · 75% · seguro | `groupStatus.ts › SLEEP_WAKE_CHANCES` |
+| Congelación | pierde de 1 a 3 turnos, igual de probables | `groupStatus.ts › FREEZE_MAX_TURNS` |
 | Estados a la vez en un jefe | 3 distintos (el resto, 1) | `groupStatus.ts › BOSS_MAX_STATUSES` |
+| Daño de estado a un jefe | como mucho el 5% de sus PS por turno y estado (quemadura, veneno; la confusión, sin tope) | `groupStatus.ts › BOSS_STATUS_DAMAGE_CAP` |
 | Revivires | 3, vuelve con el 50% | `revives.ts › INCURSION_REVIVES, REVIVE_HP` |
 | Golpe en área de un jefe | 60% del daño a cada uno | `moveEffects.ts › AREA_DAMAGE_MULT` |
 | Un rival cura a su bando | si a alguno le queda menos del 50% | `foeTactics.ts › FOE_HEAL_BELOW` |
@@ -372,7 +379,7 @@ completar.
 | Catálogo de ataques | +10 de precisión a la de los juegos (+5 si era 90; hasta 100); curas de 70 a uno y 30 al grupo; los que atraen golpes, −40% de daño | `data/incursionMoves/catalog/catalogMove.ts › CATALOG_ACCURACY_BONUS, CATALOG_ACCURACY_BONUS_AT_90, SINGLE_HEAL_POWER, TEAM_HEAL_POWER, REDIRECT_GUARD` |
 | Ritmo en pantalla | ms de cada evento | `incursionTimeline.ts › INCURSION_EVENT_MS` |
 | Pasivas | pesos 1/2/3/4, umbrales 3/6/10 | `data/incursionPassives.ts` |
-| Llaves | 10.000 / 30.000 / 50.000 ₽, máx. 10 | `data/incursions.ts › KEY_PRICE, MAX_KEYS` |
+| Llaves | 5.000 / 10.000 / 30.000 / 50.000 ₽, máx. 10 | `data/incursions.ts › KEY_PRICE, MAX_KEYS` |
 
 | Reorganizar | 90 s | `activeIncursion.ts › REGROUP_MS` |
 | Cola | 60 s como mucho; sin consultar 20 s, se sale | `online/protocol.ts › QUEUE_MAX_MS, QUEUE_STALE_MS` |
@@ -416,7 +423,8 @@ completar.
     retreatVote.ts           votos necesarios
     entry.ts                 quién puede entrar: nivel mínimo y máximo
 
-    keys.ts                  comprar y gastar llaves
+    keys.ts                  comprar y gastar llaves (las gratuitas no la piden)
+    freeIncursions.ts        gratuitas: lo ganado solo se cobra la primera vez
     activeIncursion.ts       la incursión guardada (miembros, órdenes, inicio de cada tramo) y por dónde va con la hora
     damageTally.ts           daño de cada uno del grupo sumando todos los combates, hasta lo que se ve
     incursionGame.ts         en la partida: entrar, avanzar, reorganizar, retirarse y cobrar (sin servidor)

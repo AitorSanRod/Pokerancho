@@ -65,9 +65,11 @@ export const CUEVA_HELADA: Incursion = {
       kind: RoomKind.Battle,
       name: 'Lago',
       foes: [
-        foe(POKEMON.Seadra, 34, [IMOVE.Surf.id, IMOVE.Ciclon.id]), 
-        foe(POKEMON.Tentacool, 33, [IMOVE.Acido.id, IMOVE.Toxico.id]), 
-        foe(POKEMON.Golbat, 34, [IMOVE.Mordisco.id, IMOVE.Vuelo.id])
+        foe(POKEMON.Glaceon, 33, [IMOVE.RayoAurora.id, IMOVE.DefensaFerrea.id]), 
+        weighted(
+          [foe(POKEMON.Seadra, 34, [IMOVE.Surf.id, IMOVE.Ciclon.id]), 5],
+          [foe(POKEMON.Golbat, 34, [IMOVE.Mordisco.id, IMOVE.Vuelo.id]), 5],
+        )
       ],
       reward: { money: 500, exp: 250 },
     },

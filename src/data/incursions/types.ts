@@ -7,15 +7,16 @@ import type { Tm } from '../tms'
 // incursión va en su fichero de esta carpeta y se añade a la lista de index.ts.
 
 /** Id de cada incursión. El valor se guarda en la partida: no cambiarlo sin subir SAVE_VERSION */
-export const IncursionId = { Prueba: 'prueba', CuevaHelada: 'cueva-helada' } as const
+export const IncursionId = { Prueba: 'prueba', CuevaHelada: 'cueva-helada', BosqueVerde: 'bosque-verde' } as const
 export type IncursionId = (typeof IncursionId)[keyof typeof IncursionId]
 
 /** Dificultad: decide el precio de su llave */
-export const IncursionTier = { Easy: 'easy', Medium: 'medium', Hard: 'hard' } as const
+export const IncursionTier = { VeryEasy: 'very-easy', Easy: 'easy', Medium: 'medium', Hard: 'hard' } as const
 export type IncursionTier = (typeof IncursionTier)[keyof typeof IncursionTier]
 
 /** ₽ que cuesta en la Tienda la llave de una incursión de cada dificultad */
 export const KEY_PRICE: Record<IncursionTier, number> = {
+  [IncursionTier.VeryEasy]: 5_000,
   [IncursionTier.Easy]: 10_000,
   [IncursionTier.Medium]: 30_000,
   [IncursionTier.Hard]: 50_000,
@@ -101,6 +102,8 @@ export interface Incursion {
   prizes: IncursionPrize[]
   /** Especies que pueden llevar los bots que completan el grupo */
   bots: number[]
+  /** Gratuita: se entra sin llave, pero lo ganado (₽, EXP y premios) solo se cobra la primera vez (incursion/freeIncursions.ts) */
+  free?: boolean
 }
 
 /** Un rival de una sala: especie, nivel y sus ataques (más jefe, pasivas o PS extra) */

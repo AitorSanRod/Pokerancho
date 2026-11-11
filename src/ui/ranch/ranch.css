@@ -35,7 +35,8 @@
   position: absolute;
   inset: 0;
   touch-action: none;
-  background: url('../../assets/ranch.jpg') center / cover;
+  /* La imagen, del fondo elegido (ranchLooks.ts) */
+  background: center / cover no-repeat;
   image-rendering: pixelated;
 }
 .ranch-sheet-backdrop {

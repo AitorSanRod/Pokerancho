@@ -24,6 +24,12 @@
   animation: status-confusion 1.2s ease-in-out infinite;
 }
 
+/* Sueño: apagado y respirando despacio, un poco hundido */
+.status-sleep .sprite img {
+  transform-origin: bottom center;
+  animation: status-sleep 2.4s ease-in-out infinite;
+}
+
 @keyframes status-burn {
   0%,
   100% {
@@ -73,6 +79,17 @@
   }
   75% {
     rotate: 6deg;
+  }
+}
+@keyframes status-sleep {
+  0%,
+  100% {
+    filter: brightness(0.8) saturate(0.7);
+    scale: 1 0.96;
+  }
+  50% {
+    filter: brightness(0.75) saturate(0.6);
+    scale: 1.02 0.92;
   }
 }
 @media (prefers-reduced-motion: reduce) {

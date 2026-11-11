@@ -24,4 +24,5 @@ export const PSYCHIC_MOVES = {
   Meditacion: catalogMove('meditate', 'Meditación', PokeType.Psychic, 0, [raiseSelf([{ stat: 'atk', stages: 1 }])]),
   Reflejo: catalogMove('reflect', 'Reflejo', PokeType.Psychic, 0, [raise([{ stat: 'def', stages: 1 }])]),
   PantallaDeLuz: catalogMove('light-screen', 'Pantalla de Luz', PokeType.Psychic, 0, [raise([{ stat: 'def', stages: 1 }])]),
+  Hipnosis: catalogMove('hypnosis', 'Hipnosis', PokeType.Psychic, 0, [inflict(StatusId.Sleep)], { accuracy: 60 }),
 } satisfies Record<string, IncursionMove>

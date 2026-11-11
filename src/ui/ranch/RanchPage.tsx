@@ -1,8 +1,9 @@
 import type { CSSProperties } from 'react'
 import { MonPlace, monPlace, type GameState } from '../../game/core/state'
+import { ranchBackdrop } from '../../game/team/ranchBackdrops'
 import type { useSwipe } from '../shared/useSwipe'
 import { RanchMon, type RanchDrop } from './RanchMon'
-import { ranchFilter } from './ranchLooks'
+import { ranchGroundStyle } from './ranchLooks'
 
 interface Props {
   game: GameState
@@ -20,7 +21,7 @@ export function RanchPage({ game, ranch, swipe, selectedUid, onSelect, onDrop, s
   const home = game.owned.filter((m) => m.ranch === ranch && monPlace(game, m.uid) === MonPlace.Ranch)
   return (
     <div className={`ranch-page ${swipe ? '' : 'peek'}`} style={style} aria-hidden={!swipe}>
-      <div className="ranch-ground" style={{ filter: ranchFilter(ranch, game.ranchTypeOf[ranch]) }} {...swipe} />
+      <div className="ranch-ground" style={ranchGroundStyle(ranch, ranchBackdrop(game, ranch), game.ranchTypeOf[ranch])} {...swipe} />
       {home.map((m) => (
         <RanchMon
           key={m.uid}

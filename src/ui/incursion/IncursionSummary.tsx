@@ -38,8 +38,11 @@ function rewardItems(earned: Earned): RewardItem[] {
   return items
 }
 
-/** Final de la incursión: cómo acabó, lo ganado y el botón de recogerlo (el Pokémon vuelve al rancho) */
-export function IncursionSummary({ outcome, earned }: { outcome: IncursionOutcome; earned: Earned }) {
+/**
+ * Final de la incursión: cómo acabó, lo ganado y el botón de recogerlo (el Pokémon vuelve al rancho). `prizeSpent`: es
+ * gratuita y ya se cobró, así que no da nada
+ */
+export function IncursionSummary({ outcome, earned, prizeSpent }: { outcome: IncursionOutcome; earned: Earned; prizeSpent: boolean }) {
   const [shown, setShown] = useState<RewardItem[] | null>(null)
   const items = rewardItems(earned)
   const collect = () => (items.length ? setShown(items) : act((s) => collectIncursion(s, Date.now())))
@@ -48,7 +51,11 @@ export function IncursionSummary({ outcome, earned }: { outcome: IncursionOutcom
     <section className="card incursion-summary">
       <h3>{TITLE[outcome]}</h3>
       <p className="small">
-        {outcome === IncursionOutcome.Win ? 'Te llevas lo ganado por el camino y el premio final.' : 'Te llevas lo ganado en las salas superadas.'}
+        {prizeSpent
+          ? 'Ya cobraste los premios de esta incursión: ahora es solo para practicar.'
+          : outcome === IncursionOutcome.Win
+            ? 'Te llevas lo ganado por el camino y el premio final.'
+            : 'Te llevas lo ganado en las salas superadas.'}
       </p>
       <button className="btn primary" onClick={collect}>
         {items.length ? 'Recoger' : 'Volver al rancho'}

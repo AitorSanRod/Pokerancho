@@ -1,5 +1,6 @@
+import { StatusId } from '../../passives'
 import { PokeType } from '../../types'
-import { area, lower, raiseSelf, type IncursionMove } from '../effects'
+import { area, inflict, lower, raiseSelf, type IncursionMove } from '../effects'
 import { catalogMove } from './catalogMove'
 
 // Catálogo de ataques de tipo Siniestro: con la precisión de los juegos (catalogMove le suma la mejora). Para editar a mano.
@@ -16,4 +17,5 @@ export const DARK_MOVES = {
   CercoDimension: catalogMove('hyperspace-fury', 'Cerco Dimensión', PokeType.Dark, 100),
   Maquinacion: catalogMove('nasty-plot', 'Maquinación', PokeType.Dark, 0, [raiseSelf([{ stat: 'atk', stages: 2 }])]),
   Afilagarras: catalogMove('hone-claws', 'Afilagarras', PokeType.Dark, 0, [raiseSelf([{ stat: 'atk', stages: 1 }])]),
+  BrechaNegra: catalogMove('dark-void', 'Brecha Negra', PokeType.Dark, 0, [inflict(StatusId.Sleep), area()], { accuracy: 50 }),
 } satisfies Record<string, IncursionMove>

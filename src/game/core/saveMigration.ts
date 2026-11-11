@@ -1,6 +1,7 @@
-import { IncursionId, MAX_KEYS } from '../../data/incursions'
+import { incursion, IncursionId, MAX_KEYS } from '../../data/incursions'
 import { route } from '../../data/maps'
 import { NEUTRAL_NATURE } from '../../data/natures'
+import { isRanchBackdrop } from '../../data/ranchBackdrops'
 import { RANCH_TYPES } from '../../data/ranchTypes'
 import { isFormItem } from '../../data/forms'
 import { baseSpeciesOf, isKnownSpecies, SPECIES } from '../../data/species'
@@ -32,11 +33,11 @@ export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {}
 
 /**
  * La incursión en curso se descarta en cualquier cambio de versión (IN_PROGRESS): su llave, gastada al entrar, vuelve a
- * la Mochila (sin pasar del máximo)
+ * la Mochila (sin pasar del máximo; las gratuitas no la piden)
  */
 function refundIncursionKey(save: Save) {
   const id = isRecord(save.incursion) ? save.incursion.incursionId : null
-  if (typeof id !== 'string') return
+  if (!isIncursionId(id) || incursion(id).free) return
   const keys = isRecord(save.incursionKeys) ? save.incursionKeys : {}
   keys[id] = Math.min(MAX_KEYS, (isInt(keys[id]) ? keys[id] : 0) + 1)
   save.incursionKeys = keys
@@ -62,6 +63,7 @@ const isRoute = (v: unknown): v is string => {
     return false
   }
 }
+const isIncursionId = (v: unknown): v is IncursionId => (Object.values(IncursionId) as unknown[]).includes(v)
 
 /** Lista sin repetir de los valores que valen */
 const listOf = <T>(v: unknown, valid: (x: unknown) => x is T): T[] | undefined => (Array.isArray(v) ? [...new Set(v.filter(valid))] : undefined)
@@ -111,13 +113,15 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   ranchExtraSlots: (v) => countsOf(v, isRanch, RANCH_EXPANSION_MAX * RANCH_EXPANSION_SLOTS),
   ranchNames: (v) =>
     isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([k, n]) => isRanch(k) && typeof n === 'string' && n === cleanRanchName(n) && n)) : undefined,
+  ranchBackdropOf: (v) => (isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([k, b]) => isRanch(k) && isRanchBackdrop(b))) : undefined),
   stones: (v) => countsOf(v, (k) => (Object.values(Stone) as string[]).includes(k)),
   formItems: (v) => listOf(v, isFormItem),
   mints: (v) => (isInt(v) ? v : undefined),
   starItems: (v) => countsOf(v, isStarItem),
   tms: (v) => countsOf(v, isTm),
   gachaPity: (v) => countsOf(v, (k) => isStarItem(k) && STAR_ITEMS[k].pity !== null),
-  incursionKeys: (v) => countsOf(v, (k) => (Object.values(IncursionId) as string[]).includes(k), MAX_KEYS),
+  incursionKeys: (v) => countsOf(v, isIncursionId, MAX_KEYS),
+  freeIncursionsPlayed: (v) => listOf(v, isIncursionId),
   tutorial: (v) => (v === null || (Object.values(TutorialStep) as unknown[]).includes(v) ? v : undefined),
   unlockedRoutes: (v) => listOf(v, isRoute),
   completedRoutes: (v) => listOf(v, isRoute),

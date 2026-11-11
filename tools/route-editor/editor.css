@@ -282,3 +282,83 @@ button.primary {
   background: var(--accent);
   border-color: var(--accent);
 }
+.top .mode {
+  font-size: 17px;
+  font-weight: bold;
+  margin-left: -6px;
+}
+.moves {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.move,
+.prize {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.move input {
+  width: 180px;
+}
+.move small {
+  color: var(--muted);
+}
+.prize .species {
+  flex: 1;
+}
+.slot,
+.option {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+.slot {
+  background: var(--panel);
+}
+.slot > header,
+.option > header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.slot > header small {
+  color: var(--muted);
+}
+.option {
+  background: var(--panel-2);
+}
+.option > header .field {
+  flex-direction: row;
+  align-items: center;
+}
+.option > header input {
+  width: 70px;
+}
+.boss-box {
+  border-left: 3px solid var(--accent);
+  padding-left: 10px;
+}
+.room-Battle {
+  border-left-color: var(--accent);
+}
+.room-Heal {
+  border-left-color: #f85888;
+}
+.room-Revive {
+  border-left-color: var(--warn);
+}
+.room-Regroup {
+  border-left-color: #6890f0;
+}
+.out-actions {
+  display: flex;
+  gap: 8px;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}

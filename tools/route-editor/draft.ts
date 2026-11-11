@@ -4,6 +4,7 @@
 import type { Route, RouteNode } from '../../src/data/maps'
 import type { PokeType } from '../../src/data/types'
 import { DICTS, keyOf } from './catalog'
+import { loadStored, store } from './mode'
 
 export interface EncDraft {
   species: string
@@ -137,19 +138,5 @@ export const isChain = (r: Route) => r.nodes.every((n, i) => n.next.length === (
 
 const STORAGE_KEY = 'route-editor-draft'
 
-export function loadDraft(): RouteDraft {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    return saved ? { ...emptyRoute(), ...JSON.parse(saved) } : emptyRoute()
-  } catch {
-    return emptyRoute()
-  }
-}
-
-export function saveDraft(d: RouteDraft) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(d))
-  } catch {
-    // Sin almacenamiento: el borrador se pierde al recargar
-  }
-}
+export const loadDraft = (): RouteDraft => loadStored(STORAGE_KEY, emptyRoute)
+export const saveDraft = (d: RouteDraft) => store(STORAGE_KEY, d)

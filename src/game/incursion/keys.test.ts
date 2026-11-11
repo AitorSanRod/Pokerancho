@@ -1,9 +1,16 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { INCURSIONS, KEY_PRICE, MAX_KEYS } from '../../data/incursions'
 import { initialState } from '../core/state'
-import { buyKey, buyKeyBlocker, keyPrice, keysOf, spendKey } from './keys'
+import { TEST_INCURSION } from './incursion-test-mock'
+import { buyKey, buyKeyBlocker, canAffordEntry, keyPrice, keysOf, spendKey } from './keys'
 
-const INC = INCURSIONS[0]
+vi.mock('../../data/incursions', () => import('./incursion-test-mock'))
+
+const INC = TEST_INCURSION
+
+afterEach(() => {
+  delete INC.free
+})
 
 describe('llaves de incursión', () => {
   it('cuestan lo que marca la dificultad de su incursión', () => {
@@ -29,9 +36,21 @@ describe('llaves de incursión', () => {
 
   it('se gastan de una en una', () => {
     const s = initialState()
+    expect(canAffordEntry(s, INC.id)).toBe(false)
     expect(spendKey(s, INC.id)).toBe(false)
     s.incursionKeys[INC.id] = 1
+    expect(canAffordEntry(s, INC.id)).toBe(true)
     expect(spendKey(s, INC.id)).toBe(true)
+    expect(keysOf(s, INC.id)).toBe(0)
+  })
+
+  it('las gratuitas no piden llave ni la venden', () => {
+    INC.free = true
+    const s = initialState()
+    s.money = keyPrice(INC.id)
+    expect(canAffordEntry(s, INC.id)).toBe(true)
+    expect(spendKey(s, INC.id)).toBe(true)
+    expect(buyKey(s, INC.id)).toBe(false)
     expect(keysOf(s, INC.id)).toBe(0)
   })
 })

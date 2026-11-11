@@ -25,7 +25,7 @@ export const freshMember = (m: Pick<MemberState, 'id' | 'speciesId' | 'level' | 
   ...m,
   hpFraction: 1,
   status: null,
-  frozenTurns: 0,
+  heldTurns: 0,
   out: false,
 })
 

@@ -29,6 +29,8 @@ export const GRASS_MOVES = {
   CuchillaSolar: catalogMove('solar-blade', 'Cuchilla Solar', PokeType.Grass, 125),
   LluviaHojas: catalogMove('leaf-storm', 'Lluvia Hojas', PokeType.Grass, 130, [], { accuracy: 90 }),
   Paralizador: catalogMove('stun-spore', 'Paralizador', PokeType.Grass, 0, [inflict(StatusId.Paralysis)], { accuracy: 75 }),
+  Somnifero: catalogMove('sleep-powder', 'Somnífero', PokeType.Grass, 0, [inflict(StatusId.Sleep)], { accuracy: 75 }),
+  Espora: catalogMove('spore', 'Espora', PokeType.Grass, 0, [inflict(StatusId.Sleep)]),
   Esporagodon: catalogMove('cotton-spore', 'Esporagodón', PokeType.Grass, 0, [lower([{ stat: 'spe', stages: -2 }]), area()]),
   RizoAlgodon: catalogMove('cotton-guard', 'Rizo Algodón', PokeType.Grass, 0, [raiseSelf([{ stat: 'def', stages: 3 }])]),
 } satisfies Record<string, IncursionMove>
