@@ -53,6 +53,7 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
         walkerClass={battle && frame ? `battling ${playerClass} ${statusClass(frame.event.playerStatus)}` : run.heal ? 'healing' : ''}
         onStep={walking ? () => act(tapRun) : undefined}
         landmark={landmark}
+        signText={r.name}
       >
         {battle && frame && <RouteBattle record={battle} frame={frame} />}
         {run.heal && <HealStop key={run.stop} heal={run.heal} />}

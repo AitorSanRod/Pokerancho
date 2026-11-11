@@ -7,7 +7,7 @@ import type { SceneDef, SceneLayer } from '../../engine/types'
 import { fountain } from '../../elements/fountain'
 import { gym } from '../../elements/gym'
 import { museum } from '../../elements/museum'
-import { signpost } from '../../elements/signpost'
+import { signLandmark } from '../../elements/signpost'
 import { clouds, sky, wisps } from '../meadow/backdrop'
 import { PATH } from '../meadow/ground'
 import { WOOD } from '../meadow/palette'
@@ -48,7 +48,7 @@ export function pewterCityScene(seed: number): SceneDef {
       layer('path', 'Calle', [cityPath(seed)], 0, 1),
     ],
     landmarks: [
-      { id: StopLandmark.Sign, label: 'Cartel', pixmap: signpost('CIUDAD PLATEADA', WOOD, LAWN), parallax: 1, bottom: PATH_TOP - 8, afterLayer: 'path' },
+      signLandmark('CIUDAD PLATEADA', WOOD, LAWN, PATH_TOP - 8),
       { id: StopLandmark.Museum, label: 'Museo', pixmap: museum(MUSEUM), parallax: 0.7, bottom: PATH.height - 4, afterLayer: 'city' },
       { id: StopLandmark.Gym, label: 'Gimnasio', pixmap: gym(GYM), parallax: 0.7, bottom: PATH.height - 4, afterLayer: 'city' },
       { id: StopLandmark.Fountain, label: 'Fuente', pixmap: fountain(FOUNTAIN), parallax: 1, bottom: PATH_TOP - 14, afterLayer: 'path' },

@@ -47,6 +47,7 @@ export function newRaid(boss: RaidBoss, place: RaidPlace | null, opts: { felled?
     round: 0,
     members: [],
     lastRound: [],
+    bossStatuses: [],
     felled: opts.felled ?? 0,
     nextBotId: opts.nextBotId ?? 0,
     sinceBotMs: 0,

@@ -9,6 +9,7 @@ import { meadowScene } from './scenes/meadow'
 import { mtMoonScene } from './scenes/mtMoon'
 import { palletTownScene } from './scenes/palletTown'
 import { pewterCityScene } from './scenes/pewterCity'
+import { labScene } from './scenes/lab'
 import { seaScene } from './scenes/sea'
 
 export { usePixelScene, type SceneLandmark } from './usePixelScene'
@@ -27,15 +28,25 @@ const BUILDERS: Record<Biome, (seed: number) => SceneDef> = {
   [Biome.Cave]: caveScene,
   [Biome.MtMoon]: mtMoonScene,
   [Biome.Sea]: seaScene,
+  [Biome.Lab]: labScene,
 }
-const cache = new Map<Biome, SceneDef>()
+const cache = new Map<string, SceneDef>()
 
-/** Escena pixel art del bioma (se genera una vez y se guarda) */
-export function pixelSceneFor(biome: Biome): SceneDef {
-  let scene = cache.get(biome)
+/**
+ * Escena pixel art del bioma (se genera una vez y se guarda). Con `label` (el nombre de la ruta), los elementos con
+ * texto, como el cartel, lo llevan escrito; el resto de la escena se comparte.
+ */
+export function pixelSceneFor(biome: Biome, label?: string): SceneDef {
+  const key = label === undefined ? biome : `${biome}|${label}`
+  let scene = cache.get(key)
   if (!scene) {
-    scene = BUILDERS[biome](SCENE_SEED)
-    cache.set(biome, scene)
+    scene = label === undefined ? BUILDERS[biome](SCENE_SEED) : relabeled(pixelSceneFor(biome), label)
+    cache.set(key, scene)
   }
   return scene
+}
+
+function relabeled(scene: SceneDef, label: string): SceneDef {
+  const landmarks = scene.landmarks.map((l) => (l.relabel ? { ...l, pixmap: l.relabel(label) } : l))
+  return { ...scene, landmarks }
 }

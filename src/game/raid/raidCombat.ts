@@ -1,8 +1,9 @@
-import type { PassiveRef } from '../../data/passives'
+import { StatusId, type PassiveRef } from '../../data/passives'
 import { effectiveness } from '../../data/types'
-import { attack, mustStruggle } from '../battle/attack'
+import { attack, CONFUSION_SELF_DAMAGE, damage, mustStruggle } from '../battle/attack'
 import { makeFighter, type Fighter } from '../battle/battle'
 import type { Rng } from '../core/random'
+import { bossHas, bossTurn, statusTicks, takeInflicted } from './raidBossStatus'
 import { BOSS_ID, type Raid, type RaidHit, type RaidMember } from './raidRoom'
 
 /** Milisegundos de juego entre rondas: en cada una pegan todos los que están en pie y el jefe pega a uno al azar */
@@ -27,9 +28,14 @@ function memberFighter(m: RaidMember, passives: PassiveRef[]): Fighter {
   return f
 }
 
+const bossAsMon = (raid: Raid): Fighter => makeFighter('enemy', raid.boss.speciesId, raid.boss.level, { statMult: raid.boss.statMult })
+
+/** PS que tendría el jefe como un Pokémon cualquiera (sobre ellos le quitan PS sus estados, no sobre la vida de la sala) */
+export const bossOwnMaxHp = (raid: Raid): number => bossAsMon(raid).maxHp
+
 /** El jefe con sus stats por su `statMult`, su ataque rebajado y la vida compartida de la sala en vez de la suya */
 export function bossFighter(raid: Raid): Fighter {
-  const boss = makeFighter('enemy', raid.boss.speciesId, raid.boss.level, { statMult: raid.boss.statMult })
+  const boss = bossAsMon(raid)
   boss.stats.atk = Math.max(1, Math.round(boss.stats.atk * RAID_BOSS_ATK_MULT))
   return { ...boss, hp: raid.hp, maxHp: raid.maxHp }
 }
@@ -58,7 +64,32 @@ function bossStrike(boss: Fighter, target: Fighter, rng: Rng): { dealt: number; 
   return { ...hit, dealt: before - target.hp }
 }
 
-/** Una ronda: cada participante en pie pega al jefe y, si sigue vivo, el jefe pega a uno de ellos */
+/** Daño al jefe que no es de un golpe (sus estados): se le cuenta a `by`, quien se lo puso */
+function statusHarm(raid: Raid, boss: Fighter, by: string, amount: number, status: StatusId): RaidHit {
+  const before = boss.hp
+  boss.hp = Math.max(0, boss.hp - amount)
+  const dealt = before - boss.hp
+  const member = raid.members.find((m) => m.id === by)
+  if (member) member.damage += dealt
+  return { from: by, to: BOSS_ID, dealt, eff: 1, fainted: boss.hp === 0, status }
+}
+
+/** El turno del jefe: sus estados pueden dejarle quieto o hacer que se golpee; si no, pega a uno de los que están en pie */
+function bossAct(raid: Raid, boss: Fighter, standing: [RaidMember, Fighter][], rng: Rng): RaidHit[] {
+  const turn = bossTurn(raid, rng)
+  if (turn.kind === 'skip') return []
+  if (turn.kind === 'self-hit') {
+    const selfHit = Math.max(1, Math.floor(damage(boss, boss, boss.move, rng).dealt * CONFUSION_SELF_DAMAGE))
+    return [statusHarm(raid, boss, turn.by, selfHit, StatusId.Confusion)]
+  }
+  const [target, f] = standing[Math.floor(rng() * standing.length)]
+  boss.status = bossHas(raid, StatusId.Burn) ? StatusId.Burn : null
+  const { dealt, eff } = bossStrike(boss, f, rng)
+  boss.status = null
+  return [{ from: BOSS_ID, to: target.id, dealt, eff, fainted: f.hp === 0 }]
+}
+
+/** Una ronda: cada participante en pie pega al jefe y, si sigue vivo, el jefe pega a uno de ellos y le hacen daño sus estados */
 export function playRound(raid: Raid, passivesOf: PassivesOf, rng: Rng): RaidHit[] {
   const hits: RaidHit[] = []
   const boss = bossFighter(raid)
@@ -67,15 +98,16 @@ export function playRound(raid: Raid, passivesOf: PassivesOf, rng: Rng): RaidHit
   for (const [m, f] of fighters) {
     if (boss.hp === 0) break
     const { dealt, eff } = strike(f, boss, rng)
+    takeInflicted(raid, boss, m.id)
     m.damage += dealt
     hits.push({ from: m.id, to: BOSS_ID, dealt, eff, fainted: boss.hp === 0 })
   }
 
   const standing = [...fighters].filter(([, f]) => f.hp > 0)
-  if (boss.hp > 0 && standing.length > 0) {
-    const [target, f] = standing[Math.floor(rng() * standing.length)]
-    const { dealt, eff } = bossStrike(boss, f, rng)
-    hits.push({ from: BOSS_ID, to: target.id, dealt, eff, fainted: f.hp === 0 })
+  if (boss.hp > 0 && standing.length > 0) hits.push(...bossAct(raid, boss, standing, rng))
+  for (const tick of statusTicks(raid, bossOwnMaxHp(raid))) {
+    if (boss.hp === 0) break
+    hits.push(statusHarm(raid, boss, tick.by, tick.dealt, tick.status))
   }
 
   for (const [m, f] of fighters) {

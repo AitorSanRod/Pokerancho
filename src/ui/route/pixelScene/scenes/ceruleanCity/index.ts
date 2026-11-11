@@ -5,7 +5,7 @@
 import { StopLandmark } from '../../../../../data/maps'
 import type { SceneDef, SceneLayer } from '../../engine/types'
 import { fisherHut } from '../../elements/fisherHut'
-import { signpost } from '../../elements/signpost'
+import { signLandmark } from '../../elements/signpost'
 import { waterGym } from '../../elements/waterGym'
 import { clouds, sky, wisps } from '../meadow/backdrop'
 import { PATH } from '../meadow/ground'
@@ -56,7 +56,7 @@ export function ceruleanCityScene(seed: number): SceneDef {
     ],
     particles: ceruleanParticles(seed),
     landmarks: [
-      { id: StopLandmark.Sign, label: 'Cartel', pixmap: signpost('CIUDAD CELESTE', WOOD, LAWN), parallax: 1, bottom: PATH_TOP - 8, afterLayer: 'path' },
+      signLandmark('CIUDAD CELESTE', WOOD, LAWN, PATH_TOP - 8),
       { id: StopLandmark.Gym, label: 'Gimnasio', pixmap: waterGym(WATER_GYM), parallax: 0.5, bottom: CANAL_BOTTOM + 38, afterLayer: 'city' },
       { id: StopLandmark.House, label: 'Casa del pescador', pixmap: fisherHut(FISHER_HUT), parallax: 0.5, bottom: CANAL_BOTTOM + 38, afterLayer: 'city' },
     ],

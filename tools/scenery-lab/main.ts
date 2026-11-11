@@ -3,6 +3,7 @@
 import { PARTICLES_ID, SceneRenderer } from '../../src/ui/route/pixelScene/engine/renderer'
 import type { SceneDef } from '../../src/ui/route/pixelScene/engine/types'
 import { caveScene } from '../../src/ui/route/pixelScene/scenes/cave'
+import { labScene } from '../../src/ui/route/pixelScene/scenes/lab'
 import { ceruleanCityScene } from '../../src/ui/route/pixelScene/scenes/ceruleanCity'
 import { forestScene } from '../../src/ui/route/pixelScene/scenes/forest'
 import { meadowScene } from '../../src/ui/route/pixelScene/scenes/meadow'
@@ -18,6 +19,7 @@ const AUTO_LANDMARK_SECONDS = 12
 
 /** Escenas en pruebas; el código vive en src/ui/route/pixelScene (el mismo que usa el juego) */
 const SCENES: Record<string, (seed: number) => SceneDef> = {
+  Laboratorio: labScene,
   'Ciudad Celeste': ceruleanCityScene,
   'Monte Moon': mtMoonScene,
   'Cueva (Cueva Helada, raids)': caveScene,

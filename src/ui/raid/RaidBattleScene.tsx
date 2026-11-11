@@ -1,7 +1,10 @@
 import type { CSSProperties } from 'react'
 import type { Biome } from '../../data/maps'
 import { signatureMove } from '../../data/moves'
+import { STATUS_INFO } from '../../data/passives'
 import { species } from '../../data/species'
+import type { PokeType } from '../../data/types'
+import { bossStatuses } from '../../game/raid/raidBossStatus'
 import { BOSS_ID, presentMembers, RaidMemberKind, type Raid, type RaidMember } from '../../game/raid/raidRoom'
 import { inFinale, isEnding } from '../../game/raid/raidEnding'
 import { useWatchRaid } from '../../net/raidSync'
@@ -58,7 +61,7 @@ export function RaidBattle({ raid, timeScale }: { raid: Raid; timeScale: number 
           key={m.id}
           m={m}
           index={i}
-          attack={hits.find((h) => h.from === m.id)}
+          attack={hits.find((h) => h.from === m.id && !h.status)}
           struck={hits.find((h) => h.from === BOSS_ID && h.to === m.id)}
           bossSpeciesId={raid.boss.speciesId}
           timeScale={timeScale}
@@ -66,12 +69,15 @@ export function RaidBattle({ raid, timeScale }: { raid: Raid; timeScale: number 
       ))}
       <BossFighter raid={raid} hits={hits} party={party} />
       <div className="battle-hud-slot enemy boss raid-boss-hud">
-        <BattleHud fighter={boss} hp={shownBossHp(raid)} statuses={[]} boss />
+        <BattleHud fighter={boss} hp={shownBossHp(raid)} statuses={bossStatuses(raid).map((b) => b.status)} boss />
       </div>
       {inFinale(raid) && <RaidFinale raid={raid} />}
     </div>
   )
 }
+
+/** Destello de un golpe al jefe: el del ataque de quien pega o, si es daño de un estado, el del estado */
+const hitType = (h: ReplayHit, hitter: RaidMember): PokeType => (h.status ? STATUS_INFO[h.status].type : signatureMove(hitter.speciesId).type)
 
 function BossFighter({ raid, hits, party }: { raid: Raid; hits: ReplayHit[]; party: RaidMember[] }) {
   const received = hits.filter((h) => h.to === BOSS_ID)
@@ -93,7 +99,7 @@ function BossFighter({ raid, hits, party }: { raid: Raid; hits: ReplayHit[]; par
           {h.dealt > 0 ? `-${h.dealt}` : 'Fallo'}
         </span>
       ))}
-      {latest && latest.dealt > 0 && hitter && <HitEffect key={`fx-${latest.seq}`} type={signatureMove(hitter.speciesId).type} />}
+      {latest && latest.dealt > 0 && hitter && <HitEffect key={`fx-${latest.seq}`} type={hitType(latest, hitter)} />}
       <div className={attack ? roundClass(attack.seq, 'raid-boss-lunge') : ''}>
         <div className={latest ? roundClass(latest.seq, 'raid-shake') : ''}>
           <div className="raid-idle boss">

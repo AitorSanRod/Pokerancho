@@ -4,7 +4,7 @@
 import { StopLandmark } from '../../../../../data/maps'
 import type { SceneDef, SceneLayer } from '../../engine/types'
 import { hollowLog } from '../../elements/log'
-import { signpost } from '../../elements/signpost'
+import { signLandmark } from '../../elements/signpost'
 import { PATH } from '../meadow/ground'
 import { canopy, farForest, midForest, rays, sky } from './backdrop'
 import { backTufts, forestPath, frontTufts } from './ground'
@@ -48,7 +48,7 @@ export function forestScene(seed: number): SceneDef {
     ],
     landmarks: [
       { id: StopLandmark.Log, label: 'Tronco hueco', pixmap: hollowLog(LOG), parallax: 1, bottom: PATH_TOP - 10, afterLayer: 'back-tufts' },
-      { id: StopLandmark.Sign, label: 'Cartel', pixmap: signpost('BOSQUE VERDE', WOOD, FOREST_GRASS), parallax: 1, bottom: PATH_TOP - 8, afterLayer: 'path' },
+      signLandmark('BOSQUE VERDE', WOOD, FOREST_GRASS, PATH_TOP - 8),
     ],
   }
 }

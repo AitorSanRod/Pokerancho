@@ -1,5 +1,6 @@
 import type { RouteId } from '../../data/maps'
 import type { Nature } from '../../data/natures'
+import type { StatusId } from '../../data/passives'
 import type { RaidBoss } from '../../data/raidBosses'
 
 /** Participantes que caben a la vez en una sala (jugadores y bots) */
@@ -49,6 +50,17 @@ export interface RaidHit {
   /** Eficacia del ataque (0, 0.5, 1, 2…) */
   eff: number
   fainted: boolean
+  /** Daño que le hace al jefe un estado suyo (quemadura, veneno, confusión), contado a `from`, quien se lo puso */
+  status?: StatusId
+}
+
+/** Un estado alterado del jefe (ver raidBossStatus.ts) */
+export interface BossStatus {
+  status: StatusId
+  /** Participante que se lo puso: se le cuenta el daño que haga */
+  by: string
+  /** Rondas que le quedan (sueño, congelación); null si dura hasta que cae el jefe */
+  rounds: number | null
 }
 
 /** Parada de ruta (`NodeKind.Raid`) en la que está una sala */
@@ -90,6 +102,11 @@ export interface Raid {
   round: number
   members: RaidMember[]
   lastRound: RaidHit[]
+  /**
+   * Estados alterados del jefe. Opcional para no cortar las salas en marcha al actualizar (sin subir SAVE_VERSION): las
+   * empezadas antes no lo tienen y siguen sin estados hasta que cae su jefe; las nuevas (`newRaid`) empiezan con []
+   */
+  bossStatuses?: BossStatus[]
   /** Jefes de la pestaña Raids derrotados desde el principio: decide cuál sale ahora (0 en las salas de ruta) */
   felled: number
   /** Contador para dar ids únicos a los bots */

@@ -5,7 +5,7 @@ import { StopLandmark } from '../../../../../data/maps'
 import type { SceneDef, SceneLayer } from '../../engine/types'
 import { fountain } from '../../elements/fountain'
 import { house } from '../../elements/house'
-import { signpost } from '../../elements/signpost'
+import { signLandmark } from '../../elements/signpost'
 import { clouds, farHills, hills, sky, wisps } from '../meadow/backdrop'
 import { backTufts, frontTufts, PATH } from '../meadow/ground'
 import { GRASS, WOOD } from '../meadow/palette'
@@ -51,7 +51,7 @@ export function palletTownScene(seed: number): SceneDef {
     ],
     particles: meadowParticles(seed),
     landmarks: [
-      { id: StopLandmark.Sign, label: 'Cartel', pixmap: signpost('PUEBLO PALETA', WOOD, GRASS), parallax: 1, bottom: PATH_TOP - 8, afterLayer: 'path' },
+      signLandmark('PUEBLO PALETA', WOOD, GRASS, PATH_TOP - 8),
       { id: StopLandmark.House, label: 'Casa', pixmap: house(RED_HOUSE), parallax: 0.75, bottom: PATH.height - 2, afterLayer: 'town' },
       { id: StopLandmark.Fountain, label: 'Fuente', pixmap: fountain(FOUNTAIN), parallax: 1, bottom: PATH_TOP - 14, afterLayer: 'path' },
     ],

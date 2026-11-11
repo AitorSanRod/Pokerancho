@@ -33,6 +33,8 @@ export interface Landmark {
   id: StopLandmark
   label: string
   pixmap: Pixmap
+  /** Se vuelve a pintar con otro texto (el cartel, con el nombre de la ruta) */
+  relabel?: (text: string) => Pixmap
   /** Fracción de la velocidad del camino (menos de 1 si está más lejos que el camino) */
   parallax: number
   /** Altura de su base sobre el borde inferior, en píxeles de arte */

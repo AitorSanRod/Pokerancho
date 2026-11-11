@@ -2,14 +2,13 @@
 // fósiles en las paredes, alguna Piedra Lunar junto al camino, gotas que caen del techo y el cartel de la entrada
 // como elemento de parada. Parte de la escena Cueva, que se queda como está.
 
-import { StopLandmark } from '../../../../../data/maps'
 import type { SceneDef, SceneLayer } from '../../engine/types'
 import { ceiling } from '../cave/backdrop'
 import { cavePath } from '../cave/ground'
 import { PATH } from '../meadow/ground'
 import { farWall, midWall, sky } from './backdrop'
 import { foreground, nearRocks } from './near'
-import { signpost } from '../../elements/signpost'
+import { signLandmark } from '../../elements/signpost'
 import { CEILING, FLOOR, FLOOR_INK, NEAR_ROCK, PUDDLE, WOOD } from './palette'
 import { mtMoonParticles } from './particles'
 
@@ -41,6 +40,6 @@ export function mtMoonScene(seed: number): SceneDef {
       layer('foreground', 'Rocas en primer plano', [foreground(seed)], -4, 1.4, { plane: 'front' }),
     ],
     particles: mtMoonParticles(seed),
-    landmarks: [{ id: StopLandmark.Sign, label: 'Cartel', pixmap: signpost('MONTE MOON', WOOD, NEAR_ROCK.colors), parallax: 1, bottom: PATH.height - PATH.dirtTop - 8, afterLayer: 'path' }],
+    landmarks: [signLandmark('MONTE MOON', WOOD, NEAR_ROCK.colors, PATH.height - PATH.dirtTop - 8)],
   }
 }

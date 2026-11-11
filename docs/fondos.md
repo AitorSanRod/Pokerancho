@@ -18,6 +18,15 @@ casa del pescador, un canal animado (`canal.ts`: boyas y barca que se mecen, bar
 adoquín azulado con la acera del muelle detrás y gaviotas de tarde en tarde (`particles.ts`). Paradas: cartel,
 gimnasio y casa del pescador.
 
+**Laboratorio** (`scenes/lab/`, bioma `Lab`, todavía sin ninguna ruta) es el primer interior y la base para los
+demás: pared clara con zócalo menta y rodapié, ventanales altos que siguen por detrás del techo y dejan ver cielo,
+nubes y árboles (`bigWindow`), rayos de sol que bajan en diagonal desde cada ventanal y se apagan por tramos antes de
+los pies del Pokémon (capa con el mismo parallax que la pared, `layout.ts` reparte lo de la pared para las dos),
+puertas de madera y automáticas de cristal, estanterías, máquinas, pizarra y reloj, techo con lámparas colgantes,
+parqué con filas que se ensanchan hacia delante, mesas de laboratorio con cosas encima y plantas en maceta (alguna
+grande en primer plano). El parqué va a parallax 0,7 (y el cartel con él): a 1, como el camino de fuera, sus juntas hacen
+que el Pokémon parezca deslizarse. Para otro interior basta otra paleta y otro reparto de piezas.
+
 **Monte Moon** (`scenes/mtMoon/`) parte de la Cueva: casi a oscuras, la luz sale de los cristales y aclara por
 bandas la roca de alrededor (`light.ts › relight`, sin halos); rocas de caras planas (`crag`, no de bolas, que parecían
 nubes), fósiles en la pared media, alguna Piedra Lunar junto al camino, gotas que caen del techo (`particles.ts`) y el
@@ -210,6 +219,7 @@ Parallax habitual: nubes 0,02–0,03 · colinas 0,05–0,1 · plano lejano 0,1�
 | `noise` | `makeRng(seed)`, `between`, `pick`, `hash`, `valueNoise` periódico, `periodicWave` y su pendiente |
 | `shade` | `ramp(colors, t, x, y)`: elige tono de una rampa; `verticalGradient` |
 | `spheres` | `paintSpheres`: volumen de esferas con contorno y líneas entre ellas (rocas) |
+| `box` | `shadedBox` (volumen con luz arriba a la izquierda), `insetBox` (hueco hundido), `disc` |
 | `foliage` | `paintFoliage`: follaje de esferas con borde mordido, luz, manchas de hojas; `gaps: false` = sin huecos oscuros (lo habitual) |
 
 ### `elements/` (piezas reutilizables)
@@ -233,7 +243,12 @@ Parallax habitual: nubes 0,02–0,03 · colinas 0,05–0,1 · plano lejano 0,1�
 | `lamppost` | `lamppost`: farola de hierro con farol encendido y halo semitransparente solo sobre lo vacío |
 | `rocks` | `spike` (estalactita o estalagmita), `boulder` (peñasco de varias bolas), `crag` (roca de caras planas y cantos), `crystals` (racimo de cristales con halo), `rockMass` (pared de roca de fondo sin contorno) |
 | `fence` | `picketFence` (valla blanca con postes en los extremos), `flowerBed` (parterre de flores de tallo alto) |
-| `fountain`, `log`, `mushroom`, `signpost` | Fuente de plaza, tronco hueco, seta, cartel de madera con fuente 3×5 (añadir letras a `GLYPHS` si faltan) |
+| `fountain`, `log`, `mushroom` | Fuente de plaza, tronco hueco, seta |
+| `bigWindow` | Ventanal de interior con el exterior de día (cielo, nube, árboles), parteluces, travesaño, alféizar y reflejos |
+| `interiorDoors` | `woodDoor` (cuarterones, ventanuco y pomo) y `glassDoor` (automática de dos hojas con sensor), con su jamba |
+| `bookcase`, `labMachine`, `wallDecor` | Estantería con libros; armario de ordenador y `monitor`; `whiteboard` y `wallClock` |
+| `labBench`, `pottedPlant` | Mesa de laboratorio con cajonera y cosas encima (monitor, matraces, microscopio, libros); planta en maceta |
+| `signpost`, `pixelFont` | Cartel de madera (`signLandmark`): en el juego lleva el **nombre de la ruta** (`Landmark.relabel`, `pixelSceneFor(bioma, nombre)`), en una o dos líneas (parte en « - » y por palabras); fuente de 5 px de alto con A–Z, 0–9 y `- . '` (sin tildes) |
 
 Piezas propias de cada escena que pueden servir de modelo: `meadow/plain.ts` (llanura en dos planos con árboles por
 profundidad), `palletTown/town.ts` y `pewterCity/city.ts` (filas de casas con `houseRow`), `pewterCity/backdrop.ts` (cordilleras rocosas con picos), `palletTown/ground.ts` (plaza

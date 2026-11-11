@@ -9,7 +9,7 @@ import { blockedByStatus, inflictStatus } from './status'
 /** Multiplicador de daño si el movimiento es del mismo tipo que el Pokémon */
 const STAB = 1.5
 /** Fracción del daño normal que se hace a sí mismo un Pokémon confuso al golpearse */
-const CONFUSION_SELF_DAMAGE = 0.5
+export const CONFUSION_SELF_DAMAGE = 0.5
 
 /** Lo que la fórmula de daño necesita de cada lado (también los combatientes de las incursiones) */
 export type DamageSide = Pick<Fighter, 'level' | 'types' | 'stats' | 'status' | 'bonus'>

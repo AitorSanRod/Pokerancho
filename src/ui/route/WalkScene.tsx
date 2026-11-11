@@ -16,7 +16,8 @@ interface Floater {
  * `speed` multiplica la velocidad del scroll (Pokémon más rápidos = paisaje más rápido). `children` se pinta
  * sobre el suelo (p. ej. el combate) y puede usar `--ground` para colocarse a la altura del Pokémon. Sin `speciesId` no
  * camina nadie (p. ej. en la pelea contra un jefe comunitario, que pinta a los suyos). `landmark`: elemento de la
- * parada a la que se acerca o en la que está (cartel, casa…), que entra una vez por parada.
+ * parada a la que se acerca o en la que está (cartel, casa…), que entra una vez por parada. `signText`: lo que pone el
+ * cartel (el nombre de la ruta).
  */
 export function WalkScene({
   biome,
@@ -26,6 +27,7 @@ export function WalkScene({
   walkerClass = '',
   onStep,
   landmark = null,
+  signText,
   children,
 }: {
   biome: Biome
@@ -36,9 +38,10 @@ export function WalkScene({
   walkerClass?: string
   onStep?: () => void
   landmark?: SceneLandmark | null
+  signText?: string
   children?: ReactNode
 }) {
-  const scene = pixelSceneFor(biome)
+  const scene = pixelSceneFor(biome, signText)
   const { container, back, front } = usePixelScene(scene, moving, speed, PIXEL, landmark)
   const ground = scene.walkerBottom * PIXEL
   const [floaters, setFloaters] = useState<Floater[]>([])
