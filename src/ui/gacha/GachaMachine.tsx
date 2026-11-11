@@ -98,7 +98,7 @@ export function GachaMachine({ game }: { game: GameState }) {
           }}
         />
       </div>
-      <GachaRates game={game} />
+      <GachaRates />
 
       {phase === 'rewards' && (
         <RewardOverlay

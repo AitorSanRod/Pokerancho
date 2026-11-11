@@ -1,8 +1,6 @@
 /** Stats que puede subir o bajar una naturaleza (los PS no cambian, como en los juegos) */
 export type NatureStat = 'atk' | 'def' | 'spe'
 
-export const NATURE_STAT_NAMES: Record<NatureStat, string> = { atk: 'Ataque', def: 'Defensa', spe: 'Velocidad' }
-
 /** Naturalezas por su nombre en el código (p. ej. `Nature.Bold`): la seria no sube ni baja nada */
 export const Nature = {
   Serious: 'serious',

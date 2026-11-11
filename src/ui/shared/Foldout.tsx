@@ -16,15 +16,17 @@ interface Props {
   defaultOpen: boolean
   /** Abierta sin poder cerrarla */
   forceOpen?: boolean
+  /** Id de la sección, para llevar la vista hasta ella */
+  id?: string
   children: ReactNode
 }
 
 /** Desplegable con cabecera grande (la de las Pokédex): se abre y cierra tocando la cabecera */
-export function Foldout({ kicker, title, aside, art, className = '', background, defaultOpen, forceOpen = false, children }: Props) {
+export function Foldout({ kicker, title, aside, art, className = '', background, defaultOpen, forceOpen = false, id, children }: Props) {
   const [open, setOpen] = useState(defaultOpen)
   const shownOpen = open || forceOpen
   return (
-    <section className={`foldout ${className} ${shownOpen ? 'open' : ''}`} style={background ? { ['--fold-bg' as string]: background } : undefined}>
+    <section id={id} className={`foldout ${className} ${shownOpen ? 'open' : ''}`} style={background ? { ['--fold-bg' as string]: background } : undefined}>
       <button className="foldout-head" onClick={() => setOpen(!shownOpen)} aria-expanded={shownOpen}>
         {art}
         <span className="foldout-title">

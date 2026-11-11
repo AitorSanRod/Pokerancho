@@ -4,11 +4,6 @@
   position: fixed;
   inset: 0;
   z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
   overflow: hidden;
   background: radial-gradient(circle at 50% 45%, #1d2440 0%, #07080f 70%);
   color: #fff;
@@ -32,10 +27,14 @@
   background: repeating-conic-gradient(color-mix(in srgb, var(--evo-color) 55%, transparent) 0 8deg, transparent 8deg 24deg);
   animation: evo-spin 18s linear infinite;
 }
+/* El Pokémon, fijo en el centro de los haces: no se mueve cuando aparece el texto */
 .evo-stage {
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: 45%;
   width: 220px;
   height: 220px;
+  margin: -110px 0 0 -110px;
   display: grid;
   place-items: center;
 }
@@ -70,7 +69,10 @@
   filter: drop-shadow(0 0 18px color-mix(in srgb, var(--evo-color) 80%, #fff));
 }
 .evo-text {
-  position: relative;
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: calc(45% + 128px);
   display: flex;
   flex-direction: column;
   align-items: center;

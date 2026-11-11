@@ -5,6 +5,7 @@ import { foeLevels } from '../../game/incursion/entry'
 import { keysOf } from '../../game/incursion/keys'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
+import { goToShop } from '../shared/navigation'
 import { BIOME_SCENERY } from '../shared/sheet/scenery'
 import { IncursionInfo } from './IncursionInfo'
 import { IncursionPrep } from './IncursionPrep'
@@ -47,9 +48,15 @@ function IncursionCard({ inc, keys, onEnter }: { inc: Incursion; keys: number; o
           <span className="incursion-keys small">
             <ItemIcon item={ICON.Incursion} size={24} off={keys === 0} /> ×{keys}
           </span>
-          <button className="btn primary grow" disabled={keys === 0} onClick={onEnter}>
-            {keys === 0 ? 'Compra una llave en la Tienda' : 'Preparar'}
-          </button>
+          {keys === 0 ? (
+            <button className="btn primary grow" onClick={() => goToShop('keys')}>
+              Comprar llave
+            </button>
+          ) : (
+            <button className="btn go grow" onClick={onEnter}>
+              Entrar
+            </button>
+          )}
         </div>
       </div>
     </article>

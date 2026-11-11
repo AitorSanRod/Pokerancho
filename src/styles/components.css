@@ -118,6 +118,12 @@
   color: var(--accent-ink);
   border-color: transparent;
 }
+/* Botón verde de «adelante» (entrar en una incursión con llave) */
+.btn.go {
+  background: var(--hp-ok);
+  color: #fff;
+  border-color: transparent;
+}
 .btn.ghost {
   background: transparent;
 }

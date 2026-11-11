@@ -25,11 +25,11 @@ import { ShopScreen } from './ui/shop/ShopScreen'
 import { StarterScreen } from './ui/starter/StarterScreen'
 import { ICON } from './ui/shared/icons'
 import { ItemIcon } from './ui/shared/ItemIcon'
+import { listenTabRequests, type AppTab } from './ui/shared/navigation'
 import { pendingKey, useUnseen } from './ui/shared/useUnseen'
 
-type Tab = 'route' | 'ranch' | 'shop' | 'gacha' | 'dex'
 
-const TABS: { id: Tab; icon: Item; label: string }[] = [
+const TABS: { id: AppTab; icon: Item; label: string }[] = [
   { id: 'route', icon: ICON.Route, label: 'Ruta' },
   { id: 'gacha', icon: ICON.Gacha, label: 'Gacha' },
   { id: 'ranch', icon: ICON.Ranch, label: 'Rancho' },
@@ -40,7 +40,7 @@ const TICK_MS = 250
 
 export default function App() {
   const game = useGame()
-  const [tab, setTab] = useState<Tab>(game.run ? 'route' : 'ranch')
+  const [tab, setTab] = useState<AppTab>(game.run ? 'route' : 'ranch')
 
   // Bucle de juego: el primer tick también aplica el progreso hecho con la app cerrada
   useEffect(() => {
@@ -48,6 +48,8 @@ export default function App() {
     const id = setInterval(() => act((s) => tick(s, Date.now())), TICK_MS)
     return () => clearInterval(id)
   }, [])
+  // Otras pantallas pueden llevar a una pestaña (p. ej. comprar una llave en la Tienda)
+  useEffect(() => listenTabRequests(setTab), [])
   // Salas compartidas de los jefes comunitarios: entrar, ponerse al día y avisar al salir
   useEffect(startRaidSync, [])
   useEffect(startIncursionSync, [])
@@ -67,7 +69,7 @@ export default function App() {
   // Los puntos rojos se apagan al entrar en la pestaña y vuelven si aparece algo nuevo
   const runNeedsLook = game.run && game.run.phase !== 'walking' ? [`${game.run.routeId}:${game.run.phase}`] : []
   const routePending = pendingKey([...runNeedsLook, ...game.expeditions.filter(isExpeditionDone).map((e) => e.uid)])
-  const badges: Record<Tab, boolean> = {
+  const badges: Record<AppTab, boolean> = {
     route: useUnseen('tab:route', routePending, tab === 'route'),
     ranch: false,
     shop: false,

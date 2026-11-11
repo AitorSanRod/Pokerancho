@@ -12,13 +12,16 @@ interface SectionProps {
   defaultOpen?: boolean
   /** Explicación corta, encima de la cuadrícula */
   hint?: string
+  /** Id de la sección, para llevar la vista hasta ella */
+  id?: string
   children: ReactNode
 }
 
 /** Sección desplegable de la Tienda con sus artículos en cuadrícula */
-export function ShopSection({ title, art, tone, defaultOpen = false, hint, children }: SectionProps) {
+export function ShopSection({ title, art, tone, defaultOpen = false, hint, id, children }: SectionProps) {
   return (
     <Foldout
+      id={id}
       kicker="Tienda"
       title={title}
       className={`shop-fold ${tone}`}
