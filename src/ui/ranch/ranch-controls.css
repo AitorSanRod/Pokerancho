@@ -16,27 +16,43 @@
   background: #0007;
   color: #fff;
 }
-/* Flechas amarillas a los lados para pasar de un rancho a otro */
+/* Flechas < y > a los lados para pasar de un rancho a otro, como las de la Caja del PC de los juegos: blancas con
+   borde oscuro. El botón deja 44px para el dedo; la flecha dibujada es más pequeña. */
 .ranch-arrow {
   position: absolute;
   top: 45%;
   z-index: 90;
   width: 44px;
-  height: 64px;
+  height: 44px;
+  padding: 0;
   border: none;
-  background: var(--yellow);
-  filter: drop-shadow(0 2px 0 var(--yellow-dark)) drop-shadow(0 3px 4px #0006);
+  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(1.5px 0 0 #2a2a3a) drop-shadow(-1.5px 0 0 #2a2a3a) drop-shadow(0 1.5px 0 #2a2a3a)
+    drop-shadow(0 -1.5px 0 #2a2a3a) drop-shadow(0 2px 2px #0006);
   animation: arrow-nudge 1.6s ease-in-out infinite;
 }
+.ranch-arrow::before {
+  content: '';
+  width: 14px;
+  height: 22px;
+  background: #fff;
+}
 .ranch-arrow.left {
-  left: 4px;
-  clip-path: polygon(100% 0, 0 50%, 100% 100%);
-  --nudge: -4px;
+  left: 2px;
+  --nudge: -3px;
+}
+.ranch-arrow.left::before {
+  clip-path: polygon(100% 0, 40% 50%, 100% 100%, 60% 100%, 0 50%, 60% 0);
 }
 .ranch-arrow.right {
-  right: 4px;
-  clip-path: polygon(0 0, 100% 50%, 0 100%);
-  --nudge: 4px;
+  right: 2px;
+  --nudge: 3px;
+}
+.ranch-arrow.right::before {
+  clip-path: polygon(0 0, 60% 50%, 0 100%, 40% 100%, 100% 50%, 40% 0);
 }
 /* Botones de las esquinas inferiores, bajo la valla: la Caja a la izquierda (también es donde se suelta un Pokémon
    para guardarlo) y el menú a la derecha */
