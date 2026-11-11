@@ -53,7 +53,11 @@ export function IncursionView({ game, a }: { game: GameState; a: ActiveIncursion
           <RegroupPanel game={game} a={a} members={members} msLeft={p.regroupMsLeft} />
         </div>
       )}
-      {finished && <IncursionSummary outcome={p.record.outcome} earned={p.record.earned} />}
+      {finished && (
+        <div className="incursion-finale">
+          <IncursionSummary outcome={p.record.outcome} earned={p.record.earned} />
+        </div>
+      )}
     </div>
   )
 }
