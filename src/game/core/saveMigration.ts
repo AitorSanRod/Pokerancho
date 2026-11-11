@@ -122,6 +122,8 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   unlockedRoutes: (v) => listOf(v, isRoute),
   completedRoutes: (v) => listOf(v, isRoute),
   owned: (v) => (Array.isArray(v) ? v.map(salvageMon).filter((m): m is OwnedMon => m !== null) : undefined),
+  // El compañero empieza en null y sameShape no aceptaría su uid: sin esta regla se cambiaba en cada versión
+  activeUid: (v) => (typeof v === 'string' && v ? v : undefined),
   raidPrizes: (v) => (Array.isArray(v) ? v.map(salvagePrize).filter((x) => x !== null) : undefined),
   routeRaidStreaks: (v) =>
     isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([, r]) => isRecord(r) && isInt(r.count) && typeof r.lastAt === 'number')) : undefined,

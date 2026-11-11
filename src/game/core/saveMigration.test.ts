@@ -82,6 +82,14 @@ afterEach(() => {
 })
 
 describe('al actualizar el juego no se pierde nada', () => {
+  it('el compañero se mantiene aunque no sea el primer Pokémon del rancho', () => {
+    const s = advancedGame()
+    const companion = createMon(C, 7, 0)
+    s.owned.push(companion)
+    s.activeUid = companion.uid
+    expect(migrateSave(fromOldVersion(s))!.activeUid).toBe(companion.uid)
+  })
+
   it('las llaves de incursión se quedan si son de una incursión que existe y sin pasar del máximo', () => {
     const save = { ...fromOldVersion(advancedGame()), incursionKeys: { [IncursionId.CuevaHelada]: MAX_KEYS + 1, quitada: 1 } }
     expect(migrateSave(save)!.incursionKeys).toEqual({})
