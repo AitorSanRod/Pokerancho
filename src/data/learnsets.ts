@@ -52,4 +52,11 @@ export const CUSTOM_MOVESETS: Partial<Record<number, LearnedMove[]>> = {
     { move: IMOVE.RayoSolar, level: 1 },
     { move: IMOVE.BombaLodo, level: 1 },
   ],
+  [POKEMON.Charizard]: [
+    { move: IMOVE.Vendaval, level: 1 },
+    { move: IMOVE.Llamarada, level: 1 },
+    { move: IMOVE.RayoSolar, level: 1 },
+    { move: IMOVE.FuegoFatuo, level: 1 },
+    { move: IMOVE.VientoAfin, level: 1 },
+  ],
 }

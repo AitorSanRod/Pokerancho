@@ -6,6 +6,7 @@ import { act } from '../../game/core/store'
 import { buyRanchType, ranchTypeBuyBlocker, ranchTypeOwned } from '../../game/team/ranchTypes'
 import { TypeBadge } from '../shared/common'
 import { ICON } from '../shared/icons'
+import { BuyButton } from './BuyButton'
 import { ShopSection, ShopTile } from './ShopTile'
 
 /** Tipos de rancho a la venta: cada uno favorece a uno o dos tipos de Pokémon; se colocan desde el panel del rancho */
@@ -48,9 +49,15 @@ function RanchTypeTile({ game, id }: { game: GameState; id: RanchTypeId }) {
         owned >= RANCH_TYPE_MAX_OWNED ? (
           <span className="tag ok">Completo</span>
         ) : (
-          <button className="btn primary small" disabled={!!blocker} title={blocker ?? undefined} onClick={() => act((s) => buyRanchType(s, id))}>
-            ₽ {info.price}
-          </button>
+          <BuyButton
+            name={`Rancho ${info.name}`}
+            icon={<RanchTypeGems types={info.favors} />}
+            price={info.price}
+            money={game.money}
+            disabled={!!blocker}
+            title={blocker ?? undefined}
+            onBuy={() => act((s) => buyRanchType(s, id))}
+          />
         )
       }
     >

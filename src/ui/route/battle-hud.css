@@ -140,10 +140,11 @@
   box-shadow: 0 0 0 1px var(--red);
 }
 
-/* Fila de abajo: el estado alterado */
+/* Fila de abajo: los estados alterados */
 .hud-foot {
   display: flex;
   align-items: center;
+  gap: 3px;
   min-height: 15px;
 }
 .hud-status {

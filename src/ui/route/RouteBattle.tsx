@@ -49,10 +49,10 @@ export function RouteBattle({ record, frame }: { record: BattleRecord; frame: Ba
         </div>
       </div>
       <div className="battle-hud-slot player">
-        <BattleHud fighter={record.player} hp={event.playerHp} status={event.playerStatus} struck={struck('player')} />
+        <BattleHud fighter={record.player} hp={event.playerHp} statuses={event.playerStatus ? [event.playerStatus] : []} struck={struck('player')} />
       </div>
       <div className={`battle-hud-slot enemy ${record.boss ? 'boss' : ''}`}>
-        <BattleHud fighter={record.enemy} hp={event.enemyHp} status={event.enemyStatus} struck={struck('enemy')} boss={record.boss} />
+        <BattleHud fighter={record.enemy} hp={event.enemyHp} statuses={event.enemyStatus ? [event.enemyStatus] : []} struck={struck('enemy')} boss={record.boss} />
       </div>
     </div>
   )

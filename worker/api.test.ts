@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { STARTERS } from '../src/data/species'
-import { cloudUpload } from '../src/game/core/cloudSave'
-import { initialState } from '../src/game/core/state'
+import { cloudUpload, SaveRejection } from '../src/game/core/cloudSave'
+import { initialState, SAVE_VERSION } from '../src/game/core/state'
 import { chooseStarter } from '../src/game/core/test-utils'
 import { RAID_ROTATIONS, RaidAction, RaidRotation, RoomSlot } from '../src/game/raid/online/protocol'
 import { rotationBoss } from '../src/game/raid/rotationBosses'
@@ -43,6 +43,23 @@ describe('partida en la nube', () => {
     expect(stale.status).toBe(409)
     expect(stale.data.cloud).toMatchObject({ revision: 2, save: { money: 200 } })
     expect((await api.call('/api/save', { body: upload(300, null) })).status).toBe(409)
+  })
+
+  it('una app sin actualizar no pisa una partida guardada con una versión más nueva: 409 diciendo por qué, sin la partida', async () => {
+    const api = await signedIn()
+    const newer = upload(100, null)
+    newer.save.version = SAVE_VERSION + 1
+    await api.call('/api/save', { body: newer })
+    const outdated = await api.call('/api/save', { body: upload(200, 1) })
+    expect(outdated).toMatchObject({ status: 409, data: { cloud: null, code: SaveRejection.OutdatedApp } })
+    expect((await api.call('/api/save')).data.cloud).toMatchObject({ revision: 1, save: { money: 100 } })
+  })
+
+  it('antes de cambiar la partida se guarda una copia de la que había, como mucho una cada hora', async () => {
+    const api = await signedIn()
+    for (const [money, base] of [[100, null], [200, 1], [300, 2]] as const) await api.call('/api/save', { body: upload(money, base) })
+    const { results } = await api.env.DB.prepare('SELECT revision FROM save_history').all<{ revision: number }>()
+    expect(results).toEqual([{ revision: 1 }])
   })
 })
 

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { dexSections } from '../../data/pokedexes'
 import { species, SPECIES } from '../../data/species'
-import { canCombine, combinableCount } from '../../game/collection/pieces'
+import { applyDexQuery, DEFAULT_DEX_QUERY, DexFilter, isDexQueryActive } from '../../game/collection/dexQuery'
+import { combinableCount } from '../../game/collection/pieces'
 import { TutorialStep, type GameState } from '../../game/core/state'
 import { tutorialStarter } from '../../game/team/tutorial'
 import { TutorialHint } from '../shared/TutorialHint'
@@ -10,18 +11,20 @@ import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { DexCell } from './DexCell'
 import { DexSection } from './DexSection'
+import { DexToolbar } from './DexToolbar'
 import './dex.css'
 
 const SECTIONS = dexSections()
 
 export function DexScreen({ game }: { game: GameState }) {
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [onlyReady, setOnlyReady] = useState(false)
+  const [query, setQuery] = useState(DEFAULT_DEX_QUERY)
   const ready = combinableCount(game)
-  // Si ya no queda ninguno listo, el filtro se quita solo
-  const filtering = onlyReady && ready > 0
+  const filtering = isDexQueryActive(query)
   const starter = game.tutorial === TutorialStep.Combine ? tutorialStarter(game) : undefined
   const target = starter !== undefined && selectedId !== starter ? starter : undefined
+  const sections = SECTIONS.map((section) => ({ section, shown: applyDexQuery(game, section.species, query) }))
+  const nothingFound = filtering && sections.every(({ shown }) => shown.length === 0)
 
   return (
     <>
@@ -32,28 +35,20 @@ export function DexScreen({ game }: { game: GameState }) {
             Capturados <strong>{game.caught.length}</strong>/{SPECIES.length} · Vistos {game.seen.length}
           </span>
         </div>
-        {ready > 0 &&
-          (filtering ? (
-            <div className="notice small dex-filter">
-              <ItemIcon item={ICON.Piece} size={18} />
-              <span className="grow">Solo los listos para combinar ({ready})</span>
-              <button className="dex-filter-clear" onClick={() => setOnlyReady(false)} aria-label="Quitar el filtro">
-                ✕
-              </button>
-            </div>
-          ) : (
-            <button className="notice small dex-filter" onClick={() => setOnlyReady(true)}>
-              <ItemIcon item={ICON.Piece} size={18} />
-              <span className="grow">
-                {ready} {ready === 1 ? 'Pokémon listo' : 'Pokémon listos'} para combinar. Toca aquí para verlos.
-              </span>
-            </button>
-          ))}
+        <DexToolbar query={query} onChange={setQuery} />
+        {ready > 0 && query.filter !== DexFilter.Ready && (
+          <button className="notice small dex-filter" onClick={() => setQuery({ ...DEFAULT_DEX_QUERY, filter: DexFilter.Ready })}>
+            <ItemIcon item={ICON.Piece} size={18} />
+            <span className="grow">
+              {ready} {ready === 1 ? 'Pokémon listo' : 'Pokémon listos'} para combinar. Toca aquí para verlos.
+            </span>
+          </button>
+        )}
         {target !== undefined && (
           <TutorialHint>Toca a {species(target).name} (la casilla que parpadea) para ver sus tickets.</TutorialHint>
         )}
-        {SECTIONS.map((section, i) => {
-          const shown = filtering ? section.species.filter((sp) => canCombine(game, sp.id)) : section.species
+        {nothingFound && <p className="muted small dex-no-results">Ningún Pokémon coincide con la búsqueda.</p>}
+        {sections.map(({ section, shown }, i) => {
           if (filtering && shown.length === 0) return null
           return (
             <DexSection

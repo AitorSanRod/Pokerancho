@@ -1,3 +1,4 @@
+import { GROUP_PASSIVES, type GroupPassiveLevel } from '../../data/incursionPassives'
 import { STATUS_INFO, TYPE_PASSIVES, type PassiveEffect, type PassiveLevel } from '../../data/passives'
 import { TYPE_INFO, type PokeType } from '../../data/types'
 
@@ -22,3 +23,7 @@ function describeEffect(e: PassiveEffect): string[] {
 }
 
 export const passiveText = (type: PokeType, level: PassiveLevel): string => describeEffect(TYPE_PASSIVES[type][level - 1]).join(' · ')
+
+/** Lo que da a todo el grupo la pasiva de un tipo en una incursión */
+export const groupPassiveText = (type: PokeType, level: GroupPassiveLevel): string =>
+  describeEffect(GROUP_PASSIVES[type][level - 1]).join(' · ')

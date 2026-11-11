@@ -54,6 +54,7 @@ export const ITEM = {
   EscapeRope: 'escape-rope',
   Revive: 'revive',
   TmNormal: 'tm-normal',
+  SeriousMint: 'serious-mint',
 } as const
 export type Item = (typeof ITEM)[keyof typeof ITEM]
 

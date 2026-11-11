@@ -45,11 +45,28 @@ export interface IncursionFoe {
   boss?: BossMechanics
 }
 
+/** Una opción de un rival al azar: cuanto más `weight`, más veces sale (relativo a las demás de su lista) */
+export interface FoeOption {
+  foe: IncursionFoe
+  weight: number
+}
+
+/** Plaza de rival que, al entrar en la sala, se cambia por una de sus opciones (game/incursion/foePool.ts) */
+export interface FoePool {
+  pool: FoeOption[]
+}
+
+/** Rivales que caben en una sala: la escena solo tiene sitio para tantos (ui/incursion/stageSpots.ts) */
+export const MAX_ROOM_FOES = 3
+
+/** Lo que va en `foes` de una sala: un rival fijo o uno sacado de una lista */
+export type FoeSlot = IncursionFoe | FoePool
+
 export const RoomKind = { Battle: 'battle', Heal: 'heal', Revive: 'revive', Regroup: 'regroup' } as const
 export type RoomKind = (typeof RoomKind)[keyof typeof RoomKind]
 
 export type IncursionRoom =
-  | { kind: typeof RoomKind.Battle; name: string; foes: IncursionFoe[]; /** Lo que gana cada uno al superarla */ reward: { money: number; exp: number } }
+  | { kind: typeof RoomKind.Battle; name: string; foes: FoeSlot[]; /** Lo que gana cada uno al superarla */ reward: { money: number; exp: number } }
   | { kind: typeof RoomKind.Heal; name: string; /** Fracción de los PS máximos que recuperan los que siguen en pie */ heal: number }
   | { kind: typeof RoomKind.Revive; name: string; /** Fracción de PS con la que se levantan todos los caídos */ hp: number }
   /** Cada jugador puede cambiar su movimiento: cierra un tramo (ver incursionLeg.ts) */
@@ -93,3 +110,9 @@ export const foe = (speciesId: number, level: number, moveIds: string[], extra: 
   moveIds,
   ...extra,
 })
+
+/** Rival al azar entre varios, todos igual de probables */
+export const oneOf = (...foes: IncursionFoe[]): FoePool => ({ pool: foes.map((f) => ({ foe: f, weight: 1 })) })
+
+/** Rival al azar con pesos: `weighted([a, 3], [b, 1])` saca `a` 3 de cada 4 veces */
+export const weighted = (...options: [IncursionFoe, number][]): FoePool => ({ pool: options.map(([f, weight]) => ({ foe: f, weight })) })

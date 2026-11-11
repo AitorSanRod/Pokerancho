@@ -5,6 +5,7 @@ import { act } from '../../game/core/store'
 import { buyFormItem, buyFormItemBlocker, hasFormItem } from '../../game/team/forms'
 import { Sprite } from '../shared/common'
 import { ICON } from '../shared/icons'
+import { BuyButton } from './BuyButton'
 import { ShopSection, ShopTile } from './ShopTile'
 
 /** Objetos de forma de Rotom: se compran una vez, van a la Mochila y se usan desde la ficha siempre que se quiera */
@@ -25,17 +26,23 @@ export function FormItemShop({ game }: { game: GameState }) {
 
 function FormItemTile({ game, id }: { game: GameState; id: FormItem }) {
   const info = FORM_ITEMS[id]
+  const icon = <Sprite id={info.formId} animated={false} size={48} />
   return (
     <ShopTile
-      icon={<Sprite id={info.formId} animated={false} size={48} />}
+      icon={icon}
       name={info.name}
       action={
         hasFormItem(game, id) ? (
           <span className="tag ok">Comprado</span>
         ) : (
-          <button className="btn primary small" disabled={!!buyFormItemBlocker(game, id)} onClick={() => act((s) => buyFormItem(s, id))}>
-            ₽ {info.price}
-          </button>
+          <BuyButton
+            name={info.name}
+            icon={icon}
+            price={info.price}
+            money={game.money}
+            disabled={!!buyFormItemBlocker(game, id)}
+            onBuy={() => act((s) => buyFormItem(s, id))}
+          />
         )
       }
     >

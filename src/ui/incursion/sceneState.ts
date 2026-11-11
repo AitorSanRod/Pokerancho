@@ -19,7 +19,8 @@ export interface SceneMon {
   hp: number
   maxHp: number
   out: boolean
-  status: StatusId | null
+  /** Estados alterados, del más antiguo al más nuevo (un jefe puede llevar varios) */
+  statuses: StatusId[]
   boss: boolean
   /** Del grupo: el ataque que lleva (cambia si el jugador lo cambia en plena pelea) */
   moveId?: string
@@ -48,7 +49,7 @@ function partyAtStart(a: ActiveIncursion, p: IncursionProgress): SceneMon[] {
   const members = p.leg === 0 ? a.members : p.record.legs[p.leg - 1].next.members
   return members.map((m) => ({
     id: m.id, team: Team.Party, speciesId: m.speciesId, name: species(m.speciesId).name, level: m.level,
-    hp: Math.round(m.hpFraction * 100), maxHp: 100, out: m.out, status: m.status, boss: false, moveId: m.moveId,
+    hp: Math.round(m.hpFraction * 100), maxHp: 100, out: m.out, statuses: m.status ? [m.status] : [], boss: false, moveId: m.moveId,
   }))
 }
 
@@ -62,9 +63,9 @@ function apply(scene: SceneState, e: IncursionEvent, seq: number) {
     Object.assign(scene, { room: e.room ?? scene.room, roomSeq: seq, move: null, focusFoe: null })
     scene.foes = []
     for (const f of e.fighters ?? []) {
-      const mon: SceneMon = { ...f, status: null }
+      const mon: SceneMon = { ...f, statuses: [] }
       if (f.team === Team.Foe) scene.foes.push(mon)
-      else scene.party = scene.party.map((p) => (p.id === f.id ? { ...mon, status: p.status, moveId: p.moveId } : p))
+      else scene.party = scene.party.map((p) => (p.id === f.id ? { ...mon, statuses: p.statuses, moveId: p.moveId } : p))
     }
   }
   const foe = scene.foes.find((m) => m.id === e.target || (e.kind === EventKind.Move && m.id === e.actor))
@@ -74,8 +75,10 @@ function apply(scene: SceneState, e: IncursionEvent, seq: number) {
   const target = [...scene.party, ...scene.foes].find((m) => m.id === e.target)
   if (!target) return
   if (e.hp !== undefined) Object.assign(target, { hp: e.hp, maxHp: e.maxHp ?? target.maxHp })
-  if (e.kind === EventKind.Status && e.status) target.status = e.status
-  if (e.kind === EventKind.Revive || e.kind === EventKind.Recover) target.status = null
+  const others = target.statuses.filter((s) => s !== e.status)
+  if (e.kind === EventKind.Status && e.status) target.statuses = [...others, e.status]
+  if (e.kind === EventKind.Recover) target.statuses = others
+  if (e.kind === EventKind.Revive) target.statuses = []
   if (e.kind === EventKind.Revive) target.out = false
   if (e.kind === EventKind.Out) target.out = true
 }

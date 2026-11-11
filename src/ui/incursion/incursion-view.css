@@ -93,10 +93,19 @@
 }
 .incursion-passives {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.incursion-passive-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 .incursion-passive {
+  flex: none;
   padding: 2px 8px;
   border-radius: 8px;
   background: var(--type-color);

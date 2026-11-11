@@ -5,6 +5,7 @@ import { act } from '../../game/core/store'
 import { buyKey, buyKeyBlocker, keyPrice, keysOf } from '../../game/incursion/keys'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
+import { BuyButton } from './BuyButton'
 import { clearShopSpot, isShopSpot } from '../shared/navigation'
 import { ShopSection, ShopTile } from './ShopTile'
 
@@ -37,14 +38,20 @@ export function IncursionKeyShop({ game }: { game: GameState }) {
 }
 
 function KeyTile({ game, inc }: { game: GameState; inc: Incursion }) {
+  const icon = <ItemIcon item={ICON.Incursion} size={48} />
   return (
     <ShopTile
-      icon={<ItemIcon item={ICON.Incursion} size={48} />}
+      icon={icon}
       name={inc.name}
       action={
-        <button className="btn primary small" disabled={!!buyKeyBlocker(game, inc.id)} onClick={() => act((s) => buyKey(s, inc.id))}>
-          ₽ {keyPrice(inc.id).toLocaleString('es')}
-        </button>
+        <BuyButton
+          name={`una llave de ${inc.name}`}
+          icon={icon}
+          price={keyPrice(inc.id)}
+          money={game.money}
+          disabled={!!buyKeyBlocker(game, inc.id)}
+          onBuy={() => act((s) => buyKey(s, inc.id))}
+        />
       }
     >
       <span className="tiny muted">

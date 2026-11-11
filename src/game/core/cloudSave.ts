@@ -4,10 +4,11 @@ import { cancelBlockedExpeditions } from '../team/expedition'
 import { rehomeOverflow } from '../team/ranches'
 import { migrateSave } from './saveMigration'
 import { backupTeam, parseTeamBackup, restoreTeam, type TeamBackup } from './teamBackup'
-import { initialState, restoreState, TutorialStep, type GameState } from './state'
+import { initialState, restoreState, SAVE_VERSION, TutorialStep, type GameState } from './state'
 
 // La partida en la nube de una cuenta (worker/save.ts). Gana la última que se sube: cada copia lleva una
-// revisión y el servidor solo acepta subir encima de la que el dispositivo vio por última vez.
+// revisión y el servidor solo acepta subir encima de la que el dispositivo vio por última vez y desde una app que no sea
+// más vieja que la que guardó la de la nube. Nunca se baja sin preguntar si aquí hay progreso que la nube no tiene.
 
 /** Bytes como mucho de una partida subida (la de un jugador avanzado ocupa unas decenas de KB) */
 export const MAX_SAVE_BYTES = 1024 * 1024
@@ -31,18 +32,49 @@ export interface CloudLink {
 export const CloudAction = { Upload: 'upload', Download: 'download', Ask: 'ask' } as const
 export type CloudAction = (typeof CloudAction)[keyof typeof CloudAction]
 
+/** Por qué el servidor no acepta una subida aparte de que otro dispositivo subiera antes (va en el 409) */
+export const SaveRejection = {
+  /** La partida de la nube se guardó con una versión más nueva de la app: hay que actualizar esta antes de subir */
+  OutdatedApp: 'outdated-app',
+} as const
+export type SaveRejection = (typeof SaveRejection)[keyof typeof SaveRejection]
+
 /** Una partida recién empezada, aún sin inicial: no hay nada que perder si se cambia por la de la nube */
 const isFreshGame = (s: GameState): boolean => s.tutorial === TutorialStep.Starter
 
+/** La partida de la nube es de una versión de la app más nueva que esta: no se sabe leer entera y no se carga */
+export const isFromNewerApp = (cloud: CloudSave): boolean => Number.isInteger(cloud.save?.version) && cloud.save.version > SAVE_VERSION
+
+/** Los Pokémon de una partida de la nube por uid (puede ser de otra versión: solo se fía de lo que tenga buena forma) */
+function monsByUid(save: unknown): Map<string, { level: number; stars: number }> {
+  const owned = (save as Partial<GameState> | null)?.owned
+  return new Map(Array.isArray(owned) ? owned.filter((m) => typeof m?.uid === 'string').map((m) => [m.uid, m]) : [])
+}
+
+/**
+ * Aquí hay progreso que la partida de la nube no tiene (Pokémon que no están, con más nivel o ★, o rutas completadas):
+ * bajarla sin preguntar lo perdería (p. ej. al jugar sin conexión mientras otro dispositivo subía la suya)
+ */
+export function hasUnsavedProgress(local: GameState, cloud: CloudSave): boolean {
+  const inCloud = monsByUid(cloud.save)
+  const ahead = local.owned.some((m) => {
+    const there = inCloud.get(m.uid)
+    return !there || m.level > there.level || m.stars > there.stars
+  })
+  const routes = Array.isArray(cloud.save?.completedRoutes) ? new Set(cloud.save.completedRoutes) : new Set<string>()
+  return ahead || local.completedRoutes.some((r) => !routes.has(r))
+}
+
 /**
  * Qué hacer al conectar con la cuenta `userId`: sin copia en la nube, subir la de aquí; si la de aquí ya es de esa
- * cuenta, bajar la de la nube si otro dispositivo ha subido después y, si no, subir; si no, preguntar (salvo que la
- * de aquí esté sin empezar)
+ * cuenta, bajar la de la nube si otro dispositivo ha subido después (o preguntar si aquí hay progreso que la nube no
+ * tiene) y, si no, subir; si no, preguntar (salvo que la de aquí esté sin empezar)
  */
-export function cloudAction(link: CloudLink | null, userId: string, cloud: Pick<CloudSave, 'revision'> | null, local: GameState): CloudAction {
+export function cloudAction(link: CloudLink | null, userId: string, cloud: CloudSave | null, local: GameState): CloudAction {
   if (!cloud) return CloudAction.Upload
-  if (link?.userId === userId) return cloud.revision > link.revision ? CloudAction.Download : CloudAction.Upload
-  return isFreshGame(local) ? CloudAction.Download : CloudAction.Ask
+  if (link?.userId !== userId) return isFreshGame(local) ? CloudAction.Download : CloudAction.Ask
+  if (cloud.revision <= link.revision) return CloudAction.Upload
+  return hasUnsavedProgress(local, cloud) ? CloudAction.Ask : CloudAction.Download
 }
 
 /** Lo que se sube: la partida y la copia del equipo */

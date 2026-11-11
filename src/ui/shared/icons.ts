@@ -43,6 +43,8 @@ export const ICON = {
   Evolve: ITEM.MoonStone,
   /** Cambio de forma (Rotom) y sus objetos */
   Form: ITEM.RotomCatalog,
+  /** Menta aleatoria (cambia la naturaleza) */
+  Mint: ITEM.SeriousMint,
   Active: ITEM.PokeBall,
   Money: ITEM.AmuletCoin,
   Wins: ITEM.Protein,

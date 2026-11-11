@@ -4,6 +4,7 @@ import { StatusId } from '../../data/passives'
 import { seqRng } from '../core/test-utils'
 import { ally, enemy, field } from './incursion-test-utils'
 import { chooseFoeMove, FOE_HEAL_BELOW, isUseful, stillUseful } from './foeTactics'
+import { inflict as afflict } from './groupStatus'
 import { MAX_STAGES } from './statStages'
 
 // Ataques de prueba, para no depender de los datos
@@ -22,7 +23,7 @@ describe('ataques de los rivales', () => {
     const foe = foeWith('e', [CONFUSE, HIT])
     const { bf } = field([a], [foe])
     expect(isUseful(bf, foe, CONFUSE)).toBe(true)
-    a.status = StatusId.Confusion
+    afflict(bf, a, StatusId.Confusion)
     expect(isUseful(bf, foe, CONFUSE)).toBe(false)
     for (let r = 0; r < 1; r += 0.1) expect(chooseFoeMove(bf, foe, seqRng(r), false)).toBe(HIT)
   })
@@ -56,7 +57,7 @@ describe('ataques de los rivales', () => {
     const foe = foeWith('e', [CONFUSE, HIT])
     const { bf } = field([a], [foe])
     foe.move = CONFUSE
-    a.status = StatusId.Confusion
+    afflict(bf, a, StatusId.Confusion)
     expect(stillUseful(bf, foe, seqRng(0.5), false)).toBe(HIT)
   })
 })

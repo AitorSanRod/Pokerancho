@@ -6,8 +6,8 @@ import { EXPEDITION_DURATIONS } from '../team/expedition'
 import { createMon, NEW_MON_LEVEL } from '../team/mons'
 import { RANCH_EXPANSION_SLOTS } from '../team/ranchExpansion'
 import { ranchCapacity, usedSlots } from '../team/ranches'
-import { CloudAction, cloudAction, cloudUpload, parseUpload, saveSummary, stateFromSaved, withEvolutionLines } from './cloudSave'
-import { initialState, SAVE_VERSION } from './state'
+import { CloudAction, cloudAction, cloudUpload, hasUnsavedProgress, isFromNewerApp, parseUpload, saveSummary, stateFromSaved, withEvolutionLines, type CloudSave } from './cloudSave'
+import { initialState, SAVE_VERSION, type GameState } from './state'
 import { backupTeam } from './teamBackup'
 import { chooseStarter, readyForExpeditions } from './test-utils'
 
@@ -21,21 +21,46 @@ function playedGame() {
   return s
 }
 
+/** La partida `s` (una copia) tal y como estaría en la nube con la revisión `revision` */
+const cloudOf = (s: GameState, revision: number): CloudSave => ({ ...structuredClone(cloudUpload(s)), revision, updatedAt: 0 })
+
 describe('partida en la nube', () => {
   it('sin copia en la nube, se sube la de aquí', () => {
     expect(cloudAction(null, USER, null, playedGame())).toBe(CloudAction.Upload)
   })
 
   it('si la de aquí ya es de la cuenta: baja la de la nube si otro dispositivo subió después y, si no, sube', () => {
+    const local = playedGame()
     const link = { userId: USER, revision: 3 }
-    expect(cloudAction(link, USER, { revision: 4 }, playedGame())).toBe(CloudAction.Download)
-    expect(cloudAction(link, USER, { revision: 3 }, playedGame())).toBe(CloudAction.Upload)
+    expect(cloudAction(link, USER, cloudOf(local, 4), local)).toBe(CloudAction.Download)
+    expect(cloudAction(link, USER, cloudOf(local, 3), local)).toBe(CloudAction.Upload)
+  })
+
+  it('no baja sin preguntar una partida de la nube a la que le falta progreso de aquí (jugado sin conexión)', () => {
+    const local = playedGame()
+    const older = cloudOf(local, 4)
+    expect(hasUnsavedProgress(local, older)).toBe(false)
+    local.owned[0].level++
+    expect(hasUnsavedProgress(local, older)).toBe(true)
+    expect(cloudAction({ userId: USER, revision: 3 }, USER, older, local)).toBe(CloudAction.Ask)
+    const withNewMon = playedGame()
+    const before = cloudOf(withNewMon, 4)
+    chooseStarter(withNewMon, STARTERS[1])
+    expect(hasUnsavedProgress(withNewMon, before)).toBe(true)
   })
 
   it('si la de aquí no es de la cuenta: pregunta, salvo que esté sin empezar (entonces baja sin preguntar)', () => {
-    expect(cloudAction(null, USER, { revision: 1 }, playedGame())).toBe(CloudAction.Ask)
-    expect(cloudAction({ userId: 'otra', revision: 9 }, USER, { revision: 1 }, playedGame())).toBe(CloudAction.Ask)
-    expect(cloudAction(null, USER, { revision: 1 }, initialState())).toBe(CloudAction.Download)
+    const cloud = cloudOf(playedGame(), 1)
+    expect(cloudAction(null, USER, cloud, playedGame())).toBe(CloudAction.Ask)
+    expect(cloudAction({ userId: 'otra', revision: 9 }, USER, cloud, playedGame())).toBe(CloudAction.Ask)
+    expect(cloudAction(null, USER, cloud, initialState())).toBe(CloudAction.Download)
+  })
+
+  it('una partida de la nube guardada con una versión más nueva de la app se reconoce (no se carga)', () => {
+    const cloud = cloudOf(playedGame(), 1)
+    expect(isFromNewerApp(cloud)).toBe(false)
+    cloud.save.version = SAVE_VERSION + 1
+    expect(isFromNewerApp(cloud)).toBe(true)
   })
 
   it('una copia de esta versión se recupera tal cual; de otra, se migra sin perder nada (ver saveMigration.test.ts)', () => {

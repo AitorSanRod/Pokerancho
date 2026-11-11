@@ -1,6 +1,7 @@
 import { effectiveness, type PokeType } from '../../data/types'
 import type { Rng } from '../core/random'
 import { allies, enemies, type Battlefield } from './battlefield'
+import { hasStatusRoom } from './groupStatus'
 import { Team, type GroupFighter } from './fighter'
 import { pickedTarget } from './movePicks'
 
@@ -36,11 +37,11 @@ export function debuffTarget(bf: Battlefield, actor: GroupFighter): GroupFighter
   return taunter(bf, actor) ?? pickedTarget(actor, foes) ?? foes.reduce((a, b) => (b.hp > a.hp ? b : a))
 }
 
-/** Estado a un rival: el que provoca; si no, uno al azar que no tenga ya un estado */
+/** Estado a un rival: el que provoca; si no, uno al azar al que le quepa otro estado (los jefes admiten varios) */
 export function inflictTarget(bf: Battlefield, actor: GroupFighter, rng: Rng): GroupFighter | null {
   const forced = taunter(bf, actor) ?? pickedTarget(actor, enemies(bf, actor))
   if (forced) return forced
-  const free = enemies(bf, actor).filter((f) => !f.status)
+  const free = enemies(bf, actor).filter(hasStatusRoom)
   return free.length ? pick(free, rng) : null
 }
 

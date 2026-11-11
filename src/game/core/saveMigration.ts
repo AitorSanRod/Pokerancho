@@ -28,13 +28,12 @@ type Save = Record<string, unknown>
  * Pasos de migración: SAVE_MIGRATIONS[v] convierte una partida de la versión v en una de la v + 1. Solo hace falta
  * cuando un campo cambia de nombre o de significado; los campos nuevos o quitados ya los resuelve el rescate
  */
-export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {
-  // 37 → 38: las incursiones cambian (sin nivel sincronizado, órdenes por turno): la que estaba en curso se descarta
-  // y se devuelve su llave
-  37: refundIncursionKey,
-}
+export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {}
 
-/** La incursión en curso se va a descartar: su llave vuelve a la Mochila (sin pasar del máximo) */
+/**
+ * La incursión en curso se descarta en cualquier cambio de versión (IN_PROGRESS): su llave, gastada al entrar, vuelve a
+ * la Mochila (sin pasar del máximo)
+ */
 function refundIncursionKey(save: Save) {
   const id = isRecord(save.incursion) ? save.incursion.incursionId : null
   if (typeof id !== 'string') return
@@ -43,7 +42,10 @@ function refundIncursionKey(save: Save) {
   save.incursionKeys = keys
 }
 
-/** Lo que se descarta al cambiar de versión: la ruta, la sala de raid y la incursión en curso o en cola (el Pokémon vuelve al rancho) */
+/**
+ * Lo que se descarta al cambiar de versión: la ruta (lo ganado en ella ya se sumó al ganarlo), la sala de raid y la
+ * incursión en curso (se devuelve su llave) o en cola; el Pokémon vuelve al rancho
+ */
 const IN_PROGRESS: (keyof GameState)[] = ['run', 'raids', 'raidServer', 'incursion', 'incursionQueue', 'timeScale']
 /** Ranchos que puede llegar a tener el jugador: el primero más todos los de la tienda */
 const MAX_RANCHES = 1 + UPGRADES.ranches.prices.length
@@ -111,6 +113,7 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
     isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([k, n]) => isRanch(k) && typeof n === 'string' && n === cleanRanchName(n) && n)) : undefined,
   stones: (v) => countsOf(v, (k) => (Object.values(Stone) as string[]).includes(k)),
   formItems: (v) => listOf(v, isFormItem),
+  mints: (v) => (isInt(v) ? v : undefined),
   starItems: (v) => countsOf(v, isStarItem),
   tms: (v) => countsOf(v, isTm),
   gachaPity: (v) => countsOf(v, (k) => isStarItem(k) && STAR_ITEMS[k].pity !== null),
@@ -161,6 +164,7 @@ export function migrateSave(saved: unknown): GameState | null {
   if (!isRecord(saved) || !isInt(saved.version)) return null
   const save = structuredClone(saved)
   for (let v = save.version as number; v < SAVE_VERSION; v++) SAVE_MIGRATIONS[v]?.(save)
+  refundIncursionKey(save)
   const s = initialState()
   const fields = s as unknown as Save
   for (const key of Object.keys(s) as (keyof GameState)[]) {

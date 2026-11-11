@@ -1,10 +1,10 @@
-import { TYPE_INFO } from '../../data/types'
 import type { GameState } from '../../game/core/state'
 import type { ActiveIncursion, IncursionProgress } from '../../game/incursion/activeIncursion'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { DamageTally } from './DamageTally'
 import { Fold } from './Fold'
+import { GroupPassiveList } from './GroupPassiveList'
 import { IncursionRoster } from './IncursionRoster'
 import { PickButton } from './PickButton'
 import { RetreatVote } from './RetreatVote'
@@ -36,13 +36,7 @@ export function IncursionMenuPanel({ game, a, p, scene, canPick, finished }: Pro
       </Fold>
       {scene.passives.length > 0 && (
         <Fold title={`Pasivas del grupo (${scene.passives.length})`}>
-          <div className="incursion-passives">
-            {scene.passives.map((ps) => (
-              <span key={ps.type} className="incursion-passive tiny" style={{ ['--type-color' as string]: TYPE_INFO[ps.type].color }}>
-                {TYPE_INFO[ps.type].name} {ps.level}
-              </span>
-            ))}
-          </div>
+          <GroupPassiveList passives={scene.passives} />
         </Fold>
       )}
       {!finished && (

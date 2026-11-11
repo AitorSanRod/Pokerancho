@@ -66,7 +66,7 @@ export function RaidBattle({ raid, timeScale }: { raid: Raid; timeScale: number 
       ))}
       <BossFighter raid={raid} hits={hits} party={party} />
       <div className="battle-hud-slot enemy boss raid-boss-hud">
-        <BattleHud fighter={boss} hp={shownBossHp(raid)} status={null} boss />
+        <BattleHud fighter={boss} hp={shownBossHp(raid)} statuses={[]} boss />
       </div>
       {inFinale(raid) && <RaidFinale raid={raid} />}
     </div>

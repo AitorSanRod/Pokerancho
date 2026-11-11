@@ -141,6 +141,8 @@ export interface GameState {
   stones: Partial<Record<Stone, number>>
   /** Objetos de forma comprados (ver team/forms.ts): no se gastan, se usan siempre que se quiera */
   formItems: FormItem[]
+  /** Mentas aleatorias compradas y aún sin usar (ver team/mints.ts) */
+  mints: number
   /** Objetos estelares sin gastar (ver collection/starItems.ts) */
   starItems: Partial<Record<StarItem, number>>
   /** Tiradas seguidas del gacha sin que haya salido cada objeto estelar con garantía */
@@ -186,7 +188,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 42
+export const SAVE_VERSION = 43
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 
@@ -212,6 +214,7 @@ export function initialState(): GameState {
     ranchNames: {},
     stones: {},
     formItems: [],
+    mints: 0,
     starItems: {},
     gachaPity: {},
     tms: {},

@@ -42,7 +42,7 @@ function RosterLine({ m, note, move }: { m: SceneMon; note: string; move?: strin
         <span className="incursion-line-name tiny">
           <strong>{m.name}</strong> Nv. {m.level}
           {note && <em> · {note}</em>}
-          {m.status && <span className="incursion-status"> {STATUS_INFO[m.status].short}</span>}
+          {m.statuses.map((s) => <span key={s} className="incursion-status"> {STATUS_INFO[s].short}</span>)}
           {m.out && <span className="incursion-status"> FUERA</span>}
         </span>
         <Bar value={m.hp} max={m.maxHp} kind="hp" />

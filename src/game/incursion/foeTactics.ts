@@ -1,6 +1,7 @@
 import { EffectKind, hasArea, MoveClass, moveClass, type IncursionMove, type StatChange } from '../../data/incursionMoves'
 import type { Rng } from '../core/random'
 import { allies, enemies, type Battlefield } from './battlefield'
+import { hasStatusRoom } from './groupStatus'
 import type { GroupFighter } from './fighter'
 import { MAX_STAGES } from './statStages'
 import { debuffTarget, taunter } from './targeting'
@@ -24,7 +25,7 @@ export function isUseful(bf: Battlefield, f: GroupFighter, mv: IncursionMove): b
     switch (e.kind) {
       case EffectKind.Inflict: {
         const forced = taunter(bf, f)
-        return forced ? !forced.status : enemies(bf, f).some((t) => !t.status)
+        return forced ? hasStatusRoom(forced) : enemies(bf, f).some(hasStatusRoom)
       }
       case EffectKind.Raise:
         return (e.self ? [f] : allies(bf, f)).some((t) => hasRoom(t, e.changes))

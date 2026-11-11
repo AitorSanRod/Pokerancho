@@ -59,4 +59,11 @@ describe('mochila', () => {
     s.starItems[id] = 2
     expect(bagContents(s).starItems).toEqual([{ id, count: 2 }])
   })
+
+  it('guarda las mentas sin usar', () => {
+    const s = initialState()
+    s.mints = 2
+    expect(bagContents(s).mints).toBe(2)
+    expect(isBagEmpty(bagContents(s))).toBe(false)
+  })
 })

@@ -11,6 +11,7 @@ import { EvolveResultAnimation } from './EvolveResultAnimation'
 import { FavoriteButton } from './FavoriteButton'
 import { FormPanel } from './FormPanel'
 import { HealButton } from './HealButton'
+import { MintPanel } from './MintPanel'
 import { MonHero } from './MonHero'
 import { MonOverview } from './MonOverview'
 import { MonSheet } from './MonSheet'
@@ -54,6 +55,7 @@ export function PokemonSheet({ game, speciesId: shownId, onClose }: { game: Game
       {mon && <EvolvePanel game={game} mon={mon} onEvolved={setEvolution} />}
       {mon && <FormPanel game={game} mon={mon} />}
       {mon && <TmPanel game={game} mon={mon} />}
+      {mon && <MintPanel game={game} mon={mon} />}
       {mon && <MovePanel game={game} mon={mon} />}
     </MonSheet>
   )

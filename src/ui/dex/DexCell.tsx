@@ -24,7 +24,7 @@ interface Props {
   onSelect: () => void
   /** Línea extra al pie de la casilla (el precio en la tienda de MissingNo) */
   footer?: ReactNode
-  /** Sin tocar; por defecto, las especies sin descubrir y sin tickets */
+  /** Sin tocar (en la tienda de MissingNo, si no llegan los trozos); en la Pokédex se pueden tocar todas */
   disabled?: boolean
 }
 
@@ -37,7 +37,7 @@ export function DexCell({ game, sp, selected, tutorialTarget, onSelect, footer, 
     <button
       className={`dex-cell ${caught ? 'caught' : ''} ${ready ? 'ready' : ''} ${selected ? 'selected' : ''} ${tutorialTarget ? 'tutorial-target' : ''}`}
       style={{ ['--rarity' as string]: RARITY_INFO[rarityOf(sp)].color }}
-      disabled={disabled ?? (!seen && pieces === 0)}
+      disabled={disabled}
       onClick={onSelect}
     >
       <span className="tiny muted">#{String(sp.id).padStart(3, '0')}</span>

@@ -55,7 +55,7 @@ src/
                       viejas), requests (validar lo que le llega)
   net/                identity (id de jugador y apodo), raidApi (fetch a /api/raid), raidSync (bucle de consultas),
                       raidFeed (la pestaña Raids según el servidor),
-                      account (cuenta: /api/auth), cloudSync + cloudLink (partida en la nube), dailyGift (obsequio diario),
+                      account (cuenta: /api/auth), cloudSync + cloudState + cloudLink (partida en la nube), dailyGift (obsequio diario),
                       push (notificaciones), tradeApi + tradeBoard (intercambios: /api/trade)
   ui/
     shared/           Sprite, ItemIcon e icons (iconos con objetos de PokeAPI) y piezas comunes, pantallas superpuestas (premios, aparición, confirmación),
@@ -162,9 +162,9 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `net/raidFeed.ts` | La pestaña Raids según el servidor: jefe, frontal, lista de salas y hora del servidor |
 | `game/raid/online/skipAhead.ts` | Resumir de golpe lo que una sala lleva sin consultar (el Worker tiene poca CPU por petición) |
 | `game/core/accountRules.ts` | Lo que comparten web y servidor de cuentas: email, contraseña, códigos de error |
-| `game/core/cloudSave.ts` | Partida en la nube: qué hacer al conectar (`cloudAction`), recuperar una copia (`stateFromSaved`), resumen y validar la subida |
+| `game/core/cloudSave.ts` | Partida en la nube: qué hacer al conectar (`cloudAction`), progreso sin subir (`hasUnsavedProgress`), app sin actualizar (`isFromNewerApp`, `SaveRejection`), recuperar una copia (`stateFromSaved`), resumen y validar la subida |
 | `net/account.ts` | Cuenta opcional: sesión, enlaces de los correos, entrar, crearla, recuperar la contraseña (`/api/auth`) |
-| `net/cloudSync.ts` | Subir y bajar la partida de la cuenta; conflictos entre dispositivos; `withCloudInSync` para los intercambios |
+| `net/cloudSync.ts` + `net/cloudState.ts` | Subir y bajar la partida de la cuenta; conflictos entre dispositivos y app sin actualizar; `withCloudInSync` para los intercambios / lo que ve la UI |
 | `game/trade/tradeOps.ts` | Operaciones de intercambio (anunciar, pagar, recoger) que aplica el servidor a la partida de la nube y el móvil a la suya |
 | `net/tradeApi.ts`, `net/tradeBoard.ts` | Peticiones de intercambio y el tablón (con lo pendiente de Notificaciones), consultado cada minuto |
 
@@ -199,7 +199,9 @@ En los tests se pasa un rng determinista. Una función nueva con azar **debe** s
   ya no existe se descarta); los demás se conservan si tienen la misma forma que el inicial, y los nuevos toman su
   valor inicial. Al final se arreglan las relaciones (`linkUp`: Pokémon sin repetir, activo y expediciones de
   Pokémon que existen, capturados como vistos, rutas completadas como desbloqueadas, ranchos comprados). Solo se
-  descarta lo que está a medias (`IN_PROGRESS`: la ruta y la sala de raid en curso; el Pokémon vuelve al rancho).
+  descarta lo que está a medias (`IN_PROGRESS`: la ruta, la sala de raid y la incursión en curso; el Pokémon vuelve al
+  rancho). Lo ganado en la ruta ya está sumado y la llave de la incursión se devuelve, así que jugar sin conexión con
+  la versión anterior y actualizar después no quita nada.
 - En las dos cargas se abren las rutas que desbloquean las ya completadas (`run/routeUnlocks.ts ›
   unlockReachedRoutes`): una ruta añadida al final del mapa aparece abierta para quien ya completó la anterior.
   También se da por capturada la línea evolutiva anterior de lo capturado (`collection/dex.ts › markEvolutionLines`);
@@ -353,9 +355,18 @@ Opcionales, con email y contraseña, en el propio Worker (`worker/auth/`, tablas
 - **Una partida por cuenta** (tabla `saves`): `CloudSave` = la partida, la copia del equipo (por si es de otra
   `SAVE_VERSION`) y una revisión. Se sube encima de la revisión que el dispositivo vio por última vez (`CloudLink`, en
   `localStorage` aparte de la partida) con `UPDATE … WHERE revision = <base>`; si en la nube hay otra más nueva, el
-  servidor responde 409 con ella y el dispositivo la carga (`replaceState`): gana la última subida.
+  servidor responde 409 con ella y el dispositivo la carga (`replaceState`), salvo que aquí haya progreso que esa no
+  tiene (`hasUnsavedProgress`: Pokémon que no están o con más nivel o ★, rutas completadas): entonces pregunta.
 - **Al conectar** (`cloudAction`): sin copia, se sube; si la de aquí ya es de la cuenta, se baja si hay revisión nueva
-  y si no se sube; si no, se pregunta cuál conservar (salvo que la de aquí esté sin empezar).
+  (o se pregunta si aquí hay progreso sin subir, p. ej. tras jugar sin conexión) y si no se sube; si no, se pregunta
+  cuál conservar (salvo que la de aquí esté sin empezar).
+- **Versiones de la app**: una app sin actualizar no sabe leer entera una partida guardada por una más nueva (perdería
+  las especies o campos que no conoce). Por eso el servidor no acepta subir una partida de `SAVE_VERSION` más vieja que
+  la de la nube (409 con `SaveRejection.OutdatedApp`) y el móvil no carga una de la nube más nueva (`isFromNewerApp`):
+  deja de sincronizar (`net/cloudState.ts › outdated`) y pide actualizar (`ui/account/OutdatedAppDialog`). Lo jugado
+  aquí sigue en `localStorage`; al actualizar se migra y se sube (o se pregunta, si la nube también avanzó).
+- **Copias** (tabla `save_history`): antes de cambiar la partida de la nube se guarda la que había, como mucho una por
+  hora y durante 3 días (`worker/db/saves.ts`), para recuperar algo a mano (ver [servidor.md](servidor.md)).
 - **Obsequio diario** (`game/collection/dailyGift.ts`, `worker/gift.ts`, tabla `daily_gifts`): por cuenta, en el
   servidor, para que no se recoja dos veces desde dos móviles. Se guarda cuántos lleva y cuándo fue el último; recoger
   es una sola consulta (`INSERT … ON CONFLICT DO UPDATE … WHERE last_claim_at <= ahora − 24 h RETURNING`). El cliente

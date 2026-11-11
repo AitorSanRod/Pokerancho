@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { AccountStatus, forgotPassword, MIN_PASSWORD, signIn, signOut, signUp, useAccount, type AccountUser } from '../../net/account'
-import { beforeSignOut, saveNow, useCloud } from '../../net/cloudSync'
+import { beforeSignOut, saveNow } from '../../net/cloudSync'
+import { useCloud } from '../../net/cloudState'
 import { AccountModal } from './AccountModal'
 
 const Mode = { Login: 'login', Signup: 'signup', Forgot: 'forgot' } as const
@@ -75,8 +76,15 @@ const LinkButton = ({ label, onClick }: { label: string; onClick: () => void }) 
 
 const clock = (ms: number) => new Date(ms).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
 
+/** Cómo va el guardado en la nube, en una línea */
+function cloudStatus(failing: boolean, outdated: boolean, syncedAt: number | null): string {
+  if (outdated) return 'Actualiza la app para seguir guardando en la nube. Lo que juegues aquí no se pierde.'
+  if (failing) return 'Sin conexión con el servidor: se guardará en cuanto vuelva.'
+  return syncedAt ? `Partida guardada en la nube a las ${clock(syncedAt)}.` : 'Guardando la partida en la nube…'
+}
+
 function SignedIn({ user, onClose }: { user: AccountUser; onClose: () => void }) {
-  const { syncedAt, failing } = useCloud()
+  const { syncedAt, failing, outdated } = useCloud()
   const [leaving, setLeaving] = useState(false)
 
   const leave = async () => {
@@ -92,7 +100,7 @@ function SignedIn({ user, onClose }: { user: AccountUser; onClose: () => void })
         Has entrado como <strong>{user.email}</strong>.
       </p>
       <p className="tiny muted">
-        {failing ? 'Sin conexión con el servidor: se guardará en cuanto vuelva.' : syncedAt ? `Partida guardada en la nube a las ${clock(syncedAt)}.` : 'Guardando la partida en la nube…'}
+        {cloudStatus(failing, outdated, syncedAt)}
       </p>
       <div className="account-form">
         <button className="btn wide" onClick={() => void saveNow()}>

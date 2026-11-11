@@ -23,7 +23,7 @@ Cómo funciona por dentro: [arquitectura.md › Salas compartidas](arquitectura.
 | Incursiones con otros jugadores: `POST /api/incursion` (cola, grupo, reorganizar, votos). Una consulta sin cambios no escribe en D1; los grupos sin consultas en 24 h los borra la tarea programada | `worker/incursion.ts` + `worker/db/incursions.ts`; tablas en `migrations/0010_incursions.sql` |
 | Partida en la nube: `GET` / `POST /api/save` (solo con sesión) | `worker/save.ts` + `worker/db/saves.ts` |
 | Cuentas: `/api/auth/*` (crear, confirmar, entrar, salir, recuperar, apodo) | `worker/auth/` + `worker/db/users.ts` |
-| Regalos para todos: `GET /api/server-gifts` (sin cuenta; cada partida apunta los que ya recogió). Se ponen y caducan con una migración en la tabla `server_gifts` (ver `migrations/0011_server_gifts.sql`) | `worker/serverGifts.ts`, `src/game/collection/serverGifts.ts` |
+| Regalos para todos o para un jugador: `GET /api/server-gifts` (los de todos, sin cuenta; los de un jugador, con su sesión; cada partida apunta los que ya recogió). Se ponen y caducan con una migración en la tabla `server_gifts` (ver `migrations/0011_server_gifts.sql` y `0013_save_safety.sql`) | `worker/serverGifts.ts`, `src/game/collection/serverGifts.ts` |
 | Obsequio diario: `GET` / `POST /api/gift` (solo con sesión) | `worker/gift.ts` + `worker/db/gifts.ts` |
 | Intercambios: `GET` (tablón) / `POST /api/trade` (anunciar, aceptar, retirar, recoger; solo con sesión) | `worker/trade.ts` + `worker/tradeActions.ts` + `worker/db/trades.ts`, `tradeWrites.ts`; tablas en `migrations/0007_trades.sql` |
 | Rankings de dinero y de daño a jefes: `GET /api/ranking` (solo con sesión, apodo y sin ocultarse; las fotos se rehacen cada hora). El daño lo apunta el propio servidor, en su semana, al terminar cada jefe comunitario (caer o escaparse, al guardar la sala) y cada incursión (al guardar el grupo): una escritura por Pokémon de jugador con cuenta. La foto solo cuenta la semana en curso (desde el lunes a las 00:00 UTC) y borra las anteriores | `worker/ranking.ts` + `worker/db/ranking.ts`, `worker/db/damageRanking.ts`; tablas en `migrations/0008_ranking.sql`, `0009_damage_ranking.sql` y `0012_weekly_boss_damage.sql` |
@@ -161,8 +161,16 @@ se quedara corto, sube `WATCH_SYNC_MS` y `BACKGROUND_SYNC_MS` en `src/net/raidSy
 - **Cambias el juego** (jefes, reglas, `RAID_ROOM_SIZE`…): el Worker usa el mismo código de `src/game` y `src/data`,
   así que se actualiza con cada despliegue. Las salas ya guardadas siguen con su jefe hasta que caen o caducan (24 h
   sin consultas).
-- **Cambias `SAVE_VERSION`**: no afecta al servidor. Las partidas de la nube de otra versión se migran igual que las del
-  navegador, sin perder nada.
+- **Cambias `SAVE_VERSION`**: las partidas de la nube de otra versión se migran igual que las del navegador, sin perder
+  nada. El servidor no deja que una app sin actualizar suba encima de una partida guardada con una versión más nueva
+  (responde 409 con `outdated-app` y la app pide actualizar, sin perder lo jugado en el móvil).
+- **Recuperar una partida**: la tabla `save_history` guarda, de cada cuenta, una copia por hora de los últimos 3 días
+  (la que había antes de cada subida). Para ver las de alguien:
+  `SELECT h.saved_at, h.revision, length(h.data) FROM save_history h JOIN users u ON u.id = h.user_id WHERE u.nickname = 'Apodo' ORDER BY h.saved_at DESC;`.
+  Mejor que pisar su partida (el móvil podría subir encima la suya), devuélvele lo perdido con un regalo.
+- **Regalar algo a un jugador** (p. ej. para compensar algo que falló): una migración con una fila en `server_gifts`
+  con su `user_id` (sin él, es para todos). `goods` admite `incursionKeys` y `mons` (`speciesId`, `level`, `stars`);
+  le sale en Notificaciones. Ejemplo: `migrations/0013_save_safety.sql`.
 
 ## Límites que conviene saber
 

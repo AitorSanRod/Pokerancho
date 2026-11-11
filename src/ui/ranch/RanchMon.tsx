@@ -4,6 +4,7 @@ import type { OwnedMon, RanchSpot } from '../../game/core/state'
 import { Sprite } from '../shared/common'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
+import { useRanchPose } from './useRanchPose'
 
 /** Franja de hierba de la imagen, en % de su altura: entre los árboles de arriba y la valla de abajo */
 const GRASS_TOP = 12
@@ -29,6 +30,7 @@ interface Props {
 export function RanchMon({ mon, selected, active, onClick, onDrop }: Props) {
   const drag = useRef<{ x: number; y: number } | null>(null)
   const [offset, setOffset] = useState<{ x: number; y: number } | null>(null)
+  const posing = useRanchPose(mon.hp >= 1 && !offset)
   const h = hash(mon.uid)
   const spot = mon.spot ?? { x: 2 + ((h >>> 6) % MAX_RANDOM_X), y: GRASS_TOP + (h % GRASS_HEIGHT) }
   const style = {
@@ -63,7 +65,7 @@ export function RanchMon({ mon, selected, active, onClick, onDrop }: Props) {
 
   return (
     <button
-      className={`ranch-mon ${active ? 'active' : ''} ${selected ? 'selected' : ''} ${mon.hp < 1 ? 'fainted' : ''} ${offset ? 'dragging' : ''}`}
+      className={`ranch-mon ${active ? 'active' : ''} ${selected ? 'selected' : ''} ${mon.hp < 1 ? 'fainted' : ''} ${offset ? 'dragging' : ''} ${posing ? 'posing' : ''}`}
       style={style}
       // Con el teclado no hay puntero: el clic llega con detail 0
       onClick={(e) => e.detail === 0 && onClick()}
@@ -79,7 +81,9 @@ export function RanchMon({ mon, selected, active, onClick, onDrop }: Props) {
       <span className="ranch-face">
         <span className="ranch-hop">
           {active && <ItemIcon item={ICON.Active} size={18} className="ranch-badge" />}
-          <Sprite id={mon.speciesId} size={SPRITE_PX} animated={false} />
+          {/* Los dos sprites se cargan y se muestra uno: así, al pararse, el GIF no parpadea */}
+          <Sprite id={mon.speciesId} size={SPRITE_PX} animated={false} className="ranch-still" />
+          <Sprite id={mon.speciesId} size={SPRITE_PX} className="ranch-gif" />
         </span>
       </span>
     </button>

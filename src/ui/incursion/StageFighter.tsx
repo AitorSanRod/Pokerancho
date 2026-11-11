@@ -51,7 +51,7 @@ export function StageFighter({ m, spot, side, mine, scene, idleDelay }: Props) {
       <div className={acting ? roundClass(seq, side === 'party' ? 'raid-lunge' : 'raid-boss-lunge') : ''}>
         <div className={struck ? roundClass(seq, 'raid-shake') : ''}>
           <div className={down ? '' : 'raid-idle'}>
-            <div className={statusClass(down ? null : m.status)}>
+            <div className={statusClass(down ? null : (m.statuses.at(-1) ?? null))}>
               <div className="scene-shadow" />
               <Sprite id={m.speciesId} size={size} />
             </div>

@@ -9,6 +9,7 @@ import type { GameState } from '../core/state'
 import { keysOf } from '../incursion/keys'
 import { tmsOf } from '../incursion/tms'
 import { hasFormItem } from './forms'
+import { mintsOf } from './mints'
 import { ranchTypeAvailable } from './ranchTypes'
 import { stonesOf } from './stones'
 
@@ -18,13 +19,15 @@ export interface BagEntry<Id> {
 }
 
 /**
- * Lo comprado o ganado y aún sin usar: objetos estelares, objetos evolutivos sin gastar, objetos de forma (no se gastan),
+ * Lo comprado o ganado y aún sin usar: objetos estelares, objetos evolutivos y mentas sin gastar, objetos de forma (no se gastan),
  * tipos de rancho sin colocar, llaves de incursión y MTs
  */
 export interface Bag {
   starItems: BagEntry<StarItem>[]
   stones: BagEntry<Stone>[]
   formItems: BagEntry<FormItem>[]
+  /** Mentas aleatorias: un solo tipo, solo cuenta cuántas hay */
+  mints: number
   ranchTypes: BagEntry<RanchTypeId>[]
   incursionKeys: BagEntry<IncursionId>[]
   tms: BagEntry<Tm>[]
@@ -38,10 +41,12 @@ export function bagContents(s: GameState): Bag {
     starItems: held([...STAR_ITEM_IDS].reverse(), (id) => starItemsOf(s, id)),
     stones: held(STONE_IDS, (id) => stonesOf(s, id)),
     formItems: held(FORM_ITEM_IDS, (id) => (hasFormItem(s, id) ? 1 : 0)),
+    mints: mintsOf(s),
     ranchTypes: held(RANCH_TYPE_IDS, (id) => ranchTypeAvailable(s, id)),
     incursionKeys: held(INCURSIONS.map((i) => i.id), (id) => keysOf(s, id)),
     tms: held(TM_IDS, (id) => tmsOf(s, id)),
   }
 }
 
-export const isBagEmpty = (bag: Bag): boolean => Object.values(bag).every((entries) => entries.length === 0)
+export const isBagEmpty = (bag: Bag): boolean =>
+  Object.values(bag).every((entries) => (typeof entries === 'number' ? entries === 0 : entries.length === 0))

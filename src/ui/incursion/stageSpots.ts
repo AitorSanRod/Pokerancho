@@ -1,3 +1,5 @@
+import { MAX_ROOM_FOES } from '../../data/incursions'
+
 // Dónde se pinta cada Pokémon en la escena de la incursión: el grupo a la izquierda, en filas de dos que suben hacia el
 // fondo, y los rivales a la derecha, donde el rival de una ruta.
 
@@ -32,7 +34,7 @@ export function partySpot(index: number): Spot {
   }
 }
 
-/** Rivales: uno solo, donde el de una ruta; varios, dos delante y uno detrás */
+/** Rivales: uno solo, donde el de una ruta; varios, dos delante y uno detrás (hasta MAX_ROOM_FOES) */
 const FOE_SPOTS: Record<number, Spot[]> = {
   1: [{ left: 74, rise: 0, scale: 1, z: 10 }],
   2: [
@@ -46,4 +48,7 @@ const FOE_SPOTS: Record<number, Spot[]> = {
   ],
 }
 
-export const foeSpot = (index: number, count: number): Spot => (FOE_SPOTS[count] ?? FOE_SPOTS[3])[index] ?? FOE_SPOTS[3][2]
+export const foeSpot = (index: number, count: number): Spot => {
+  const spots = FOE_SPOTS[count] ?? FOE_SPOTS[MAX_ROOM_FOES]
+  return spots[index] ?? spots[spots.length - 1]
+}

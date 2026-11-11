@@ -2,6 +2,7 @@ import { RoomKind, type Incursion } from '../../data/incursions'
 import { seededRng, type Rng } from '../core/random'
 import type { Battlefield } from './battlefield'
 import { EventKind, view, type IncursionEvent } from './events'
+import { pickFoe } from './foePool'
 import { foeFighter, memberState, partyFighter, type MemberState } from './fighter'
 import { fightRoom, refreshPassives } from './groupBattle'
 import { addEarnings, noEarnings, rollPrizes, type Earned } from './incursionRewards'
@@ -86,7 +87,7 @@ export function simulateLeg(inc: Incursion, start: LegStart, seed: number, resol
       restRoom(bf, room)
       continue
     }
-    bf.foes = room.foes.map((f, i) => foeFighter(f, `foe-${r}-${i}`))
+    bf.foes = room.foes.map((slot, i) => foeFighter(pickFoe(slot, rng), `foe-${r}-${i}`))
     log({ kind: EventKind.Room, room: r, text: room.name, fighters: [...bf.party, ...bf.foes].map(view) })
     const outcome = fightRoom(bf, rng, tapWindow)
     if (outcome === 'waiting') return result(LegOutcome.Waiting, r)

@@ -1,7 +1,7 @@
 import type { BossMechanics, IncursionFoe } from '../../data/incursions'
 import { incursionMove, type IncursionMove } from '../../data/incursionMoves'
 import type { Nature } from '../../data/natures'
-import type { StatusId } from '../../data/passives'
+import { STATUS_INFO, type StatusId } from '../../data/passives'
 import { species } from '../../data/species'
 import type { BoostStat } from '../../data/incursionMoves'
 import type { PokeType } from '../../data/types'
@@ -23,6 +23,15 @@ export const FOE_ATK_MULT = 0.85
 /** Lo menos que puede quedar una stat con las pasivas a la baja (0.25 = un 25% de la suya); las etapas, aparte */
 export const MIN_STAT_MULT = 0.25
 
+/** Un estado alterado puesto, con lo que le queda */
+export interface Affliction {
+  status: StatusId
+  /** Turnos que le quedan (ver groupStatus.ts › STATUS_MAX_TURNS) */
+  turns: number
+  /** Turnos que le quedan sin moverse por la congelación */
+  frozenTurns: number
+}
+
 export interface GroupFighter {
   id: string
   team: Team
@@ -40,11 +49,8 @@ export interface GroupFighter {
   moves: IncursionMove[]
   /** Pasivas: las del grupo (se recalculan cada turno) o las escritas en el rival */
   bonus: CombatBonus
-  status: StatusId | null
-  /** Turnos que le quedan sin moverse por la congelación */
-  frozenTurns: number
-  /** Turnos que le quedan al estado alterado (ver groupStatus.ts › STATUS_MAX_TURNS) */
-  statusTurns: number
+  /** Estados alterados que lleva, del más antiguo al más nuevo: uno como mucho, salvo los jefes (groupStatus.ts) */
+  statuses: Affliction[]
   /** Etapas que lleva subidas o bajadas cada stat (statStages.ts); se pierden al acabar la sala o al caer */
   stages: Stages
   taunt: { turns: number; guard: number } | null
@@ -78,7 +84,7 @@ function fighter(id: string, team: Team, speciesId: number, level: number, base:
   const moves = moveIds.map(incursionMove)
   return {
     id, team, speciesId, name: sp.name, level, types: sp.types, base, hp: base.hp, maxHp: base.hp,
-    move: moves[0], moves, bonus: sumEffects([]), status: null, frozenTurns: 0, statusTurns: 0, stages: noStages(), taunt: null,
+    move: moves[0], moves, bonus: sumEffects([]), statuses: [], stages: noStages(), taunt: null,
     out: false, fellAt: null, boss: null, target: null,
   }
 }
@@ -87,7 +93,9 @@ function fighter(id: string, team: Team, speciesId: number, level: number, base:
 export function partyFighter(m: MemberState): GroupFighter {
   const f = fighter(m.id, Team.Party, m.speciesId, m.level, calcStats(m.speciesId, m.level, m.stars, m.nature), [m.moveId])
   f.hp = m.out ? 0 : Math.round(m.hpFraction * f.maxHp)
-  return { ...f, status: m.status, frozenTurns: m.frozenTurns, statusTurns: 0, out: m.out }
+  // El estado que trae del tramo anterior se le pasa al acabar el primer turno
+  const statuses = m.status ? [{ status: m.status, turns: 1, frozenTurns: m.frozenTurns }] : []
+  return { ...f, statuses, out: m.out }
 }
 
 /** Un rival de una sala, con su nivel */
@@ -104,8 +112,8 @@ export const memberState = (f: GroupFighter, m: MemberState): MemberState => ({
   ...m,
   moveId: f.move.id,
   hpFraction: f.maxHp ? f.hp / f.maxHp : 0,
-  status: f.status,
-  frozenTurns: f.frozenTurns,
+  status: f.statuses[0]?.status ?? null,
+  frozenTurns: f.statuses[0]?.frozenTurns ?? 0,
   out: f.out,
 })
 
@@ -116,11 +124,17 @@ export function stat(f: GroupFighter, k: BoostStat): number {
   return Math.max(1, Math.round(f.base[k] * Math.max(MIN_STAT_MULT, 1 + f.bonus[k]) * stageMult(f.stages[k])))
 }
 
+const atkMult = (s: StatusId) => STATUS_INFO[s].atkMult ?? 1
+
+/** De sus estados, el que más le baja el Ataque (la fórmula de daño solo mira uno) */
+const attackStatus = (f: GroupFighter): StatusId | null =>
+  f.statuses.map((a) => a.status).reduce<StatusId | null>((worst, s) => (!worst || atkMult(s) < atkMult(worst) ? s : worst), null)
+
 /** El combatiente tal y como lo ve la fórmula de daño de siempre */
 export const damageSide = (f: GroupFighter): DamageSide => ({
   level: f.level,
   types: f.types,
-  status: f.status,
+  status: attackStatus(f),
   bonus: f.bonus,
   stats: { hp: f.maxHp, atk: stat(f, 'atk'), def: stat(f, 'def'), spe: stat(f, 'spe') },
 })

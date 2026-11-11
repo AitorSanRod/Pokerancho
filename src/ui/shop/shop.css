@@ -12,6 +12,9 @@
 .shop-fold-forms {
   --fold-bg: linear-gradient(135deg, #e8803a 0%, #a8431b 100%);
 }
+.shop-fold-mints {
+  --fold-bg: linear-gradient(135deg, #4fc39a 0%, #1f7a5c 100%);
+}
 .shop-fold-keys {
   --fold-bg: linear-gradient(135deg, #4aa3c8 0%, #1f5f86 100%);
 }
@@ -77,4 +80,8 @@
   align-items: center;
   gap: 8px;
   text-align: left;
+}
+/* Confirmación de compra: icono del artículo junto al texto */
+.buy-confirm {
+  align-items: center;
 }

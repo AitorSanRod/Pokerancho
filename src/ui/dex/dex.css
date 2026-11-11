@@ -60,7 +60,7 @@
 .dex-cell.ready .dex-pieces {
   color: var(--accent);
 }
-/* Aviso de los listos para combinar: toca para filtrar; con el filtro puesto, el aspa lo quita */
+/* Aviso de los listos para combinar: toca para filtrar por ellos */
 .dex-filter {
   display: flex;
   align-items: center;
@@ -74,6 +74,7 @@
 button.dex-filter {
   cursor: pointer;
 }
+/* Aspa que quita la búsqueda y los filtros */
 .dex-filter-clear {
   display: grid;
   place-items: center;
@@ -144,4 +145,75 @@ button.dex-filter {
   margin: 0;
   padding: 12px;
   text-align: center;
+}
+
+/* Buscador, orden y filtro (DexToolbar) */
+.dex-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dex-selects {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.dex-select {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.dex-select select {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+}
+.dex-select select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.dex-no-results {
+  margin: 0;
+  padding: 24px 12px;
+  text-align: center;
+}
+/* Botones que despliegan el buscador y los filtros; «active» si lo suyo está puesto aunque estén plegados */
+.dex-tools {
+  display: flex;
+  gap: 8px;
+}
+.dex-tool {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+.dex-tool.open {
+  border-color: var(--accent);
+}
+.dex-tool.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--card));
+  color: var(--accent);
+}
+.dex-tools .dex-filter-clear {
+  height: 44px;
+  width: 44px;
 }

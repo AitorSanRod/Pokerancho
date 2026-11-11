@@ -6,8 +6,9 @@ export function UpdatePrompt() {
   const { ready, dismissed } = useAppUpdate()
   if (!ready || dismissed) return null
   return (
-    <ConfirmDialog title="Nueva versión disponible" confirmLabel="Recargar" cancelLabel="Más tarde" onConfirm={reloadToUpdate} onCancel={dismissUpdate}>
-      <p className="small">Hay una versión nueva de Pokérancho. Recarga para usarla o cierra y vuelve a abrir la app. Tu partida no se pierde.</p>
+    <ConfirmDialog title="¡Pokérancho se ha actualizado!" confirmLabel="Actualizar" cancelLabel="Más tarde" onConfirm={reloadToUpdate} onCancel={dismissUpdate}>
+      <p className="small">Hay novedades esperándote. Actualiza ahora o, si estás a mitad de algo, más tarde: también vale cerrar y volver a abrir la app.</p>
+      <p className="small">Tu partida está a salvo: tus Pokémon, tu dinero y todo lo que has conseguido se quedan tal cual.</p>
     </ConfirmDialog>
   )
 }

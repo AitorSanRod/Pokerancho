@@ -1,4 +1,4 @@
-import { Fragment, type CSSProperties } from 'react'
+import { Fragment, useEffect, useRef, type CSSProperties } from 'react'
 import type { Item } from '../../data/items'
 import { ITEM } from '../../data/items'
 import { legSteps, node, NodeKind, route } from '../../data/maps'
@@ -22,15 +22,30 @@ function legFraction(run: Run): number {
   return Math.min(1, run.steps / needed)
 }
 
+/** Desplaza el mapa para que la parada actual quede en el centro cuando no caben todas */
+function useCenterCurrent(stop: number) {
+  const track = useRef<HTMLOListElement>(null)
+  useEffect(() => {
+    const list = track.current
+    const current = list?.querySelector<HTMLElement>('.stop-dot.current')
+    if (!list || !current) return
+    const left = current.offsetLeft - (list.clientWidth - current.offsetWidth) / 2
+    list.scrollTo({ left, behavior: 'smooth' })
+  }, [stop])
+  return track
+}
+
 /**
  * Mapa horizontal del camino elegido: las paradas ya alcanzadas enseñan qué eran y las que faltan, un «?». La línea
- * entre paradas se va llenando con los pasos, así que también marca el avance del tramo en curso
+ * entre paradas se va llenando con los pasos, así que también marca el avance del tramo en curso. Si la ruta es
+ * larga, se desplaza con el dedo y sigue sola a la parada actual
  */
 export function StopTrack({ run }: { run: Run }) {
   const r = route(run.routeId)
   const leg = legFraction(run)
+  const track = useCenterCurrent(run.stop)
   return (
-    <ol className="stop-track" aria-label={`Parada ${run.stop} de ${run.path.length - 1}`}>
+    <ol ref={track} className="stop-track" aria-label={`Parada ${run.stop} de ${run.path.length - 1}`}>
       {run.path.map((id, i) => {
         const reached = i <= run.stop
         const state = i === run.stop ? 'current' : reached ? 'passed' : 'unknown'

@@ -210,7 +210,7 @@ Deseo:    move('wish', 'Deseo', 'normal', 20, [healTeam(0.2)])  // no pega: cura
 | `drain(f)` | Recupera la fracción `f` del daño hecho | A sí mismo |
 | `healAlly(f)` | Convierte la potencia en PS (×`f`) | Al aliado con menos PS en proporción (o al elegido) |
 | `healTeam(f)` | Convierte la potencia en PS (×`f`) | A todo el grupo |
-| `inflict(estado, prob.)` | Pone un estado alterado | Al rival golpeado; sin potencia, a un rival sin estado |
+| `inflict(estado, prob.)` | Pone un estado alterado | Al rival golpeado; sin potencia, a un rival al que le quepa (sin estado, o un jefe con menos de 3) |
 | `raise(etapas)` / `raiseSelf(etapas)` | Sube etapas de stats hasta acabar la sala | A todo el grupo / solo al que lo usa |
 | `lower(etapas)` | Baja etapas de stats hasta acabar la sala | Al rival golpeado; sin potencia, al de más PS |
 | `taunt(guard, turnos)` | Atrae los golpes y recibe un `guard` menos de daño | A sí mismo |
@@ -361,6 +361,7 @@ completar.
 | Bajada máxima de una stat por pasivas | hasta el 25% de la suya | `fighter.ts › MIN_STAT_MULT` |
 | Furia de los jefes | +1 etapa de Ataque cada 6 turnos desde el 15 (Cueva Helada) | `enrage` de cada jefe en `data/incursions/` |
 | Estados alterados | 5 turnos como mucho | `groupStatus.ts › STATUS_MAX_TURNS` |
+| Estados a la vez en un jefe | 3 distintos (el resto, 1) | `groupStatus.ts › BOSS_MAX_STATUSES` |
 | Revivires | 3, vuelve con el 50% | `revives.ts › INCURSION_REVIVES, REVIVE_HP` |
 | Golpe en área de un jefe | 60% del daño a cada uno | `moveEffects.ts › AREA_DAMAGE_MULT` |
 | Un rival cura a su bando | si a alguno le queda menos del 50% | `foeTactics.ts › FOE_HEAL_BELOW` |

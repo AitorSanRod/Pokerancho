@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { species } from '../../data/species'
 import { act, getState } from '../../game/core/store'
-import { claimServerGift, type ServerGift } from '../../game/collection/serverGifts'
+import { claimServerGift, serverGiftBlocker, type ServerGift } from '../../game/collection/serverGifts'
 import { collectRaidPrize, collectRaidPrizes } from '../../game/raid/raidPrizes'
 import { goodText } from '../../game/trade/goodText'
 import { TradeAction, type InboxEntry } from '../../game/trade/tradeProtocol'
@@ -53,6 +53,8 @@ export function useInboxCollect() {
 
   const collectServerGift = (gift: ServerGift) =>
     exclusive(`server:${gift.id}`, async () => {
+      const blocker = serverGiftBlocker(getState(), gift)
+      if (blocker) return setNotice(`${blocker} Haz sitio para recoger el regalo: te espera aquí.`)
       if (act((s) => claimServerGift(s, gift))) setReport({ title: '¡Regalo!', items: serverGiftRewards(gift) })
     })
 

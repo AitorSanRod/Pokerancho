@@ -1,6 +1,6 @@
 import type { DailyGift } from '../../data/dailyGifts'
 import { incursion, type IncursionId } from '../../data/incursions'
-import { RARITY_INFO, species } from '../../data/species'
+import { RARITY_INFO, rarityOf, species } from '../../data/species'
 import { STAR_ITEMS } from '../../data/starItems'
 import { giftStarItems } from '../../game/collection/dailyGift'
 import type { ServerGift } from '../../game/collection/serverGifts'
@@ -104,12 +104,19 @@ export function giftRewards(gift: DailyGift): RewardItem[] {
 
 /** Lo que da un regalo del servidor: cada llave de incursión */
 export function serverGiftRewards(gift: ServerGift): RewardItem[] {
-  return (Object.entries(gift.incursionKeys) as [IncursionId, number][]).map(([id, n]) => ({
+  const mons = gift.mons.map((mon, i) => ({
+    key: `mon-${mon.speciesId}-${i}`,
+    icon: <Sprite id={mon.speciesId} size={96} />,
+    title: `${species(mon.speciesId).name} · Nv. ${mon.level}${mon.stars ? ` ${'★'.repeat(mon.stars)}` : ''}`,
+    color: RARITY_INFO[rarityOf(species(mon.speciesId))].color,
+  }))
+  const keys = (Object.entries(gift.incursionKeys) as [IncursionId, number][]).map(([id, n]) => ({
     key: `key-${id}`,
     icon: <ItemIcon item={ICON.Incursion} size={96} />,
     title: `Llave: ${incursion(id).name} ×${n}`,
     color: '#1f5f86',
   }))
+  return [...mons, ...keys]
 }
 
 /** Premios de los jefes comunitarios derrotados, sumados: cada jefe, y después EXP, ₽, tickets y tickets de cada jefe */

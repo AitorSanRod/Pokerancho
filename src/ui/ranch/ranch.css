@@ -113,8 +113,28 @@
   display: block;
   animation: hop var(--dur) var(--delay) infinite alternate;
 }
+/* Parado: se queda donde iba (y mirando hacia allí), en el suelo, y se mueve como en su GIF */
+.ranch-mon.posing,
+.ranch-mon.posing .ranch-face {
+  animation-play-state: paused;
+}
+.ranch-mon.posing .ranch-hop {
+  animation: none;
+}
+.ranch-gif {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+}
+.ranch-mon.posing .ranch-gif {
+  visibility: visible;
+}
+.ranch-mon.posing .ranch-still {
+  visibility: hidden;
+}
 .ranch-badge {
   position: absolute;
+  z-index: 1;
   top: -6px;
   left: 50%;
   transform: translateX(-50%);

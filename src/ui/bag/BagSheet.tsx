@@ -45,6 +45,11 @@ export function BagSheet({ game, onBack }: { game: GameState; onBack: () => void
               ))}
             </BagGroup>
           )}
+          {bag.mints > 0 && (
+            <BagGroup title="Mentas" hint="Se gasta al usarla en la ficha de un Pokémon, en Naturaleza: le da otra naturaleza al azar.">
+              <BagTile icon={<ItemIcon item={ICON.Mint} size={44} />} name="Menta aleatoria" count={bag.mints} />
+            </BagGroup>
+          )}
           {bag.ranchTypes.length > 0 && (
             <BagGroup title="Tipos de rancho" hint="Se colocan desde el botón de arriba a la izquierda del rancho.">
               {bag.ranchTypes.map(({ id, count }) => (

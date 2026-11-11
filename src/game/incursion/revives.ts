@@ -1,6 +1,7 @@
 import type { Battlefield } from './battlefield'
 import { EventKind, on } from './events'
 import type { GroupFighter } from './fighter'
+import { clearStatus } from './groupStatus'
 
 // Revivires del grupo: se gastan solos, en el orden en que cayeron, al empezar el turno siguiente a la caída.
 
@@ -12,8 +13,7 @@ export const REVIVE_HP = 0.5
 /** Lo levanta con esa fracción de sus PS y sin estado (también a uno que ya no volvía); `revives`, los que quedan si gastó uno */
 export function raise(bf: Battlefield, f: GroupFighter, hpFraction: number, revives?: number) {
   f.hp = Math.max(1, Math.round(f.maxHp * hpFraction))
-  f.status = null
-  f.frozenTurns = 0
+  clearStatus(f)
   f.fellAt = null
   f.out = false
   bf.log(on(f, { kind: EventKind.Revive, revives, text: `¡${f.name} vuelve a la lucha!` }))

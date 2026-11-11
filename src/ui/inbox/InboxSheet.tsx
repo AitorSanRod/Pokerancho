@@ -62,8 +62,8 @@ export function InboxSheet({ game, onBack }: { game: GameState; onBack: () => vo
       )}
       {serverGifts.map((g) => (
         <InboxRow key={g.id} detail={g.title} {...row(`server:${g.id}`)} onCollect={() => void collect.collectServerGift(g)}>
-          <ItemIcon item={ICON.Incursion} size={56} />
-          <span className="small inbox-thing-name">Regalo</span>
+          {g.mons.length ? <Sprite id={g.mons[0].speciesId} size={64} animated={false} /> : <ItemIcon item={ICON.Incursion} size={56} />}
+          <span className="small inbox-thing-name">{g.mons.length ? species(g.mons[0].speciesId).name : 'Regalo'}</span>
         </InboxRow>
       ))}
       {game.raidPrizes.map((prize, i) => (

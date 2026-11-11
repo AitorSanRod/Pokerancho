@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { GameState } from '../../game/core/state'
 import { MAX_OPEN_LISTINGS } from '../../game/trade/tradeGoods'
 import { AccountStatus, useAccount } from '../../net/account'
-import { useCloud } from '../../net/cloudSync'
+import { useCloud } from '../../net/cloudState'
 import { refreshTradeBoard, useTradeBoard } from '../../net/tradeBoard'
 import { AccountDialog } from '../account/AccountDialog'
 import { ICON } from '../shared/icons'
@@ -25,6 +25,7 @@ export function TradeScreen({ game }: { game: GameState }) {
 
   if (status !== AccountStatus.SignedIn) return <SignInFirst />
   if (cloud.choice) return <p className="screen scroll small muted">Antes de intercambiar, elige qué partida se queda: la de aquí o la de la nube.</p>
+  if (cloud.outdated) return <p className="screen scroll small muted">Actualiza la app para volver a intercambiar: tu partida se guardará en la nube en cuanto lo hagas.</p>
 
   const mine = trade.board?.mine.length ?? 0
   return (
