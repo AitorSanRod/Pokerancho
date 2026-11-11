@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { StatusId } from '../../data/passives'
 import { raidMinutesLeft } from './raidEstimate'
 import { newMember, RaidMemberKind, type Raid } from './raidRoom'
 import { raidState, sparringSpecies } from './raid-test-utils'
@@ -39,5 +40,14 @@ describe('tiempo estimado para tirar al jefe', () => {
     const full = raidMinutesLeft(s, raid)!
     raid.hp = Math.round(raid.maxHp / 2)
     expect(raidMinutesLeft(s, raid)!).toBeCloseTo(full / 2)
+  })
+
+  it('cuenta el daño de un estado que puso alguien que ya no está en la sala', () => {
+    const { s, raid } = raidState()
+    addFighter(raid, 'a')
+    raid.bossStatuses = [{ status: StatusId.Burn, by: 'se-fue', rounds: null }]
+    const withBurn = raidMinutesLeft(s, raid)!
+    raid.bossStatuses = []
+    expect(withBurn).toBeLessThan(raidMinutesLeft(s, raid)!)
   })
 })

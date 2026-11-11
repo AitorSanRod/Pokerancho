@@ -29,7 +29,9 @@ export function roomPace(raid: Raid, passives: PassivesOf): RoomPace {
     for (const hit of playRound(copy, passives, rng)) {
       if (hit.to !== BOSS_ID) continue
       dealt += hit.dealt
-      totals[hit.from].damage += hit.dealt
+      // El daño de un estado se cuenta a quien lo puso, que puede haber salido ya de la sala
+      const hitter = totals[hit.from]
+      if (hitter) hitter.damage += hit.dealt
     }
   }
   const byMember = Object.fromEntries(
