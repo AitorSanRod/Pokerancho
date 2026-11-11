@@ -8,7 +8,9 @@
 .incursion-info-btn {
   align-self: stretch;
 }
+/* Sin flex-shrink, el overflow: hidden deja que la columna la encoja en vez de hacer scroll */
 .incursion-card {
+  flex-shrink: 0;
   padding: 0;
   overflow: hidden;
 }
