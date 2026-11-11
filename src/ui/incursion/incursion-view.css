@@ -164,7 +164,6 @@
 }
 
 /* Reorganizar y final */
-.incursion-regroup,
 /* El final, a pantalla completa sobre la escena y la cabecera (si no, la escena lo tapa y no se puede recoger) */
 .incursion-finale {
   position: absolute;
@@ -180,6 +179,7 @@
   width: 100%;
   max-width: 420px;
 }
+.incursion-regroup,
 .incursion-summary {
   display: flex;
   flex-direction: column;
