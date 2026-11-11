@@ -27,6 +27,7 @@ Cómo funciona por dentro: [arquitectura.md › Salas compartidas](arquitectura.
 | Obsequio diario: `GET` / `POST /api/gift` (solo con sesión) | `worker/gift.ts` + `worker/db/gifts.ts` |
 | Intercambios: `GET` (tablón) / `POST /api/trade` (anunciar, aceptar, retirar, recoger; solo con sesión) | `worker/trade.ts` + `worker/tradeActions.ts` + `worker/db/trades.ts`, `tradeWrites.ts`; tablas en `migrations/0007_trades.sql` |
 | Rankings de dinero y de daño a jefes: `GET /api/ranking` (solo con sesión, apodo y sin ocultarse; las fotos se rehacen cada hora). El daño lo apunta el propio servidor, en su semana, al terminar cada jefe comunitario (caer o escaparse, al guardar la sala) y cada incursión (al guardar el grupo): una escritura por Pokémon de jugador con cuenta. La foto solo cuenta la semana en curso (desde el lunes a las 00:00 UTC) y borra las anteriores | `worker/ranking.ts` + `worker/db/ranking.ts`, `worker/db/damageRanking.ts`; tablas en `migrations/0008_ranking.sql`, `0009_damage_ranking.sql` y `0012_weekly_boss_damage.sql` |
+| Errores de los jugadores: `POST /api/error-report` (botón «Enviar error» de la pantalla «Algo ha fallado»; sin cuenta también, con sesión se apunta de quién es). El mismo error activo suma en su fila en vez de crear otra | `worker/errorReport.ts`, `src/game/core/errorReport.ts`; tabla en `migrations/0014_error_reports.sql` |
 | Notificaciones push: `/api/push/*` y el envío (VAPID, cifrado) | `worker/push/` |
 | Tarea programada cada minuto (raids sin nadie mirando, borrar paradas viejas, anuncios caducados, ranking cada hora, avisos que tocan) | `worker/scheduled.ts`, `triggers` en `wrangler.jsonc` |
 | Correos (Brevo) y su texto | `worker/mail.ts` |
@@ -155,6 +156,10 @@ se quedara corto, sube `WATCH_SYNC_MS` y `BACKGROUND_SYNC_MS` en `src/net/raidSy
 ## Mantenimiento
 
 - **Registros y errores**: *Workers & Pages → pokerancho → Logs*.
+- **Errores enviados por los jugadores** (tabla `error_reports`, desde la consola de D1). Los que faltan por arreglar,
+  primero los más repetidos: `SELECT id, count, message, stack, datetime(last_at / 1000, 'unixepoch') AS last FROM error_reports WHERE active = 1 ORDER BY count DESC;`.
+  Al corregir uno (y publicarlo), márcalo como inactivo: `UPDATE error_reports SET active = 0 WHERE id = 7;`. Si vuelve
+  a pasar, entra como una fila nueva y activa.
 - **Ver o tocar los datos**: *Storage & Databases → D1 → pokerancho → Console*. Por ejemplo, borrar una cuenta (con
   su partida y sesiones): `DELETE FROM users WHERE email = 'alguien@ejemplo.com';`. Borrar todas las salas (los
   jugadores que estuvieran dentro siguen en local): `DELETE FROM rooms;`.

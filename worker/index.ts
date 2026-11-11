@@ -3,6 +3,7 @@ import { giftRoute } from './gift'
 import { pushRoute } from './push/routes'
 import { scheduled } from './scheduled'
 import type { Env } from './env'
+import { errorReportRoute } from './errorReport'
 import { json } from './http'
 import { incursionRoute } from './incursion'
 import { raidRoute } from './raid'
@@ -27,6 +28,7 @@ export default {
     if (pathname === '/api/server-gifts') return serverGiftsRoute(request, env)
     if (pathname === '/api/trade') return tradeRoute(request, env)
     if (pathname === '/api/ranking') return rankingRoute(request, env)
+    if (pathname === '/api/error-report') return errorReportRoute(request, env)
     if (pathname.startsWith(AUTH_PREFIX)) return authRoute(request, env, pathname.slice(AUTH_PREFIX.length))
     if (pathname.startsWith(PUSH_PREFIX)) return pushRoute(request, env, pathname.slice(PUSH_PREFIX.length))
     return json({ error: 'No existe' }, 404)
