@@ -121,7 +121,7 @@ function fightFloor(s: GameState, mon: OwnedMon, rng: Rng) {
   const prize = floorPrize(t.floor, t.startBest)
   t.prize = prize
   t.lastBattle = {
-    player: { speciesId: mon.speciesId, name: player.name, level: mon.level, maxHp: player.maxHp },
+    player: { speciesId: mon.speciesId, name: player.name, level: mon.level, maxHp: player.maxHp, move: player.move },
     enemy: { speciesId: enemyId, name: enemy.name, level, maxHp: enemy.maxHp },
     events: result.events,
     outcome: result.outcome,

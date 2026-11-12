@@ -67,8 +67,8 @@ export type MissReason = 'miss' | 'dodge' | 'immune'
 type BattleOutcome = 'win' | 'lose' | 'flee'
 
 export interface BattleRecord {
-  player: { speciesId: number; name: string; level: number; maxHp: number }
-  enemy: { speciesId: number; name: string; level: number; maxHp: number }
+  player: BattleSide
+  enemy: BattleSide
   events: BattleEvent[]
   outcome: BattleOutcome
   /** Combate contra el jefe de la parada (se ve distinto y da más premio) */
@@ -79,6 +79,19 @@ export interface BattleRecord {
 
 /** Turnos tras los que el salvaje huye y el combate acaba sin ganador */
 const MAX_TURNS = 25
+
+/** Quién lucha en un lado del combate, tal y como se ve */
+export interface BattleSide {
+  speciesId: number
+  name: string
+  level: number
+  maxHp: number
+  /** El ataque que usa, si no es el suyo de siempre (p. ej. el elegido en la torre) */
+  move?: Move
+}
+
+/** El ataque con el que pega ese lado: el que lleva el registro o el suyo de siempre */
+export const sideMove = (s: BattleSide): Move => s.move ?? signatureMove(s.speciesId)
 
 export function makeFighter(
   side: Side,

@@ -1,8 +1,8 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { signatureMove, STRUGGLE } from '../../data/moves'
+import { STRUGGLE } from '../../data/moves'
 import { STATUS_INFO } from '../../data/passives'
 import { TYPE_INFO, type PokeType } from '../../data/types'
-import type { BattleRecord, Side } from '../../game/battle/battle'
+import { sideMove, type BattleRecord, type Side } from '../../game/battle/battle'
 import { Sprite } from '../shared/common'
 import { BattleHud } from './BattleHud'
 import { BattlePop } from './BattlePop'
@@ -60,7 +60,7 @@ export function RouteBattle({ record, frame, enemyOverlay }: { record: BattleRec
   )
 }
 
-const speciesOf = (record: BattleRecord, side: Side) => (side === 'player' ? record.player : record.enemy).speciesId
+const moveOf = (record: BattleRecord, side: Side) => sideMove(side === 'player' ? record.player : record.enemy)
 
 /**
  * Nombre del ataque, del color de su tipo, sobre quien lo usa: aparece al lanzarlo y sigue mientras se ve su resultado
@@ -71,7 +71,7 @@ function MoveCallout({ record, frame, side }: { record: BattleRecord; frame: Bat
   const { index, event } = frame
   const attackAt = event.kind === 'attack' ? index : record.events[index - 1]?.kind === 'attack' ? index - 1 : -1
   if (attackAt < 0 || record.events[attackAt].side !== side) return null
-  const mv = record.events[attackAt].struggle ? STRUGGLE : signatureMove(speciesOf(record, side))
+  const mv = record.events[attackAt].struggle ? STRUGGLE : moveOf(record, side)
   return (
     <span key={attackAt} className="move-callout" style={typeColor(mv.type)}>
       {mv.name}
@@ -91,6 +91,6 @@ function Hit({ record, frame, side }: { record: BattleRecord; frame: BattleFrame
     ? STATUS_INFO[event.status].type
     : event.struggle
       ? STRUGGLE.type
-      : signatureMove(speciesOf(record, rival)).type
+      : moveOf(record, rival).type
   return <HitEffect key={index} type={type} />
 }

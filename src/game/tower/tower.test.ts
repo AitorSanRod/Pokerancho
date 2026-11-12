@@ -19,7 +19,8 @@ import {
   TowerEnd,
   towerMovePickDue,
 } from './tower'
-import { TOWER_MOVE_PICK_EVERY, towerMoveChoices } from './towerMoves'
+import { TOWER_MOVE_PICK_EVERY, towerMove, towerMoveChoices } from './towerMoves'
+import { sideMove } from '../battle/battle'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
 
@@ -60,6 +61,14 @@ describe('torre infinita', () => {
     startTower(s, firstMove(s), seqRng(0.3))
     expect(s.tower).toMatchObject({ uid: activeMon(s)!.uid, floor: 1, end: null })
     expect(s.tower!.battleMsLeft).toBeGreaterThan(0)
+  })
+
+  it('el combate lleva el ataque elegido, también para verlo', () => {
+    const s = withMon(MAX_LEVEL)
+    const choices = towerMoveChoices(activeMon(s)!)
+    const chosen = choices.at(-1)!.id
+    startTower(s, chosen, seqRng(0.3))
+    expect(sideMove(s.tower!.lastBattle!.player)).toEqual(towerMove(activeMon(s)!, chosen))
   })
 
   it('al acabar un combate espera: el siguiente piso solo empieza cuando se pide', () => {
