@@ -12,11 +12,11 @@ import './ranking.css'
 const Board = { Money: 'money', Damage: 'damage', Tower: 'tower' } as const
 type Board = (typeof Board)[keyof typeof Board]
 
-/** Pestañas del ranking; la de la torre, solo con `npm run dev`, como la torre */
+/** Pestañas del ranking */
 const BOARD_TABS: { id: Board; label: string }[] = [
   { id: Board.Money, label: 'Dinero' },
   { id: Board.Damage, label: 'Daño a jefes' },
-  ...(import.meta.env.DEV ? [{ id: Board.Tower, label: 'Torre' }] : []),
+  { id: Board.Tower, label: 'Torre' },
 ]
 
 /** Qué explica cada ranking, bajo la cabecera */

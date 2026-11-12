@@ -8,7 +8,7 @@ import { towerFoe, towerLevel, towerStatMult } from './towerFoes'
 import { isMovePickFloor, towerMove, towerMoveChoices } from './towerMoves'
 import { floorPrize, noTowerEarned, rewardFloor, type FloorPrize, type TowerEarned } from './towerRewards'
 
-// Torre infinita (solo en desarrollo): el compañero sube piso a piso contra rivales cada vez más fuertes (towerFoes.ts),
+// Torre infinita: el compañero sube piso a piso contra rivales cada vez más fuertes (towerFoes.ts),
 // con el ataque que se elige cada pocos pisos (towerMoves.ts) y premios en cada piso (towerRewards.ts), hasta que cae.
 // Lucha una copia con sus stats, pasivas e hitos (sus PS de verdad no cambian). El combate en curso sigue aunque no se
 // mire, pero el siguiente piso solo empieza cuando la pantalla lo pide (nextFloor): salir la deja parada entre pisos,

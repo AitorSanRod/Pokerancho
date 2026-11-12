@@ -13,7 +13,7 @@ import { TowerSummary } from './TowerSummary'
 import './tower.css'
 
 /**
- * Torre infinita (solo en desarrollo): el compañero sube piso a piso contra rivales cada vez más fuertes hasta que cae.
+ * Torre infinita: el compañero sube piso a piso contra rivales cada vez más fuertes hasta que cae.
  * Sin subida en curso, el resumen de la última y elegir ataque para empezar otra; con ella, la subida a pantalla completa
  * (TowerClimb)
  */
@@ -33,12 +33,9 @@ function TowerHead({ game }: { game: GameState }) {
   const prizeFloor = nextPrizeFloor(game.towerBest)
   return (
     <div className="card tower-head">
-      <div className="row between">
-        <strong className="with-icon">
-          <ItemIcon item={ICON.Tower} size={28} /> Torre infinita
-        </strong>
-        <span className="tag">Desarrollo</span>
-      </div>
+      <strong className="with-icon">
+        <ItemIcon item={ICON.Tower} size={28} /> Torre infinita
+      </strong>
       <span className="small">
         Récord: <strong>piso {game.towerBest}</strong>
       </span>

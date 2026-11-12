@@ -14,10 +14,8 @@ import './route.css'
 
 type RouteTab = 'route' | 'expeditions' | 'raid' | 'incursion' | 'tower'
 
-/** La torre infinita es una prueba: solo sale con `npm run dev` */
-const TOWER_TAB = import.meta.env.DEV ? [{ id: 'tower' as const, icon: ICON.Tower, label: 'Torre' }] : []
 
-/** Pestaña Ruta: la ruta del Pokémon activo (mapa o ruta en curso), las expediciones del resto, el jefe comunitario y las incursiones */
+/** Pestaña Ruta: la ruta del Pokémon activo (mapa o ruta en curso), las expediciones del resto, el jefe comunitario, las incursiones y la torre */
 export function RouteScreen({ game }: { game: GameState }) {
   const [tab, setTab] = useState<RouteTab>('route')
   const mon = activeMon(game)
@@ -36,7 +34,7 @@ export function RouteScreen({ game }: { game: GameState }) {
           { id: 'expeditions', icon: ICON.Expedition, label: 'Expediciones', count: returnedUnseen ? returned.length : 0 },
           { id: 'raid', icon: ICON.Raid, label: 'Raids', count: prizesUnseen ? prizes.length : 0 },
           { id: 'incursion', icon: ICON.Incursion, label: 'Incursiones' },
-          ...TOWER_TAB,
+          { id: 'tower', icon: ICON.Tower, label: 'Torre' },
         ]}
       />
       <div className="tabbed-body">

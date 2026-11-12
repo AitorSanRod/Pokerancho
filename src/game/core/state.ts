@@ -172,7 +172,7 @@ export interface GameState {
   claimedServerGifts: string[]
   /** Misiones del día (ver collection/missions.ts); null hasta que salen las primeras */
   missions: DailyMissions | null
-  /** Torre infinita en curso o su resumen al acabar (solo en desarrollo, ver tower/tower.ts); null si no */
+  /** Torre infinita en curso o su resumen al acabar (ver tower/tower.ts); null si no */
   tower: TowerRun | null
   /** Piso más alto superado en la torre infinita (sale en su ranking) */
   towerBest: number

@@ -68,6 +68,6 @@ export const ICON = {
   ExpBoost: ITEM.LuckyEgg,
   /** Toque crítico */
   Crit: ITEM.QuickClaw,
-  /** Torre infinita (solo en desarrollo) */
+  /** Torre infinita */
   Tower: ITEM.MachoBrace,
 } as const
