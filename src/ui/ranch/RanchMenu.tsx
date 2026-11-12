@@ -3,7 +3,6 @@ import type { Item } from '../../data/items'
 import { claimableMissions } from '../../game/collection/missions'
 import type { GameState } from '../../game/core/state'
 import { giftReady, useDailyGift } from '../../net/dailyGift'
-import { useTradeBoard } from '../../net/tradeBoard'
 import { BagSheet } from '../bag/BagSheet'
 import { DailyGiftSheet } from '../gift/DailyGiftSheet'
 import { InboxSheet } from '../inbox/InboxSheet'
@@ -12,8 +11,9 @@ import { RankingSheet } from '../ranking/RankingSheet'
 import { useInboxCount } from '../inbox/useInboxCount'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
-import { pendingKey, useUnseen } from '../shared/useUnseen'
+import { useUnseen } from '../shared/useUnseen'
 import { TutorialsSheet } from '../tutorials/TutorialsSheet'
+import { useMenuPending } from './useMenuPending'
 
 type Panel = 'menu' | 'gift' | 'missions' | 'bag' | 'tutorials' | 'inbox' | 'ranking'
 
@@ -25,15 +25,11 @@ export function RanchMenu({ game }: { game: GameState }) {
   const [panel, setPanel] = useState<Panel | null>(null)
   const gift = useDailyGift()
   const giftKey = giftReady(gift) && gift.state ? `gift:${gift.state.claimed}` : null
-  const prizes = game.raidPrizes.length
-  const prizeKey = prizes > 0 ? `prizes:${prizes}` : null
-  const inbox = useTradeBoard().board?.inbox ?? []
   const inboxCount = useInboxCount(game)
-  const inboxKey = inbox.length > 0 ? `inbox:${inbox.map((e) => e.id).join(',')}` : null
   const missionsReady = claimableMissions(game)
-  const missionKey = missionsReady > 0 ? `missions:${game.missions?.day}:${missionsReady}` : null
-  // El punto del botón (obsequio o premios nuevos) se apaga al abrir el menú; el de la entrada, al abrir el obsequio
-  const menuDot = useUnseen('ranch:menu', pendingKey([giftKey, prizeKey, inboxKey, missionKey].filter((k): k is string => k !== null)), panel !== null)
+  // Algo nuevo en el menú: punto en la pestaña Rancho (App.tsx) y, ya en el rancho, en este botón hasta abrir el menú;
+  // el de la entrada del obsequio, hasta abrirlo
+  const menuDot = useUnseen('ranch:menu', useMenuPending(game), panel !== null)
   const giftDot = useUnseen('ranch:gift', giftKey, panel === 'gift')
   const close = () => setPanel(null)
   const back = () => setPanel('menu')

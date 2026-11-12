@@ -27,6 +27,7 @@ import { ICON } from './ui/shared/icons'
 import { ItemIcon } from './ui/shared/ItemIcon'
 import { listenTabRequests, type AppTab } from './ui/shared/navigation'
 import { pendingKey, useUnseen } from './ui/shared/useUnseen'
+import { useMenuPending } from './ui/ranch/useMenuPending'
 
 
 const TABS: { id: AppTab; icon: Item; label: string }[] = [
@@ -71,7 +72,7 @@ export default function App() {
   const routePending = pendingKey([...runNeedsLook, ...game.expeditions.filter(isExpeditionDone).map((e) => e.uid)])
   const badges: Record<AppTab, boolean> = {
     route: useUnseen('tab:route', routePending, tab === 'route'),
-    ranch: false,
+    ranch: useUnseen('tab:ranch', useMenuPending(game), tab === 'ranch'),
     shop: false,
     gacha: false,
     dex: useUnseen('tab:dex', pendingKey(combinableIds(game)), tab === 'dex'),

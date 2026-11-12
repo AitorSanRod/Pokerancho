@@ -8,6 +8,7 @@ import {
   isHealFloor,
   nextFloor,
   pickTowerMove,
+  TOWER_AWAY_FLOORS,
   towerBetweenFloors,
   towerMon,
   towerMovePickDue,
@@ -29,7 +30,7 @@ const FLOOR_GAP_MS = 700
 /**
  * La subida en curso, a pantalla completa como una ruta: escena, cabecera encima y, abajo, seguir o elegir ataque. Entre
  * pisos, el siguiente sale solo mientras se mira. Al volver a la
- * pantalla (o tras pasar a segundo plano) queda parada hasta «Seguir subiendo»; cada pocos pisos, elegir ataque
+ * pantalla (o tras pasar a segundo plano, en el que sube sola unos pisos) queda parada hasta «Seguir subiendo»; cada pocos pisos, elegir ataque
  */
 export function TowerClimb({ game }: { game: GameState }) {
   const t = game.tower!
@@ -84,7 +85,7 @@ export function TowerClimb({ game }: { game: GameState }) {
         {between && <FloorNote game={game} />}
       </div>
 
-      {battle && <div className="tap-hint">Si sales, el combate sigue y la torre te espera</div>}
+      {battle && <div className="tap-hint">Si sales, sube sola hasta {TOWER_AWAY_FLOORS} pisos más y te espera</div>}
       {walking && <div className="tap-hint">Subiendo al piso {t.floor}…</div>}
 
       {between && !walking && (

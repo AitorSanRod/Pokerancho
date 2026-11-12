@@ -1,6 +1,7 @@
 import { activeMon, type GameState } from '../../game/core/state'
 import { act } from '../../game/core/store'
-import { startTower, towerBlocker, towerWeekBest, TOWER_HEAL_EVERY, TOWER_LAST_HEAL_FLOOR, towerActive } from '../../game/tower/tower'
+import { startTower, towerBlocker, TOWER_HEAL_EVERY, TOWER_LAST_HEAL_FLOOR, towerActive } from '../../game/tower/tower'
+import { towerWeekBest } from '../../game/tower/towerWeek'
 import { TOWER_LEVEL_CAP_FLOOR } from '../../game/tower/towerFoes'
 import { TOWER_MOVE_PICK_EVERY } from '../../game/tower/towerMoves'
 import { nextPrizeFloor, towerPrize } from '../../game/tower/towerRewards'

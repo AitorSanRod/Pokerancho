@@ -236,15 +236,60 @@ button.dex-filter {
 }
 .dex-perk-row {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 4px;
   padding: 6px 8px;
   border-radius: 10px;
   border-left: 4px solid var(--type-color);
   background: var(--card);
 }
-.dex-perk-row .grow {
+.dex-perk-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dex-perk-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dex-perk-line .grow {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.dex-perk-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+.dex-perk-rule {
+  display: flex;
+  flex-direction: column;
   gap: 2px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--card);
+}
+.dex-perk-rule p {
+  margin: 0;
+}
+.dex-perk-rule-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dex-perk-gives {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--hp-ok);
+  white-space: nowrap;
+}
+.dex-perk-title {
+  margin: 12px 0 0;
 }
 .dex-perk-value {
   font-size: 12px;

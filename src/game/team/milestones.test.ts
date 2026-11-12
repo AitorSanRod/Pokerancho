@@ -3,6 +3,7 @@ import { SPECIES, species } from '../../data/species'
 import { initialState } from '../core/state'
 import { createMon } from './mons'
 import {
+  fiveStarCountByType,
   fiveStarSpecies,
   LEVEL_MILESTONES,
   levelMilestoneBonus,
@@ -45,5 +46,13 @@ describe('bono de 5 ★ por tipo', () => {
     for (const sp of ofType) s.owned.push(withStars(sp.id, MAX_STARS))
     const expected = Math.min(STAR_TYPE_BONUS_MAX, ofType.length * STAR_TYPE_BONUS)
     expect(starTypeBonuses(s)[type]).toBeCloseTo(expected)
+  })
+
+  it('cuenta las especies con 5 ★ de cada tipo, sin tope', () => {
+    const s = initialState()
+    const type = SPECIES[0].types[0]
+    const ofType = SPECIES.filter((sp) => sp.types.includes(type))
+    for (const sp of ofType) s.owned.push(withStars(sp.id, MAX_STARS))
+    expect(fiveStarCountByType(s)[type]).toBe(ofType.length)
   })
 })

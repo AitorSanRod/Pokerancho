@@ -13,6 +13,15 @@ describe('colección por tipo', () => {
     expect(collectionDamage(initialState())).toEqual({})
   })
 
+  it('dice cuántas especies faltan para el siguiente corte, y con ellas se alcanza', () => {
+    const s = initialState()
+    const { toNext, next } = typeCollection(s, TYPE)
+    s.caught = OF_TYPE.slice(0, toNext - 1).map((sp) => sp.id)
+    expect(typeCollection(s, TYPE).damage).toBe(0)
+    s.caught = OF_TYPE.slice(0, toNext).map((sp) => sp.id)
+    expect(typeCollection(s, TYPE).damage).toBe(next!.damage)
+  })
+
   it('cada corte da su daño al alcanzarlo, no antes', () => {
     for (const tier of COLLECTION_TIERS) {
       expect(tierDamage(tier.share)).toBe(tier.damage)
@@ -24,7 +33,7 @@ describe('colección por tipo', () => {
     const s = initialState()
     s.caught = OF_TYPE.map((sp) => sp.id)
     const best = COLLECTION_TIERS.at(-1)!
-    expect(typeCollection(s, TYPE)).toMatchObject({ caught: OF_TYPE.length, damage: best.damage, next: null })
+    expect(typeCollection(s, TYPE)).toMatchObject({ caught: OF_TYPE.length, damage: best.damage, next: null, toNext: 0 })
     expect(collectionDamage(s)[TYPE]).toBe(best.damage)
   })
 })

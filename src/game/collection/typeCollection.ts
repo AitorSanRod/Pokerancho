@@ -20,6 +20,8 @@ export interface TypeCollection {
   damage: number
   /** Siguiente corte por alcanzar; null si ya tiene el último */
   next: { share: number; damage: number } | null
+  /** Especies que faltan por capturar para llegar al siguiente corte (0 si no hay más) */
+  toNext: number
 }
 
 export const ALL_TYPES = Object.keys(TYPE_INFO) as PokeType[]
@@ -33,7 +35,9 @@ export function typeCollection(s: GameState, type: PokeType): TypeCollection {
   const ofType = SPECIES.filter((sp) => sp.types.includes(type))
   const caught = ofType.filter((sp) => s.caught.includes(sp.id)).length
   const share = ofType.length ? caught / ofType.length : 0
-  return { type, caught, total: ofType.length, damage: tierDamage(share), next: COLLECTION_TIERS.find((t) => share < t.share) ?? null }
+  const next = COLLECTION_TIERS.find((t) => share < t.share) ?? null
+  const toNext = next ? Math.ceil(next.share * ofType.length - 1e-9) - caught : 0
+  return { type, caught, total: ofType.length, damage: tierDamage(share), next, toNext }
 }
 
 /** Daño de más de cada tipo de ataque por la colección; sin entrada, ninguno */

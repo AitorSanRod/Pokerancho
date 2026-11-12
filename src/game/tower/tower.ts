@@ -1,10 +1,10 @@
 import { makeFighter, simulateBattle, type BattleRecord } from '../battle/battle'
 import type { Rng } from '../core/random'
-import { rankingWeek } from '../core/ranking'
 import { activeMon, MonPlace, monPlace, type GameState, type OwnedMon } from '../core/state'
 import { battleDuration } from '../run/battleTimeline'
 import { monPerks } from '../team/perks'
 import { ranchPassives } from '../team/ranchPassives'
+import { recordWeekFloor } from './towerWeek'
 import { towerFoe, towerLevel, towerStatMult } from './towerFoes'
 import { isMovePickFloor, towerMove, towerMoveChoices } from './towerMoves'
 import { floorPrize, noTowerEarned, rewardFloor, type FloorPrize, type TowerEarned } from './towerRewards'
@@ -13,12 +13,17 @@ import { floorPrize, noTowerEarned, rewardFloor, type FloorPrize, type TowerEarn
 // con el ataque que se elige cada pocos pisos (towerMoves.ts) y premios en cada piso (towerRewards.ts), hasta que cae.
 // Lucha una copia con sus stats, pasivas e hitos (sus PS de verdad no cambian). El combate en curso sigue aunque no se
 // mire, pero el siguiente piso solo empieza cuando la pantalla lo pide (nextFloor): salir la deja parada entre pisos,
-// tal cual, para retomarla después con el mismo Pokémon de compañero.
+// tal cual, para retomarla con el mismo compañero. Con la app cerrada sigue sola TOWER_AWAY_FLOORS pisos y luego espera.
 
 /** Cada cuántos pisos se cura del todo antes de seguir */
 export const TOWER_HEAL_EVERY = 25
 /** Último piso tras el que se cura; más arriba ya no hay curas */
 export const TOWER_LAST_HEAL_FLOOR = 100
+
+/** Pisos que sube sola con la app cerrada o en segundo plano antes de pararse a esperar */
+export const TOWER_AWAY_FLOORS = 5
+/** Milisegundos de paseo entre pisos que sube sola; más que un tick con la app delante, así solo sigue con ella cerrada */
+export const TOWER_AWAY_GAP_MS = 2000
 
 /** Cómo acabó la subida: cayó o la abandonó */
 export const TowerEnd = { Fainted: 'fainted', Left: 'left' } as const
@@ -40,6 +45,8 @@ export interface TowerRun {
   prize: FloorPrize | null
   /** Milisegundos reales que quedan del combate del piso; 0 entre pisos */
   battleMsLeft: number
+  /** Pisos empezados solos, sin la pantalla delante, desde la última vez que la pantalla pidió uno */
+  awayFloors: number
   /** Récord antes de esta subida: los premios de piso solo se dan por encima */
   startBest: number
   earned: TowerEarned
@@ -100,6 +107,7 @@ export function startTower(s: GameState, moveId: string, rng: Rng = Math.random)
     lastBattle: null,
     prize: null,
     battleMsLeft: 0,
+    awayFloors: 0,
     startBest: s.towerBest,
     earned: noTowerEarned(),
     end: null,
@@ -118,6 +126,7 @@ export function pickTowerMove(s: GameState, moveId: string) {
 /** Empieza el combate del siguiente piso, si se puede y no falta elegir ataque */
 export function nextFloor(s: GameState, rng: Rng = Math.random) {
   if (!canContinueTower(s) || towerMovePickDue(s)) return
+  s.tower!.awayFloors = 0
   fightFloor(s, towerMon(s)!, rng)
 }
 
@@ -165,22 +174,28 @@ function finishFloor(s: GameState) {
   t.floor++
 }
 
-/** Pasa `ms` reales: el combate en curso sigue a su velocidad (se mire o no) hasta acabar */
-export function advanceTower(s: GameState, ms: number) {
+/**
+ * Pasa `ms` reales: el combate en curso sigue a su velocidad (se mire o no) hasta acabar. Si sobra tiempo para el paseo
+ * hasta el siguiente piso (app cerrada o en segundo plano), sube sola, hasta TOWER_AWAY_FLOORS pisos
+ */
+export function advanceTower(s: GameState, ms: number, rng: Rng = Math.random) {
   const t = s.tower
-  if (!t || t.end !== null || t.battleMsLeft === 0) return
-  t.battleMsLeft = Math.max(0, t.battleMsLeft - ms)
-  if (t.battleMsLeft === 0) finishFloor(s)
+  let left = ms
+  while (t && t.end === null && t.battleMsLeft > 0) {
+    const spent = Math.min(left, t.battleMsLeft)
+    t.battleMsLeft -= spent
+    left -= spent
+    if (t.battleMsLeft > 0) return
+    finishFloor(s)
+    if (left < TOWER_AWAY_GAP_MS || !canGoAlone(s)) return
+    left -= TOWER_AWAY_GAP_MS
+    t.awayFloors++
+    fightFloor(s, towerMon(s)!, rng)
+  }
 }
 
-/** Apunta el piso superado en el récord de la semana (empieza de cero si la semana es otra) */
-function recordWeekFloor(s: GameState, floor: number) {
-  const week = rankingWeek(s.lastTick)
-  s.towerWeek = { week, best: Math.max(towerWeekBest(s, s.lastTick), floor) }
-}
-
-/** Piso más alto superado en la semana de `now`: el de su ranking */
-export const towerWeekBest = (s: GameState, now: number): number => (s.towerWeek.week === rankingWeek(now) ? s.towerWeek.best : 0)
+/** Puede empezar sola el siguiente piso: le quedan pisos sin la pantalla y no toca elegir ataque */
+const canGoAlone = (s: GameState): boolean => canContinueTower(s) && !towerMovePickDue(s) && s.tower!.awayFloors < TOWER_AWAY_FLOORS
 
 /** El jugador la deja entre pisos: se acaba ahí, con lo ganado */
 export function abandonTower(s: GameState) {

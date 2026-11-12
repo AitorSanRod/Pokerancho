@@ -26,11 +26,18 @@ export function fiveStarSpecies(s: GameState): number[] {
   return [...new Set(ids)]
 }
 
+/** Cuántas especies distintas con 5 ★ tiene el jugador de cada tipo; sin entrada, ninguna */
+export function fiveStarCountByType(s: GameState): Partial<Record<PokeType, number>> {
+  const out: Partial<Record<PokeType, number>> = {}
+  for (const id of fiveStarSpecies(s)) for (const t of species(id).types) out[t] = (out[t] ?? 0) + 1
+  return out
+}
+
 /** Bono de stats de cada tipo por las especies con 5 ★ (con su tope); sin entrada, ninguno */
 export function starTypeBonuses(s: GameState): Partial<Record<PokeType, number>> {
   const out: Partial<Record<PokeType, number>> = {}
-  for (const id of fiveStarSpecies(s)) {
-    for (const t of species(id).types) out[t] = Math.min(STAR_TYPE_BONUS_MAX, (out[t] ?? 0) + STAR_TYPE_BONUS)
+  for (const [t, count] of Object.entries(fiveStarCountByType(s))) {
+    out[t as PokeType] = Math.min(STAR_TYPE_BONUS_MAX, count * STAR_TYPE_BONUS)
   }
   return out
 }

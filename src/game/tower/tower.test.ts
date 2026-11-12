@@ -23,8 +23,10 @@ import {
   TowerEnd,
   towerBlocker,
   towerMovePickDue,
-  towerWeekBest,
+  TOWER_AWAY_FLOORS,
+  TOWER_AWAY_GAP_MS,
 } from './tower'
+import { towerWeekBest } from './towerWeek'
 import { TOWER_MOVE_PICK_EVERY, towerMove, towerMoveChoices } from './towerMoves'
 import { sideMove } from '../battle/battle'
 
@@ -88,6 +90,33 @@ describe('torre infinita', () => {
     expect(towerBetweenFloors(s)).toBe(true)
     nextFloor(s, seqRng(0.3))
     expect(s.tower!.battleMsLeft).toBeGreaterThan(0)
+  })
+
+  it('con la app cerrada sube sola unos pocos pisos (hasta que toca elegir ataque) y después espera', () => {
+    const s = withMon(MAX_LEVEL)
+    startTower(s, firstMove(s), seqRng(0.3))
+    advanceTower(s, Number.MAX_SAFE_INTEGER, seqRng(0.3))
+    expect(towerBetweenFloors(s)).toBe(true)
+    expect(s.tower!.floor).toBe(Math.min(2 + TOWER_AWAY_FLOORS, TOWER_MOVE_PICK_EVERY + 1))
+    expect(s.tower!.awayFloors).toBeLessThanOrEqual(TOWER_AWAY_FLOORS)
+  })
+
+  it('si no da tiempo al paseo entre pisos (app delante), no sigue sola', () => {
+    const s = withMon(MAX_LEVEL)
+    startTower(s, firstMove(s), seqRng(0.3))
+    advanceTower(s, s.tower!.battleMsLeft + TOWER_AWAY_GAP_MS - 1, seqRng(0.3))
+    expect(towerBetweenFloors(s)).toBe(true)
+    expect(s.tower!.floor).toBe(2)
+  })
+
+  it('al pedir piso la pantalla, vuelve a tener pisos para subir sola', () => {
+    const s = withMon(MAX_LEVEL)
+    startTower(s, firstMove(s), seqRng(0.3))
+    advanceTower(s, s.tower!.battleMsLeft + TOWER_AWAY_GAP_MS, seqRng(0.3))
+    expect(s.tower!.awayFloors).toBe(1)
+    finishBattle(s)
+    nextFloor(s, seqRng(0.3))
+    expect(s.tower!.awayFloors).toBe(0)
   })
 
   it('solo sigue con su Pokémon de compañero', () => {
