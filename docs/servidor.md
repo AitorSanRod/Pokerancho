@@ -174,8 +174,8 @@ se quedara corto, sube `WATCH_SYNC_MS` y `BACKGROUND_SYNC_MS` en `src/net/raidSy
   `SELECT h.saved_at, h.revision, length(h.data) FROM save_history h JOIN users u ON u.id = h.user_id WHERE u.nickname = 'Apodo' ORDER BY h.saved_at DESC;`.
   Mejor que pisar su partida (el móvil podría subir encima la suya), devuélvele lo perdido con un regalo.
 - **Regalar algo a un jugador** (p. ej. para compensar algo que falló): una migración con una fila en `server_gifts`
-  con su `user_id` (sin él, es para todos). `goods` admite `incursionKeys` y `mons` (`speciesId`, `level`, `stars`);
-  le sale en Notificaciones. Ejemplo: `migrations/0013_save_safety.sql`.
+  con su `user_id` (sin él, es para todos). `goods` admite `money` (₽, como mucho un millón), `incursionKeys`
+  y `mons` (`speciesId`, `level`, `stars`); le sale en Notificaciones. Ejemplo: `migrations/0013_save_safety.sql`.
 
 ## Límites que conviene saber
 

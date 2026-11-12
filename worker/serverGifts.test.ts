@@ -12,7 +12,7 @@ const SPECIES_ID = SPECIES[0].id
 async function addGift(db: D1Database, id: string, expiresAt: number, userId: string | null = null) {
   await db
     .prepare('INSERT INTO server_gifts (id, title, goods, expires_at, user_id) VALUES (?, ?, ?, ?, ?)')
-    .bind(id, 'Regalo', JSON.stringify({ incursionKeys: { [ID]: 1 }, mons: [{ speciesId: SPECIES_ID, level: 10, stars: 1 }] }), expiresAt, userId)
+    .bind(id, 'Regalo', JSON.stringify({ money: 500, incursionKeys: { [ID]: 1 }, mons: [{ speciesId: SPECIES_ID, level: 10, stars: 1 }] }), expiresAt, userId)
     .run()
 }
 
@@ -24,7 +24,7 @@ describe('regalos del servidor', () => {
     await addGift(api.env.DB, 'caducado', Date.now() - 1)
     const { status, data } = await api.call('/api/server-gifts')
     expect(status).toBe(200)
-    expect(data.gifts).toEqual([{ id: 'vigente', title: 'Regalo', incursionKeys: { [ID]: 1 }, mons: [{ speciesId: SPECIES_ID, level: 10, exp: 0, stars: 1 }] }])
+    expect(data.gifts).toEqual([{ id: 'vigente', title: 'Regalo', money: 500, incursionKeys: { [ID]: 1 }, mons: [{ speciesId: SPECIES_ID, level: 10, exp: 0, stars: 1 }] }])
   })
 
   it('el regalo de un jugador solo lo ve él, con su sesión', async () => {

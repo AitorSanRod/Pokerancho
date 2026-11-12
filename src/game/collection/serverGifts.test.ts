@@ -12,14 +12,23 @@ import { claimServerGift, parseServerGifts, pendingServerGifts, serverGiftBlocke
 
 const ID = INCURSIONS[0].id
 const [STARTER, GIFTED] = SPECIES.map((sp) => sp.id)
-const gift: ServerGift = { id: 'regalo-1', title: 'Un regalo', incursionKeys: { [ID]: 1 }, mons: [] }
-const monGift: ServerGift = { id: 'perdon-1', title: 'Te devolvemos tu Pokémon', incursionKeys: {}, mons: [{ speciesId: GIFTED, level: 13, exp: 0, stars: 2 }] }
+const gift: ServerGift = { id: 'regalo-1', title: 'Un regalo', money: 0, incursionKeys: { [ID]: 1 }, mons: [] }
+const monGift: ServerGift = { id: 'perdon-1', title: 'Te devolvemos tu Pokémon', money: 0, incursionKeys: {}, mons: [{ speciesId: GIFTED, level: 13, exp: 0, stars: 2 }] }
 
 describe('regalos del servidor', () => {
   it('se descarta lo que no tiene buena forma y las incursiones que no existen', () => {
     const parsed = parseServerGifts([gift, { id: 'MAL ID', title: 'x', incursionKeys: {} }, { ...gift, id: 'otro', incursionKeys: { quitada: 2, [ID]: -1 } }, 'basura'])
-    expect(parsed).toEqual([gift, { id: 'otro', title: gift.title, incursionKeys: {}, mons: [] }])
+    expect(parsed).toEqual([gift, { id: 'otro', title: gift.title, money: 0, incursionKeys: {}, mons: [] }])
     expect(parseServerGifts(null)).toEqual([])
+  })
+
+  it('da sus ₽; los que no son un entero positivo no cuentan', () => {
+    const s = initialState()
+    const money = s.money
+    const [parsed, bad] = parseServerGifts([{ ...gift, money: 500 }, { ...gift, id: 'otro', money: -5 }])
+    expect(bad.money).toBe(0)
+    expect(claimServerGift(s, parsed)).toBe(true)
+    expect(s.money).toBe(money + 500)
   })
 
   it('los Pokémon de especies que no existen o con nivel o ★ fuera de rango se descartan o se arreglan', () => {

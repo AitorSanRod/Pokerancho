@@ -14,6 +14,8 @@ export interface ServerGift {
   id: string
   /** Por qué se regala, tal y como se ve en Notificaciones */
   title: string
+  /** ₽ que da */
+  money: number
   /** Llaves de incursión que da, por incursión */
   incursionKeys: Partial<Record<IncursionId, number>>
   /** Pokémon que da (p. ej. los perdidos que se devuelven); si ya se tiene la especie, como en un intercambio repetido */
@@ -23,6 +25,8 @@ export interface ServerGift {
 export const SERVER_GIFT_ID = /^[a-z0-9-]{1,40}$/
 /** Lo más que da de una llave un regalo */
 const MAX_GIFT_KEYS = MAX_KEYS
+/** Lo más que da de ₽ un regalo, para que un cero de más al escribirlo no rompa la economía */
+const MAX_GIFT_MONEY = 1_000_000
 /** Pokémon como mucho en un regalo */
 const MAX_GIFT_MONS = 6
 const TITLE_MAX = 160
@@ -54,7 +58,8 @@ function parseKeys(v: unknown): ServerGift['incursionKeys'] {
 function parseGift(v: unknown): ServerGift | null {
   if (!isObject(v) || typeof v.id !== 'string' || !SERVER_GIFT_ID.test(v.id) || typeof v.title !== 'string') return null
   const mons = Array.isArray(v.mons) ? v.mons.map(parseMon).filter((m): m is TradedMon => m !== null).slice(0, MAX_GIFT_MONS) : []
-  return { id: v.id, title: v.title.slice(0, TITLE_MAX), incursionKeys: parseKeys(v.incursionKeys), mons }
+  const money = isInt(v.money, 1, Number.MAX_SAFE_INTEGER) ? Math.min(MAX_GIFT_MONEY, v.money) : 0
+  return { id: v.id, title: v.title.slice(0, TITLE_MAX), money, incursionKeys: parseKeys(v.incursionKeys), mons }
 }
 
 /** Los regalos que manda el servidor que tienen buena forma; lo que no, se descarta */
@@ -73,9 +78,10 @@ export function serverGiftBlocker(s: GameState, gift: ServerGift): string | null
   return null
 }
 
-/** Recoge el regalo (una sola vez): suma sus llaves sin pasar del máximo y mete sus Pokémon. false si ya estaba recogido o no cabe */
+/** Recoge el regalo (una sola vez): suma sus ₽ y sus llaves sin pasar del máximo y mete sus Pokémon. false si ya estaba recogido o no cabe */
 export function claimServerGift(s: GameState, gift: ServerGift): boolean {
   if (s.claimedServerGifts.includes(gift.id) || serverGiftBlocker(s, gift)) return false
+  s.money += gift.money
   for (const [id, n] of Object.entries(gift.incursionKeys) as [IncursionId, number][]) {
     s.incursionKeys[id] = Math.min(MAX_KEYS, keysOf(s, id) + n)
   }
