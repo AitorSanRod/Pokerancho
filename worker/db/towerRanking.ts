@@ -1,22 +1,25 @@
-import { RANKING_ACTIVE_MS, RANKING_SIZE, type TowerRankingEntry, type TowerRankingView } from '../../src/game/core/ranking'
+import { RANKING_ACTIVE_MS, RANKING_SIZE, rankingWeek, type TowerRankingEntry, type TowerRankingView } from '../../src/game/core/ranking'
 import { RANKED_USERS } from './users'
 
 // El ranking de la torre infinita en D1 (tabla tower_ranking, migrations/0015_tower_ranking.sql): el piso más alto
-// (towerBest) de la partida en la nube de cada cuenta, rehecho cada hora junto a la foto del dinero y con sus permisos.
+// superado esta semana (towerWeek) en la partida en la nube de cada cuenta, rehecho cada hora junto a la foto del dinero
+// y con sus permisos. Es semanal: el de otra semana cuenta como 0, así que cada lunes empieza de cero.
 
-/** Sentencias que rehacen la foto: cuentas visibles con algún piso y la partida subida hace poco; empates, mismo puesto */
+/** Sentencias que rehacen la foto: cuentas visibles con algún piso esta semana y la partida subida hace poco; empates, mismo puesto */
 export const rebuildTowerStatements = (db: D1Database, now: number): D1PreparedStatement[] => [
   db.prepare('DELETE FROM tower_ranking'),
   db
     .prepare(
       `INSERT INTO tower_ranking (user_id, rank, floor)
        SELECT user_id, RANK() OVER (ORDER BY floor DESC), floor FROM (
-         SELECT saves.user_id, CAST(json_extract(saves.data, '$.save.towerBest') AS INTEGER) AS floor
+         SELECT saves.user_id,
+           CASE WHEN json_extract(saves.data, '$.save.towerWeek.week') = ?
+             THEN CAST(json_extract(saves.data, '$.save.towerWeek.best') AS INTEGER) ELSE 0 END AS floor
          FROM saves JOIN users ON users.id = saves.user_id
          WHERE ${RANKED_USERS} AND saves.updated_at >= ?
        ) WHERE floor > 0`,
     )
-    .bind(now - RANKING_ACTIVE_MS),
+    .bind(rankingWeek(now), now - RANKING_ACTIVE_MS),
 ]
 
 interface EntryRow {

@@ -174,8 +174,10 @@ export interface GameState {
   missions: DailyMissions | null
   /** Torre infinita en curso o su resumen al acabar (ver tower/tower.ts); null si no */
   tower: TowerRun | null
-  /** Piso más alto superado en la torre infinita (sale en su ranking) */
+  /** Piso más alto superado en la torre infinita (los premios de piso se dan por encima) */
   towerBest: number
+  /** Piso más alto superado esta semana (`week`, ver core/ranking.ts › rankingWeek): el que sale en su ranking, de cero cada lunes */
+  towerWeek: { week: number; best: number }
   /** Buscando grupo para una incursión con otros jugadores (ver incursion/online/linkedIncursion.ts); null si no */
   incursionQueue: IncursionQueue | null
   tutorial: TutorialStep | null
@@ -209,7 +211,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 50
+export const SAVE_VERSION = 51
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 
@@ -248,6 +250,7 @@ export function initialState(): GameState {
     missions: null,
     tower: null,
     towerBest: 0,
+    towerWeek: { week: 0, best: 0 },
     tutorial: TutorialStep.Starter,
     unlockedRoutes: [RouteId.PuebloPaleta],
     completedRoutes: [],

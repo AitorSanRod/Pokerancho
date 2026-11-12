@@ -1,5 +1,6 @@
 import { makeFighter, simulateBattle, type BattleRecord } from '../battle/battle'
 import type { Rng } from '../core/random'
+import { rankingWeek } from '../core/ranking'
 import { activeMon, MonPlace, monPlace, type GameState, type OwnedMon } from '../core/state'
 import { battleDuration } from '../run/battleTimeline'
 import { monPerks } from '../team/perks'
@@ -159,6 +160,7 @@ function finishFloor(s: GameState) {
   }
   rewardFloor(s, mon, t.earned, t.lastBattle!.enemy.speciesId, t.prize!)
   s.towerBest = Math.max(s.towerBest, t.floor)
+  recordWeekFloor(s, t.floor)
   if (isHealFloor(t.floor)) t.hp = null
   t.floor++
 }
@@ -170,6 +172,15 @@ export function advanceTower(s: GameState, ms: number) {
   t.battleMsLeft = Math.max(0, t.battleMsLeft - ms)
   if (t.battleMsLeft === 0) finishFloor(s)
 }
+
+/** Apunta el piso superado en el récord de la semana (empieza de cero si la semana es otra) */
+function recordWeekFloor(s: GameState, floor: number) {
+  const week = rankingWeek(s.lastTick)
+  s.towerWeek = { week, best: Math.max(towerWeekBest(s, s.lastTick), floor) }
+}
+
+/** Piso más alto superado en la semana de `now`: el de su ranking */
+export const towerWeekBest = (s: GameState, now: number): number => (s.towerWeek.week === rankingWeek(now) ? s.towerWeek.best : 0)
 
 /** El jugador la deja entre pisos: se acaba ahí, con lo ganado */
 export function abandonTower(s: GameState) {

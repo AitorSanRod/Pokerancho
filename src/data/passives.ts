@@ -6,6 +6,13 @@ import type { PokeType } from './types'
 /** Pokémon del mismo tipo que hacen falta en el rancho para el nivel 1 y el nivel 2 de su pasiva */
 export const PASSIVE_THRESHOLDS = [3, 5] as const
 
+/**
+ * Parte del efecto de las pasivas de rancho que cuenta en combate (0.4 = al 40 %), en rutas, jefes, torre y expediciones
+ * (no en incursiones): ayudan sin decidir el combate. Se aplica a todos sus números (stats, probabilidades, curas, daño
+ * extra), así que `TYPE_PASSIVES` guarda el efecto «entero» y lo que se ve en el juego ya va multiplicado
+ */
+export const RANCH_PASSIVE_SCALE = 0.4
+
 /** Nivel de una pasiva: 1 o 2 */
 export type PassiveLevel = 1 | 2
 

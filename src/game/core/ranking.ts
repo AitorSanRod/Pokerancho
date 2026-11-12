@@ -44,8 +44,8 @@ const WEEK_DAYS = 7
 /** Días que van del lunes anterior al 1 de enero de 1970 (jueves), el día 0 de las fechas en ms */
 const EPOCH_AFTER_MONDAY_DAYS = 3
 
-/** Inicio (ms, lunes a las 00:00 UTC) de la semana del ranking de daño: cada lunes empieza de cero */
-export function damageWeek(now: number): number {
+/** Inicio (ms, lunes a las 00:00 UTC) de la semana de los rankings semanales (daño y torre): cada lunes empiezan de cero */
+export function rankingWeek(now: number): number {
   const day = Math.floor(now / DAY_MS)
   return (day - ((day + EPOCH_AFTER_MONDAY_DAYS) % WEEK_DAYS)) * DAY_MS
 }

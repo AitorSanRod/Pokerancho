@@ -20,6 +20,8 @@ export type Team = (typeof Team)[keyof typeof Team]
 export const FOE_HP_MULT = 8
 /** Multiplicador del Ataque de los rivales de incursión: son varios a la vez y no deben tumbar al grupo de dos golpes */
 export const FOE_ATK_MULT = 0.85
+/** Las pasivas de los rivales de incursión cuentan enteras (1 = al 100 %): el recorte de RANCH_PASSIVE_SCALE no llega aquí */
+const INCURSION_FOE_PASSIVE_SCALE = 1
 
 /** Lo menos que puede quedar una stat con las pasivas a la baja (0.25 = un 25% de la suya); las etapas, aparte */
 export const MIN_STAT_MULT = 0.25
@@ -118,7 +120,7 @@ export function foeFighter(foe: IncursionFoe, id: string): GroupFighter {
   base.hp = Math.round(base.hp * FOE_HP_MULT * (foe.hpMult ?? 1))
   base.atk = Math.round(base.atk * FOE_ATK_MULT)
   const f = fighter(id, Team.Foe, foe.speciesId, foe.level, base, foe.moveIds)
-  return { ...f, bonus: combineBonus(foe.passives ?? []), boss: foe.boss ?? null }
+  return { ...f, bonus: combineBonus(foe.passives ?? [], INCURSION_FOE_PASSIVE_SCALE), boss: foe.boss ?? null }
 }
 
 /** Lo que sale del tramo para el siguiente */

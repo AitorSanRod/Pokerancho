@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CRIT_MULT, STATUS_INFO, StatusId, TYPE_PASSIVES } from '../../data/passives'
+import { CRIT_MULT, RANCH_PASSIVE_SCALE, STATUS_INFO, StatusId, TYPE_PASSIVES } from '../../data/passives'
 import { POKEMON } from '../../data/pokemon'
 import { seqRng } from '../core/test-utils'
 import { calcStats } from '../team/stats'
@@ -11,14 +11,37 @@ const SPECIES_ID = POKEMON.Charmander
 const RIVAL_ID = POKEMON.Bulbasaur
 
 describe('combineBonus', () => {
-  it('suma las pasivas y acumula sus estados', () => {
-    const bonus = combineBonus([
-      { type: 'fire', level: 1 },
-      { type: 'electric', level: 2 },
-    ])
+  it('suma las pasivas (enteras) y acumula sus estados', () => {
+    const bonus = combineBonus(
+      [
+        { type: 'fire', level: 1 },
+        { type: 'electric', level: 2 },
+      ],
+      1,
+    )
     expect(bonus.atk).toBe(TYPE_PASSIVES.fire[0].atk)
     expect(bonus.spe).toBe(TYPE_PASSIVES.electric[1].spe)
     expect(bonus.inflicts).toEqual([TYPE_PASSIVES.fire[0].inflict, TYPE_PASSIVES.electric[1].inflict])
+  })
+
+  it('a una parte de su efecto, todos sus números bajan en esa proporción', () => {
+    const scale = 0.5
+    const passives = [
+      { type: 'fire', level: 2 },
+      { type: 'steel', level: 2 },
+      { type: 'bug', level: 1 },
+    ] as const
+    const full = combineBonus([...passives], 1)
+    const part = combineBonus([...passives], scale)
+    expect(part.atk).toBeCloseTo(full.atk * scale)
+    expect(part.damageReduction).toBeCloseTo(full.damageReduction * scale)
+    expect(part.inflicts[0].chance).toBeCloseTo(full.inflicts[0].chance * scale)
+    expect(part.bonusVs[0].damage).toBeCloseTo(full.bonusVs[0].damage * scale)
+  })
+
+  it('por defecto cuentan a RANCH_PASSIVE_SCALE de su efecto', () => {
+    const ref = [{ type: 'fighting', level: 2 }] as const
+    expect(combineBonus([...ref]).atk).toBeCloseTo(combineBonus([...ref], 1).atk * RANCH_PASSIVE_SCALE)
   })
 
   it('sin pasivas no cambia nada', () => {
@@ -31,7 +54,7 @@ describe('pasivas en combate', () => {
   it('las de stats suben la stat en su porcentaje, y los PS actuales en proporción', () => {
     const base = calcStats(SPECIES_ID, LEVEL)
     const f = makeFighter('player', SPECIES_ID, LEVEL, { hp: base.hp, passives: [{ type: 'normal', level: 1 }] })
-    expect(f.maxHp).toBe(Math.round(base.hp * (1 + TYPE_PASSIVES.normal[0].hp!)))
+    expect(f.maxHp).toBe(Math.round(base.hp * (1 + TYPE_PASSIVES.normal[0].hp! * RANCH_PASSIVE_SCALE)))
     expect(f.hp).toBe(f.maxHp)
   })
 

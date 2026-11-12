@@ -97,7 +97,7 @@ export function makeFighter(
   side: Side,
   speciesId: number,
   level: number,
-  /** `move`: en lugar del suyo de siempre (signatureMove), p. ej. el elegido en la torre */
+  /** `move`: en lugar del suyo de siempre (signatureMove), p. ej. el elegido en la torre*/
   opts: { hp?: number; stars?: number; nature?: Nature; statMult?: number; passives?: PassiveRef[]; perks?: MonPerks; move?: Move } = {},
 ): Fighter {
   const sp = species(speciesId)

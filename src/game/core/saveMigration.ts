@@ -119,6 +119,7 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   formItems: (v) => listOf(v, isFormItem),
   mints: (v) => (isInt(v) ? v : undefined),
   towerBest: (v) => (isInt(v) ? v : undefined),
+  towerWeek: (v) => (isRecord(v) && isInt(v.week) && isInt(v.best) ? { week: v.week, best: v.best } : undefined),
   starItems: (v) => countsOf(v, isStarItem),
   tms: (v) => countsOf(v, isTm),
   gachaPity: (v) => countsOf(v, (k) => isStarItem(k) && STAR_ITEMS[k].pity !== null),

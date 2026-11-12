@@ -1,4 +1,4 @@
-import { TYPE_PASSIVES, type PassiveEffect, type PassiveRef, type StatusId } from '../../data/passives'
+import { RANCH_PASSIVE_SCALE, TYPE_PASSIVES, type PassiveEffect, type PassiveRef, type StatusId } from '../../data/passives'
 import type { PokeType } from '../../data/types'
 
 /** Todas las pasivas de un combatiente sumadas: los porcentajes se suman y los estados y bonos por tipo se acumulan */
@@ -35,9 +35,33 @@ const NO_BONUS: CombatBonus = {
   bonusVs: [],
 }
 
-/** Suma de las pasivas de rancho; la reducción de daño, la esquiva y el crítico no pasan del 90% */
-export const combineBonus = (passives: PassiveRef[]): CombatBonus =>
-  sumEffects(passives.map(({ type, level }) => TYPE_PASSIVES[type][level - 1]))
+/**
+ * Suma de las pasivas de rancho, cada una a `scale` de su efecto (por defecto, RANCH_PASSIVE_SCALE; 1 = entera); la
+ * reducción de daño, la esquiva y el crítico no pasan del 90%
+ */
+export const combineBonus = (passives: PassiveRef[], scale = RANCH_PASSIVE_SCALE): CombatBonus =>
+  sumEffects(passives.map(({ type, level }) => scaleEffect(TYPE_PASSIVES[type][level - 1], scale)))
+
+const scaled = (value: number | undefined, scale: number) => (value === undefined ? undefined : value * scale)
+
+/** La pasiva con todos sus números (stats, probabilidades, curas, daño extra) multiplicados por `scale` */
+export function scaleEffect(e: PassiveEffect, scale: number): PassiveEffect {
+  if (scale === 1) return e
+  return {
+    hp: scaled(e.hp, scale),
+    atk: scaled(e.atk, scale),
+    def: scaled(e.def, scale),
+    spe: scaled(e.spe, scale),
+    inflict: e.inflict && { ...e.inflict, chance: e.inflict.chance * scale },
+    regen: scaled(e.regen, scale),
+    drain: scaled(e.drain, scale),
+    damageReduction: scaled(e.damageReduction, scale),
+    dodge: scaled(e.dodge, scale),
+    crit: scaled(e.crit, scale),
+    winHeal: scaled(e.winHeal, scale),
+    bonusVs: e.bonusVs && { ...e.bonusVs, damage: e.bonusVs.damage * scale },
+  }
+}
 
 /** Suma de efectos de pasiva sueltos (también las de grupo de las incursiones), con los mismos topes */
 export function sumEffects(effects: PassiveEffect[]): CombatBonus {

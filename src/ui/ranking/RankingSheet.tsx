@@ -24,7 +24,7 @@ const BOARD_INTRO: Record<Board, string> = {
   [Board.Money]: 'Celebración de la fiesta capitalista. Se actualiza cada hora.',
   [Board.Damage]:
     'Daño a los jefes comunitarios y de incursión esta semana, con tu Pokémon que más ha hecho. Cuenta al terminar cada pelea, se actualiza cada hora y empieza de cero cada lunes.',
-  [Board.Tower]: 'Piso más alto de la torre infinita. Cuenta con la partida guardada en la nube y se actualiza cada hora.',
+  [Board.Tower]: 'Piso más alto de la torre infinita esta semana. Cuenta con la partida guardada en la nube, se actualiza cada hora y empieza de cero cada lunes.',
 }
 
 /**

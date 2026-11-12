@@ -1,5 +1,6 @@
 import { GROUP_PASSIVES, type GroupPassiveLevel } from '../../data/incursionPassives'
-import { STATUS_INFO, TYPE_PASSIVES, type PassiveEffect, type PassiveLevel } from '../../data/passives'
+import { scaleEffect } from '../../game/battle/combatBonus'
+import { RANCH_PASSIVE_SCALE, STATUS_INFO, TYPE_PASSIVES, type PassiveEffect, type PassiveLevel } from '../../data/passives'
 import { TYPE_INFO, type PokeType } from '../../data/types'
 
 const pct = (fraction: number) => `${Math.round(fraction * 100)}%`
@@ -22,7 +23,9 @@ function describeEffect(e: PassiveEffect): string[] {
   return parts
 }
 
-export const passiveText = (type: PokeType, level: PassiveLevel): string => describeEffect(TYPE_PASSIVES[type][level - 1]).join(' · ')
+/** Lo que da la pasiva de rancho de un tipo en combate (ya a RANCH_PASSIVE_SCALE de su efecto) */
+export const passiveText = (type: PokeType, level: PassiveLevel): string =>
+  describeEffect(scaleEffect(TYPE_PASSIVES[type][level - 1], RANCH_PASSIVE_SCALE)).join(' · ')
 
 /** Lo que da a todo el grupo la pasiva de un tipo en una incursión */
 export const groupPassiveText = (type: PokeType, level: GroupPassiveLevel): string =>

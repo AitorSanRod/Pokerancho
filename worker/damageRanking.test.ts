@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { damageWeek } from '../src/game/core/ranking'
+import { rankingWeek } from '../src/game/core/ranking'
 import { player as anonymousId, snap, tabRoom } from '../src/game/raid/online/online-test-utils'
 import { seatPlayer, type SharedRoom } from '../src/game/raid/online/sharedRoom'
 import { RaidMemberKind } from '../src/game/raid/raidRoom'
@@ -65,7 +65,7 @@ describe('ranking de daño a los jefes', () => {
   it('cada lunes empieza de cero', async () => {
     const ash = await player('ash@paleta.es', 'Ash')
     await save(ash, room([{ playerId: await accountId(ash), uid: 'pika', damage: 30 }]))
-    const nextWeek = damageWeek(Date.now()) + WEEK_MS
+    const nextWeek = rankingWeek(Date.now()) + WEEK_MS
     await refreshRanking(ash.env.DB, nextWeek - 1)
     expect((await ash.call('/api/ranking')).data.damage.mine.damage).toBe(30)
     await refreshRanking(ash.env.DB, nextWeek)

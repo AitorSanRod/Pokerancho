@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { STARTERS } from '../src/data/species'
 import { cloudUpload } from '../src/game/core/cloudSave'
-import { RANKING_ACTIVE_MS, RANKING_REFRESH_MS, RANKING_SIZE, RankingCode } from '../src/game/core/ranking'
+import { RANKING_ACTIVE_MS, RANKING_REFRESH_MS, RANKING_SIZE, RankingCode, rankingWeek } from '../src/game/core/ranking'
 import { initialState } from '../src/game/core/state'
 import { chooseStarter } from '../src/game/core/test-utils'
 import { refreshRanking } from './ranking'
@@ -11,11 +11,13 @@ import { testWorker } from './test/api'
 vi.mock('./mail', async (original) => ({ ...(await original<typeof import('./mail')>()), sendMail: vi.fn() }))
 vi.mock('../src/data/maps/kantoMaps', () => import('../src/game/core/test-map'))
 
-async function upload(api: Api, money: number, towerBest = 0) {
+/** Sube una partida con ese dinero y, en la torre, ese piso como el mejor de la semana `week` (por defecto, esta) */
+async function upload(api: Api, money: number, towerFloor = 0, week = rankingWeek(Date.now())) {
   const s = initialState()
   chooseStarter(s, STARTERS[0])
   s.money = money
-  s.towerBest = towerBest
+  s.towerBest = towerFloor
+  s.towerWeek = { week, best: towerFloor }
   await api.call('/api/save', { body: { baseRevision: null, ...cloudUpload(s) } })
 }
 
@@ -87,4 +89,17 @@ describe('ranking de la torre', () => {
     expect(tower.mine).toEqual({ rank: 2, floor: 12 })
     expect(tower.total).toBe(2)
   })
+
+  it('solo cuenta el piso de esta semana: cada lunes empieza de cero', async () => {
+    const ash = await player('ash@paleta.es', 'Ash')
+    const gary = await player('gary@paleta.es', 'Gary', ash.env)
+    await upload(ash, 0, 12)
+    await upload(gary, 0, 30, rankingWeek(Date.now()) - WEEK_MS)
+    await refresh(ash)
+    const { tower } = (await ash.call('/api/ranking')).data
+    expect(tower.top.map((e: { nickname: string }) => e.nickname)).toEqual(['Ash'])
+  })
 })
+
+/** Una semana en ms */
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000

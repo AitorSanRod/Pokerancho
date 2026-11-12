@@ -1,4 +1,4 @@
-import { damageWeek, RANKING_SIZE, type DamageRankingEntry, type DamageRankingView, type MonDamage } from '../../src/game/core/ranking'
+import { rankingWeek, RANKING_SIZE, type DamageRankingEntry, type DamageRankingView, type MonDamage } from '../../src/game/core/ranking'
 import { RANKED_USERS } from './users'
 
 // El ranking semanal de daño a los jefes (comunitarios y de incursión) en D1 (tablas boss_damage y damage_ranking,
@@ -12,7 +12,7 @@ import { RANKED_USERS } from './users'
  */
 export async function addDamage(db: D1Database, tally: MonDamage[], now = Date.now()) {
   if (tally.length === 0) return
-  await addDamageRows(db, tally, damageWeek(now)).catch((e: unknown) => console.error('Ranking de daño: no se ha podido apuntar', e))
+  await addDamageRows(db, tally, rankingWeek(now)).catch((e: unknown) => console.error('Ranking de daño: no se ha podido apuntar', e))
 }
 
 function addDamageRows(db: D1Database, tally: MonDamage[], week: number) {
@@ -34,7 +34,7 @@ function addDamageRows(db: D1Database, tally: MonDamage[], week: number) {
  * hecho; los empates comparten puesto. Borran el daño de las semanas pasadas
  */
 export const rebuildDamageStatements = (db: D1Database, now: number): D1PreparedStatement[] => [
-  db.prepare('DELETE FROM boss_damage WHERE week < ?').bind(damageWeek(now)),
+  db.prepare('DELETE FROM boss_damage WHERE week < ?').bind(rankingWeek(now)),
   db.prepare('DELETE FROM damage_ranking'),
   db
     .prepare(
@@ -47,7 +47,7 @@ export const rebuildDamageStatements = (db: D1Database, now: number): D1Prepared
          WHERE ${RANKED_USERS} AND boss_damage.week = ?
        ) WHERE position = 1`,
     )
-    .bind(damageWeek(now)),
+    .bind(rankingWeek(now)),
 ]
 
 interface EntryRow {

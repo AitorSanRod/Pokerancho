@@ -4,6 +4,7 @@ import type { Rng } from '../core/random'
 import { activeMon, initialState, MonPlace, monPlace, type GameState } from '../core/state'
 import { chooseStarter, seqRng } from '../core/test-utils'
 import { MAX_LEVEL } from '../team/stats'
+import { rankingWeek } from '../core/ranking'
 import { runBlocker } from '../run/run'
 import { expeditionBlocker } from '../team/expedition'
 import { setActive } from '../team/ranch'
@@ -22,6 +23,7 @@ import {
   TowerEnd,
   towerBlocker,
   towerMovePickDue,
+  towerWeekBest,
 } from './tower'
 import { TOWER_MOVE_PICK_EVERY, towerMove, towerMoveChoices } from './towerMoves'
 import { sideMove } from '../battle/battle'
@@ -181,4 +183,23 @@ describe('torre infinita', () => {
     setActive(s, uid)
     expect(canContinueTower(s)).toBe(true)
   })
+
+
+  it('apunta el mejor piso de la semana, que empieza de cero la semana siguiente', () => {
+    const s = withMon(MAX_LEVEL)
+    startTower(s, firstMove(s), seqRng(0.5))
+    finishBattle(s)
+    expect(towerWeekBest(s, s.lastTick)).toBe(1)
+    expect(s.towerWeek.week).toBe(rankingWeek(s.lastTick))
+    const nextWeek = rankingWeek(s.lastTick) + WEEK_MS
+    expect(towerWeekBest(s, nextWeek)).toBe(0)
+    s.lastTick = nextWeek
+    nextFloor(s, seqRng(0.5))
+    finishBattle(s)
+    expect(s.towerWeek).toEqual({ week: nextWeek, best: 2 })
+    expect(s.towerBest).toBe(2)
+  })
 })
+
+/** Una semana en ms */
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000
