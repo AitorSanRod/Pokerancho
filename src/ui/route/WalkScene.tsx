@@ -17,7 +17,8 @@ interface Floater {
  * sobre el suelo (p. ej. el combate) y puede usar `--ground` para colocarse a la altura del Pokémon. Sin `speciesId` no
  * camina nadie (p. ej. en la pelea contra un jefe comunitario, que pinta a los suyos). `landmark`: elemento de la
  * parada a la que se acerca o en la que está (cartel, casa…), que entra una vez por parada. `signText`: lo que pone el
- * cartel (el nombre de la ruta).
+ * cartel (el nombre de la ruta). `onStep` devuelve false si el toque no contó (no sale la flecha); con `singleTouch` no
+ * cuentan los toques de un segundo dedo. `floaterText`: lo que sale donde se toca (por defecto, una flecha).
  */
 export function WalkScene({
   biome,
@@ -27,6 +28,8 @@ export function WalkScene({
   speed,
   walkerClass = '',
   onStep,
+  singleTouch = false,
+  floaterText = '»',
   landmark = null,
   signText,
   children,
@@ -39,7 +42,9 @@ export function WalkScene({
   speed: number
   /** Animación del Pokémon (p. ej. al atacar en un combate) */
   walkerClass?: string
-  onStep?: () => void
+  onStep?: () => boolean | void
+  singleTouch?: boolean
+  floaterText?: string
   landmark?: SceneLandmark | null
   signText?: string
   children?: ReactNode
@@ -51,8 +56,8 @@ export function WalkScene({
   const nextId = useRef(0)
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    if (!onStep) return
-    onStep()
+    if (!onStep || (singleTouch && !e.isPrimary)) return
+    if (onStep() === false) return
     navigator.vibrate?.(8)
     const rect = e.currentTarget.getBoundingClientRect()
     const f = { id: nextId.current++, x: e.clientX - rect.left, y: e.clientY - rect.top }
@@ -77,8 +82,8 @@ export function WalkScene({
       <canvas ref={front} className="scene-canvas front" />
       {children}
       {floaters.map((f) => (
-        <span key={f.id} className="floater" style={{ left: f.x, top: f.y }}>
-          »
+        <span key={f.id} className={`floater ${floaterText.length > 1 ? 'text' : ''}`} style={{ left: f.x, top: f.y }}>
+          {floaterText}
         </span>
       ))}
     </div>

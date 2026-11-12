@@ -1,5 +1,6 @@
 import { incursion, KEY_PRICE, MAX_KEYS, type IncursionId } from '../../data/incursions'
 import type { GameState } from '../core/state'
+import { spendMoney } from '../core/wallet'
 
 // Llaves de incursión: se compran en la Tienda (el precio depende de la dificultad) y se gasta una al entrar. Las
 // gratuitas (`free`) no la piden ni la venden.
@@ -24,7 +25,7 @@ export function buyKeyBlocker(s: GameState, id: IncursionId): string | null {
 
 export function buyKey(s: GameState, id: IncursionId): boolean {
   if (buyKeyBlocker(s, id)) return false
-  s.money -= keyPrice(id)
+  spendMoney(s, keyPrice(id))
   s.incursionKeys[id] = keysOf(s, id) + 1
   return true
 }

@@ -185,3 +185,8 @@
     translate: 6px 0;
   }
 }
+/* Golpe del jugador hecho crítico con un toque (RaidCritRing) */
+.battle-pop.tap-crit {
+  color: var(--yellow);
+  font-size: 1.25em;
+}

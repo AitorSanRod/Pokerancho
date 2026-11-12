@@ -1,0 +1,36 @@
+/* Bonificación de EXP de la ruta (ExpBoost) */
+.exp-boost-spawn {
+  position: absolute;
+  bottom: calc(var(--ground) + 90px);
+  z-index: 3;
+  padding: 6px;
+  border: none;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff9 0%, #fff0 70%);
+  transform: translateX(-50%);
+  animation: exp-boost-bounce 0.8s ease-in-out infinite alternate;
+}
+@keyframes exp-boost-bounce {
+  from {
+    translate: 0 0;
+    filter: drop-shadow(0 0 4px var(--yellow));
+  }
+  to {
+    translate: 0 -14px;
+    filter: drop-shadow(0 0 12px var(--yellow));
+  }
+}
+.exp-boost-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--exp) 18%, transparent);
+  color: var(--exp);
+  font-size: 12px;
+}
+.floater.text {
+  font-size: 18px;
+  color: #8fd0ff;
+}

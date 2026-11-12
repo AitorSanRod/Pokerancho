@@ -1,30 +1,10 @@
-import { RAID_ROUND_MS } from '../../game/raid/raidCombat'
-import { BOSS_ID, type Raid, type RaidHit } from '../../game/raid/raidRoom'
+import { elapsedInRound, replayHits, type ReplayHit } from '../../game/raid/raidReplay'
+import { BOSS_ID, type Raid } from '../../game/raid/raidRoom'
+
+export type { ReplayHit }
 
 /** Milisegundos reales que se ve cada golpe (embestida, temblor y número) */
 const HIT_VISIBLE_MS = 700
-
-/** Golpe de la última ronda con su turno: `seq` es único y crece golpe a golpe, `at` el ms de la ronda en que se ve */
-export interface ReplayHit extends RaidHit {
-  seq: number
-  at: number
-}
-
-/**
- * Los golpes de la última ronda se juegan de una vez en el motor; aquí se reparten en orden a lo largo de la ronda
- * siguiente, con el del jefe a mitad y el daño de sus estados al final, para que la pelea se vea por turnos y no toda
- * a la vez
- */
-function replayHits(raid: Raid): ReplayHit[] {
-  const party = raid.lastRound.filter((h) => h.from !== BOSS_ID && !h.status)
-  const boss = raid.lastRound.filter((h) => h.from === BOSS_ID)
-  const statuses = raid.lastRound.filter((h) => h.status)
-  const half = Math.ceil(party.length / 2)
-  const ordered = [...party.slice(0, half), ...boss, ...party.slice(half), ...statuses]
-  return ordered.map((h, i) => ({ ...h, seq: raid.round * 100 + i, at: (i * RAID_ROUND_MS) / ordered.length }))
-}
-
-const elapsedInRound = (raid: Raid) => RAID_ROUND_MS - raid.roundMsLeft
 
 /** Golpes que se están viendo ahora (a mucha velocidad de juego, varios a la vez) */
 export function visibleHits(raid: Raid, timeScale: number): ReplayHit[] {

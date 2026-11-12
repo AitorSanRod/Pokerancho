@@ -27,6 +27,8 @@ export interface Seat {
   passives: PassiveRef[]
   /** Rondas que ha empezado en pie: el jugador gana la EXP de cada una */
   expRounds: number
+  /** Ronda hasta la que se le han contado los toques críticos (ver sharedCrits.ts); sin ella (salas de antes), la de ahora */
+  critRound?: number
 }
 
 export interface SharedRoom {
@@ -120,10 +122,10 @@ function makeRoomFor(raid: Raid): boolean {
   return !!bot
 }
 
-/** Nivel, ★, pasivas y apodo de ahora (pueden cambiar mientras lucha) */
+/** Nivel, ★, pasivas, hitos y apodo de ahora (pueden cambiar mientras lucha) */
 function refreshSeat(room: SharedRoom, seat: Seat, nickname: string, mon: MonSnapshot) {
   seat.passives = mon.passives
-  Object.assign(memberOf(room, seat), { trainer: nickname, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature })
+  Object.assign(memberOf(room, seat), { trainer: nickname, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, perks: mon.perks })
 }
 
 /** Ese Pokémon del jugador ha gastado sus vidas en esta sala */
@@ -155,7 +157,7 @@ export function seatPlayer(room: SharedRoom, playerId: string, nickname: string,
   if (member) Object.assign(member, { left: false, hpFraction: mon.hpFraction, downMs: 0, lives })
   else {
     const memberId = `p${room.nextSeat++}`
-    room.seats[key] = { playerId, uid: mon.uid, memberId, passives: [], expRounds: 0 }
+    room.seats[key] = { playerId, uid: mon.uid, memberId, passives: [], expRounds: 0, critRound: room.raid.round }
     const who = { id: memberId, kind: RaidMemberKind.Player, trainer: nickname, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature }
     room.raid.members.push({ ...newMember(who, mon.hpFraction), lives })
   }

@@ -1,14 +1,20 @@
 import { legSteps, NodeKind, type Boss, type Route, type RouteNode } from '../../data/maps'
-import { makeFighter, simulateBattle } from '../battle/battle'
+import { makeFighter } from '../battle/battle'
 import { combineBonus } from '../battle/combatBonus'
 import { boostedMoney, expReward, moneyReward, pieceReward, ticketReward } from '../battle/rewards'
+import { MissionKind } from '../../data/dailyMissions'
+import { baseSpeciesOf } from '../../data/species'
 import { markSeen } from '../collection/dex'
+import { advanceMission } from '../collection/missions'
 import { addPieces } from '../collection/pieces'
 import { pickEncounter, randInt, type Rng } from '../core/random'
 import { activeMon, type GameState } from '../core/state'
+import { monPerks } from '../team/perks'
 import { ranchPassives } from '../team/ranchPassives'
 import { gainExp, maxHp } from '../team/stats'
 import { battleDuration } from './battleTimeline'
+import { boostActive, BOOST_EXP_MULT } from './expBoost'
+import { playSetup, rewardsFor } from './tapCrit'
 
 /**
  * Multiplicador de stats de los salvajes. Por debajo de 1 porque el jugador encadena combates y solo se cura en las
@@ -41,7 +47,7 @@ export function seeOnRoute(s: GameState, speciesId: number) {
  * Resuelve el combate de la parada pero no lo aplica: PS, premio y derrota se aplican en `settleBattle` cuando
  * termina su tiempo, para que el estado no se adelante a lo que ve el jugador. Los jefes luchan con sus stats
  * completas (sin WILD_STAT_MULT), con sus pasivas del mapa, y dan más premio. El Pokémon del jugador lleva las pasivas
- * de su rancho.
+ * de su rancho. Se juega con una semilla y se guarda cómo empezó, para repetirlo con los toques críticos (tapCrit.ts).
  */
 export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng) {
   const run = s.run!
@@ -55,9 +61,16 @@ export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng) 
     stars: mon.stars,
     nature: mon.nature,
     passives: ranchPassives(s, mon.ranch!),
+    perks: monPerks(s, mon),
   })
-  const result = simulateBattle(player, enemy, rng)
-  const win = result.outcome === 'win'
+  const prize = {
+    money: moneyReward(level, legSteps(r, run.path, run.stop), rng) * (isBoss ? BOSS_MONEY_MULT : 1),
+    tickets: isBoss ? BOSS_TICKETS : ticketReward(enemyId, rng),
+    exp: expReward(level, mon.level) * (isBoss ? BOSS_EXP_MULT : 1) * (boostActive(run) ? BOOST_EXP_MULT : 1),
+    piece: pieceReward(enemyId, rng),
+  }
+  run.battleSetup = { seed: Math.floor(rng() * 2 ** 31), player, enemy, prize, taps: [] }
+  const result = playSetup(run.battleSetup, [])
   seeOnRoute(s, enemyId)
   run.earned.battles++
   run.lastBattle = {
@@ -66,13 +79,7 @@ export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng) 
     events: result.events,
     outcome: result.outcome,
     boss: isBoss,
-    rewards: {
-      money: win ? moneyReward(level, legSteps(r, run.path, run.stop), rng) * (isBoss ? BOSS_MONEY_MULT : 1) : 0,
-      tickets: win ? (isBoss ? BOSS_TICKETS : ticketReward(enemyId, rng)) : 0,
-      exp: win ? expReward(level, mon.level) * (isBoss ? BOSS_EXP_MULT : 1) : 0,
-      piece: win && pieceReward(enemyId, rng),
-      moneyLost: 0,
-    },
+    rewards: rewardsFor(prize, result.outcome),
   }
   run.battleMsLeft = battleDuration(run.lastBattle)
 }
@@ -110,12 +117,13 @@ function settleBattle(s: GameState, r: Route) {
       run.earned.pieces.push(record.enemy.speciesId)
     }
     run.earned.wins++
+    advanceMission(s, MissionKind.WinBattles)
   }
   if (run.stop === run.path.length - 1) completeRoute(s, r)
 }
 
 /** El Pokémon de la ruta gana EXP y se apunta en lo ganado en ella */
-function gainRunExp(s: GameState, exp: number) {
+export function gainRunExp(s: GameState, exp: number) {
   const run = s.run!
   run.earned.exp += exp
   run.earned.levelsGained += gainExp(activeMon(s)!, exp).levelsGained
@@ -131,10 +139,18 @@ export function faint(s: GameState): number {
   return lost
 }
 
+/** Completar una ruta cuenta para las misiones de rutas: cualquiera, esa ruta y con ese compañero */
+function countRouteMissions(s: GameState, r: Route) {
+  advanceMission(s, MissionKind.CompleteRoutes)
+  advanceMission(s, MissionKind.CompleteRoute, 1, { routeId: r.id })
+  advanceMission(s, MissionKind.CompleteRouteWith, 1, { speciesId: baseSpeciesOf(activeMon(s)!.speciesId) })
+}
+
 /** Completa la ruta. Su premio final solo se gana la primera vez; al repetirla quedan los combates */
 export function completeRoute(s: GameState, r: Route) {
   const run = s.run!
   run.phase = 'complete'
+  countRouteMissions(s, r)
   if (s.completedRoutes.includes(r.id)) return
   s.completedRoutes.push(r.id)
   s.tickets += r.reward.tickets

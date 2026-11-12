@@ -46,7 +46,17 @@ export async function buildDemoSave(scenario) {
   s.completedRoutes = [RouteId.PuebloPaleta, RouteId.Ruta1]
 
   const uidOf = (speciesId) => s.owned.find((m) => m.speciesId === speciesId).uid
+  if (scenario.perks) {
+    const { SPECIES } = await import('/src/data/species.ts')
+    const { PokeType } = await import('/src/data/types.ts')
+    s.owned.find((m) => m.speciesId === P.Charmander).level = 52
+    s.owned.find((m) => m.speciesId === P.Bulbasaur).stars = 5
+    const grassAndFire = SPECIES.filter((sp) => sp.types.includes(PokeType.Fire) || sp.types.includes(PokeType.Grass)).slice(0, 14)
+    for (const sp of grassAndFire) markCaught(s, sp.id)
+  }
   if (scenario.run) startRun(s, RouteId.Ruta1)
+  // El objeto de la bonificación de EXP sale enseguida
+  if (scenario.boost) s.run.boost.spawnInMs = 1500
   if (scenario.expedition) {
     sendExpedition(s, uidOf(P.Pidgey), RouteId.Ruta1, EXPEDITION_DURATIONS[1])
     sendExpedition(s, uidOf(P.Rattata), RouteId.PuebloPaleta, EXPEDITION_DURATIONS[0])

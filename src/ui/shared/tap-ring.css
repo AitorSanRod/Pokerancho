@@ -1,0 +1,61 @@
+/* Anillo del toque crítico (TapRing), sobre el rival o el jefe */
+.tap-ring {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  width: 72px;
+  height: 72px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 4;
+}
+.tap-ring-target,
+.tap-ring-closing {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+.tap-ring-target {
+  border: 3px solid #fff;
+  box-shadow: 0 0 6px #0008;
+  opacity: 0.85;
+}
+.tap-ring-closing {
+  border: 4px solid var(--yellow);
+  box-shadow: 0 0 10px var(--yellow);
+  animation-name: tap-ring-close;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+@keyframes tap-ring-close {
+  from {
+    transform: scale(3);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.tap-ring.crit .tap-ring-target {
+  border-color: var(--yellow);
+  box-shadow: 0 0 18px var(--yellow);
+}
+.tap-ring.fail .tap-ring-target {
+  border-color: var(--muted);
+  opacity: 0.4;
+}
+.tap-ring-text {
+  position: absolute;
+  left: 50%;
+  top: -22px;
+  transform: translateX(-50%);
+  font-size: 16px;
+  font-weight: 900;
+  white-space: nowrap;
+  color: var(--yellow);
+  text-shadow: 0 2px 2px #000a;
+}
+.tap-ring.fail .tap-ring-text {
+  color: #ddd;
+}

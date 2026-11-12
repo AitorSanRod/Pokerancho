@@ -1,0 +1,28 @@
+/* Misiones diarias (MissionsSheet) */
+.mission-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mission {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+.mission.done {
+  border-color: var(--yellow-dark);
+  background: color-mix(in srgb, var(--yellow) 18%, var(--card));
+}
+.mission.claimed {
+  opacity: 0.6;
+}
+.mission-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}

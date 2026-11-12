@@ -7,6 +7,7 @@ import { REGEN_PER_MIN } from '../../../game/team/ranch'
 import { calcStats, maxHp, stepsPerMinute } from '../../../game/team/stats'
 import { MoveChip, TypeBadge } from '../common'
 import { MonSection, MonStats, type StatLine } from './MonSheet'
+import { MilestoneStrip } from './MilestoneStrip'
 import { MovesInfo } from './MovesInfo'
 
 const PLACE_LABEL: Record<MonPlace, string> = {
@@ -50,7 +51,10 @@ export function MonOverview({ game, speciesId, mon, previewLevel = null }: { gam
         <p className="tiny muted center">Descansando: +{REGEN_PER_MIN * 100}% PS por minuto</p>
       )}
       {mon ? (
-        <MonStats now={statLine(mon, mon.level)} next={previewLevel ? statLine(mon, previewLevel) : null} nature={mon.nature} />
+        <>
+          <MonStats now={statLine(mon, mon.level)} next={previewLevel ? statLine(mon, previewLevel) : null} nature={mon.nature} />
+          <MilestoneStrip game={game} mon={mon} />
+        </>
       ) : (
         seen && <p className="tiny muted center">Sus stats se ven cuando lo tengas.</p>
       )}

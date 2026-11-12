@@ -60,4 +60,14 @@ export const ICON = {
   Bot: ITEM.PokeDoll,
   /** Crear un Pokémon shiny seguro */
   Shiny: ITEM.ShinyCharm,
+  /** Mejoras de la Pokédex: colección por tipo, 5 ★ e hitos */
+  Perks: ITEM.PowerBracer,
+  /** Misiones diarias */
+  Missions: ITEM.VsRecorder,
+  /** Bonificación de EXP de la ruta */
+  ExpBoost: ITEM.LuckyEgg,
+  /** Toque crítico */
+  Crit: ITEM.QuickClaw,
+  /** Torre infinita (solo en desarrollo) */
+  Tower: ITEM.MachoBrace,
 } as const

@@ -1,4 +1,4 @@
-import type { DailyGift } from '../../data/dailyGifts'
+import type { GiftContents } from '../../data/dailyGifts'
 import { incursion, type IncursionId } from '../../data/incursions'
 import { RARITY_INFO, rarityOf, species } from '../../data/species'
 import { STAR_ITEMS } from '../../data/starItems'
@@ -89,8 +89,8 @@ export function repeatNote(mult: number): string {
   return `Repetida seguida: el jefe da el ${Math.round(mult * 100)}% de su dinero. Vuelve al 100% si pasan ${minutes} min sin derrotarlo.`
 }
 
-/** Lo que da un obsequio diario: ₽, tickets, trozos de MissingNo y objetos estelares */
-export function giftRewards(gift: DailyGift): RewardItem[] {
+/** Lo que da un obsequio diario o una misión: ₽, tickets, trozos de MissingNo y objetos estelares */
+export function giftRewards(gift: GiftContents): RewardItem[] {
   const items = moneyAndTickets(gift.money, gift.tickets)
   if (gift.missingnoShards > 0) {
     items.push({ key: 'shards', icon: <ItemIcon item={ICON.Shard} size={96} />, title: `+${gift.missingnoShards} trozos de MissingNo`, color: '#7a5ab0' })

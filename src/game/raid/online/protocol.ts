@@ -1,6 +1,7 @@
 import type { RouteId } from '../../../data/maps'
 import type { Nature } from '../../../data/natures'
 import type { PassiveRef } from '../../../data/passives'
+import type { MonPerks } from '../../team/perks'
 import type { Raid, RaidPlace } from '../raidRoom'
 
 // Lo que se dicen el juego y el servidor de salas compartidas (worker/raid.ts). Sin cuentas: cada
@@ -51,6 +52,8 @@ export interface MonSnapshot {
   hpFraction: number
   /** Pasivas de su rancho */
   passives: PassiveRef[]
+  /** Hitos y colección (team/perks.ts); sin ellos (clientes de antes), ninguno */
+  perks?: MonPerks
 }
 
 interface PlayerRequest {
@@ -76,6 +79,8 @@ export interface SyncRequest extends PlayerRequest {
   action: typeof RaidAction.Sync
   roomId: string
   mon: MonSnapshot | null
+  /** Toques críticos acertados desde la última consulta (ver raidCrit.ts); sin él (clientes de antes), ninguno */
+  crits?: number
 }
 
 /** Lo que hay ahora en la pestaña Raids; `watchRoomId`, la sala que el jugador ha elegido mirar (null: la del frontal) */

@@ -6,6 +6,7 @@ import { spendStarItem, starItemBlocker, starItemFor } from '../collection/starI
 import { findMon, MonPlace, monPlace, ownedOfSpecies, type GameState, type OwnedMon } from '../core/state'
 import { maxHp } from './stats'
 import { spendStone, stonesOf } from './stones'
+import { spendMoney } from '../core/wallet'
 
 // Evolución desde la ficha: al llegar al nivel de su evolución o gastando una piedra, pagando según la rareza de la
 // evolución (y su objeto estelar si no es común). Es el mismo Pokémon con otra especie: conserva nivel y EXP, pierde
@@ -51,7 +52,7 @@ export function evolve(s: GameState, uid: string, intoId: number): EvolveResult 
   const mon = findMon(s, uid)!
   const evo = evolutionTo(mon.speciesId, intoId)!
   const fromId = mon.speciesId
-  s.money -= evolvePrice(intoId)
+  spendMoney(s, evolvePrice(intoId))
   const item = starItemFor(intoId)
   if (item) spendStarItem(s, item)
   if (evo.stone !== undefined) spendStone(s, evo.stone)

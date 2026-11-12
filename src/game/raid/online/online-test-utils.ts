@@ -1,5 +1,6 @@
 import { NodeKind, route, RouteId } from '../../../data/maps'
 import { seqRng } from '../../core/test-utils'
+import { noPerks } from '../../team/perks'
 import { raidBossAt } from '../raid'
 import { sparringSpecies } from '../raid-test-utils'
 import { addBot } from '../raidBots'
@@ -26,7 +27,7 @@ export const player = (n: number) => `player-${String(n).padStart(4, '0')}`
 /** Un Pokémon que puede herir al jefe de la pestaña y que el jefe puede herir, de su nivel */
 export function snap(uid: string, overrides: Partial<MonSnapshot> = {}): MonSnapshot {
   const boss = raidBossAt(0)
-  return { uid, speciesId: sparringSpecies(boss.speciesId), level: boss.level, stars: 0, hpFraction: 1, passives: [], ...overrides }
+  return { uid, speciesId: sparringSpecies(boss.speciesId), level: boss.level, stars: 0, hpFraction: 1, passives: [], perks: noPerks(), ...overrides }
 }
 
 let nextId = 0

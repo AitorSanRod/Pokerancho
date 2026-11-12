@@ -1,4 +1,4 @@
-import { DAILY_GIFTS, type DailyGift } from '../../data/dailyGifts'
+import { DAILY_GIFTS, type DailyGift, type GiftContents } from '../../data/dailyGifts'
 import { STAR_ITEM_IDS, type StarItem } from '../../data/starItems'
 import type { GameState } from '../core/state'
 import { addStarItems } from './starItems'
@@ -44,13 +44,13 @@ export function claimGift(st: DailyGiftState, now: number): DailyGift | null {
  * Los objetos estelares del obsequio, del más valioso al menos. El obsequio llega del servidor: si es de una versión
  * sin ellos (o con alguno que este móvil no conoce), se ignora lo que no encaje
  */
-export function giftStarItems(gift: DailyGift): [StarItem, number][] {
+export function giftStarItems(gift: GiftContents): [StarItem, number][] {
   const items = gift.starItems ?? {}
   return STAR_ITEM_IDS.filter((id) => Number.isInteger(items[id]) && items[id]! > 0).map((id) => [id, items[id]!])
 }
 
-/** Suma el obsequio a la partida */
-export function applyGift(s: GameState, gift: DailyGift) {
+/** Suma el obsequio (o cualquier premio puesto a mano) a la partida */
+export function applyGift(s: GameState, gift: GiftContents) {
   s.money += gift.money
   s.missingnoShards += gift.missingnoShards
   s.tickets += gift.tickets

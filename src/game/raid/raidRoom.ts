@@ -2,6 +2,8 @@ import type { RouteId } from '../../data/maps'
 import type { Nature } from '../../data/natures'
 import type { StatusId } from '../../data/passives'
 import type { RaidBoss } from '../../data/raidBosses'
+import type { RingResult } from '../battle/critTiming'
+import type { MonPerks } from '../team/perks'
 
 /** Participantes que caben a la vez en una sala (jugadores y bots) */
 export const RAID_ROOM_SIZE = 10
@@ -40,6 +42,8 @@ export interface RaidMember {
   stayMs: number | null
   /** Veces que aún puede caer (cada vez que cae, una menos); null si no tiene límite */
   lives: number | null
+  /** Hitos y colección de los Pokémon de los jugadores (team/perks.ts); sin él (bots y salas de antes), ninguno */
+  perks?: MonPerks
 }
 
 /** Un golpe de la última ronda, para que la UI lo pinte; `from`/`to` son ids de participante o BOSS_ID */
@@ -52,6 +56,16 @@ export interface RaidHit {
   fainted: boolean
   /** Daño que le hace al jefe un estado suyo (quemadura, veneno, confusión), contado a `from`, quien se lo puso */
   status?: StatusId
+  /** Golpe del jugador hecho crítico con un toque (ver raidCrit.ts) */
+  tapCrit?: boolean
+}
+
+/** El toque crítico de la ronda que se ve: sus toques (ms de la ronda) y, una vez vigilado el golpe, cómo fue */
+export interface RaidCrit {
+  round: number
+  taps: number[]
+  settled: boolean
+  result: RingResult
 }
 
 /** Un estado alterado del jefe (ver raidBossStatus.ts) */
@@ -81,6 +95,8 @@ export interface RoomLink {
   openHp: number | null
   /** Mientras entra en la pestaña Raids: la sala elegida (la del frontal o una de la lista); null, la que diga el servidor */
   target: string | null
+  /** Toques críticos acertados que aún no se han mandado al servidor (ver raidCrit.ts) */
+  pendingCrits?: number
 }
 
 /** Enlace de una sala que espera sitio en una compartida del servidor */
@@ -102,6 +118,8 @@ export interface Raid {
   round: number
   members: RaidMember[]
   lastRound: RaidHit[]
+  /** Toques del jugador alrededor de su golpe en la ronda que se ve (solo en el móvil; ver raidCrit.ts) */
+  crit?: RaidCrit
   /**
    * Estados alterados del jefe. Opcional para no cortar las salas en marcha al actualizar (sin subir SAVE_VERSION): las
    * empezadas antes no lo tienen y siguen sin estados hasta que cae su jefe; las nuevas (`newRaid`) empiezan con []

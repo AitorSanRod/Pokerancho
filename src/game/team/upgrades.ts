@@ -1,4 +1,5 @@
 import type { GameState } from '../core/state'
+import { spendMoney } from '../core/wallet'
 
 export type UpgradeId = 'expeditionSlots' | 'ranches'
 
@@ -34,7 +35,7 @@ export function nextUpgradePrice(s: GameState, id: UpgradeId): number | null {
 export function buyUpgrade(s: GameState, id: UpgradeId): boolean {
   const price = nextUpgradePrice(s, id)
   if (price === null || s.money < price) return false
-  s.money -= price
+  spendMoney(s, price)
   s.upgrades[id] = upgradeLevel(s, id) + 1
   return true
 }

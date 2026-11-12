@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import { act, getState } from '../game/core/store'
-import { applyView, dropLink, forgetRoom, presenceKey, ROOM_KEYS, roomAt, roomRequest, type RoomKey } from '../game/raid/online/linkedRoom'
+import { applyView, dropLink, forgetRoom, markCritsSent, presenceKey, ROOM_KEYS, roomAt, roomRequest, type RoomKey } from '../game/raid/online/linkedRoom'
 import { DEFAULT_NICKNAME, RaidAction } from '../game/raid/online/protocol'
 import { nickname, playerId } from './identity'
 import { postRaid, RaidApiError } from './raidApi'
@@ -47,6 +47,7 @@ async function syncRoom(key: RoomKey, now: number, hidden: boolean) {
       // Si ha entrado o salido mientras, la respuesta ya no vale: la próxima consulta lo pondrá al día
       if (!joining && presenceKey(s, key) !== presence) return
       const applied = applyView(s, key, sentRoomId, view)
+      if (applied && !joining) markCritsSent(s, key, req.crits ?? 0)
       if (joining && !applied && view) s.roomsToLeave.push(view.roomId)
     })
   } catch (e) {

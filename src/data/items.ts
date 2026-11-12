@@ -56,6 +56,11 @@ export const ITEM = {
   TmNormal: 'tm-normal',
   SeriousMint: 'serious-mint',
   ShinyCharm: 'shiny-charm',
+  PowerBracer: 'power-bracer',
+  VsRecorder: 'vs-recorder',
+  LuckyEgg: 'lucky-egg',
+  QuickClaw: 'quick-claw',
+  MachoBrace: 'macho-brace',
 } as const
 export type Item = (typeof ITEM)[keyof typeof ITEM]
 

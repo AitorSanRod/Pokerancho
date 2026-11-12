@@ -1,9 +1,9 @@
-import type { DailyGift } from '../../data/dailyGifts'
+import type { GiftContents } from '../../data/dailyGifts'
 import { STAR_ITEMS } from '../../data/starItems'
 import { giftStarItems } from '../../game/collection/dailyGift'
 
-/** Lo que trae el obsequio, para leerlo: «2000 ₽, 50 trozos de MissingNo, 1 ticket y 1 Polvo estelar» */
-export function giftText(gift: DailyGift): string {
+/** Lo que trae el obsequio (o una misión), para leerlo: «2000 ₽, 50 trozos de MissingNo, 1 ticket y 1 Polvo estelar» */
+export function giftText(gift: GiftContents): string {
   const parts = [
     gift.money > 0 && `${gift.money} ₽`,
     gift.missingnoShards > 0 && `${gift.missingnoShards} trozos de MissingNo`,

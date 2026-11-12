@@ -1,5 +1,6 @@
 import { findMon, MonPlace, monPlace, type GameState, type OwnedMon } from '../core/state'
 import { expToNext, gainExp, MAX_LEVEL, maxHp, type LevelUpResult } from './stats'
+import { spendMoney } from '../core/wallet'
 
 /** Fracción de PS máximos que se recupera por minuto descansando en el rancho */
 export const REGEN_PER_MIN = 0.1
@@ -34,7 +35,7 @@ export function restInRanch(s: GameState, minutes: number) {
 export function healInstant(s: GameState, uid: string): boolean {
   const m = ranchMon(s, uid)
   if (!m || s.money < healCost(m) || m.hp >= maxHp(m)) return false
-  s.money -= healCost(m)
+  spendMoney(s, healCost(m))
   m.hp = maxHp(m)
   return true
 }
@@ -82,7 +83,7 @@ export function train(s: GameState, uid: string, sessions = 1): LevelUpResult | 
   const m = ranchMon(s, uid)
   if (!m || sessions < 1 || sessions > maxTrainSessions(s, uid)) return null
   const startLevel = m.level
-  for (let i = 0; i < sessions; i++) s.money -= trainOnce(m)
+  for (let i = 0; i < sessions; i++) spendMoney(s, trainOnce(m))
   return { levelsGained: m.level - startLevel }
 }
 

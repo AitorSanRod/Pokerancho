@@ -4,6 +4,9 @@ import type { Rng } from '../core/random'
 import type { GameState } from '../core/state'
 import { addPieces } from './pieces'
 import { rollStarItem } from './starItems'
+import { spendMoney } from '../core/wallet'
+import { MissionKind } from '../../data/dailyMissions'
+import { advanceMission } from './missions'
 
 /** Piezas que da cada tirada; cada una sortea su rareza y su especie por separado */
 export const PIECES_PER_PULL = 5
@@ -66,6 +69,7 @@ export function pull(s: GameState, count = 1, rng: Rng = Math.random): PullResul
   const result: PullResult = { pieces: [], money: [], starItems: [] }
   for (; count > 0 && s.tickets > 0; count--) {
     s.tickets--
+    advanceMission(s, MissionKind.PullGacha)
     const hasMoney = rng() < MONEY_SLOT_CHANCE
     if (hasMoney) result.money.push(rollMoney(rng))
     const item = rollStarItem(s, rng)
@@ -87,7 +91,7 @@ export const maxTicketsToBuy = (s: GameState): number => Math.floor(s.money / TI
 /** Compra `count` tickets de gacha de una vez; si no llega el dinero para todos, no compra ninguno */
 export function buyTicket(s: GameState, count = 1): boolean {
   if (count < 1 || count > maxTicketsToBuy(s)) return false
-  s.money -= count * TICKET_PRICE
+  spendMoney(s, count * TICKET_PRICE)
   s.tickets += count
   return true
 }

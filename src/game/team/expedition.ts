@@ -2,6 +2,8 @@ import { averageLegSteps, route, wildSpecies, type Route } from '../../data/maps
 import { species } from '../../data/species'
 import { expReward, moneyReward, pieceReward, ticketReward } from '../battle/rewards'
 import { isSeen } from '../collection/dex'
+import { MissionKind } from '../../data/dailyMissions'
+import { advanceMission } from '../collection/missions'
 import { addPieces } from '../collection/pieces'
 import { pickEncounter, randInt, type Rng } from '../core/random'
 import { findMon, MonPlace, monPlace, type Expedition, type GameState, type OwnedMon } from '../core/state'
@@ -139,6 +141,7 @@ export function collectExpedition(s: GameState, uid: string, rng: Rng = Math.ran
   }
 
   s.expeditions = s.expeditions.filter((x) => x !== e)
+  advanceMission(s, MissionKind.FinishExpeditions)
   s.money += result.money
   s.tickets += result.tickets
   for (const id of result.pieces) addPieces(s, id, 1)

@@ -4,6 +4,7 @@ import { isExpeditionDone } from '../../game/team/expedition'
 import { ExpeditionScreen } from '../expeditions/ExpeditionScreen'
 import { IncursionScreen } from '../incursion/IncursionScreen'
 import { RaidScreen } from '../raid/RaidScreen'
+import { TowerScreen } from '../tower/TowerScreen'
 import { IconTabs } from '../shared/IconTabs'
 import { ICON } from '../shared/icons'
 import { pendingKey, useUnseen } from '../shared/useUnseen'
@@ -11,7 +12,10 @@ import { RouteMap } from './RouteMap'
 import { RunView } from './RunView'
 import './route.css'
 
-type RouteTab = 'route' | 'expeditions' | 'raid' | 'incursion'
+type RouteTab = 'route' | 'expeditions' | 'raid' | 'incursion' | 'tower'
+
+/** La torre infinita es una prueba: solo sale con `npm run dev` */
+const TOWER_TAB = import.meta.env.DEV ? [{ id: 'tower' as const, icon: ICON.Tower, label: 'Torre' }] : []
 
 /** Pestaña Ruta: la ruta del Pokémon activo (mapa o ruta en curso), las expediciones del resto, el jefe comunitario y las incursiones */
 export function RouteScreen({ game }: { game: GameState }) {
@@ -32,10 +36,13 @@ export function RouteScreen({ game }: { game: GameState }) {
           { id: 'expeditions', icon: ICON.Expedition, label: 'Expediciones', count: returnedUnseen ? returned.length : 0 },
           { id: 'raid', icon: ICON.Raid, label: 'Raids', count: prizesUnseen ? prizes.length : 0 },
           { id: 'incursion', icon: ICON.Incursion, label: 'Incursiones' },
+          ...TOWER_TAB,
         ]}
       />
       <div className="tabbed-body">
-        {tab === 'incursion' ? (
+        {tab === 'tower' ? (
+          <TowerScreen game={game} />
+        ) : tab === 'incursion' ? (
           <IncursionScreen game={game} />
         ) : tab === 'raid' ? (
           <RaidScreen game={game} />

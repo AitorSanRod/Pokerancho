@@ -1,0 +1,16 @@
+/* Torre infinita (TowerScreen, solo en desarrollo) */
+.tower {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+.tower-head {
+  gap: 4px;
+}
+.tower-stage {
+  position: relative;
+  height: 440px;
+  border-radius: var(--radius);
+  overflow: hidden;
+}

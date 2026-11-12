@@ -2,6 +2,7 @@ import { route } from '../../data/maps'
 import { species } from '../../data/species'
 import type { GameState } from '../../game/core/state'
 import { raidMinutesLeft } from '../../game/raid/raidEstimate'
+import type { RoomKey } from '../../game/raid/online/linkedRoom'
 import type { Raid } from '../../game/raid/raidRoom'
 import { Bar } from '../shared/common'
 import { ICON } from '../shared/icons'
@@ -14,9 +15,10 @@ import './raid.css'
 
 /**
  * El jefe comunitario: la pelea en su paisaje (el de su ruta o, sin ruta, el de su tipo) y debajo la vida que le queda
- * y cuánto tardará en caer al ritmo de la sala, en tiempo real
+ * y cuánto tardará en caer al ritmo de la sala, en tiempo real. Con `roomKey` (el jugador lucha en ella), tocar la
+ * escena es para el toque crítico
  */
-export function RaidScene({ game, raid }: { game: GameState; raid: Raid }) {
+export function RaidScene({ game, raid, roomKey }: { game: GameState; raid: Raid; roomKey: RoomKey | null }) {
   const sp = species(raid.boss.speciesId)
   const biome = raidBiome(raid)
   const gameMinutesLeft = raidMinutesLeft(game, raid)
@@ -26,7 +28,7 @@ export function RaidScene({ game, raid }: { game: GameState; raid: Raid }) {
 
   return (
     <>
-      <RaidBattleScene raid={raid} biome={biome} timeScale={game.timeScale} />
+      <RaidBattleScene raid={raid} biome={biome} timeScale={game.timeScale} lastTick={game.lastTick} roomKey={roomKey} />
       <div className="raid-summary">
         <div className="row between">
           <strong>{sp.name}</strong>

@@ -10,6 +10,9 @@ import { ranchWithRoom } from '../team/ranches'
 import { MAX_STARS } from '../team/stats'
 import { isSeen, markCaught } from './dex'
 import { spendStarItem, starItemBlocker, starItemFor } from './starItems'
+import { spendMoney } from '../core/wallet'
+import { MissionKind } from '../../data/dailyMissions'
+import { advanceMission } from './missions'
 
 /** Piezas iguales que se gastan en cada combinación: desbloquean el Pokémon o le dan una ★ */
 export const PIECES_PER_COMBINE = 5
@@ -97,6 +100,7 @@ function createOwned(s: GameState, speciesId: number, shiny: boolean, rng: Rng):
   const mon = createMon(speciesId, NEW_MON_LEVEL, ranchWithRoom(s), randomNature(rng), shiny)
   s.owned.push(mon)
   markCaught(s, speciesId)
+  advanceMission(s, MissionKind.CreateMons)
   // El primer Pokémon (el inicial del tutorial) sale directamente como activo
   s.activeUid ??= mon.uid
   if (s.tutorial === TutorialStep.Combine) s.tutorial = TutorialStep.Route
@@ -107,7 +111,7 @@ function createOwned(s: GameState, speciesId: number, shiny: boolean, rng: Rng):
 function payCombine(s: GameState, speciesId: number, pieces: number) {
   const item = combineStarItem(s, speciesId)
   if (item) spendStarItem(s, item)
-  s.money -= combinePrice(s, speciesId)
+  spendMoney(s, combinePrice(s, speciesId))
   s.pieces[speciesId] -= pieces
 }
 

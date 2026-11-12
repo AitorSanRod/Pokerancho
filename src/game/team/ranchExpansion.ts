@@ -1,5 +1,6 @@
 import type { GameState } from '../core/state'
 import { ranchCount } from './ranches'
+import { spendMoney } from '../core/wallet'
 
 /** Precio en ₽ de cada Ampliación de rancho de la tienda */
 export const RANCH_EXPANSION_PRICE = 75_000
@@ -28,7 +29,7 @@ export function expansionBlocker(s: GameState, ranch: number): string | null {
 /** Compra una Ampliación y suma sus espacios al rancho elegido */
 export function buyRanchExpansion(s: GameState, ranch: number): boolean {
   if (expansionBlocker(s, ranch)) return false
-  s.money -= RANCH_EXPANSION_PRICE
+  spendMoney(s, RANCH_EXPANSION_PRICE)
   s.ranchExtraSlots[ranch] = (s.ranchExtraSlots[ranch] ?? 0) + RANCH_EXPANSION_SLOTS
   return true
 }

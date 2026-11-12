@@ -1,5 +1,6 @@
 import { STONES, type Stone } from '../../data/stones'
 import type { GameState } from '../core/state'
+import { spendMoney } from '../core/wallet'
 
 /** ₽ que cuesta el objeto evolutivo en la tienda (sin límite de compra) */
 export const stonePrice = (stone: Stone): number => STONES[stone].price
@@ -10,7 +11,7 @@ export const stonesOf = (s: GameState, stone: Stone): number => s.stones[stone] 
 export function buyStone(s: GameState, stone: Stone): boolean {
   const price = stonePrice(stone)
   if (s.money < price) return false
-  s.money -= price
+  spendMoney(s, price)
   s.stones[stone] = stonesOf(s, stone) + 1
   return true
 }

@@ -4,6 +4,7 @@ import type { PassiveRef, StatusId } from '../../data/passives'
 import { species } from '../../data/species'
 import type { PokeType } from '../../data/types'
 import type { Rng } from '../core/random'
+import { noPerks, type MonPerks } from '../team/perks'
 import { calcStats, type Stats } from '../team/stats'
 import { attack } from './attack'
 import { combineBonus, type CombatBonus } from './combatBonus'
@@ -24,9 +25,15 @@ export interface Fighter {
   move: Move
   /** Sus pasivas sumadas (las stats ya van aplicadas en `stats`) */
   bonus: CombatBonus
+  /** Hitos y colección (solo los Pokémon de los jugadores; ver team/perks.ts): las stats ya van aplicadas en `stats` */
+  perks: MonPerks
   status: StatusId | null
   /** Turnos que le quedan sin poder moverse por la congelación */
   frozenTurns: number
+  /** Ataques que ha hecho en el combate (cuenta el que está haciendo) */
+  attacks: number
+  /** Ataques (1 = el primero) que van con el toque crítico del jugador (ver run/tapCrit.ts) */
+  tapCrits: number[]
 }
 
 export interface BattleEvent {
@@ -39,6 +46,8 @@ export interface BattleEvent {
   status?: StatusId
   /** hit de un ataque: golpe crítico */
   crit?: boolean
+  /** hit de un ataque: crítico por el toque del jugador */
+  tapCrit?: boolean
   /** hit de un ataque: multiplicador de eficacia de tipos (2 = muy eficaz, 0,5 = poco eficaz) */
   eff?: number
   /** attack: usa Forcejeo; hit: su golpe al rival o su retroceso (sobre quien lo usa, con el texto «Retroceso») */
@@ -75,13 +84,14 @@ export function makeFighter(
   side: Side,
   speciesId: number,
   level: number,
-  opts: { hp?: number; stars?: number; nature?: Nature; statMult?: number; passives?: PassiveRef[] } = {},
+  opts: { hp?: number; stars?: number; nature?: Nature; statMult?: number; passives?: PassiveRef[]; perks?: MonPerks } = {},
 ): Fighter {
   const sp = species(speciesId)
   const bonus = combineBonus(opts.passives ?? [])
+  const perks = opts.perks ?? noPerks()
   const stats = calcStats(speciesId, level, opts.stars ?? 0, opts.nature)
   for (const k of Object.keys(stats) as (keyof Stats)[]) {
-    stats[k] = Math.max(1, Math.round(stats[k] * (opts.statMult ?? 1) * (1 + bonus[k])))
+    stats[k] = Math.max(1, Math.round(stats[k] * (opts.statMult ?? 1) * (1 + bonus[k]) * (1 + perks.stats)))
   }
   return {
     side,
@@ -90,13 +100,16 @@ export function makeFighter(
     level,
     types: sp.types,
     stats,
-    // Los PS actuales crecen en la misma proporción que los máximos (la pasiva de PS no es una cura)
-    hp: Math.min(stats.hp, Math.round((opts.hp ?? Infinity) * (1 + bonus.hp))),
+    // Los PS actuales crecen en la misma proporción que los máximos (la pasiva y los hitos no son una cura)
+    hp: Math.min(stats.hp, Math.round((opts.hp ?? Infinity) * (1 + bonus.hp) * (1 + perks.stats))),
     maxHp: stats.hp,
     move: signatureMove(speciesId),
     bonus,
+    perks,
     status: null,
     frozenTurns: 0,
+    attacks: 0,
+    tapCrits: [],
   }
 }
 

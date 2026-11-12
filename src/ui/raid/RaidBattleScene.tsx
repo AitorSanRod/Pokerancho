@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import type { Biome } from '../../data/maps'
 import { signatureMove } from '../../data/moves'
 import { STATUS_INFO } from '../../data/passives'
@@ -8,6 +8,9 @@ import { bossStatuses } from '../../game/raid/raidBossStatus'
 import { BOSS_ID, presentMembers, RaidMemberKind, type Raid, type RaidMember } from '../../game/raid/raidRoom'
 import { inFinale, isEnding } from '../../game/raid/raidEnding'
 import { useWatchRaid } from '../../net/raidSync'
+import { tapRoom } from './tapRoom'
+import { RaidCritRing } from './RaidCritRing'
+import type { RoomKey } from '../../game/raid/online/linkedRoom'
 import { BattleHud } from '../route/BattleHud'
 import { HitEffect } from '../route/HitEffect'
 import { WalkScene } from '../route/WalkScene'
@@ -28,12 +31,21 @@ const IDLE_PHASE_S = 0.37
 const POP_LANES = 3
 const POP_LANE_PX = 34
 
+interface SceneProps {
+  raid: Raid
+  biome: Biome
+  timeScale: number
+  lastTick: number
+  /** Dónde está la sala si el jugador lucha en ella (tocar es para el crítico); null si solo la mira */
+  roomKey: RoomKey | null
+}
+
 /** La pelea de la pestaña Raids: su propio paisaje, en una franja de la pantalla, con la pelea dentro */
-export function RaidBattleScene({ raid, biome, timeScale }: { raid: Raid; biome: Biome; timeScale: number }) {
+export function RaidBattleScene({ raid, biome, timeScale, lastTick, roomKey }: SceneProps) {
   return (
     <div className="raid-stage">
-      <WalkScene biome={biome} moving={false} speed={1}>
-        <RaidBattle raid={raid} timeScale={timeScale} />
+      <WalkScene biome={biome} moving={false} speed={1} onStep={roomKey ? () => tapRoom(roomKey) : undefined}>
+        <RaidBattle raid={raid} timeScale={timeScale} lastTick={lastTick} />
       </WalkScene>
     </div>
   )
@@ -46,7 +58,7 @@ export function RaidBattleScene({ raid, biome, timeScale }: { raid: Raid; biome:
  * jefe va a sus pies. Cuando la pelea se para, se ve entera la última ronda, el jefe cae y queda el cartel del final
  * (RaidFinale) hasta que se aplica el resultado
  */
-export function RaidBattle({ raid, timeScale }: { raid: Raid; timeScale: number }) {
+export function RaidBattle({ raid, timeScale, lastTick }: { raid: Raid; timeScale: number; lastTick: number }) {
   useWatchRaid()
   // El del jugador, delante del todo
   const party = presentMembers(raid).sort((a, b) => Number(b.kind === RaidMemberKind.Player) - Number(a.kind === RaidMemberKind.Player))
@@ -67,7 +79,7 @@ export function RaidBattle({ raid, timeScale }: { raid: Raid; timeScale: number 
           timeScale={timeScale}
         />
       ))}
-      <BossFighter raid={raid} hits={hits} party={party} />
+      <BossFighter raid={raid} hits={hits} party={party} ring={<RaidCritRing raid={raid} lastTick={lastTick} timeScale={timeScale} />} />
       <div className="battle-hud-slot enemy boss raid-boss-hud">
         <BattleHud fighter={boss} hp={shownBossHp(raid)} statuses={bossStatuses(raid).map((b) => b.status)} boss />
       </div>
@@ -79,7 +91,7 @@ export function RaidBattle({ raid, timeScale }: { raid: Raid; timeScale: number 
 /** Destello de un golpe al jefe: el del ataque de quien pega o, si es daño de un estado, el del estado */
 const hitType = (h: ReplayHit, hitter: RaidMember): PokeType => (h.status ? STATUS_INFO[h.status].type : signatureMove(hitter.speciesId).type)
 
-function BossFighter({ raid, hits, party }: { raid: Raid; hits: ReplayHit[]; party: RaidMember[] }) {
+function BossFighter({ raid, hits, party, ring }: { raid: Raid; hits: ReplayHit[]; party: RaidMember[]; ring: ReactNode }) {
   const received = hits.filter((h) => h.to === BOSS_ID)
   const latest = received.at(-1)
   const hitter = latest && party.find((m) => m.id === latest.from)
@@ -93,12 +105,13 @@ function BossFighter({ raid, hits, party }: { raid: Raid; hits: ReplayHit[]; par
       {received.map((h) => (
         <span
           key={h.seq}
-          className={`battle-pop hit ${isMine(h) ? 'mine' : ''}`}
+          className={`battle-pop hit ${isMine(h) ? 'mine' : ''} ${h.tapCrit ? 'tap-crit' : ''}`}
           style={{ ['--pop-x' as string]: `${((h.seq % POP_LANES) - 1) * POP_LANE_PX}px` } as CSSProperties}
         >
-          {h.dealt > 0 ? `-${h.dealt}` : 'Fallo'}
+          {h.dealt > 0 ? `${h.tapCrit ? '¡Crítico! ' : ''}-${h.dealt}` : 'Fallo'}
         </span>
       ))}
+      {ring}
       {latest && latest.dealt > 0 && hitter && <HitEffect key={`fx-${latest.seq}`} type={hitType(latest, hitter)} />}
       <div className={attack ? roundClass(attack.seq, 'raid-boss-lunge') : ''}>
         <div className={latest ? roundClass(latest.seq, 'raid-shake') : ''}>

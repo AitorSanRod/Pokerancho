@@ -1,6 +1,7 @@
 import { RANCH_TYPE_MAX_OWNED, RANCH_TYPES, type RanchTypeId } from '../../data/ranchTypes'
 import type { GameState } from '../core/state'
 import { ranchCount } from './ranches'
+import { spendMoney } from '../core/wallet'
 
 /** Objetos de ese tipo de rancho comprados, colocados o no */
 export const ranchTypeOwned = (s: GameState, id: RanchTypeId): number => s.ranchTypeItems[id] ?? 0
@@ -20,7 +21,7 @@ export function ranchTypeBuyBlocker(s: GameState, id: RanchTypeId): string | nul
 
 export function buyRanchType(s: GameState, id: RanchTypeId): boolean {
   if (ranchTypeBuyBlocker(s, id)) return false
-  s.money -= RANCH_TYPES[id].price
+  spendMoney(s, RANCH_TYPES[id].price)
   s.ranchTypeItems[id] = ranchTypeOwned(s, id) + 1
   return true
 }

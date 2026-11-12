@@ -259,3 +259,27 @@
   align-items: center;
   gap: 2px;
 }
+/* Hitos de nivel (MilestoneStrip) */
+.milestones {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.milestone-pills {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.milestone-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.milestone-pill.reached {
+  border-color: var(--yellow-dark);
+  background: var(--yellow);
+  color: var(--text);
+}

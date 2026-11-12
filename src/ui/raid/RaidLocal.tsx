@@ -14,7 +14,7 @@ export function RaidLocal({ game }: { game: GameState }) {
   if (raidWaiting(raid)) return <RaidWaiting game={game} raid={raid} />
   return (
     <>
-      <RaidScene game={game} raid={raid} />
+      <RaidScene game={game} raid={raid} roomKey={LOCAL_ROTATION} />
       <div className="mon-card">
         <MonSection title={`En la sala · ${presentMembers(raid).length}/${RAID_ROOM_SIZE}`}>
           <RaidRoster raid={raid} timeScale={game.timeScale} />

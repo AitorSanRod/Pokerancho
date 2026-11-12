@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { signatureMove, STRUGGLE } from '../../data/moves'
 import { STATUS_INFO } from '../../data/passives'
 import { TYPE_INFO, type PokeType } from '../../data/types'
@@ -22,8 +22,9 @@ const typeColor = (type: PokeType) => ({ ['--type-color' as string]: TYPE_INFO[t
  * Combate dentro de la escena de la ruta: el rival aparece delante del Pokémon, cada uno con su marcador (BattleHud) a sus pies,
  * el ataque se anuncia con su nombre y los golpes se ven como números flotantes con el efecto de su tipo; el crítico
  * destella y un estado alterado se ve en el sprite mientras dura. El sprite del jugador lo pinta `WalkScene`.
+ * `enemyOverlay`: lo que va sobre el rival (el anillo del toque crítico).
  */
-export function RouteBattle({ record, frame }: { record: BattleRecord; frame: BattleFrame }) {
+export function RouteBattle({ record, frame, enemyOverlay }: { record: BattleRecord; frame: BattleFrame; enemyOverlay?: ReactNode }) {
   const { event, index } = frame
   const crit = !frame.ended && event.kind === 'hit' && event.crit
   const struck = (side: Side) => !frame.ended && event.kind === 'hit' && event.side === side
@@ -41,6 +42,7 @@ export function RouteBattle({ record, frame }: { record: BattleRecord; frame: Ba
         <MoveCallout record={record} frame={frame} side="enemy" />
         <BattlePop record={record} frame={frame} side="enemy" />
         <Hit record={record} frame={frame} side="enemy" />
+        {enemyOverlay}
         <div className={`route-enemy ${fighterClass(record, frame, 'enemy')}`}>
           <div className="scene-shadow" />
           <div className={statusClass(event.enemyStatus)}>

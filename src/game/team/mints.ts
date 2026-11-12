@@ -2,6 +2,7 @@ import { Nature } from '../../data/natures'
 import { species } from '../../data/species'
 import type { Rng } from '../core/random'
 import { findMon, MonPlace, monPlace, type GameState } from '../core/state'
+import { spendMoney } from '../core/wallet'
 
 // Menta aleatoria: se compra en la Tienda, se guarda en la Mochila y se gasta al usarla en la ficha de un Pokémon, que
 // pasa a tener otra naturaleza al azar (nunca la que ya tenía).
@@ -16,7 +17,7 @@ export const mintsOf = (s: GameState): number => s.mints
 /** Compra una menta; false si no hay ₽ */
 export function buyMint(s: GameState): boolean {
   if (s.money < MINT_PRICE) return false
-  s.money -= MINT_PRICE
+  spendMoney(s, MINT_PRICE)
   s.mints += 1
   return true
 }

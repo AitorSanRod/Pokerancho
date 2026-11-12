@@ -23,12 +23,18 @@ const silent = () => {}
 const isFighting = (m: RaidMember) => !m.left && m.downMs === 0
 
 function memberFighter(m: RaidMember, passives: PassiveRef[]): Fighter {
-  const f = makeFighter('player', m.speciesId, m.level, { stars: m.stars, nature: m.nature, passives })
+  const f = makeFighter('player', m.speciesId, m.level, { stars: m.stars, nature: m.nature, passives, perks: m.perks })
   f.hp = Math.round(f.maxHp * m.hpFraction)
   return f
 }
 
 const bossAsMon = (raid: Raid): Fighter => makeFighter('enemy', raid.boss.speciesId, raid.boss.level, { statMult: raid.boss.statMult })
+
+/** Daño de un golpe de ese participante al jefe ahora, sin tocar la sala (para el toque crítico en el servidor) */
+export function hitOnBoss(raid: Raid, m: RaidMember, passives: PassiveRef[], rng: Rng): number {
+  const atk = memberFighter(m, passives)
+  return mustStruggle(atk, bossFighter(raid)) ? 0 : damage(atk, bossFighter(raid), atk.move, rng).dealt
+}
 
 /** PS que tendría el jefe como un Pokémon cualquiera (sobre ellos le quitan PS sus estados, no sobre la vida de la sala) */
 export const bossOwnMaxHp = (raid: Raid): number => bossAsMon(raid).maxHp

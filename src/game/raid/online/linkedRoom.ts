@@ -1,5 +1,6 @@
 import type { Rng } from '../../core/random'
 import { findMon, type GameState } from '../../core/state'
+import { monPerks } from '../../team/perks'
 import { ranchPassives } from '../../team/ranchPassives'
 import { gainExp } from '../../team/stats'
 import { playerMembers, raidExpPerRound, removePlayer } from '../raidEngine'
@@ -40,7 +41,7 @@ function monSnapshot(s: GameState, raid: Raid): MonSnapshot | null {
   const mon = member && findMon(s, member.id)
   if (!mon) return null
   const passives = mon.ranch !== null ? ranchPassives(s, mon.ranch) : []
-  return { uid: mon.uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, hpFraction: member.hpFraction, passives }
+  return { uid: mon.uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, hpFraction: member.hpFraction, passives, perks: monPerks(s, mon) }
 }
 
 /** Lo que toca pedir por la sala de `key`: entrar si espera sitio, ponerse al día si está enlazada; null, nada */
@@ -48,7 +49,7 @@ export function roomRequest(s: GameState, key: RoomKey): RoomRequest | null {
   const raid = roomAt(s, key)
   if (!raid?.remote || isEnding(raid)) return null
   const mon = monSnapshot(s, raid)
-  if (raid.remote.roomId !== null) return { action: RaidAction.Sync, roomId: raid.remote.roomId, mon }
+  if (raid.remote.roomId !== null) return { action: RaidAction.Sync, roomId: raid.remote.roomId, mon, crits: raid.remote.pendingCrits ?? 0 }
   return mon && { action: RaidAction.Join, channel: channelOf(raid, key), targetRoomId: raid.remote.target, mon, bossHp: raid.remote.openHp }
 }
 
@@ -106,11 +107,20 @@ export function applyView(s: GameState, key: RoomKey, sentRoomId: string | null,
   }
   const joining = sentRoomId === null
   if (!joining) grantExp(s, view, raid.remote.exp)
-  const next: Raid = { ...view.raid, endingMs: 0, felled: raid.felled, remote: { roomId: view.roomId, exp: view.exp, openHp: null, target: null } }
+  const remote = { roomId: view.roomId, exp: view.exp, openHp: null, target: null, pendingCrits: raid.remote.pendingCrits }
+  // El toque crítico de la ronda que se ve sigue si el servidor aún va por ella
+  const crit = raid.crit?.round === view.raid.round ? raid.crit : undefined
+  const next: Raid = { ...view.raid, endingMs: 0, felled: raid.felled, remote, crit }
   setRoomAt(s, key, next)
   if (isTab(key)) sendOffSpentRemote(s, raid, next, rng)
   resolve(s, key, next, view.closed)
   return true
+}
+
+/** El servidor ya ha recibido `sent` toques críticos de la sala de `key`: dejan de estar pendientes */
+export function markCritsSent(s: GameState, key: RoomKey, sent: number) {
+  const remote = roomAt(s, key)?.remote
+  if (remote && sent > 0) remote.pendingCrits = Math.max(0, (remote.pendingCrits ?? 0) - sent)
 }
 
 /** El servidor ya sabe que el jugador ha dejado la sala */

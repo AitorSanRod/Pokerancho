@@ -2,6 +2,7 @@ import type { Rng } from '../../core/random'
 import { hasRoom, presentMembers, RaidMemberKind } from '../raidRoom'
 import { ROUTE_RAID_JOIN_MIN_HP } from '../stopRoom'
 import { RoomSlot, type JoinChannel, type JoinRequest, type RoomView, type SyncRequest } from './protocol'
+import { creditCrits } from './sharedCrits'
 import { catchUp, createRoom, isOver, playersIn, seatPlayer, seatsOf, spentLivesIn, unseatPlayer, viewFor, type SharedRoom } from './sharedRoom'
 
 // Las acciones del servidor de salas, sin el almacén: el servidor carga las salas, llama aquí y guarda lo que cambie.
@@ -59,7 +60,10 @@ export function syncRoom(room: SharedRoom, req: SyncRequest, now: number, rng: R
   if (!req.mon) unseatPlayer(room, req.playerId)
   // Quien acaba de gastar sus vidas no vuelve a sentarse al consultar (el móvil aún no lo sabe); en una parada, sí al
   // volver a pedir entrar
-  else if (!spentLivesIn(room, req.playerId, req.mon.uid)) seatPlayer(room, req.playerId, req.nickname, req.mon)
+  else if (!spentLivesIn(room, req.playerId, req.mon.uid)) {
+    seatPlayer(room, req.playerId, req.nickname, req.mon)
+    creditCrits(room, req.playerId, req.mon.uid, req.crits ?? 0, rng)
+  }
   const view = viewFor(room, req.playerId)
   if (room.channel.slot === RoomSlot.Route && isOver(room)) unseatPlayer(room, req.playerId)
   return view

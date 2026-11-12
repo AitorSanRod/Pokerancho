@@ -9,6 +9,7 @@ import { isStarItem, STAR_ITEMS } from '../../data/starItems'
 import { Stone } from '../../data/stones'
 import { isTm } from '../../data/tms'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
+import { salvageMissions } from '../collection/missions'
 import { SERVER_GIFT_ID } from '../collection/serverGifts'
 import { createMon } from '../team/mons'
 import { isNature } from '../team/natures'
@@ -47,7 +48,7 @@ function refundIncursionKey(save: Save) {
  * Lo que se descarta al cambiar de versión: la ruta (lo ganado en ella ya se sumó al ganarlo), la sala de raid y la
  * incursión en curso (se devuelve su llave) o en cola; el Pokémon vuelve al rancho
  */
-const IN_PROGRESS: (keyof GameState)[] = ['run', 'raids', 'raidServer', 'incursion', 'incursionQueue', 'timeScale']
+const IN_PROGRESS: (keyof GameState)[] = ['run', 'raids', 'raidServer', 'incursion', 'incursionQueue', 'tower', 'timeScale']
 /** Ranchos que puede llegar a tener el jugador: el primero más todos los de la tienda */
 const MAX_RANCHES = 1 + UPGRADES.ranches.prices.length
 
@@ -117,6 +118,7 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   stones: (v) => countsOf(v, (k) => (Object.values(Stone) as string[]).includes(k)),
   formItems: (v) => listOf(v, isFormItem),
   mints: (v) => (isInt(v) ? v : undefined),
+  towerBest: (v) => (isInt(v) ? v : undefined),
   starItems: (v) => countsOf(v, isStarItem),
   tms: (v) => countsOf(v, isTm),
   gachaPity: (v) => countsOf(v, (k) => isStarItem(k) && STAR_ITEMS[k].pity !== null),
@@ -131,6 +133,7 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   raidPrizes: (v) => (Array.isArray(v) ? v.map(salvagePrize).filter((x) => x !== null) : undefined),
   routeRaidStreaks: (v) =>
     isRecord(v) ? Object.fromEntries(Object.entries(v).filter(([, r]) => isRecord(r) && isInt(r.count) && typeof r.lastAt === 'number')) : undefined,
+  missions: (v) => salvageMissions(v) ?? undefined,
   roomsToLeave: (v) => listOf(v, (x): x is string => typeof x === 'string'),
   claimedServerGifts: (v) => listOf(v, (x): x is string => typeof x === 'string' && SERVER_GIFT_ID.test(x)),
   lastTick: (v) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(v, Date.now()) : undefined),

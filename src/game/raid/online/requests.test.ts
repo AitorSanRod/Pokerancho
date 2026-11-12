@@ -43,8 +43,16 @@ describe('peticiones al servidor de salas', () => {
 
   it('ponerse al día admite retirarse (sin Pokémon) y solo ids de sala del almacén', () => {
     const sync = { action: RaidAction.Sync, playerId: player(1), nickname: 'Ana', roomId: 'tab/0/abc', mon: null }
-    expect(parseRequest(sync)).toEqual(sync)
+    expect(parseRequest(sync)).toEqual({ ...sync, crits: 0 })
     expect(parseRequest({ ...sync, roomId: '../otra-cosa' })).toBeNull()
+  })
+
+  it('los toques críticos de una consulta, solo en número entero y razonable', () => {
+    const sync = { action: RaidAction.Sync, playerId: player(1), nickname: 'Ana', roomId: 'tab/0/abc', mon: null }
+    expect(parseRequest({ ...sync, crits: 2 })).toMatchObject({ crits: 2 })
+    expect(parseRequest({ ...sync, crits: -1 })).toBeNull()
+    expect(parseRequest({ ...sync, crits: 1.5 })).toBeNull()
+    expect(parseRequest({ ...sync, crits: 1e6 })).toBeNull()
   })
 
   it('entrar en una sala elegida de la pestaña Raids y mirar el frontal o una sala', () => {

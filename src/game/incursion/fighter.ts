@@ -7,6 +7,7 @@ import type { BoostStat } from '../../data/incursionMoves'
 import type { PokeType } from '../../data/types'
 import type { DamageSide } from '../battle/attack'
 import { combineBonus, sumEffects, type CombatBonus } from '../battle/combatBonus'
+import { noPerks, type MonPerks } from '../team/perks'
 import { calcStats, type Stats } from '../team/stats'
 import { noStages, stageMult, type Stages } from './statStages'
 
@@ -49,6 +50,8 @@ export interface GroupFighter {
   moves: IncursionMove[]
   /** Pasivas: las del grupo (se recalculan cada turno) o las escritas en el rival */
   bonus: CombatBonus
+  /** Hitos y colección de los del grupo (las stats ya van en `base`); los rivales, ninguno */
+  perks: MonPerks
   /** Estados alterados que lleva, del más antiguo al más nuevo: uno como mucho, salvo los jefes (groupStatus.ts) */
   statuses: Affliction[]
   /** Etapas que lleva subidas o bajadas cada stat (statStages.ts); se pierden al acabar la sala o al caer */
@@ -71,6 +74,8 @@ export interface MemberState {
   stars: number
   /** Sin ella (bots y clientes de antes de las naturalezas), neutra */
   nature?: Nature
+  /** Hitos y colección (team/perks.ts); sin ellos (bots y clientes de antes), ninguno */
+  perks?: MonPerks
   moveId: string
   /** PS como fracción de los máximos */
   hpFraction: number
@@ -85,14 +90,22 @@ function fighter(id: string, team: Team, speciesId: number, level: number, base:
   const moves = moveIds.map(incursionMove)
   return {
     id, team, speciesId, name: sp.name, level, types: sp.types, base, hp: base.hp, maxHp: base.hp,
-    move: moves[0], moves, bonus: sumEffects([]), statuses: [], stages: noStages(), taunt: null,
+    move: moves[0], moves, bonus: sumEffects([]), perks: noPerks(), statuses: [], stages: noStages(), taunt: null,
     out: false, fellAt: null, boss: null, target: null,
   }
 }
 
+/** Stats con el bono de sus hitos */
+function withPerks(base: Stats, perks: MonPerks): Stats {
+  const out = { ...base }
+  for (const k of Object.keys(out) as (keyof Stats)[]) out[k] = Math.max(1, Math.round(out[k] * (1 + perks.stats)))
+  return out
+}
+
 /** Un Pokémon del grupo, con su nivel */
 export function partyFighter(m: MemberState): GroupFighter {
-  const f = fighter(m.id, Team.Party, m.speciesId, m.level, calcStats(m.speciesId, m.level, m.stars, m.nature), [m.moveId])
+  const perks = m.perks ?? noPerks()
+  const f = { ...fighter(m.id, Team.Party, m.speciesId, m.level, withPerks(calcStats(m.speciesId, m.level, m.stars, m.nature), perks), [m.moveId]), perks }
   f.hp = m.out ? 0 : Math.round(m.hpFraction * f.maxHp)
   // El estado que trae del tramo anterior se le pasa al acabar el primer turno
   const statuses = m.status ? [{ status: m.status, turns: 1, heldTurns: m.heldTurns ?? 0 }] : []
@@ -137,5 +150,6 @@ export const damageSide = (f: GroupFighter): DamageSide => ({
   types: f.types,
   status: attackStatus(f),
   bonus: f.bonus,
+  perks: f.perks,
   stats: { hp: f.maxHp, atk: stat(f, 'atk'), def: stat(f, 'def'), spe: stat(f, 'spe') },
 })

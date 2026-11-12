@@ -6,18 +6,24 @@ import { isSearching } from '../../game/raid/raidEngine'
 import { isEnding } from '../../game/raid/raidEnding'
 import { currentRouteRaid } from '../../game/raid/routeRaid'
 import { endRun, tapRun } from '../../game/run/run'
+import { boostActive, BOOST_TAP_EXP } from '../../game/run/expBoost'
 import { landmarkInView } from '../../game/run/runLandmark'
+import { tapBattle } from '../../game/run/tapCrit'
 import { stepsPerMinute } from '../../game/team/stats'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { formatMinutes } from '../shared/format'
 import { discoveryReward, earningsRewards, levelUpReward, raidBossReward, repeatNote } from '../shared/rewardItems'
 import { RewardOverlay } from '../shared/RewardOverlay'
 import { battleFrame, fighterClass, statusClass } from './battleFrame'
+import { CritRing } from './CritRing'
 import { RouteBattle } from './RouteBattle'
 import { RaidBattle } from '../raid/RaidBattleScene'
+import { tapRoom } from '../raid/tapRoom'
+import { RoomSlot } from '../../game/raid/online/protocol'
 import { RaidHudLine, RaidSearching, RetreatButton } from './RouteRaidHud'
 import { HealStop } from './HealStop'
 import { StopTrack } from './StopTrack'
+import { ExpBoostBadge, ExpBoostSpawn } from './ExpBoost'
 import { WalkScene } from './WalkScene'
 import './run.css'
 import { ICON } from '../shared/icons'
@@ -27,6 +33,12 @@ import { ItemIcon } from '../shared/ItemIcon'
  * La ruta avanza sola: el Pokémon camina, se para a combatir (o a curarse) en cada parada y sigue hasta el final. En una
  * parada de jefe comunitario, la pelea se ve en la misma escena (con él dentro del grupo) hasta que cae el jefe
  */
+/** En combate, tocar es para el crítico: no sale la flecha de los pasos */
+function tapInBattle(): boolean {
+  act((s) => tapBattle(s, Date.now()))
+  return false
+}
+
 export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: OwnedMon }) {
   const r = route(run.routeId)
   const spm = stepsPerMinute(mon)
@@ -35,6 +47,7 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
   const battle = run.battleMsLeft > 0 && run.lastBattle ? run.lastBattle : null
   const frame = battle && battleFrame(battle, run.battleMsLeft)
   const walking = run.phase === 'walking' && !battle && !run.heal
+  const boosted = boostActive(run)
   const lastStop = run.path.length - 1
   const playerClass = battle && frame ? fighterClass(battle, frame, 'player') : ''
   const defeated = run.phase === 'fainted' || playerClass === 'fainted'
@@ -52,13 +65,22 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
         moving={walking}
         speed={Math.min(1.8, Math.max(0.6, spm / 22))}
         walkerClass={battle && frame ? `battling ${playerClass} ${statusClass(frame.event.playerStatus)}` : run.heal ? 'healing' : ''}
-        onStep={walking ? () => act(tapRun) : undefined}
+        onStep={walking ? () => act((s) => tapRun(s, Date.now())) : battle ? tapInBattle : routeRaid && !searching ? () => tapRoom(RoomSlot.Route) : undefined}
+        singleTouch={boosted}
+        floaterText={boosted ? `+${BOOST_TAP_EXP} EXP` : undefined}
         landmark={landmark}
         signText={r.name}
       >
-        {battle && frame && <RouteBattle record={battle} frame={frame} />}
+        {battle && frame && (
+          <RouteBattle
+            record={battle}
+            frame={frame}
+            enemyOverlay={run.battleSetup && <CritRing record={battle} setup={run.battleSetup} msLeft={run.battleMsLeft} lastTick={game.lastTick} />}
+          />
+        )}
         {run.heal && <HealStop key={run.stop} heal={run.heal} />}
-        {routeRaid && (searching ? <RaidSearching raid={routeRaid} /> : <RaidBattle raid={routeRaid} timeScale={game.timeScale} />)}
+        {walking && run.boost.visibleMs > 0 && <ExpBoostSpawn spot={run.boost.spot} />}
+        {routeRaid && (searching ? <RaidSearching raid={routeRaid} /> : <RaidBattle raid={routeRaid} timeScale={game.timeScale} lastTick={game.lastTick} />)}
       </WalkScene>
 
       <div className="run-hud">
@@ -70,6 +92,7 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
           {run.phase === 'walking' && <AbandonButton />}
           {routeRaid && !isEnding(routeRaid) && <RetreatButton />}
         </div>
+        {boosted && <ExpBoostBadge msLeft={run.boost.activeMs} />}
         <StopTrack run={run} />
         {/* En el combate de la última parada la ruta sigue 'walking' hasta que acaba, pero ya no hay tramo siguiente */}
         {run.phase === 'walking' && run.stop < lastStop && <LegProgress game={game} run={run} spm={spm} />}
@@ -77,8 +100,9 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
         {routeRaid && !searching && <p className="run-hud-note">Los que acaban la ruta se unen a la pelea</p>}
       </div>
 
-      {walking && <div className="tap-hint">Toca para avanzar más rápido</div>}
+      {walking && <div className="tap-hint">{boosted ? `Cada toque: +${BOOST_TAP_EXP} EXP` : 'Toca para avanzar más rápido'}</div>}
       {run.heal && <div className="tap-hint">Parada de curación</div>}
+      {battle && !frame?.ended && <div className="tap-hint">Atento: si sale un anillo sobre el rival, toca cuando se cierre</div>}
 
       {ended && !battle && <RunSummary run={run} mon={mon} />}
     </div>

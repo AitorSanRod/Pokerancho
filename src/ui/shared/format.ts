@@ -16,3 +16,7 @@ export function formatClock(ms: number): string {
 
 /** Fracción como porcentaje entero, hacia abajo: 0.1 → "10%" */
 export const formatPercent = (fraction: number): string => `${Math.floor(fraction * 100)}%`
+
+/** Bono como porcentaje con un decimal si hace falta: 0.025 → "+2,5 %" */
+export const formatBonus = (fraction: number): string =>
+  `+${(fraction * 100).toLocaleString('es-ES', { maximumFractionDigits: 1 })} %`

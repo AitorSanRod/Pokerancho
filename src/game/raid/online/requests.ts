@@ -3,6 +3,7 @@ import type { PassiveRef } from '../../../data/passives'
 import { species } from '../../../data/species'
 import { TYPE_INFO, type PokeType } from '../../../data/types'
 import { isNature } from '../../team/natures'
+import { parsePerks } from '../../team/perks'
 import { DEFAULT_NICKNAME, NICKNAME_MAX, RAID_ROTATIONS, RaidAction, RoomSlot, type JoinChannel, type RaidRotation, type MonSnapshot, type RaidRequest } from './protocol'
 
 // Lo que llega al servidor viene de cualquiera: se comprueba todo y se descarta lo que no encaje.
@@ -11,6 +12,8 @@ import { DEFAULT_NICKNAME, NICKNAME_MAX, RAID_ROTATIONS, RaidAction, RoomSlot, t
 const MAX_LEVEL = 100
 /** ★ más altas que se aceptan */
 const MAX_STARS = 10
+/** Toques críticos que se aceptan en una consulta (el servidor además da como mucho uno por ronda jugada) */
+const MAX_CRITS = 100
 /** Pasivas como mucho por Pokémon (una por tipo) */
 const MAX_PASSIVES = Object.keys(TYPE_INFO).length
 
@@ -49,7 +52,9 @@ function parseMon(v: unknown): MonSnapshot | null {
   if (!isInt(v.level, 1, MAX_LEVEL) || !isInt(v.stars, 0, MAX_STARS)) return null
   if (typeof v.hpFraction !== 'number' || !(v.hpFraction >= 0 && v.hpFraction <= 1)) return null
   const passives = parsePassives(v.passives)
-  return passives && { uid: v.uid, speciesId: v.speciesId, level: v.level, stars: v.stars, nature: isNature(v.nature) ? v.nature : undefined, hpFraction: v.hpFraction, passives }
+  const perks = parsePerks(v.perks)
+  if (!passives || !perks) return null
+  return { uid: v.uid, speciesId: v.speciesId, level: v.level, stars: v.stars, nature: isNature(v.nature) ? v.nature : undefined, hpFraction: v.hpFraction, passives, perks }
 }
 
 /** Parada de ruta que existe y tiene jefe comunitario */
@@ -96,5 +101,7 @@ export function parseRequest(body: unknown): RaidRequest | null {
   }
   if (body.action !== RaidAction.Sync || !matches(body.roomId, ROOM_ID)) return null
   const mon = body.mon === null ? null : parseMon(body.mon)
-  return body.mon !== null && !mon ? null : { action: RaidAction.Sync, ...who, roomId: body.roomId, mon }
+  const crits = body.crits === undefined ? 0 : body.crits
+  if ((body.mon !== null && !mon) || !isInt(crits, 0, MAX_CRITS)) return null
+  return { action: RaidAction.Sync, ...who, roomId: body.roomId, mon, crits }
 }

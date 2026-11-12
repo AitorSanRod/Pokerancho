@@ -1,6 +1,7 @@
 import type { IncursionId } from '../../../data/incursions'
 import type { Rng } from '../../core/random'
 import { findMon, type GameState } from '../../core/state'
+import { monPerks } from '../../team/perks'
 import { maxHp } from '../../team/stats'
 import { incursionBlocker, startIncursion } from '../incursionGame'
 import { spendKey } from '../keys'
@@ -33,7 +34,7 @@ export function queueRequest(s: GameState): Pick<QueueRequest, 'action' | 'incur
   const q = s.incursionQueue
   const mon = q && findMon(s, q.uid)
   if (!q || !mon) return null
-  const member = { ...freshMember({ id: mon.uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, moveId: q.moveId }), hpFraction: mon.hp / maxHp(mon) }
+  const member = { ...freshMember({ id: mon.uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, perks: monPerks(s, mon), moveId: q.moveId }), hpFraction: mon.hp / maxHp(mon) }
   return { action: IncursionAction.Queue, incursionId: q.incursionId, member }
 }
 

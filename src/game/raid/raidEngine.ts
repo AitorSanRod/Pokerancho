@@ -2,6 +2,7 @@ import type { RaidBoss } from '../../data/raidBosses'
 import { markSeen } from '../collection/dex'
 import type { Rng } from '../core/random'
 import { findMon, type GameState, type OwnedMon } from '../core/state'
+import { monPerks } from '../team/perks'
 import { ranchPassives } from '../team/ranchPassives'
 import { gainExp, maxHp } from '../team/stats'
 import { elapseRound, playRound, RAID_ROUND_MS, type PassivesOf } from './raidCombat'
@@ -67,7 +68,7 @@ export function addPlayer(s: GameState, raid: Raid, mon: OwnedMon, lives: number
   const before = raid.members.find((m) => m.id === mon.uid)
   if (before) Object.assign(before, { left: false, hpFraction, downMs: 0, lives: before.lives ?? lives })
   else {
-    const who = { id: mon.uid, kind: RaidMemberKind.Player, trainer: PLAYER_TRAINER, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature }
+    const who = { id: mon.uid, kind: RaidMemberKind.Player, trainer: PLAYER_TRAINER, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, perks: monPerks(s, mon) }
     raid.members.push({ ...newMember(who, hpFraction), lives })
   }
   markSeen(s, raid.boss.speciesId)
@@ -107,7 +108,7 @@ function syncPlayers(s: GameState, raid: Raid) {
       continue
     }
     if (m.downMs === 0) gainExp(mon, raidExpPerRound(raid.boss))
-    Object.assign(m, { level: mon.level, stars: mon.stars, nature: mon.nature })
+    Object.assign(m, { level: mon.level, stars: mon.stars, nature: mon.nature, perks: monPerks(s, mon) })
   }
 }
 
@@ -119,9 +120,11 @@ const roomStopped = (raid: Raid): boolean => raid.hp === 0 || playerMembers(raid
 
 /**
  * Juega las rondas que caben en `ms` milisegundos de juego. Si el jefe cae o un Pokémon del jugador gasta sus vidas,
- * se para ahí y devuelve los milisegundos que sobran; si no, null
+ * se para ahí y devuelve los milisegundos que sobran; si no, null. Si ya estaba parada (el jefe cayó entre rondas por un
+ * toque crítico), no juega nada
  */
 export function advanceRoom(raid: Raid, ms: number, bots: BotPolicy, rng: Rng, hooks: RoomHooks): number | null {
+  if (roomStopped(raid)) return ms
   let left = ms
   while (left >= raid.roundMsLeft) {
     left -= raid.roundMsLeft

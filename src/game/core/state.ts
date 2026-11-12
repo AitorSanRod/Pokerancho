@@ -10,8 +10,12 @@ import type { StarItem } from '../../data/starItems'
 import type { Tm } from '../../data/tms'
 import type { Stone } from '../../data/stones'
 import type { BattleRecord } from '../battle/battle'
+import type { DailyMissions } from '../collection/missions'
 import type { ActiveIncursion } from '../incursion/activeIncursion'
 import type { IncursionQueue } from '../incursion/online/linkedIncursion'
+import type { ExpBoost } from '../run/expBoost'
+import type { RouteBattleSetup } from '../run/tapCrit'
+import type { TowerRun } from '../tower/tower'
 import { RaidRotation } from '../raid/online/protocol'
 import type { Raid, RaidPrize } from '../raid/raidRoom'
 import type { UpgradeId } from '../team/upgrades'
@@ -73,6 +77,8 @@ export interface Run {
   phase: RunPhase
   /** Último combate, para que la UI lo reproduzca */
   lastBattle: BattleRecord | null
+  /** Cómo empezó el último combate, para repetirlo con los toques críticos (ver run/tapCrit.ts) */
+  battleSetup: RouteBattleSetup | null
   /** Milisegundos reales que quedan del combate en curso; mientras sea > 0 no se dan pasos */
   battleMsLeft: number
   /** Sala del jefe comunitario de la parada en la que está luchando (fase `raid`) */
@@ -84,6 +90,8 @@ export interface Run {
   raidRejoinHp: number | null
   /** Cura de la parada de poción en la que está parado el Pokémon; mientras `msLeft` sea > 0 no se dan pasos */
   heal: StopHeal | null
+  /** Bonificación de EXP: el objeto que aparece al caminar y el rato que dura al tocarlo (ver run/expBoost.ts) */
+  boost: ExpBoost
   /** Ruta que se ha desbloqueado al completar esta por primera vez (null si no ha desbloqueado ninguna) */
   unlocked: string | null
   /**
@@ -162,6 +170,12 @@ export interface GameState {
   incursion: ActiveIncursion | null
   /** Regalos del servidor ya recogidos, por su id (ver collection/serverGifts.ts) */
   claimedServerGifts: string[]
+  /** Misiones del día (ver collection/missions.ts); null hasta que salen las primeras */
+  missions: DailyMissions | null
+  /** Torre infinita en curso (solo en desarrollo, ver tower/tower.ts); null si no */
+  tower: TowerRun | null
+  /** Piso más alto superado en la torre infinita */
+  towerBest: number
   /** Buscando grupo para una incursión con otros jugadores (ver incursion/online/linkedIncursion.ts); null si no */
   incursionQueue: IncursionQueue | null
   tutorial: TutorialStep | null
@@ -195,7 +209,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 47
+export const SAVE_VERSION = 48
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 
@@ -231,6 +245,9 @@ export function initialState(): GameState {
     incursion: null,
     incursionQueue: null,
     claimedServerGifts: [],
+    missions: null,
+    tower: null,
+    towerBest: 0,
     tutorial: TutorialStep.Starter,
     unlockedRoutes: [RouteId.PuebloPaleta],
     completedRoutes: [],

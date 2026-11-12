@@ -42,6 +42,15 @@ async function tapUntilBattle(page) {
   await wait(2600)
 }
 
+/** Toca la escena de la ruta (para llegar antes a los combates) hasta que sale un anillo del toque crítico */
+async function tapUntilRing(page) {
+  for (let i = 0; i < 600 && !(await page.$('.tap-ring-closing')); i++) {
+    if (!(await page.$('.route-battle'))) await page.mouse.click(195, 500)
+    await wait(100)
+  }
+  await wait(450)
+}
+
 const toRoute = (p) => nav(p, 'route')
 const toRouteTab = async (p, label, after) => {
   await toRoute(p)
@@ -57,6 +66,36 @@ const routeBattle = async (p) => {
 }
 
 export const SHOTS = [
+  // Mejoras, misiones y toques
+  { name: 'perks-milestones', scenario: { perks: true }, steps: (p) => openRanchMon(p, 'Charmander'), focus: '.milestones' },
+  {
+    name: 'perks-dex',
+    scenario: { perks: true },
+    steps: async (p) => {
+      await nav(p, 'dex')
+      await tap(p, '::-p-text(Mejoras)')
+    },
+    focus: '.dex-perks',
+  },
+  { name: 'perks-missions', steps: (p) => openMenu(p, 'Misiones'), focus: '.mission-list' },
+  {
+    name: 'perks-crit',
+    scenario: { run: true },
+    steps: async (p) => {
+      await toRoute(p)
+      await tapUntilRing(p)
+    },
+    focus: '.tap-ring',
+  },
+  {
+    name: 'perks-boost',
+    scenario: { run: true, boost: true },
+    steps: async (p) => {
+      await toRoute(p)
+      await p.waitForSelector('.exp-boost-spawn', { timeout: 8000 })
+    },
+    focus: '.exp-boost-spawn',
+  },
   // Cómo jugar
   { name: 'play-ranch', focus: '.ranch-mon' },
   { name: 'play-companion', steps: (p) => openRanchMon(p, 'Eevee'), focus: '.companion-button' },

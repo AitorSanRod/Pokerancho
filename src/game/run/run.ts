@@ -4,7 +4,8 @@ import type { Rng } from '../core/random'
 import { activeMon, MonPlace, monPlace, TutorialStep, type GameState } from '../core/state'
 import { advanceRouteRaid, enterRouteRaid } from '../raid/routeRaid'
 import { stepsPerMinute } from '../team/stats'
-import { completeRoute, spendBattleTime, startStopBattle } from './runBattle'
+import { advanceExpBoost, boostActive, BOOST_TAP_EXP, newExpBoost, takeBoostTap } from './expBoost'
+import { completeRoute, gainRunExp, spendBattleTime, startStopBattle } from './runBattle'
 import { spendHealTime, drinkStopPotion } from './runHeal'
 
 export function runBlocker(s: GameState): string | null {
@@ -20,7 +21,7 @@ export function runBlocker(s: GameState): string | null {
 }
 
 /** Sale a la ruta con el camino ya elegido; a partir de aquí todo es automático */
-export function startRun(s: GameState, routeId: string, path = pathFrom(route(routeId))) {
+export function startRun(s: GameState, routeId: string, path = pathFrom(route(routeId)), rng: Rng = Math.random) {
   if (runBlocker(s) || !s.unlockedRoutes.includes(routeId) || !isValidPath(route(routeId), path)) return
   if (s.tutorial === TutorialStep.Route) s.tutorial = null
   s.run = {
@@ -30,10 +31,12 @@ export function startRun(s: GameState, routeId: string, path = pathFrom(route(ro
     steps: 0,
     phase: 'walking',
     lastBattle: null,
+    battleSetup: null,
     battleMsLeft: 0,
     raid: null,
     raidRejoinHp: null,
     heal: null,
+    boost: newExpBoost(rng),
     unlocked: null,
     earned: { money: 0, tickets: 0, pieces: [], exp: 0, levelsGained: 0, wins: 0, battles: 0, raidBosses: [], raidMoneyMult: 1, discovered: [] },
   }
@@ -46,6 +49,7 @@ export function startRun(s: GameState, routeId: string, path = pathFrom(route(ro
  */
 export function advanceRun(s: GameState, realMs: number, rng: Rng = Math.random) {
   const run = s.run
+  if (run) advanceExpBoost(run, realMs, rng)
   let left = realMs
   while (run && left > 0) {
     if (run.battleMsLeft > 0) {
@@ -85,9 +89,16 @@ export function walk(s: GameState, steps: number, rng: Rng = Math.random): numbe
   return needed
 }
 
-/** Tocar la escena caminando da un paso; los combates y la cura van siempre a su velocidad, sin adelantarse */
-export function tapRun(s: GameState) {
-  if (s.run && s.run.battleMsLeft === 0) walk(s, 1)
+/**
+ * Tocar la escena caminando da un paso (y, con la bonificación de EXP, EXP, con su límite por segundo); los combates y
+ * la cura van siempre a su velocidad, sin adelantarse. Devuelve si el toque contó
+ */
+export function tapRun(s: GameState, now: number = Date.now()): boolean {
+  const run = s.run
+  if (!run || run.phase !== 'walking' || run.battleMsLeft > 0 || run.heal || !takeBoostTap(run, now)) return false
+  walk(s, 1)
+  if (boostActive(run)) gainRunExp(s, BOOST_TAP_EXP)
+  return true
 }
 
 function arrive(s: GameState, r: Route, rng: Rng) {

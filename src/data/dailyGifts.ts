@@ -3,8 +3,8 @@
 
 import { StarItem } from './starItems'
 
-/** Lo que da un día del ciclo */
-export interface DailyGift {
+/** Lo que da un premio puesto a mano (un día del obsequio, una misión diaria) */
+export interface GiftContents {
   money: number
   /** Trozos de MissingNo */
   missingnoShards: number
@@ -12,11 +12,18 @@ export interface DailyGift {
   tickets: number
   /** Objetos estelares (ver data/starItems.ts) */
   starItems: Partial<Record<StarItem, number>>
+}
+
+/** Lo que da un día del ciclo */
+export interface DailyGift extends GiftContents {
   /** Día grande: se destaca en la lista */
   big: boolean
 }
 
-const gift = (contents: Partial<DailyGift>): DailyGift => ({ money: 0, missingnoShards: 0, tickets: 0, starItems: {}, big: false, ...contents })
+/** Premio con lo dado y lo demás a 0 */
+export const giftContents = (contents: Partial<GiftContents>): GiftContents => ({ money: 0, missingnoShards: 0, tickets: 0, starItems: {}, ...contents })
+
+const gift = ({ big = false, ...contents }: Partial<DailyGift>): DailyGift => ({ ...giftContents(contents), big })
 
 /** Los días del ciclo, en orden */
 export const DAILY_GIFTS: DailyGift[] = [

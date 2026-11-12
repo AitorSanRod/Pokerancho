@@ -2,6 +2,7 @@ import { FORM_ITEMS, formItemsOf, type FormItem } from '../../data/forms'
 import { baseSpeciesOf, species } from '../../data/species'
 import { findMon, MonPlace, monPlace, type GameState } from '../core/state'
 import { maxHp } from './stats'
+import { spendMoney } from '../core/wallet'
 
 // Cambio de forma desde la ficha (Rotom → Rotom Calor…): con el objeto de la forma en la Mochila, gratis y las veces que
 // se quiera, también de vuelta a la forma normal. Es el mismo Pokémon con otra especie: conserva nivel, EXP, ★ y la
@@ -18,7 +19,7 @@ export function buyFormItemBlocker(s: GameState, id: FormItem): string | null {
 /** Compra el objeto de forma; false si ya lo tiene o no hay ₽ */
 export function buyFormItem(s: GameState, id: FormItem): boolean {
   if (buyFormItemBlocker(s, id)) return false
-  s.money -= FORM_ITEMS[id].price
+  spendMoney(s, FORM_ITEMS[id].price)
   s.formItems.push(id)
   return true
 }

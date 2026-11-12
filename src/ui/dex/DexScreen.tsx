@@ -10,6 +10,7 @@ import { PokemonSheet } from '../shared/sheet/PokemonSheet'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { DexCell } from './DexCell'
+import { DexPerks } from './DexPerks'
 import { DexSection } from './DexSection'
 import { DexToolbar } from './DexToolbar'
 import './dex.css'
@@ -36,6 +37,7 @@ export function DexScreen({ game }: { game: GameState }) {
           </span>
         </div>
         <DexToolbar query={query} onChange={setQuery} />
+        {!filtering && <DexPerks game={game} />}
         {ready > 0 && query.filter !== DexFilter.Ready && (
           <button className="notice small dex-filter" onClick={() => setQuery({ ...DEFAULT_DEX_QUERY, filter: DexFilter.Ready })}>
             <ItemIcon item={ICON.Piece} size={18} />

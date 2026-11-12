@@ -38,7 +38,7 @@ export function RaidFront({ game, state, board }: { game: GameState; state: Feed
 
   return (
     <>
-      <RaidScene game={game} raid={shown} />
+      <RaidScene game={game} raid={shown} roomKey={shown === own ? board.rotation : null} />
       <div className="mon-card">
         {board.phase === CyclePhase.Closing && (
           <p className="small raid-closing">
