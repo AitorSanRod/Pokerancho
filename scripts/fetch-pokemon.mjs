@@ -42,6 +42,7 @@ async function fetchOne(id) {
       spd: stat('special-defense'),
       spe: stat('speed'),
     },
+    height: mon.height,
   }
 }
 

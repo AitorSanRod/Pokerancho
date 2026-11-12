@@ -87,8 +87,12 @@ export function train(s: GameState, uid: string, sessions = 1): LevelUpResult | 
   return { levelsGained: m.level - startLevel }
 }
 
+/** Elige compañero: uno del rancho o, para retomar la subida, el que está en la torre */
+export const canBeCompanion = (s: GameState, uid: string): boolean =>
+  !s.run && uid !== s.activeUid && [MonPlace.Ranch, MonPlace.Tower].some((place) => place === monPlace(s, uid))
+
 export function setActive(s: GameState, uid: string) {
-  if (s.run || !ranchMon(s, uid)) return
+  if (!canBeCompanion(s, uid)) return
   s.activeUid = uid
 }
 

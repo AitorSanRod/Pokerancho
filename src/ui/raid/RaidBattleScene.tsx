@@ -13,6 +13,7 @@ import { RaidCritRing } from './RaidCritRing'
 import type { RoomKey } from '../../game/raid/online/linkedRoom'
 import { BattleHud } from '../route/BattleHud'
 import { HitEffect } from '../route/HitEffect'
+import { battleFit } from '../route/spriteSizes'
 import { WalkScene } from '../route/WalkScene'
 import { Sprite } from '../shared/common'
 import { partySpot } from './partySpot'
@@ -116,7 +117,7 @@ function BossFighter({ raid, hits, party, ring }: { raid: Raid; hits: ReplayHit[
       <div className={attack ? roundClass(attack.seq, 'raid-boss-lunge') : ''}>
         <div className={latest ? roundClass(latest.seq, 'raid-shake') : ''}>
           <div className="raid-idle boss">
-            <Sprite id={raid.boss.speciesId} size={BOSS_SPRITE_SIZE} />
+            <Sprite id={raid.boss.speciesId} size={BOSS_SPRITE_SIZE} fit={battleFit(raid.boss.speciesId)} />
           </div>
         </div>
       </div>
@@ -161,7 +162,7 @@ function PartyMon({ m, index, attack, struck, bossSpeciesId, timeScale }: PartyM
       <div className={attack ? roundClass(attack.seq, 'raid-lunge') : ''}>
         <div className={struck ? roundClass(struck.seq, 'raid-shake') : ''}>
           <div className={down ? '' : 'raid-idle'}>
-            <Sprite id={m.speciesId} size={PARTY_SPRITE_SIZE} />
+            <Sprite id={m.speciesId} size={PARTY_SPRITE_SIZE} fit={battleFit(m.speciesId)} />
           </div>
         </div>
       </div>

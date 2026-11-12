@@ -16,6 +16,7 @@ export function runBlocker(s: GameState): string | null {
   if (monPlace(s, mon.uid) === MonPlace.Expedition) return `${name} está de expedición.`
   if (monPlace(s, mon.uid) === MonPlace.Raid) return `${name} está luchando contra el jefe.`
   if (monPlace(s, mon.uid) === MonPlace.Incursion) return `${name} está en una incursión.`
+  if (monPlace(s, mon.uid) === MonPlace.Tower) return `${name} está en la torre: termínala o abandónala antes.`
   if (mon.hp < 1) return `${name} está debilitado. Déjalo descansar o cúralo en el rancho.`
   return null
 }

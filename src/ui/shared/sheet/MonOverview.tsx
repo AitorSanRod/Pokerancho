@@ -16,6 +16,7 @@ const PLACE_LABEL: Record<MonPlace, string> = {
   [MonPlace.Expedition]: 'De expedición',
   [MonPlace.Raid]: 'Contra el jefe',
   [MonPlace.Incursion]: 'En una incursión',
+  [MonPlace.Tower]: 'En la torre',
   [MonPlace.Box]: 'En la Caja',
 }
 

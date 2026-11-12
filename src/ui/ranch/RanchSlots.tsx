@@ -20,6 +20,7 @@ const OUT_LABEL: Partial<Record<MonPlace, { icon: Item; text: string }>> = {
   [MonPlace.Expedition]: { icon: ICON.Expedition, text: 'De expedición' },
   [MonPlace.Raid]: { icon: ICON.Raid, text: 'Contra el jefe' },
   [MonPlace.Incursion]: { icon: ICON.Incursion, text: 'En una incursión' },
+  [MonPlace.Tower]: { icon: ICON.Tower, text: 'En la torre' },
 }
 
 /**

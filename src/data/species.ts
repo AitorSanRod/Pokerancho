@@ -14,6 +14,8 @@ interface Species {
   name: string
   types: PokeType[]
   base: BaseStats
+  /** Altura de la especie en decímetros (la de PokeAPI); da el tamaño del sprite en combate */
+  height: number
   /** Solo en las formas (Rotom Calor…): la especie de la que son forma (ver data/forms.ts) */
   baseId?: number
 }

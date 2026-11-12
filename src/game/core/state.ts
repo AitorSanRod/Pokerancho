@@ -278,7 +278,7 @@ export function activeMon(s: GameState): OwnedMon | null {
   return (s.activeUid && findMon(s, s.activeUid)) || null
 }
 
-export const MonPlace = { Ranch: 'ranch', Run: 'run', Expedition: 'expedition', Raid: 'raid', Incursion: 'incursion', Box: 'box' } as const
+export const MonPlace = { Ranch: 'ranch', Run: 'run', Expedition: 'expedition', Raid: 'raid', Incursion: 'incursion', Tower: 'tower', Box: 'box' } as const
 export type MonPlace = (typeof MonPlace)[keyof typeof MonPlace]
 
 /** Dónde está un Pokémon: solo los que están en el rancho se pueden curar, entrenar o enviar */
@@ -286,6 +286,7 @@ export function monPlace(s: GameState, uid: string): MonPlace {
   if (s.run && uid === s.activeUid) return MonPlace.Run
   if (s.expeditions.some((e) => e.uid === uid)) return MonPlace.Expedition
   if (Object.values(s.raids).some((r) => r?.members.some((m) => m.id === uid && !m.left))) return MonPlace.Raid
+  if (s.tower?.end === null && s.tower.uid === uid) return MonPlace.Tower
   if (s.incursion?.uid === uid || s.incursionQueue?.uid === uid) return MonPlace.Incursion
   if (findMon(s, uid)?.ranch === null) return MonPlace.Box
   return MonPlace.Ranch

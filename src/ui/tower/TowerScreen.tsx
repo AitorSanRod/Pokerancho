@@ -1,6 +1,6 @@
 import { activeMon, type GameState } from '../../game/core/state'
 import { act } from '../../game/core/store'
-import { startTower, TOWER_HEAL_EVERY, TOWER_LAST_HEAL_FLOOR, towerActive } from '../../game/tower/tower'
+import { startTower, towerBlocker, TOWER_HEAL_EVERY, TOWER_LAST_HEAL_FLOOR, towerActive } from '../../game/tower/tower'
 import { TOWER_LEVEL_CAP_FLOOR } from '../../game/tower/towerFoes'
 import { TOWER_MOVE_PICK_EVERY } from '../../game/tower/towerMoves'
 import { nextPrizeFloor, towerPrize } from '../../game/tower/towerRewards'
@@ -49,8 +49,8 @@ function TowerHead({ game }: { game: GameState }) {
 /** Empezar una subida con el compañero y el ataque elegido */
 function TowerStart({ game }: { game: GameState }) {
   const mon = activeMon(game)
-  if (!mon) return <p className="notice small">Necesitas un compañero para subir a la torre.</p>
-  if (game.run) return <p className="notice small">Tu compañero está en una ruta: termínala para subir a la torre.</p>
+  const blocker = towerBlocker(game)
+  if (blocker || !mon) return <p className="notice small">{blocker}</p>
   return (
     <>
       <div className="card tower-rules">

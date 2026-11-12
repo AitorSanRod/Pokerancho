@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import { POKEMON } from '../../data/pokemon'
 import type { Rng } from '../core/random'
-import { activeMon, initialState, type GameState } from '../core/state'
+import { activeMon, initialState, MonPlace, monPlace, type GameState } from '../core/state'
 import { chooseStarter, seqRng } from '../core/test-utils'
 import { MAX_LEVEL } from '../team/stats'
+import { runBlocker } from '../run/run'
+import { expeditionBlocker } from '../team/expedition'
+import { setActive } from '../team/ranch'
 import {
   abandonTower,
   advanceTower,
@@ -17,6 +20,7 @@ import {
   TOWER_LAST_HEAL_FLOOR,
   towerBetweenFloors,
   TowerEnd,
+  towerBlocker,
   towerMovePickDue,
 } from './tower'
 import { TOWER_MOVE_PICK_EVERY, towerMove, towerMoveChoices } from './towerMoves'
@@ -146,5 +150,35 @@ describe('torre infinita', () => {
     abandonTower(s)
     expect(s.tower!.end).toBe(TowerEnd.Left)
     expect(canStartTower(s)).toBe(true)
+  })
+
+  it('mientras sube, su Pokémon está en la torre y no puede ir a ninguna otra actividad', () => {
+    const s = withMon(MAX_LEVEL)
+    const uid = activeMon(s)!.uid
+    startTower(s, firstMove(s), seqRng(0.5))
+    finishBattle(s)
+    expect(monPlace(s, uid)).toBe(MonPlace.Tower)
+    expect(runBlocker(s)).not.toBeNull()
+    expect(expeditionBlocker(s, uid)).not.toBeNull()
+    abandonTower(s)
+    expect(monPlace(s, uid)).toBe(MonPlace.Ranch)
+  })
+
+  it('si el compañero está en otra actividad, no puede subir', () => {
+    const s = withMon(MAX_LEVEL)
+    s.expeditions.push({ uid: activeMon(s)!.uid } as never)
+    expect(towerBlocker(s)).not.toBeNull()
+    startTower(s, firstMove(s))
+    expect(s.tower).toBeNull()
+  })
+
+  it('se puede volver a elegir de compañero al que está en la torre para retomarla', () => {
+    const s = withMon(MAX_LEVEL)
+    const uid = activeMon(s)!.uid
+    startTower(s, firstMove(s), seqRng(0.5))
+    finishBattle(s)
+    s.activeUid = null
+    setActive(s, uid)
+    expect(canContinueTower(s)).toBe(true)
   })
 })

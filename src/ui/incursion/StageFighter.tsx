@@ -3,7 +3,7 @@ import { STATUS_INFO } from '../../data/passives'
 import { EventKind } from '../../game/incursion/events'
 import { HitEffect } from '../route/HitEffect'
 import { statusClass } from '../route/battleFrame'
-import { BOSS_SPRITE_SIZE, ENEMY_SPRITE_SIZE } from '../route/spriteSizes'
+import { battleFit, BOSS_SPRITE_SIZE, ENEMY_SPRITE_SIZE } from '../route/spriteSizes'
 import { roundClass } from '../raid/roundClass'
 import { Sprite } from '../shared/common'
 import type { SceneMon, SceneState } from './sceneState'
@@ -53,7 +53,7 @@ export function StageFighter({ m, spot, side, mine, scene, idleDelay }: Props) {
           <div className={down ? '' : 'raid-idle'}>
             <div className={statusClass(down ? null : (m.statuses.at(-1) ?? null))}>
               <div className="scene-shadow" />
-              <Sprite id={m.speciesId} size={size} />
+              <Sprite id={m.speciesId} size={size} fit={battleFit(m.speciesId)} />
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import type { Biome } from '../../data/maps'
 import { Sprite } from '../shared/common'
 import { PIXEL, pixelSceneFor, usePixelScene, type SceneLandmark } from './pixelScene'
+import { battleFit, ENEMY_SPRITE_SIZE } from './spriteSizes'
 import './scene.css'
 
 interface Floater {
@@ -73,7 +74,7 @@ export function WalkScene({
       {speciesId !== undefined && (
         <div className={`scene-walker ${walkerClass}`}>
           <div className="scene-shadow" />
-          <Sprite id={speciesId} size={128} shiny={shiny} />
+          <Sprite id={speciesId} size={ENEMY_SPRITE_SIZE} fit={battleFit(speciesId)} shiny={shiny} />
         </div>
       )}
       <canvas ref={front} className="scene-canvas front" />

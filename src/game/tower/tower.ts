@@ -1,6 +1,6 @@
 import { makeFighter, simulateBattle, type BattleRecord } from '../battle/battle'
 import type { Rng } from '../core/random'
-import { activeMon, type GameState, type OwnedMon } from '../core/state'
+import { activeMon, MonPlace, monPlace, type GameState, type OwnedMon } from '../core/state'
 import { battleDuration } from '../run/battleTimeline'
 import { monPerks } from '../team/perks'
 import { ranchPassives } from '../team/ranchPassives'
@@ -61,8 +61,25 @@ export const towerMovePickDue = (s: GameState): boolean =>
 /** Puede seguir: está entre pisos, su Pokémon es el compañero y no está en una ruta */
 export const canContinueTower = (s: GameState): boolean => towerBetweenFloors(s) && activeMon(s)?.uid === s.tower!.uid && s.run === null
 
-/** Se puede empezar una subida nueva: hay compañero, no está en una ruta y no hay otra a medias */
-export const canStartTower = (s: GameState): boolean => activeMon(s) !== null && s.run === null && !towerActive(s)
+/** Lo que dice cada sitio en el que puede estar el compañero para no poder subir */
+const AWAY_TEXT: Partial<Record<MonPlace, string>> = {
+  [MonPlace.Run]: 'Tu compañero está en una ruta: termínala para subir a la torre.',
+  [MonPlace.Expedition]: 'Tu compañero está de expedición: espera a que vuelva para subir a la torre.',
+  [MonPlace.Raid]: 'Tu compañero está luchando contra un jefe: espera a que acabe para subir a la torre.',
+  [MonPlace.Incursion]: 'Tu compañero está en una incursión: termínala para subir a la torre.',
+  [MonPlace.Box]: 'Tu compañero está en la Caja: llévalo al rancho para subir a la torre.',
+}
+
+/** Por qué no se puede empezar una subida (sin compañero, con él en otra actividad o con otra a medias), o null */
+export function towerBlocker(s: GameState): string | null {
+  const mon = activeMon(s)
+  if (!mon) return 'Necesitas un compañero para subir a la torre.'
+  if (towerActive(s)) return 'Ya hay una subida a medias.'
+  return AWAY_TEXT[monPlace(s, mon.uid)] ?? null
+}
+
+/** Se puede empezar una subida nueva */
+export const canStartTower = (s: GameState): boolean => towerBlocker(s) === null
 
 /** Se cura al acabar este piso */
 export const isHealFloor = (floor: number): boolean => floor % TOWER_HEAL_EVERY === 0 && floor <= TOWER_LAST_HEAL_FLOOR

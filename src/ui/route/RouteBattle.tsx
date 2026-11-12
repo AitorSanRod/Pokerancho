@@ -8,7 +8,7 @@ import { BattleHud } from './BattleHud'
 import { BattlePop } from './BattlePop'
 import { fighterClass, statusClass, type BattleFrame } from './battleFrame'
 import { HitEffect } from './HitEffect'
-import { BOSS_SPRITE_SIZE, ENEMY_SPRITE_SIZE } from './spriteSizes'
+import { battleFit, BOSS_SPRITE_SIZE, ENEMY_SPRITE_SIZE } from './spriteSizes'
 import './battle.css'
 import './battle-callouts.css'
 import './status-fx.css'
@@ -46,7 +46,7 @@ export function RouteBattle({ record, frame, enemyOverlay }: { record: BattleRec
         <div className={`route-enemy ${fighterClass(record, frame, 'enemy')}`}>
           <div className="scene-shadow" />
           <div className={statusClass(event.enemyStatus)}>
-            <Sprite id={record.enemy.speciesId} size={record.boss ? BOSS_SPRITE_SIZE : ENEMY_SPRITE_SIZE} />
+            <Sprite id={record.enemy.speciesId} size={record.boss ? BOSS_SPRITE_SIZE : ENEMY_SPRITE_SIZE} fit={battleFit(record.enemy.speciesId)} />
           </div>
         </div>
       </div>
