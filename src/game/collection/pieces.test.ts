@@ -7,7 +7,7 @@ import { boostedMoney } from '../battle/rewards'
 import { initialState } from '../core/state'
 import { chooseStarter, seqRng, speciesOfRarity } from '../core/test-utils'
 import { createMon, NEW_MON_LEVEL } from '../team/mons'
-import { RANCH_SLOTS, slotsOf, usedSlots } from '../team/ranches'
+import { RANCH_SLOTS, usedSlots } from '../team/ranches'
 import { MAX_STARS } from '../team/stats'
 import { pickStarter } from '../team/tutorial'
 import { markSeen } from './dex'
@@ -21,8 +21,12 @@ import {
   combineBlocker,
   CombineKind,
   combinePrice,
+  combineShiny,
   PIECES_PER_COMBINE,
   piecesOf,
+  SHINY_CHANCE,
+  SHINY_COMBINE_PIECES,
+  shinyCombineBlocker,
   STAR_PRICES,
 } from './pieces'
 
@@ -126,7 +130,7 @@ describe('combine', () => {
   it('va al primer rancho con hueco y no se crea si no cabe en ninguno', () => {
     const s = stateWithStarter()
     const filler = speciesOfRarity(Rarity.Common)
-    while (usedSlots(s, 0) + slotsOf(filler) <= RANCH_SLOTS) s.owned.push(createMon(filler, NEW_MON_LEVEL))
+    while (usedSlots(s, 0) < RANCH_SLOTS) s.owned.push(createMon(filler, NEW_MON_LEVEL))
     readyToCombine(s, POKEMON.Pidgey)
     expect(combineBlocker(s, POKEMON.Pidgey)).toMatch(/rancho/)
     expect(combine(s, POKEMON.Pidgey)).toBeNull()
@@ -164,6 +168,45 @@ describe('combine', () => {
     expect(combine(s, POKEMON.Bulbasaur)).toMatchObject({ kind: CombineKind.Money, money: expected })
     expect(s.money).toBe(expected)
     expect(s.owned[0].stars).toBe(MAX_STARS)
+  })
+})
+
+describe('shiny', () => {
+  it('al crearlo sale shiny si la tirada cae por debajo de SHINY_CHANCE', () => {
+    const lucky = stateWithStarter()
+    readyToCombine(lucky, POKEMON.Pidgey)
+    expect(combine(lucky, POKEMON.Pidgey, seqRng(SHINY_CHANCE / 2))).toMatchObject({ shiny: true })
+    expect(lucky.owned.find((m) => m.speciesId === POKEMON.Pidgey)?.shiny).toBe(true)
+
+    const unlucky = stateWithStarter()
+    readyToCombine(unlucky, POKEMON.Pidgey)
+    expect(combine(unlucky, POKEMON.Pidgey, seqRng(SHINY_CHANCE))).toMatchObject({ shiny: false })
+    expect(unlucky.owned.find((m) => m.speciesId === POKEMON.Pidgey)?.shiny).toBe(false)
+  })
+
+  it('con SHINY_COMBINE_PIECES tickets lo crea shiny seguro y los gasta todos', () => {
+    const s = stateWithStarter()
+    markSeen(s, POKEMON.Pidgey)
+    addPieces(s, POKEMON.Pidgey, SHINY_COMBINE_PIECES + 1)
+    const money = s.money
+    expect(combineShiny(s, POKEMON.Pidgey, seqRng(0.999))).toMatchObject({ kind: CombineKind.Unlock, shiny: true })
+    expect(s.owned.find((m) => m.speciesId === POKEMON.Pidgey)?.shiny).toBe(true)
+    expect(piecesOf(s, POKEMON.Pidgey)).toBe(1)
+    expect(s.money).toBe(money - createPrice(POKEMON.Pidgey))
+  })
+
+  it('no crea shiny seguro con menos tickets, si ya lo tienes ni en el tutorial', () => {
+    const s = stateWithStarter()
+    readyToCombine(s, POKEMON.Pidgey)
+    expect(shinyCombineBlocker(s, POKEMON.Pidgey)).toMatch(/tickets/)
+    expect(combineShiny(s, POKEMON.Pidgey)).toBeNull()
+    addPieces(s, POKEMON.Bulbasaur, SHINY_COMBINE_PIECES)
+    expect(combineShiny(s, POKEMON.Bulbasaur)).toBeNull()
+
+    const tutorial = initialState()
+    pickStarter(tutorial, POKEMON.Bulbasaur)
+    addPieces(tutorial, POKEMON.Bulbasaur, SHINY_COMBINE_PIECES)
+    expect(combineShiny(tutorial, POKEMON.Bulbasaur)).toBeNull()
   })
 })
 

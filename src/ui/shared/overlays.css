@@ -128,6 +128,18 @@
   font-size: 24px;
   text-shadow: 0 2px 0 #0008;
 }
+/* Etiqueta de Pokémon shiny (ficha y aparición) */
+.shiny-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffe680, #ffb3e6, #9fe0ff);
+  color: #3a2a00;
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: middle;
+}
 /* En los halos el Pokémon va centrado; en la ruta sigue apoyado en el suelo (alineación por defecto de .sprite) */
 .reveal-mon .sprite,
 .reward-icon .sprite {

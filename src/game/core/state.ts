@@ -33,6 +33,8 @@ export interface OwnedMon {
   spot: RanchSpot | null
   /** Ataques de incursión aprendidos con una MT (ver incursion/tms.ts): los tiene para siempre */
   tmMoves: Tm[]
+  /** Shiny (otros colores): sale al crearlo, por suerte o pagando tickets (ver collection/pieces.ts); lo conserva al evolucionar */
+  shiny: boolean
 }
 
 export interface RanchSpot {
@@ -193,7 +195,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 46
+export const SAVE_VERSION = 47
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 

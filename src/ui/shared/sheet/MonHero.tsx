@@ -43,6 +43,7 @@ export function MonHero({ mon, preview = null }: { mon: OwnedMon; preview?: Trai
             Nv. {shown.level}
           </span>
           {levelsUp && <span className="level-gain">+{preview.levelsGained}</span>}
+          {mon.shiny && <span className="shiny-tag">Shiny</span>}
         </>
       }
       footer={
@@ -56,7 +57,7 @@ export function MonHero({ mon, preview = null }: { mon: OwnedMon; preview?: Trai
     >
       <ExpArc progress={levelsUp ? 0 : shown.progress} preview={previewEnd} previewTip={levelsUp} label={`EXP ${mon.exp} de ${expToNext(mon.level)}`} />
       <span ref={spriteRef} className="level-up-jump">
-        <Sprite id={mon.speciesId} size={128} className="mon-hero-sprite idle-bounce" />
+        <Sprite id={mon.speciesId} size={128} className="mon-hero-sprite idle-bounce" shiny={mon.shiny} />
       </span>
       {leveledUp && <LevelUpBurst key={shown.level} level={shown.level} />}
     </HeroLayout>

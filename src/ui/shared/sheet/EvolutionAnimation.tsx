@@ -16,6 +16,8 @@ interface Props {
   intoId: number
   /** Si evoluciona, el de antes: empieza en color, se vuelve luz y alterna con la evolución. Sin él, sale de su silueta de luz */
   fromId?: number
+  /** Con los colores shiny (y el título lo dice) */
+  shiny?: boolean
   title: string
   name: string
   detail?: string
@@ -28,7 +30,7 @@ interface Props {
  * Aparición o evolución al estilo de los juegos: fondo oscuro, haces de luz, destellos, el Pokémon brillando en blanco y
  * un fogonazo que lo revela en color. Tocar durante la transformación la salta; después, cierra.
  */
-export function EvolutionAnimation({ intoId, fromId, title, name, detail, color, onClose }: Props) {
+export function EvolutionAnimation({ intoId, fromId, shiny = false, title, name, detail, color, onClose }: Props) {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const [revealed, setRevealed] = useState(reduced)
 
@@ -49,11 +51,11 @@ export function EvolutionAnimation({ intoId, fromId, title, name, detail, color,
         {!revealed && (
           <>
             <span className="evo-glow from">
-              <Sprite id={fromId ?? intoId} size={SPRITE_PX} animated={false} />
+              <Sprite id={fromId ?? intoId} size={SPRITE_PX} animated={false} shiny={shiny} />
             </span>
             {fromId && (
               <span className="evo-glow into">
-                <Sprite id={intoId} size={SPRITE_PX} animated={false} />
+                <Sprite id={intoId} size={SPRITE_PX} animated={false} shiny={shiny} />
               </span>
             )}
             {Array.from({ length: SPARKLES }, (_, i) => (
@@ -63,7 +65,7 @@ export function EvolutionAnimation({ intoId, fromId, title, name, detail, color,
         )}
         {revealed && (
           <span className="evo-final">
-            <Sprite id={intoId} size={SPRITE_PX} />
+            <Sprite id={intoId} size={SPRITE_PX} shiny={shiny} />
           </span>
         )}
       </div>
@@ -71,6 +73,7 @@ export function EvolutionAnimation({ intoId, fromId, title, name, detail, color,
         <div className="evo-text">
           <h2 className="reward-title">{title}</h2>
           <strong className="reveal-name">{name}</strong>
+          {shiny && <span className="shiny-tag">Shiny</span>}
           {detail && <span className="small">{detail}</span>}
           <span className="reward-hint small">Toca para continuar</span>
         </div>

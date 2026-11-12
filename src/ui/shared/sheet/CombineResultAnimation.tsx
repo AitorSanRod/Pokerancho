@@ -8,7 +8,8 @@ export function CombineResultAnimation({ result, onClose }: { result: CombineRes
   const sp = species(result.speciesId)
   const color = RARITY_INFO[rarityOf(sp)].color
   if (result.kind === CombineKind.Unlock) {
-    return <EvolutionAnimation intoId={result.speciesId} title="¡Llega al rancho!" name={sp.name} color={color} onClose={onClose} />
+    const title = result.shiny ? '¡Ha salido shiny!' : '¡Llega al rancho!'
+    return <EvolutionAnimation intoId={result.speciesId} shiny={result.shiny} title={title} name={sp.name} color={color} onClose={onClose} />
   }
   const star = result.kind === CombineKind.Star
   return (

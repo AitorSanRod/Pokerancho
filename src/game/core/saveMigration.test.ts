@@ -129,6 +129,13 @@ describe('al actualizar el juego no se pierde nada', () => {
     expect(migrateSave(saved)!.owned.every((m) => m.tmMoves.length === 0)).toBe(true)
   })
 
+  it('un Pokémon de antes de los shiny es normal; el shiny lo sigue siendo', () => {
+    const saved = fromOldVersion(advancedGame()) as { owned: Record<string, unknown>[] }
+    delete saved.owned[0].shiny
+    saved.owned[1] = { ...saved.owned[1], shiny: true }
+    expect(migrateSave(saved)!.owned.slice(0, 2).map((m) => m.shiny)).toEqual([false, true])
+  })
+
   it('un Pokémon de antes de las naturalezas (o con una que no existe) es neutro; el que tiene una la conserva', () => {
     const saved = fromOldVersion(advancedGame()) as { owned: Record<string, unknown>[] }
     const [, , kept] = Object.values(Nature)

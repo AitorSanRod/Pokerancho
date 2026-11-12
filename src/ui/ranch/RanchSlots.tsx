@@ -5,7 +5,7 @@ import { species } from '../../data/species'
 import { MonPlace, monPlace, type GameState } from '../../game/core/state'
 import { placedRanchType, ranchPassives } from '../../game/team/ranchPassives'
 import { ranchName } from '../../game/team/ranchNames'
-import { ranchCapacity, slotsOf, usedSlots } from '../../game/team/ranches'
+import { ranchCapacity, usedSlots } from '../../game/team/ranches'
 import { Sprite } from '../shared/common'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
@@ -68,11 +68,10 @@ export function RanchSlots({ game, ranch }: { game: GameState; ranch: number }) 
             {away.length > 0 && <div className="label">Fuera, guardando su hueco</div>}
             {away.map((m) => (
               <div key={m.uid} className="row gap small">
-                <Sprite id={m.speciesId} size={32} animated={false} />
+                <Sprite id={m.speciesId} size={32} animated={false} shiny={m.shiny} />
                 <span className="grow">{species(m.speciesId).name}</span>
                 <span className="tiny muted with-icon">
-                  <ItemIcon item={OUT_LABEL[monPlace(game, m.uid)]!.icon} size={16} /> {OUT_LABEL[monPlace(game, m.uid)]!.text} ·{' '}
-                  {slotsOf(m.speciesId)} esp.
+                  <ItemIcon item={OUT_LABEL[monPlace(game, m.uid)]!.icon} size={16} /> {OUT_LABEL[monPlace(game, m.uid)]!.text}
                 </span>
               </div>
             ))}

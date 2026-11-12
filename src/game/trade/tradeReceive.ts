@@ -35,8 +35,8 @@ export const duplicateRefund = (mon: TradedMon): DuplicateRefund => ({
 })
 
 /** Dónde se queda un Pokémon que llega: el primer rancho con sitio, la Caja (null) o ninguno (undefined) */
-function destinationOf(s: GameState, speciesId: number): number | null | undefined {
-  const ranch = ranchWithRoom(s, speciesId)
+function destinationOf(s: GameState): number | null | undefined {
+  const ranch = ranchWithRoom(s)
   if (ranch !== null) return ranch
   return boxedMons(s).length < BOX_SLOTS ? null : undefined
 }
@@ -44,7 +44,7 @@ function destinationOf(s: GameState, speciesId: number): number | null | undefin
 /** Por qué no se puede recoger aún (un Pokémon sin sitio en ningún rancho ni en la Caja); null si se puede */
 export function receiveBlocker(s: GameState, good: TradeGood): string | null {
   if (good.kind !== GoodKind.Mon || isDuplicate(s, good.mon.speciesId)) return null
-  return destinationOf(s, good.mon.speciesId) === undefined ? 'No hay sitio en los ranchos ni en la Caja.' : null
+  return destinationOf(s) === undefined ? 'No hay sitio en los ranchos ni en la Caja.' : null
 }
 
 /** Lo que ha entrado en la partida: lo recibido y, si era un Pokémon repetido, lo que se ha dado en su lugar */
@@ -60,7 +60,7 @@ function receiveMon(s: GameState, traded: TradedMon): DuplicateRefund | null {
     s.money += refund.money
     return refund
   }
-  const mon = { ...createMon(traded.speciesId, traded.level, destinationOf(s, traded.speciesId), traded.nature), exp: traded.exp, stars: traded.stars }
+  const mon = { ...createMon(traded.speciesId, traded.level, destinationOf(s), traded.nature, traded.shiny === true), exp: traded.exp, stars: traded.stars }
   mon.hp = maxHp(mon)
   mon.tmMoves = (traded.tmMoves ?? []).filter(isTm)
   s.owned.push(mon)

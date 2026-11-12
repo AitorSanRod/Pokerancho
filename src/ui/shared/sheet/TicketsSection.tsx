@@ -23,6 +23,7 @@ import { Bar } from '../common'
 import { ICON } from '../icons'
 import { TutorialHint } from '../TutorialHint'
 import { CombineResultAnimation } from './CombineResultAnimation'
+import { ShinyCombineAction } from './ShinyCombineAction'
 import { BigAction, MonSection } from './MonSheet'
 import { StepperAction } from './StepperAction'
 
@@ -74,6 +75,9 @@ export function TicketsSection({ game, speciesId }: { game: GameState; speciesId
         className={`${!blocker ? 'primary' : ''} ${guided ? 'tutorial-target' : ''}`}
         onClick={() => setResult(act((s) => combine(s, speciesId)))}
       />
+      {seen && kind === CombineKind.Unlock && game.tutorial !== TutorialStep.Combine && (
+        <ShinyCombineAction game={game} speciesId={speciesId} onCombined={setResult} />
+      )}
       <StepperAction
         icon={ICON.Shard}
         label={(n) => (n > 0 ? `Crear ${n} ${n === 1 ? 'ticket' : 'tickets'}` : `Crear tickets (tienes ${game.missingnoShards} trozos)`)}

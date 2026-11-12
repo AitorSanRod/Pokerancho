@@ -128,7 +128,7 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `game/team/stats.ts` | Fórmulas de stats, EXP y velocidad de paso |
 | `game/team/ranch.ts` | Acciones del rancho y descanso |
 | `game/team/ranches.ts` | Espacios de cada rancho, la Caja, traslados entre ellos y sitio arrastrado (`moveMon`, `placeMon`) |
-| `game/team/evolution.ts` | Evolucionar por nivel o piedra (`evolve`, `evolveBlocker`, `evolveDestination`, `evolvePrice`) |
+| `game/team/evolution.ts` | Evolucionar por nivel o piedra (`evolve`, `evolveBlocker`, `evolvePrice`) |
 | `game/team/stones.ts` | Comprar y gastar piedras evolutivas (`buyStone`, `spendStone`) |
 | `game/team/expedition.ts` | Expediciones por tiempo |
 | `game/team/upgrades.ts` | Mejoras de la pestaña Tienda (precios por nivel y compra) |

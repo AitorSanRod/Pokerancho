@@ -2,17 +2,20 @@ import { describe, expect, it } from 'vitest'
 import { RouteId } from '../../data/maps'
 import { PASSIVE_THRESHOLDS } from '../../data/passives'
 import { RANCH_TYPE_IDS, RANCH_TYPE_THRESHOLD_DISCOUNT, RANCH_TYPES } from '../../data/ranchTypes'
-import { Rarity, rarityOf, SPECIES } from '../../data/species'
+import { Rarity, RARITY_INFO, rarityOf, SPECIES } from '../../data/species'
 import type { PokeType } from '../../data/types'
 import { initialState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
 import { createMon, NEW_MON_LEVEL } from './mons'
-import { passiveThreshold, ranchPassives, ranchTypeCounts } from './ranchPassives'
+import { maxesPassives, passiveThreshold, passiveWeightOf, ranchPassives, ranchTypeCounts } from './ranchPassives'
 import { buyRanchType, placeRanchType } from './ranchTypes'
 
-/** Especie de un solo tipo, para que cada Pokémon sume exactamente 1 a ese tipo */
-const pureOf = (type: PokeType) => SPECIES.find((sp) => sp.types.length === 1 && sp.types[0] === type)!.id
-const DUAL = SPECIES.find((sp) => sp.types.length === 2)!
+const isCommon = (sp: (typeof SPECIES)[number]) => rarityOf(sp) === Rarity.Common
+/** Especie común de un solo tipo, para que cada Pokémon sume exactamente 1 a ese tipo */
+const pureOf = (type: PokeType) => SPECIES.find((sp) => isCommon(sp) && sp.types.length === 1 && sp.types[0] === type)!.id
+const DUAL = SPECIES.find((sp) => isCommon(sp) && sp.types.length === 2)!
+/** Una especie de un solo tipo para cada rareza que no es legendaria */
+const PURE_BY_RARITY = [Rarity.Common, Rarity.Rare, Rarity.Epic].map((r) => SPECIES.find((sp) => rarityOf(sp) === r && sp.types.length === 1)!)
 const [LEVEL_1, LEVEL_2] = PASSIVE_THRESHOLDS
 
 /** Rancho 0 con `count` Pokémon de un solo tipo (el primero es el activo) */
@@ -37,6 +40,15 @@ describe('ranchTypeCounts', () => {
     s.owned.push(createMon(pureOf('normal'), NEW_MON_LEVEL, 1))
     expect(ranchTypeCounts(s, 0).normal).toBe(3)
   })
+
+  it('cada uno cuenta lo de su rareza', () => {
+    for (const sp of PURE_BY_RARITY) {
+      const s = initialState()
+      chooseStarter(s, sp.id)
+      expect(passiveWeightOf(sp.id)).toBe(RARITY_INFO[rarityOf(sp)].passiveWeight)
+      expect(ranchTypeCounts(s, 0)[sp.types[0]]).toBe(passiveWeightOf(sp.id))
+    }
+  })
 })
 
 describe('ranchPassives', () => {
@@ -57,7 +69,7 @@ describe('ranchPassives', () => {
   })
 
   it('un legendario sube él solo la pasiva de sus tipos al nivel máximo, y no las de otros tipos', () => {
-    const legendary = SPECIES.find((sp) => rarityOf(sp) === Rarity.Legendary)!
+    const legendary = SPECIES.find((sp) => maxesPassives(sp.id))!
     const other = (['normal', 'fire', 'water', 'grass'] as PokeType[]).find((t) => !legendary.types.includes(t))!
     const s = ranchWith(other, 1)
     s.owned.push(createMon(legendary.id, NEW_MON_LEVEL))

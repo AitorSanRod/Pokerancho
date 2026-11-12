@@ -12,7 +12,8 @@ const plural = (n: number, one: string, many: string) => `${amount(n)} ${n === 1
 export function goodText(good: TradeGood): string {
   if (good.kind === GoodKind.Mon) {
     const stars = good.mon.stars > 0 ? ` ${'★'.repeat(good.mon.stars)}` : ''
-    return `${species(good.mon.speciesId).name} Nv. ${good.mon.level}${stars}`
+    const shiny = good.mon.shiny ? ' shiny' : ''
+    return `${species(good.mon.speciesId).name}${shiny} Nv. ${good.mon.level}${stars}`
   }
   if (good.kind === GoodKind.Pieces) return `${plural(good.count, 'ticket', 'tickets')} de ${species(good.speciesId).name}`
   if (good.kind === GoodKind.StarItem) return plural(good.count, STAR_ITEMS[good.item].name, STAR_ITEMS[good.item].plural)

@@ -7,7 +7,7 @@ import { initialState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
 import { evolve, evolveBlocker, evolvePrice } from './evolution'
 import { createMon, NEW_MON_LEVEL } from './mons'
-import { RANCH_SLOTS, slotsOf, usedSlots } from './ranches'
+import { RANCH_SLOTS, usedSlots } from './ranches'
 import { maxHp } from './stats'
 import { stonesOf } from './stones'
 
@@ -19,8 +19,6 @@ const BY_LEVEL = firstEvolution((_, e) => e.level !== undefined)!
 const BY_STONE = firstEvolution((_, e) => e.stone !== undefined)
 /** Una evolución por nivel a una especie que pide objeto estelar */
 const TO_STAR_ITEM = firstEvolution((_, e) => e.level !== undefined && starItemFor(e.into) !== null)
-/** Una evolución por nivel que ocupa más espacios del rancho que el de antes */
-const GROWING = firstEvolution((from, e) => e.level !== undefined && slotsOf(e.into) > slotsOf(from))
 const BRANCHING = EVOLVING_SPECIES.find((id) => evolutionsOf(id).length > 1)
 
 const FROM = BY_LEVEL.from
@@ -43,7 +41,7 @@ function stateReady(from = FROM, level = LEVEL, into = INTO) {
 
 /** Llena el rancho del Pokémon con otros que no son su evolución */
 function fillRanch(s: ReturnType<typeof stateReady>['s'], ranch: number, avoid: number) {
-  const filler = SPECIES.find((sp) => sp.id !== avoid && slotsOf(sp.id) === 1)!.id
+  const filler = SPECIES.find((sp) => sp.id !== avoid)!.id
   while (usedSlots(s, ranch) < RANCH_SLOTS) s.owned.push(createMon(filler, NEW_MON_LEVEL, ranch))
 }
 
@@ -51,11 +49,18 @@ describe('evolve', () => {
   it('al llegar a su nivel cambia de especie: conserva nivel, EXP y uid, pierde las ★ y queda con todos sus PS', () => {
     const { s, mon } = stateReady()
     const uid = mon.uid
-    expect(evolve(s, uid, INTO)).toEqual({ fromId: FROM, intoId: INTO, destination: mon.ranch })
+    expect(evolve(s, uid, INTO)).toEqual({ fromId: FROM, intoId: INTO })
     expect(s.owned).toHaveLength(1)
     expect(s.owned[0]).toMatchObject({ uid, speciesId: INTO, level: LEVEL, exp: 3, stars: 0 })
     expect(s.owned[0].hp).toBe(maxHp(s.owned[0]))
     expect(s.activeUid).toBe(uid)
+  })
+
+  it('un shiny sigue siéndolo al evolucionar', () => {
+    const { s, mon } = stateReady()
+    mon.shiny = true
+    evolve(s, mon.uid, INTO)
+    expect(s.owned[0].shiny).toBe(true)
   })
 
   it('en la Pokédex la especie de antes sigue como capturada', () => {
@@ -94,23 +99,21 @@ describe('evolve', () => {
     expect(evolveBlocker(s, mon.uid, INTO)).toMatch(/rancho/)
   })
 
-  it('en la Caja evoluciona y se queda en ella aunque los ranchos estén llenos', () => {
+  it('evoluciona aunque su rancho esté lleno y se queda en él, en el mismo sitio', () => {
     const { s, mon } = stateReady()
     fillRanch(s, mon.ranch!, INTO)
-    mon.ranch = null
-    s.activeUid = s.owned[1].uid
-    expect(evolve(s, mon.uid, INTO)?.destination).toBeNull()
-    expect(mon.ranch).toBeNull()
+    mon.spot = { x: 30, y: 40 }
+    expect(evolve(s, mon.uid, INTO)).not.toBeNull()
+    expect(mon).toMatchObject({ ranch: 0, spot: { x: 30, y: 40 } })
   })
 
-  it.runIf(GROWING)('si no cabe en su rancho va al primero con hueco, y si no cabe en ninguno no evoluciona', () => {
-    const { from, evo } = GROWING!
-    const { s, mon } = stateReady(from, evo.level!, evo.into)
-    fillRanch(s, mon.ranch!, evo.into)
-    expect(evolveBlocker(s, mon.uid, evo.into)).toMatch(/ningún rancho/)
-    s.upgrades.ranches = 1
-    expect(evolve(s, mon.uid, evo.into)?.destination).toBe(1)
-    expect(mon).toMatchObject({ ranch: 1, spot: null })
+  it('en la Caja evoluciona y se queda en ella', () => {
+    const { s, mon } = stateReady()
+    s.owned.push(createMon(NOT_INTO, NEW_MON_LEVEL))
+    mon.ranch = null
+    s.activeUid = s.owned[1].uid
+    evolve(s, mon.uid, INTO)
+    expect(mon.ranch).toBeNull()
   })
 
   it.runIf(BY_STONE)('por piedra evoluciona a cualquier nivel gastando la piedra y pagando su rareza', () => {

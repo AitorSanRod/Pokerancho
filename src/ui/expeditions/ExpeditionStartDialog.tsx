@@ -46,7 +46,7 @@ export function ExpeditionStartDialog({ game, route: r, mons, onClose }: Props) 
     <div className="confirm-overlay" onClick={onClose}>
       <div className="card route-start" role="dialog" aria-modal="true" aria-label={`Expedición a ${r.name}`} onClick={(e) => e.stopPropagation()}>
         <HeroLayout compact scenery={BIOME_SCENERY[r.biome]} name={r.name} subtitle={`Nv. ${r.levels[0]}–${r.levels[1]}`}>
-          <Sprite key={mon.uid} id={mon.speciesId} size={96} className="mon-hero-sprite idle-bounce" />
+          <Sprite key={mon.uid} id={mon.speciesId} size={96} className="mon-hero-sprite idle-bounce" shiny={mon.shiny} />
         </HeroLayout>
         <div className="route-start-body">
           <div className="label">¿Quién va?</div>

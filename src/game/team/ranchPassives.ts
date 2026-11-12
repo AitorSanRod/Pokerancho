@@ -1,14 +1,23 @@
 import { PASSIVE_THRESHOLDS, type PassiveLevel, type PassiveRef } from '../../data/passives'
 import { RANCH_TYPE_THRESHOLD_DISCOUNT, RANCH_TYPES } from '../../data/ranchTypes'
-import { Rarity, rarityOf, species } from '../../data/species'
+import { Rarity, RARITY_INFO, rarityOf, species } from '../../data/species'
 import type { PokeType } from '../../data/types'
 import type { GameState } from '../core/state'
 
-/** Pokémon del rancho por tipo: cuentan todos los que pertenecen a él, estén donde estén; los de dos tipos, en ambos */
+/** Cuántos Pokémon de su tipo cuenta la especie para las pasivas, según su rareza (`RARITY_INFO.passiveWeight`) */
+export const passiveWeightOf = (speciesId: number): number => RARITY_INFO[rarityOf(species(speciesId))].passiveWeight
+
+/** Si la especie sube ella sola las pasivas de sus tipos al máximo (los legendarios) */
+export const maxesPassives = (speciesId: number): boolean => rarityOf(species(speciesId)) === Rarity.Legendary
+
+/**
+ * Pokémon del rancho por tipo, cada uno con el peso de su rareza: cuentan todos los que pertenecen a él, estén donde
+ * estén; los de dos tipos, en ambos
+ */
 export function ranchTypeCounts(s: GameState, ranch: number): Partial<Record<PokeType, number>> {
   const counts: Partial<Record<PokeType, number>> = {}
   for (const m of s.owned.filter((m) => m.ranch === ranch)) {
-    for (const t of species(m.speciesId).types) counts[t] = (counts[t] ?? 0) + 1
+    for (const t of species(m.speciesId).types) counts[t] = (counts[t] ?? 0) + passiveWeightOf(m.speciesId)
   }
   return counts
 }
@@ -25,7 +34,7 @@ export function passiveThreshold(s: GameState, ranch: number, type: PokeType, le
 
 /** Tipos de los legendarios del rancho: cada legendario sube él solo la pasiva de sus tipos al nivel máximo */
 export function legendaryTypes(s: GameState, ranch: number): Set<PokeType> {
-  const legendaries = s.owned.filter((m) => m.ranch === ranch && rarityOf(species(m.speciesId)) === Rarity.Legendary)
+  const legendaries = s.owned.filter((m) => m.ranch === ranch && maxesPassives(m.speciesId))
   return new Set(legendaries.flatMap((m) => species(m.speciesId).types))
 }
 

@@ -22,6 +22,7 @@ interface Floater {
 export function WalkScene({
   biome,
   speciesId,
+  shiny = false,
   moving,
   speed,
   walkerClass = '',
@@ -32,6 +33,8 @@ export function WalkScene({
 }: {
   biome: Biome
   speciesId?: number
+  /** El Pokémon que camina, con los colores shiny */
+  shiny?: boolean
   moving: boolean
   speed: number
   /** Animación del Pokémon (p. ej. al atacar en un combate) */
@@ -68,7 +71,7 @@ export function WalkScene({
       {speciesId !== undefined && (
         <div className={`scene-walker ${walkerClass}`}>
           <div className="scene-shadow" />
-          <Sprite id={speciesId} size={128} />
+          <Sprite id={speciesId} size={128} shiny={shiny} />
         </div>
       )}
       <canvas ref={front} className="scene-canvas front" />

@@ -28,6 +28,8 @@ interface BackedUpMon {
   stars: number
   /** Las copias de antes de las naturalezas no la tienen: neutra */
   nature?: Nature
+  /** Las copias de antes de los shiny no lo tienen: normal */
+  shiny?: boolean
   /** Rancho al que pertenece, o null si está en la Caja */
   ranch: number | null
 }
@@ -60,7 +62,7 @@ export function backupTeam(s: GameState): TeamBackup {
   return {
     format: TEAM_BACKUP_FORMAT,
     activeIndex: active >= 0 ? active : null,
-    mons: s.owned.map(({ speciesId, level, exp, stars, nature, ranch }) => ({ speciesId, level, exp, stars, nature, ranch })),
+    mons: s.owned.map(({ speciesId, level, exp, stars, nature, ranch, shiny }) => ({ speciesId, level, exp, stars, nature, ranch, shiny })),
     expeditions: s.expeditions
       .map(({ uid, routeId, durationMin, elapsedMin }) => ({ monIndex: indexOf(uid), routeId, durationMin, elapsedMin }))
       .filter((e) => e.monIndex >= 0),
@@ -123,6 +125,7 @@ export function parseTeamBackup(raw: unknown): TeamBackup | null {
       isInt(m.exp, 0, Number.MAX_SAFE_INTEGER) &&
       isInt(m.stars, 0, MAX_STARS) &&
       (m.nature === undefined || isNature(m.nature)) &&
+      (m.shiny === undefined || typeof m.shiny === 'boolean') &&
       (m.ranch === null || isInt(m.ranch, 0, MAX_RANCHES - 1)),
   )
   // Si se descartó alguno, las posiciones (del activo y de las expediciones) ya no son fiables
@@ -146,7 +149,7 @@ export function parseTeamBackup(raw: unknown): TeamBackup | null {
 export function restoreTeam(s: GameState, backup: TeamBackup) {
   if (s.owned.length > 0 || backup.mons.length === 0) return
   for (const saved of backup.mons) {
-    const mon = createMon(saved.speciesId, saved.level, saved.ranch, saved.nature)
+    const mon = createMon(saved.speciesId, saved.level, saved.ranch, saved.nature, saved.shiny)
     mon.exp = Math.min(saved.exp, expToNext(saved.level) - 1)
     mon.stars = saved.stars
     s.owned.push(mon)

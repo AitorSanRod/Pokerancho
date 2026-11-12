@@ -30,6 +30,8 @@ export interface TradedMon {
   nature?: Nature
   /** Lo aprendido con MTs: se lo lleva. Puede faltar en lo anunciado antes de que existieran */
   tmMoves?: Tm[]
+  /** Si es shiny; puede faltar en lo anunciado antes de que existieran */
+  shiny?: boolean
 }
 
 /** Cantidades sueltas: trozos de MissingNo, dinero o tickets de gacha */

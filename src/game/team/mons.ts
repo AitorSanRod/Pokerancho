@@ -11,6 +11,6 @@ const FIRST_RANCH = 0
 const newUid = () => Math.random().toString(36).slice(2, 10)
 
 /** Un Pokémon nuevo del equipo, con los PS al máximo; la naturaleza al azar la elige quien lo crea (`randomNature`) */
-export function createMon(speciesId: number, level: number, ranch: number | null = FIRST_RANCH, nature: Nature = NEUTRAL_NATURE): OwnedMon {
-  return { uid: newUid(), speciesId, level, exp: 0, hp: calcStats(speciesId, level).hp, stars: 0, nature, ranch, spot: null, tmMoves: [] }
+export function createMon(speciesId: number, level: number, ranch: number | null = FIRST_RANCH, nature: Nature = NEUTRAL_NATURE, shiny = false): OwnedMon {
+  return { uid: newUid(), speciesId, level, exp: 0, hp: calcStats(speciesId, level).hp, stars: 0, nature, ranch, spot: null, tmMoves: [], shiny }
 }

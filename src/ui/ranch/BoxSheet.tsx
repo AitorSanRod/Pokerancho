@@ -33,7 +33,7 @@ export function BoxSheet({ game }: { game: GameState }) {
               onClick={() => setSelectedUid(mon.uid)}
               aria-label={`${species(mon.speciesId).name} Nv. ${mon.level}`}
             >
-              <Sprite id={mon.speciesId} size={56} animated={false} />
+              <Sprite id={mon.speciesId} size={56} animated={false} shiny={mon.shiny} />
               <span className="tiny">Nv. {mon.level}</span>
             </button>
           )

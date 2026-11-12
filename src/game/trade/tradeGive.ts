@@ -27,7 +27,7 @@ export function givableMons(s: GameState): OwnedMon[] {
 }
 
 /** El Pokémon tal como sale en un intercambio: en la forma normal de su especie (los objetos de forma no se dan) */
-export const tradedMon = (m: OwnedMon): TradedMon => ({ speciesId: baseSpeciesOf(m.speciesId), level: m.level, exp: m.exp, stars: m.stars, nature: m.nature, tmMoves: [...m.tmMoves] })
+export const tradedMon = (m: OwnedMon): TradedMon => ({ speciesId: baseSpeciesOf(m.speciesId), level: m.level, exp: m.exp, stars: m.stars, nature: m.nature, tmMoves: [...m.tmMoves], shiny: m.shiny })
 
 /** Quita el Pokémon de la partida si se puede dar y devuelve cómo viaja */
 export function takeMon(s: GameState, uid: string): TradedMon | null {

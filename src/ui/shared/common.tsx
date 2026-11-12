@@ -20,6 +20,7 @@ export function Sprite({
   size = 96,
   className = '',
   silhouette = false,
+  shiny = false,
 }: {
   id: number
   back?: boolean
@@ -27,14 +28,16 @@ export function Sprite({
   size?: number
   className?: string
   silhouette?: boolean
+  /** Con los colores shiny */
+  shiny?: boolean
 }) {
   // Si el GIF animado no existe o falla, se usa el sprite estático
   const [fallback, setFallback] = useState(!animated)
   // Tamaño real de la imagen cargada; hasta saberlo no se muestra, para que no salte de tamaño
   const [natural, setNatural] = useState<{ src: string; w: number; h: number } | null>(null)
   const src = fallback
-    ? back ? sprite.back(id) : sprite.front(id)
-    : back ? sprite.animatedBack(id) : sprite.animated(id)
+    ? back ? sprite.back(id, shiny) : sprite.front(id, shiny)
+    : back ? sprite.animatedBack(id, shiny) : sprite.animated(id, shiny)
   const scale = size / SPRITE_CANVAS
   const loaded = natural?.src === src ? natural : null
 

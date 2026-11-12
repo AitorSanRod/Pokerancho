@@ -55,6 +55,7 @@ export const ITEM = {
   Revive: 'revive',
   TmNormal: 'tm-normal',
   SeriousMint: 'serious-mint',
+  ShinyCharm: 'shiny-charm',
 } as const
 export type Item = (typeof ITEM)[keyof typeof ITEM]
 

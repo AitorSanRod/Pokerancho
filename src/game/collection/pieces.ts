@@ -18,6 +18,10 @@ export const PIECES_PER_COMBINE = 5
  * último, la de MAX_STARS (crear el Pokémon cuesta según su rareza: `RARITY_INFO.createPrice`)
  */
 export const STAR_PRICES = [200, 500, 1000, 1500, 2500]
+/** Probabilidad (0–1) de que un Pokémon salga shiny al crearlo con las piezas de siempre */
+export const SHINY_CHANCE = 0.05
+/** Tickets de la especie que se gastan en vez de PIECES_PER_COMBINE para crearlo shiny seguro (mismo ₽ y objeto estelar) */
+export const SHINY_COMBINE_PIECES = 500
 
 /** Qué da combinar: el Pokémon si no lo tienes, una ★ si la admite y, con ★ al máximo, pokécuartos */
 export const CombineKind = { Unlock: 'unlock', Star: 'star', Money: 'money' } as const
@@ -29,6 +33,8 @@ export interface CombineResult {
   level?: number
   /** La naturaleza con la que sale al crearlo */
   nature?: Nature
+  /** Si ha salido shiny al crearlo */
+  shiny?: boolean
   stars?: number
   money?: number
 }
@@ -70,7 +76,7 @@ export function combineBlocker(s: GameState, speciesId: number): string | null {
   if (s.money < combinePrice(s, speciesId)) return `Necesitas ₽ ${combinePrice(s, speciesId)}.`
   const missingItem = combineStarItem(s, speciesId) && starItemBlocker(s, speciesId)
   if (missingItem) return missingItem
-  if (combineKind(s, speciesId) === CombineKind.Unlock && ranchWithRoom(s, speciesId) === null)
+  if (combineKind(s, speciesId) === CombineKind.Unlock && ranchWithRoom(s) === null)
     return 'No cabe en ningún rancho: libera espacio o guarda Pokémon en la Caja.'
   return null
 }
@@ -86,23 +92,46 @@ export const combinableIds = (s: GameState): number[] =>
 
 export const combinableCount = (s: GameState): number => combinableIds(s).length
 
-export function combine(s: GameState, speciesId: number, rng: Rng = Math.random): CombineResult | null {
-  if (!canCombine(s, speciesId)) return null
-  const kind = combineKind(s, speciesId)
+/** Pone el Pokémon nuevo en el equipo (ya pagado) y lo marca como capturado */
+function createOwned(s: GameState, speciesId: number, shiny: boolean, rng: Rng): CombineResult {
+  const mon = createMon(speciesId, NEW_MON_LEVEL, ranchWithRoom(s), randomNature(rng), shiny)
+  s.owned.push(mon)
+  markCaught(s, speciesId)
+  // El primer Pokémon (el inicial del tutorial) sale directamente como activo
+  s.activeUid ??= mon.uid
+  if (s.tutorial === TutorialStep.Combine) s.tutorial = TutorialStep.Route
+  return { kind: CombineKind.Unlock, speciesId, level: mon.level, nature: mon.nature, shiny }
+}
+
+/** Paga lo que cuesta combinar (₽ y objeto estelar si lo pide) y gasta los tickets */
+function payCombine(s: GameState, speciesId: number, pieces: number) {
   const item = combineStarItem(s, speciesId)
   if (item) spendStarItem(s, item)
   s.money -= combinePrice(s, speciesId)
-  s.pieces[speciesId] -= PIECES_PER_COMBINE
+  s.pieces[speciesId] -= pieces
+}
 
-  if (kind === CombineKind.Unlock) {
-    const mon = createMon(speciesId, NEW_MON_LEVEL, ranchWithRoom(s, speciesId), randomNature(rng))
-    s.owned.push(mon)
-    markCaught(s, speciesId)
-    // El primer Pokémon (el inicial del tutorial) sale directamente como activo
-    s.activeUid ??= mon.uid
-    if (s.tutorial === TutorialStep.Combine) s.tutorial = TutorialStep.Route
-    return { kind, speciesId, level: mon.level, nature: mon.nature }
-  }
+/** Por qué no se puede crear shiny seguro (null si se puede): solo al crearlo, fuera del tutorial y con sus tickets */
+export function shinyCombineBlocker(s: GameState, speciesId: number): string | null {
+  if (combineKind(s, speciesId) !== CombineKind.Unlock) return 'Solo se puede al crearlo.'
+  if (s.tutorial === TutorialStep.Combine) return 'Termina antes el tutorial.'
+  if (piecesOf(s, speciesId) < SHINY_COMBINE_PIECES) return `Faltan tickets: tienes ${piecesOf(s, speciesId)} de ${SHINY_COMBINE_PIECES}.`
+  return combineBlocker(s, speciesId)
+}
+
+/** Crea el Pokémon shiny seguro gastando SHINY_COMBINE_PIECES tickets en vez de los de siempre */
+export function combineShiny(s: GameState, speciesId: number, rng: Rng = Math.random): CombineResult | null {
+  if (shinyCombineBlocker(s, speciesId)) return null
+  payCombine(s, speciesId, SHINY_COMBINE_PIECES)
+  return createOwned(s, speciesId, true, rng)
+}
+
+export function combine(s: GameState, speciesId: number, rng: Rng = Math.random): CombineResult | null {
+  if (!canCombine(s, speciesId)) return null
+  const kind = combineKind(s, speciesId)
+  payCombine(s, speciesId, PIECES_PER_COMBINE)
+
+  if (kind === CombineKind.Unlock) return createOwned(s, speciesId, rng() < SHINY_CHANCE, rng)
   if (kind === CombineKind.Star) {
     const mon = ownedOfSpecies(s, speciesId)!
     mon.stars++

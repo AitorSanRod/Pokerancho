@@ -48,6 +48,7 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
         biome={r.biome}
         // En la pelea del jefe comunitario el Pokémon va con el grupo, no caminando (mientras se busca sala, espera solo)
         speciesId={routeRaid && !searching ? undefined : mon.speciesId}
+        shiny={mon.shiny}
         moving={walking}
         speed={Math.min(1.8, Math.max(0.6, spm / 22))}
         walkerClass={battle && frame ? `battling ${playerClass} ${statusClass(frame.event.playerStatus)}` : run.heal ? 'healing' : ''}

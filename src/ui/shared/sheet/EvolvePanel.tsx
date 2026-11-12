@@ -6,8 +6,7 @@ import { STONES } from '../../../data/stones'
 import { starItemFor, starItemsOf } from '../../../game/collection/starItems'
 import type { GameState, OwnedMon } from '../../../game/core/state'
 import { act } from '../../../game/core/store'
-import { evolve, evolveBlocker, evolveDestination, evolvePrice, type EvolveResult } from '../../../game/team/evolution'
-import { ranchName } from '../../../game/team/ranchNames'
+import { evolve, evolveBlocker, evolvePrice, type EvolveResult } from '../../../game/team/evolution'
 import { stonesOf } from '../../../game/team/stones'
 import { ConfirmDialog } from '../ConfirmDialog'
 import { ICON } from '../icons'
@@ -35,7 +34,7 @@ export function EvolvePanel({ game, mon, onEvolved }: { game: GameState; mon: Ow
       </div>
       {pendingId !== null && (
         <ConfirmDialog title={`¿Evolucionar a ${species(pendingId).name}?`} confirmLabel="Evolucionar" onConfirm={() => confirm(pendingId)} onCancel={() => setPendingId(null)}>
-          <p className="small confirm-text">{confirmText(game, mon, pendingId)}</p>
+          <p className="small confirm-text">{confirmText(mon, pendingId)}</p>
         </ConfirmDialog>
       )}
     </MonSection>
@@ -64,21 +63,13 @@ function EvolveOption({ game, mon, evo, onPick }: { game: GameState; mon: OwnedM
   )
 }
 
-function confirmText(game: GameState, mon: OwnedMon, intoId: number): string {
+function confirmText(mon: OwnedMon, intoId: number): string {
   const name = species(mon.speciesId).name
   const stone = evolutionTo(mon.speciesId, intoId)?.stone
   const item = starItemFor(intoId)
   const parts = [`₽ ${evolvePrice(intoId)}`, stone && `una ${STONES[stone].name}`, item && `un ${STAR_ITEMS[item].name}`].filter(Boolean)
   const cost = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} y ${parts.at(-1)}` : parts[0]
-  const destination = evolveDestination(game, mon, intoId)
-  const moves = destination !== undefined && destination !== null && destination !== mon.ranch
-  return [
-    `${name} evolucionará a ${species(intoId).name}: conserva su nivel y su EXP, pierde sus ★. Cuesta ${cost}.`,
-    moves ? `En su rancho no cabe: irá a ${ranchName(game, destination)}.` : '',
-    `En la Pokédex, ${name} volverá a quedar solo como visto.`,
-  ]
-    .filter(Boolean)
-    .join(' ')
+  return `${name} evolucionará a ${species(intoId).name}: conserva su nivel y su EXP, pierde sus ★. Cuesta ${cost}. En la Pokédex, ${name} volverá a quedar solo como visto.`
 }
 
 /** El objeto estelar que pide la evolución y cuántos hay; null si no pide ninguno */

@@ -16,7 +16,7 @@ import { MonHero } from './MonHero'
 import { MonOverview } from './MonOverview'
 import { MonSheet } from './MonSheet'
 import { MovePanel } from './MovePanel'
-import { RanchSlotsBadge } from './RanchSlotsBadge'
+import { PassiveWeightBadge } from './PassiveWeightBadge'
 import { SpeciesHero } from './SpeciesHero'
 import { TicketsSection } from './TicketsSection'
 import { TmPanel } from './TmPanel'
@@ -30,11 +30,12 @@ export function PokemonSheet({ game, speciesId: shownId, onClose }: { game: Game
   const speciesId = baseSpeciesOf(shownId)
   // Sesiones de entrenamiento elegidas sin aceptar: se ven en el arco de EXP antes de pagarlas
   const [sessions, setSessions] = useState(0)
-  const [evolution, setEvolution] = useState<EvolveResult | null>(null)
+  // Tras evolucionar ya no se encuentra por la especie de antes: se guarda si era shiny para la animación
+  const [evolution, setEvolution] = useState<{ result: EvolveResult; shiny: boolean } | null>(null)
   const mon = ownedOfSpecies(game, speciesId)
   const plan = mon && sessions > 0 ? trainPlan(mon, sessions) : null
 
-  if (evolution) return <EvolveResultAnimation result={evolution} onClose={onClose} />
+  if (evolution) return <EvolveResultAnimation result={evolution.result} shiny={evolution.shiny} onClose={onClose} />
 
   const hero = mon ? (
     <MonHero mon={mon} preview={plan} />
@@ -46,13 +47,13 @@ export function PokemonSheet({ game, speciesId: shownId, onClose }: { game: Game
         topLeft: mon && <CompanionButton game={game} mon={mon} />,
         topRight: <FavoriteButton game={game} speciesId={speciesId} />,
         bottomLeft: mon && <HealButton game={game} mon={mon} />,
-        bottomRight: isSeen(game, speciesId) && <RanchSlotsBadge speciesId={speciesId} />,
+        bottomRight: isSeen(game, speciesId) && <PassiveWeightBadge speciesId={speciesId} />,
       }}
       onClose={onClose}>
       <MonOverview game={game} speciesId={speciesId} mon={mon} previewLevel={plan && plan.levelsGained > 0 ? plan.level : null} />
       {mon && <CareSection game={game} mon={mon} sessions={sessions} onSessionsChange={setSessions} />}
       <TicketsSection game={game} speciesId={speciesId} />
-      {mon && <EvolvePanel game={game} mon={mon} onEvolved={setEvolution} />}
+      {mon && <EvolvePanel game={game} mon={mon} onEvolved={(result) => setEvolution({ result, shiny: mon.shiny })} />}
       {mon && <FormPanel game={game} mon={mon} />}
       {mon && <TmPanel game={game} mon={mon} />}
       {mon && <MintPanel game={game} mon={mon} />}

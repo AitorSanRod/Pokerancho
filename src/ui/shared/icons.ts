@@ -58,4 +58,6 @@ export const ICON = {
   Revive: ITEM.Revive,
   /** Participante de una sala que no es un jugador */
   Bot: ITEM.PokeDoll,
+  /** Crear un Pokémon shiny seguro */
+  Shiny: ITEM.ShinyCharm,
 } as const

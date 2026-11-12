@@ -40,7 +40,7 @@ export function ExpeditionList({ game }: { game: GameState }) {
         const left = (e.durationMin - e.elapsedMin) / game.timeScale
         return (
           <RouteRow key={e.uid} route={route(e.routeId)}>
-            <Sprite id={mon.speciesId} size={56} animated={false} />
+            <Sprite id={mon.speciesId} size={56} animated={false} shiny={mon.shiny} />
             <span className="grow small expedition-info">
               <strong>
                 {name} <span className="muted">Nv. {mon.level}</span>
@@ -74,7 +74,7 @@ export function ExpeditionList({ game }: { game: GameState }) {
           onCancel={() => setCancellingUid(null)}
         >
           <div className="row gap">
-            <Sprite id={cancelling.speciesId} size={64} animated={false} />
+            <Sprite id={cancelling.speciesId} size={64} animated={false} shiny={cancelling.shiny} />
             <p className="small confirm-text">
               {species(cancelling.speciesId).name} volverá al rancho ahora y <strong>no ganará nada</strong> de esta expedición: ni EXP, ni
               ₽, ni tickets.

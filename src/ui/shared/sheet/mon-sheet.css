@@ -34,8 +34,8 @@
   bottom: 36px;
   right: 14px;
 }
-/* Espacios que ocupa en el rancho: círculo pequeño con borde y número en blanco */
-.ranch-slots-badge {
+/* Cuánto cuenta para las pasivas del rancho: círculo pequeño con borde y número en blanco */
+.passive-weight-badge {
   display: grid;
   place-items: center;
   width: 28px;
@@ -49,6 +49,9 @@
   line-height: 1;
   text-shadow: 0 1px 2px #000a;
   box-shadow: 0 2px 6px #0004;
+}
+.passive-weight-badge.maxed {
+  font-size: 9px;
 }
 /* Botones redondos de las esquinas de la cabecera: corazón de favorito, Poké Ball de compañero y poción de curar */
 .favorite-button,

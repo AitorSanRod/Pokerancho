@@ -3,10 +3,10 @@ import { initialState } from '../core/state'
 import { buyRanchExpansion, expandableRanches, expansionBlocker, RANCH_EXPANSION_MAX, RANCH_EXPANSION_PRICE, RANCH_EXPANSION_SLOTS } from './ranchExpansion'
 import { SPECIES } from '../../data/species'
 import { createMon, NEW_MON_LEVEL } from './mons'
-import { fitsInRanch, RANCH_SLOTS, ranchCapacity, slotsOf, usedSlots } from './ranches'
+import { fitsInRanch, RANCH_SLOTS, ranchCapacity, usedSlots } from './ranches'
 import { buyUpgrade, UPGRADES } from './upgrades'
 
-const ONE_SLOT = SPECIES.find((sp) => slotsOf(sp.id) === 1)!.id
+const ONE_SLOT = SPECIES[0].id
 
 const richState = (times = 1) => {
   const s = initialState()
@@ -45,9 +45,9 @@ describe('Ampliación de rancho', () => {
   it('en un rancho lleno vuelven a caber Pokémon al ampliarlo', () => {
     const s = richState()
     while (usedSlots(s, 0) < RANCH_SLOTS) s.owned.push(createMon(ONE_SLOT, NEW_MON_LEVEL))
-    expect(fitsInRanch(s, 0, ONE_SLOT)).toBe(false)
+    expect(fitsInRanch(s, 0)).toBe(false)
     buyRanchExpansion(s, 0)
-    expect(fitsInRanch(s, 0, ONE_SLOT)).toBe(true)
+    expect(fitsInRanch(s, 0)).toBe(true)
   })
 
   it('sin dinero o en un rancho que no es suyo no se compra nada', () => {

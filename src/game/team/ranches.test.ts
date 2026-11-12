@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { RouteId } from '../../data/maps'
-import { SPECIES } from '../../data/species'
+import { Rarity, rarityOf, SPECIES } from '../../data/species'
 import { initialState, MonPlace, monPlace } from '../core/state'
 import { chooseStarter, seqRng } from '../core/test-utils'
 import { startRun } from '../run/run'
 import { createMon, NEW_MON_LEVEL } from './mons'
-import { BOX_SLOTS, boxedMons, fitsInRanch, moveBlocker, moveMon, placeMon, RANCH_SLOTS, ranchCapacity, ranchCount, ranchWithRoom, rehomeOverflow, slotsOf, usedSlots } from './ranches'
+import { BOX_SLOTS, boxedMons, fitsInRanch, moveBlocker, moveMon, placeMon, RANCH_SLOTS, ranchCapacity, ranchCount, ranchWithRoom, rehomeOverflow, usedSlots } from './ranches'
 
-const [ONE_SLOT, BIG] = [SPECIES.find((sp) => slotsOf(sp.id) === 1)!.id, SPECIES.find((sp) => slotsOf(sp.id) > 1)!.id]
+const [ONE_SLOT, LEGENDARY] = [SPECIES[0].id, SPECIES.find((sp) => rarityOf(sp) === Rarity.Legendary)!.id]
 
-/** Partida con un activo y `extra` Pokémon de 1 espacio más en el primer rancho */
+/** Partida con un activo y `extra` Pokémon más en el primer rancho */
 function stateWithTeam(extra = 1) {
   const s = initialState()
   chooseStarter(s, ONE_SLOT)
@@ -22,10 +22,10 @@ const fillRanch = (s: ReturnType<typeof initialState>, ranch = 0) => {
 }
 
 describe('espacios del rancho', () => {
-  it('cada Pokémon ocupa los espacios de su rareza', () => {
+  it('cada Pokémon ocupa un espacio, sea cual sea su rareza', () => {
     const s = stateWithTeam(0)
-    s.owned.push(createMon(BIG, NEW_MON_LEVEL))
-    expect(usedSlots(s, 0)).toBe(slotsOf(ONE_SLOT) + slotsOf(BIG))
+    s.owned.push(createMon(LEGENDARY, NEW_MON_LEVEL))
+    expect(usedSlots(s, 0)).toBe(2)
   })
 
   it('los que están fuera siguen ocupando su espacio', () => {
@@ -39,17 +39,11 @@ describe('espacios del rancho', () => {
   it('un rancho lleno no admite más; se usa el siguiente si se ha comprado', () => {
     const s = stateWithTeam(0)
     fillRanch(s)
-    expect(fitsInRanch(s, 0, ONE_SLOT)).toBe(false)
-    expect(ranchWithRoom(s, ONE_SLOT)).toBeNull()
+    expect(fitsInRanch(s, 0)).toBe(false)
+    expect(ranchWithRoom(s)).toBeNull()
     s.upgrades.ranches = 1
     expect(ranchCount(s)).toBe(2)
-    expect(ranchWithRoom(s, ONE_SLOT)).toBe(1)
-  })
-
-  it('lo que se libera a la vez cuenta como hueco', () => {
-    const s = stateWithTeam(0)
-    fillRanch(s)
-    expect(fitsInRanch(s, 0, ONE_SLOT, slotsOf(ONE_SLOT))).toBe(true)
+    expect(ranchWithRoom(s)).toBe(1)
   })
 })
 
@@ -60,7 +54,7 @@ describe('moveMon', () => {
     expect(moveMon(s, mon.uid, null)).toBe(true)
     expect(monPlace(s, mon.uid)).toBe(MonPlace.Box)
     expect(boxedMons(s)).toEqual([mon])
-    expect(usedSlots(s, 0)).toBe(slotsOf(ONE_SLOT))
+    expect(usedSlots(s, 0)).toBe(1)
   })
 
   it(`la Caja admite ${BOX_SLOTS} Pokémon, ocupen lo que ocupen en el rancho`, () => {

@@ -44,7 +44,7 @@ export function RouteStartDialog({ game, route: r, mon, onClose }: { game: GameS
             </>
           }
         >
-          <Sprite id={mon.speciesId} size={96} className="mon-hero-sprite idle-bounce" />
+          <Sprite id={mon.speciesId} size={96} className="mon-hero-sprite idle-bounce" shiny={mon.shiny} />
         </HeroLayout>
         <div className="route-start-body">
           <p className="small center">

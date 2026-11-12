@@ -1,9 +1,8 @@
-import { RARITY_INFO, rarityOf, species } from '../../data/species'
 import { randInt, type Rng } from '../core/random'
 import { findMon, MonPlace, monPlace, type GameState, type RanchSpot } from '../core/state'
 import { upgradeLevel } from './upgrades'
 
-/** Espacios con los que empieza cada rancho; cada Pokémon ocupa los de su rareza (`RARITY_INFO.ranchSlots`) */
+/** Espacios con los que empieza cada rancho; cada Pokémon ocupa uno, sea cual sea su rareza */
 export const RANCH_SLOTS = 10
 /** Pokémon que caben en la Caja, uno por sitio sea cual sea su rareza */
 export const BOX_SLOTS = 8
@@ -14,19 +13,16 @@ export const ranchCount = (s: GameState): number => 1 + upgradeLevel(s, 'ranches
 /** Espacios que tiene el rancho: los de partida más los de sus ampliaciones (ver ranchExpansion.ts) */
 export const ranchCapacity = (s: GameState, ranch: number): number => RANCH_SLOTS + (s.ranchExtraSlots[ranch] ?? 0)
 
-export const slotsOf = (speciesId: number): number => RARITY_INFO[rarityOf(species(speciesId))].ranchSlots
-
 /** Espacios ocupados de un rancho, contando a los suyos que están en ruta o de expedición */
 export const usedSlots = (s: GameState, ranch: number): number =>
-  s.owned.filter((m) => m.ranch === ranch).reduce((sum, m) => sum + slotsOf(m.speciesId), 0)
+  s.owned.filter((m) => m.ranch === ranch).length
 
-/** Si cabe una especie en el rancho; `freed` son los espacios que se liberan a la vez (p. ej. al evolucionar) */
-export const fitsInRanch = (s: GameState, ranch: number, speciesId: number, freed = 0): boolean =>
-  usedSlots(s, ranch) - freed + slotsOf(speciesId) <= ranchCapacity(s, ranch)
+/** Si cabe un Pokémon más en el rancho */
+export const fitsInRanch = (s: GameState, ranch: number): boolean => usedSlots(s, ranch) < ranchCapacity(s, ranch)
 
-/** El primer rancho donde cabe la especie, o null si no cabe en ninguno */
-export function ranchWithRoom(s: GameState, speciesId: number): number | null {
-  for (let ranch = 0; ranch < ranchCount(s); ranch++) if (fitsInRanch(s, ranch, speciesId)) return ranch
+/** El primer rancho con hueco, o null si no cabe en ninguno */
+export function ranchWithRoom(s: GameState): number | null {
+  for (let ranch = 0; ranch < ranchCount(s); ranch++) if (fitsInRanch(s, ranch)) return ranch
   return null
 }
 
@@ -52,7 +48,7 @@ export function moveBlocker(s: GameState, uid: string, to: MonDestination): stri
     return null
   }
   if (to < 0 || to >= ranchCount(s)) return 'Ese rancho no es tuyo.'
-  return fitsInRanch(s, to, mon.speciesId) ? null : 'No cabe en ese rancho.'
+  return fitsInRanch(s, to) ? null : 'No cabe en ese rancho.'
 }
 
 /** Lleva el Pokémon a otro rancho o a la Caja; si era el activo, pasa a serlo uno del rancho al azar */
@@ -76,7 +72,7 @@ function overflowOf(s: GameState, ranch: number) {
   for (const mon of movable) {
     if (used <= ranchCapacity(s, ranch)) break
     extra.push(mon)
-    used -= slotsOf(mon.speciesId)
+    used--
   }
   return extra
 }
@@ -90,7 +86,7 @@ export function rehomeOverflow(s: GameState): number {
   let moved = 0
   for (let ranch = 0; ranch < ranchCount(s); ranch++) {
     for (const mon of overflowOf(s, ranch)) {
-      mon.ranch = ranchWithRoom(s, mon.speciesId)
+      mon.ranch = ranchWithRoom(s)
       mon.spot = null
       moved++
     }

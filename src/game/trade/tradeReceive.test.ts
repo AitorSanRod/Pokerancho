@@ -6,7 +6,7 @@ import { TM_IDS } from '../../data/tms'
 import { initialState, type GameState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
 import { createMon } from '../team/mons'
-import { BOX_SLOTS, ranchCount, RANCH_SLOTS, slotsOf } from '../team/ranches'
+import { BOX_SLOTS, ranchCount, RANCH_SLOTS } from '../team/ranches'
 import { GoodKind, type TradeGood } from './tradeGoods'
 import { DUPLICATE_BASE_PIECES, DUPLICATE_MONEY, DUPLICATE_PIECES_PER_STAR, receiveBlocker, receiveGood } from './tradeReceive'
 
@@ -21,7 +21,7 @@ const monGood = (speciesId: number, stars = 0): TradeGood => ({ kind: GoodKind.M
 
 /** Llena todos los ranchos y la Caja con Pokémon de la especie A (no importa repetir para ocupar sitio) */
 function fillEverything(s: GameState) {
-  for (let ranch = 0; ranch < ranchCount(s); ranch++) for (let i = 0; i < RANCH_SLOTS / slotsOf(A); i++) s.owned.push(createMon(A, 5, ranch))
+  for (let ranch = 0; ranch < ranchCount(s); ranch++) for (let i = 0; i < RANCH_SLOTS; i++) s.owned.push(createMon(A, 5, ranch))
   for (let i = 0; i < BOX_SLOTS; i++) s.owned.push(createMon(A, 5, null))
 }
 

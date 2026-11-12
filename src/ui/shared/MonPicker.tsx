@@ -35,7 +35,7 @@ export function MonPicker({ mons, selectedUid, onSelect, lockOf = () => null }: 
             aria-label={`${name} Nv. ${m.level}${lock === 'favorite' ? ', favorito' : ''}`}
           >
             {lock === 'favorite' && <HeartIcon className="mon-pick-heart" />}
-            <Sprite id={m.speciesId} size={64} animated={false} />
+            <Sprite id={m.speciesId} size={64} animated={false} shiny={m.shiny} />
             <span className="mon-pick-name tiny">{name}</span>
             <span className="mon-pick-level tiny">Nv. {m.level}</span>
             <Bar value={m.hp} max={maxHp(m)} kind="hp" />
