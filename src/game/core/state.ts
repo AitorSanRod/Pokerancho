@@ -172,9 +172,9 @@ export interface GameState {
   claimedServerGifts: string[]
   /** Misiones del día (ver collection/missions.ts); null hasta que salen las primeras */
   missions: DailyMissions | null
-  /** Torre infinita en curso (solo en desarrollo, ver tower/tower.ts); null si no */
+  /** Torre infinita en curso o su resumen al acabar (solo en desarrollo, ver tower/tower.ts); null si no */
   tower: TowerRun | null
-  /** Piso más alto superado en la torre infinita */
+  /** Piso más alto superado en la torre infinita (sale en su ranking) */
   towerBest: number
   /** Buscando grupo para una incursión con otros jugadores (ver incursion/online/linkedIncursion.ts); null si no */
   incursionQueue: IncursionQueue | null
@@ -209,7 +209,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 48
+export const SAVE_VERSION = 50
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 

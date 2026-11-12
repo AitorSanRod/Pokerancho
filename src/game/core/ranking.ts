@@ -82,3 +82,20 @@ export interface DamageRankingView {
   total: number
   builtAt: number | null
 }
+
+export interface TowerRankingEntry {
+  rank: number
+  nickname: string
+  /** Piso más alto superado en la torre infinita */
+  floor: number
+  /** Es la cuenta que lo mira */
+  mine: boolean
+}
+
+/** El ranking de la torre infinita: como el de dinero, con el piso más alto de cada uno */
+export interface TowerRankingView {
+  top: TowerRankingEntry[]
+  mine: { rank: number; floor: number } | null
+  total: number
+  builtAt: number | null
+}

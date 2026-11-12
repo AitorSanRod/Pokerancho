@@ -2,8 +2,7 @@ import { randInt, type Rng } from '../core/random'
 import type { GameState, Run } from '../core/state'
 
 // Bonificación de EXP de la ruta: de vez en cuando, caminando, aparece un objeto en la escena durante un momento. Si el
-// jugador lo toca, durante un rato los combates dan más EXP y cada toque caminando da EXP, con un límite de toques por
-// segundo (y un solo dedo, ver RunView) para que no valga tocar a lo loco.
+// jugador lo toca, durante un rato los combates dan más EXP y cada toque caminando da EXP.
 
 /** Milisegundos reales caminando, como poco, hasta que aparece el objeto */
 export const BOOST_SPAWN_MIN_MS = 4 * 60_000
@@ -17,10 +16,6 @@ export const BOOST_DURATION_MS = 60_000
 export const BOOST_EXP_MULT = 2
 /** EXP que da cada toque caminando con la bonificación */
 export const BOOST_TAP_EXP = 10
-/** Toques por segundo que cuentan con la bonificación; los demás no hacen nada */
-export const BOOST_MAX_TAPS_PER_SECOND = 3
-
-const SECOND_MS = 1000
 
 export interface ExpBoost {
   /** Milisegundos caminando que faltan para que aparezca el objeto */
@@ -31,8 +26,6 @@ export interface ExpBoost {
   spot: number
   /** Milisegundos que le quedan a la bonificación; 0 si no está activa */
   activeMs: number
-  /** Hora real de los toques que contaron en el último segundo (para el límite) */
-  recentTaps: number[]
 }
 
 export const newExpBoost = (rng: Rng = Math.random): ExpBoost => ({
@@ -40,7 +33,6 @@ export const newExpBoost = (rng: Rng = Math.random): ExpBoost => ({
   visibleMs: 0,
   spot: 0,
   activeMs: 0,
-  recentTaps: [],
 })
 
 export const boostActive = (run: Run): boolean => run.boost.activeMs > 0
@@ -67,12 +59,3 @@ export function catchExpBoost(s: GameState): boolean {
   return true
 }
 
-/** Con la bonificación, si el toque de `now` cabe en el límite por segundo; lo apunta. Sin ella, siempre cabe */
-export function takeBoostTap(run: Run, now: number): boolean {
-  if (!boostActive(run)) return true
-  const b = run.boost
-  b.recentTaps = b.recentTaps.filter((t) => now - t < SECOND_MS && t <= now)
-  if (b.recentTaps.length >= BOOST_MAX_TAPS_PER_SECOND) return false
-  b.recentTaps.push(now)
-  return true
-}

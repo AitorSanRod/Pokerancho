@@ -17,8 +17,7 @@ interface Floater {
  * sobre el suelo (p. ej. el combate) y puede usar `--ground` para colocarse a la altura del Pokémon. Sin `speciesId` no
  * camina nadie (p. ej. en la pelea contra un jefe comunitario, que pinta a los suyos). `landmark`: elemento de la
  * parada a la que se acerca o en la que está (cartel, casa…), que entra una vez por parada. `signText`: lo que pone el
- * cartel (el nombre de la ruta). `onStep` devuelve false si el toque no contó (no sale la flecha); con `singleTouch` no
- * cuentan los toques de un segundo dedo. `floaterText`: lo que sale donde se toca (por defecto, una flecha).
+ * cartel (el nombre de la ruta). `onStep` devuelve false si el toque no contó (no sale la flecha). `floaterText`: lo que sale donde se toca (por defecto, una flecha).
  */
 export function WalkScene({
   biome,
@@ -28,7 +27,6 @@ export function WalkScene({
   speed,
   walkerClass = '',
   onStep,
-  singleTouch = false,
   floaterText = '»',
   landmark = null,
   signText,
@@ -43,7 +41,6 @@ export function WalkScene({
   /** Animación del Pokémon (p. ej. al atacar en un combate) */
   walkerClass?: string
   onStep?: () => boolean | void
-  singleTouch?: boolean
   floaterText?: string
   landmark?: SceneLandmark | null
   signText?: string
@@ -56,7 +53,7 @@ export function WalkScene({
   const nextId = useRef(0)
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
-    if (!onStep || (singleTouch && !e.isPrimary)) return
+    if (!onStep) return
     if (onStep() === false) return
     navigator.vibrate?.(8)
     const rect = e.currentTarget.getBoundingClientRect()

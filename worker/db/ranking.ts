@@ -1,12 +1,13 @@
 import { RANKING_ACTIVE_MS, RANKING_SIZE, type RankingEntry, type RankingView } from '../../src/game/core/ranking'
 import { rebuildDamageStatements } from './damageRanking'
+import { rebuildTowerStatements } from './towerRanking'
 import { RANKED_USERS } from './users'
 
 // El ranking de dinero en D1 (tablas ranking y ranking_meta, migrations/0008_ranking.sql). La foto sale del dinero de
 // la partida en la nube de cada cuenta; al leerla se vuelve a mirar el apodo y si la cuenta sigue queriendo salir.
 
 /**
- * Rehace las fotos del dinero y del daño (damageRanking.ts). La del dinero, con las cuentas visibles que han subido la
+ * Rehace las fotos del dinero, del daño (damageRanking.ts) y de la torre (towerRanking.ts). La del dinero, con las cuentas visibles que han subido la
  * partida hace poco; los empates comparten puesto
  */
 export async function rebuildRanking(db: D1Database, now: number) {
@@ -23,6 +24,7 @@ export async function rebuildRanking(db: D1Database, now: number) {
       )
       .bind(now - RANKING_ACTIVE_MS),
     ...rebuildDamageStatements(db, now),
+    ...rebuildTowerStatements(db, now),
     db.prepare('INSERT INTO ranking_meta (id, built_at) VALUES (1, ?) ON CONFLICT (id) DO UPDATE SET built_at = excluded.built_at').bind(now),
   ])
 }

@@ -41,7 +41,8 @@ function rollRarity(rng: Rng): Rarity {
   return Rarity.Common
 }
 
-function rollPiece(rng: Rng): PieceDrop {
+/** Una especie al azar por rareza, con las probabilidades del gacha */
+export function rollPiece(rng: Rng): PieceDrop {
   const rarity = rollRarity(rng)
   const pool = POOLS[rarity]
   return { speciesId: pool[Math.floor(rng() * pool.length)].id, rarity }

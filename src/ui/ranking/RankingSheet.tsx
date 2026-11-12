@@ -5,22 +5,30 @@ import { fetchRanking, type RankingResult } from '../../net/ranking'
 import { NicknameDialog } from '../raid/NicknameDialog'
 import { MenuSheetHeader } from '../ranch/MenuSheetHeader'
 import { ICON } from '../shared/icons'
-import { DamageBoard, MoneyBoard } from './RankingBoards'
+import { DamageBoard, MoneyBoard, TowerBoard } from './RankingBoards'
 import './ranking.css'
 
 /** Qué ranking se mira */
-const Board = { Money: 'money', Damage: 'damage' } as const
+const Board = { Money: 'money', Damage: 'damage', Tower: 'tower' } as const
 type Board = (typeof Board)[keyof typeof Board]
+
+/** Pestañas del ranking; la de la torre, solo con `npm run dev`, como la torre */
+const BOARD_TABS: { id: Board; label: string }[] = [
+  { id: Board.Money, label: 'Dinero' },
+  { id: Board.Damage, label: 'Daño a jefes' },
+  ...(import.meta.env.DEV ? [{ id: Board.Tower, label: 'Torre' }] : []),
+]
 
 /** Qué explica cada ranking, bajo la cabecera */
 const BOARD_INTRO: Record<Board, string> = {
   [Board.Money]: 'Celebración de la fiesta capitalista. Se actualiza cada hora.',
   [Board.Damage]:
     'Daño a los jefes comunitarios y de incursión esta semana, con tu Pokémon que más ha hecho. Cuenta al terminar cada pelea, se actualiza cada hora y empieza de cero cada lunes.',
+  [Board.Tower]: 'Piso más alto de la torre infinita. Cuenta con la partida guardada en la nube y se actualiza cada hora.',
 }
 
 /**
- * Rankings del menú del rancho: dinero y daño semanal a los jefes, con tu puesto. Los dos piden lo mismo: cuenta,
+ * Rankings del menú del rancho: dinero, daño semanal a los jefes y torre, con tu puesto. Todos piden lo mismo: cuenta,
  * apodo y no haberse ocultado del ranking en Ajustes
  */
 export function RankingSheet({ onBack }: { onBack: () => void }) {
@@ -48,12 +56,11 @@ export function RankingSheet({ onBack }: { onBack: () => void }) {
     <>
       <MenuSheetHeader icon={ICON.Ranking} title="Ranking" onBack={onBack} />
       <div className="segmented ranking-tabs">
-        <button className={board === Board.Money ? 'active' : ''} onClick={() => setBoard(Board.Money)}>
-          Dinero
-        </button>
-        <button className={board === Board.Damage ? 'active' : ''} onClick={() => setBoard(Board.Damage)}>
-          Daño a jefes
-        </button>
+        {BOARD_TABS.map((t) => (
+          <button key={t.id} className={board === t.id ? 'active' : ''} onClick={() => setBoard(t.id)}>
+            {t.label}
+          </button>
+        ))}
       </div>
       <p className="tiny muted">{BOARD_INTRO[board]}</p>
       {status !== AccountStatus.SignedIn ? (
@@ -75,15 +82,18 @@ export function RankingSheet({ onBack }: { onBack: () => void }) {
       ) : !result ? (
         <p className="small muted">Cargando…</p>
       ) : 'view' in result ? (
-        board === Board.Money ? (
-          <MoneyBoard view={result.view} />
-        ) : (
-          <DamageBoard view={result.damage} />
-        )
+        <ResultBoard board={board} result={result} />
       ) : (
         <p className="notice small">No se ha podido conectar con el servidor. Prueba otra vez en un rato.</p>
       )}
       {naming && <NicknameDialog onDone={() => setNaming(false)} onCancel={() => setNaming(false)} />}
     </>
   )
+}
+
+/** El tablero elegido con la foto que ha llegado */
+function ResultBoard({ board, result }: { board: Board; result: Extract<RankingResult, { view: unknown }> }) {
+  if (board === Board.Money) return <MoneyBoard view={result.view} />
+  if (board === Board.Damage) return <DamageBoard view={result.damage} />
+  return result.tower ? <TowerBoard view={result.tower} /> : <p className="small muted">El servidor aún no tiene este ranking.</p>
 }

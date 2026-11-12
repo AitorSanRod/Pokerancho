@@ -7,7 +7,6 @@ import { maxHp } from '../team/stats'
 import {
   advanceExpBoost,
   BOOST_DURATION_MS,
-  BOOST_MAX_TAPS_PER_SECOND,
   BOOST_SPAWN_MAX_MS,
   BOOST_SPAWN_MIN_MS,
   BOOST_TAP_EXP,
@@ -19,7 +18,8 @@ import { startRun, tapRun } from './run'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
 
-const NOW = 1_000_000
+/** Toques seguidos que se prueban */
+const TAPS = 10
 
 function onRoute() {
   const s = initialState()
@@ -56,19 +56,17 @@ describe('objeto de la bonificación', () => {
 })
 
 describe('toques con la bonificación', () => {
-  it('cada toque da su EXP, hasta el límite por segundo', () => {
+  it('cada toque da su EXP, sin límite', () => {
     const s = onRoute()
     advanceExpBoost(s.run!, BOOST_SPAWN_MIN_MS)
     catchExpBoost(s)
-    for (let i = 0; i < BOOST_MAX_TAPS_PER_SECOND; i++) expect(tapRun(s, NOW + i)).toBe(true)
-    expect(tapRun(s, NOW + BOOST_MAX_TAPS_PER_SECOND)).toBe(false)
-    expect(s.run!.earned.exp).toBe(BOOST_MAX_TAPS_PER_SECOND * BOOST_TAP_EXP)
-    expect(tapRun(s, NOW + 1000)).toBe(true)
+    for (let i = 0; i < TAPS; i++) expect(tapRun(s)).toBe(true)
+    expect(s.run!.earned.exp).toBe(TAPS * BOOST_TAP_EXP)
   })
 
-  it('sin bonificación los toques no tienen límite ni dan EXP', () => {
+  it('sin bonificación los toques no dan EXP', () => {
     const s = onRoute()
-    for (let i = 0; i <= BOOST_MAX_TAPS_PER_SECOND; i++) expect(tapRun(s, NOW)).toBe(true)
+    for (let i = 0; i < TAPS; i++) expect(tapRun(s)).toBe(true)
     expect(s.run!.earned.exp).toBe(0)
   })
 })

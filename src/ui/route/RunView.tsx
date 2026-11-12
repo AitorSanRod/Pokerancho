@@ -65,8 +65,7 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
         moving={walking}
         speed={Math.min(1.8, Math.max(0.6, spm / 22))}
         walkerClass={battle && frame ? `battling ${playerClass} ${statusClass(frame.event.playerStatus)}` : run.heal ? 'healing' : ''}
-        onStep={walking ? () => act((s) => tapRun(s, Date.now())) : battle ? tapInBattle : routeRaid && !searching ? () => tapRoom(RoomSlot.Route) : undefined}
-        singleTouch={boosted}
+        onStep={walking ? () => act(tapRun) : battle ? tapInBattle : routeRaid && !searching ? () => tapRoom(RoomSlot.Route) : undefined}
         floaterText={boosted ? `+${BOOST_TAP_EXP} EXP` : undefined}
         landmark={landmark}
         signText={r.name}

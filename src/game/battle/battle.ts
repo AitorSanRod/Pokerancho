@@ -84,7 +84,8 @@ export function makeFighter(
   side: Side,
   speciesId: number,
   level: number,
-  opts: { hp?: number; stars?: number; nature?: Nature; statMult?: number; passives?: PassiveRef[]; perks?: MonPerks } = {},
+  /** `move`: en lugar del suyo de siempre (signatureMove), p. ej. el elegido en la torre */
+  opts: { hp?: number; stars?: number; nature?: Nature; statMult?: number; passives?: PassiveRef[]; perks?: MonPerks; move?: Move } = {},
 ): Fighter {
   const sp = species(speciesId)
   const bonus = combineBonus(opts.passives ?? [])
@@ -103,7 +104,7 @@ export function makeFighter(
     // Los PS actuales crecen en la misma proporción que los máximos (la pasiva y los hitos no son una cura)
     hp: Math.min(stats.hp, Math.round((opts.hp ?? Infinity) * (1 + bonus.hp) * (1 + perks.stats))),
     maxHp: stats.hp,
-    move: signatureMove(speciesId),
+    move: opts.move ?? signatureMove(speciesId),
     bonus,
     perks,
     status: null,

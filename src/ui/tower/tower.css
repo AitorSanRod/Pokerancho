@@ -1,16 +1,68 @@
 /* Torre infinita (TowerScreen, solo en desarrollo) */
-.tower {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-}
 .tower-head {
   gap: 4px;
 }
-.tower-stage {
-  position: relative;
-  height: 440px;
-  border-radius: var(--radius);
-  overflow: hidden;
+/* Lo de abajo de la subida (TowerClimb): seguir, elegir ataque o por qué no puede seguir, sobre la escena */
+.tower-panel {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 3;
+  max-height: 60%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tower-panel .btn.primary {
+  box-shadow: 0 2px 8px #0004;
+}
+.tower-rules ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  line-height: 1.35;
+}
+.tower-summary {
+  gap: 6px;
+}
+.tower-record {
+  color: var(--accent);
+}
+.tower-earned {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.tower-pieces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.tower-piece {
+  display: inline-flex;
+  align-items: center;
+}
+.tower-pick {
+  gap: 8px;
+}
+/* Fundido al cambiar el fondo de la torre (cada pocos pisos): la escena nueva sale de la oscuridad */
+.tower-fade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #000;
+  pointer-events: none;
+  animation: tower-fade-in 0.9s ease-out forwards;
+}
+@keyframes tower-fade-in {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }

@@ -11,10 +11,11 @@ import { testWorker } from './test/api'
 vi.mock('./mail', async (original) => ({ ...(await original<typeof import('./mail')>()), sendMail: vi.fn() }))
 vi.mock('../src/data/maps/kantoMaps', () => import('../src/game/core/test-map'))
 
-async function upload(api: Api, money: number) {
+async function upload(api: Api, money: number, towerBest = 0) {
   const s = initialState()
   chooseStarter(s, STARTERS[0])
   s.money = money
+  s.towerBest = towerBest
   await api.call('/api/save', { body: { baseRevision: null, ...cloudUpload(s) } })
 }
 
@@ -69,5 +70,21 @@ describe('ranking de dinero', () => {
 
   it('sin sesión no hay ranking', async () => {
     expect((await testWorker().call('/api/ranking')).status).toBe(401)
+  })
+})
+
+describe('ranking de la torre', () => {
+  it('ordena por el piso más alto y deja fuera a quien no ha subido', async () => {
+    const ash = await player('ash@paleta.es', 'Ash')
+    const gary = await player('gary@paleta.es', 'Gary', ash.env)
+    const misty = await player('misty@celeste.es', 'Misty', ash.env)
+    await upload(ash, 0, 12)
+    await upload(gary, 0, 30)
+    await upload(misty, 0, 0)
+    await refresh(ash)
+    const { tower } = (await ash.call('/api/ranking')).data
+    expect(tower.top.map((e: { nickname: string }) => e.nickname)).toEqual(['Gary', 'Ash'])
+    expect(tower.mine).toEqual({ rank: 2, floor: 12 })
+    expect(tower.total).toBe(2)
   })
 })

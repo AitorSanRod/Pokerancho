@@ -3,8 +3,16 @@ import { TYPE_INFO } from '../../data/types'
 import { moveClass } from '../../data/incursionMoves'
 import { CLASS_LABEL, moveText } from '../shared/moveText'
 
+interface Props {
+  moves: IncursionMove[]
+  selectedId: string
+  onSelect: (id: string) => void
+  /** Lo que se dice de cada uno; por defecto, lo que hace en una incursión (en la torre solo cuenta el golpe) */
+  describe?: (mv: IncursionMove) => string
+}
+
 /** Lista de movimientos para elegir uno: nombre, tipo, papel y lo que hace */
-export function MovePicker({ moves, selectedId, onSelect }: { moves: IncursionMove[]; selectedId: string; onSelect: (id: string) => void }) {
+export function MovePicker({ moves, selectedId, onSelect, describe = moveText }: Props) {
   return (
     <div className="incursion-moves" role="listbox">
       {moves.map((mv) => (
@@ -22,7 +30,7 @@ export function MovePicker({ moves, selectedId, onSelect }: { moves: IncursionMo
               {CLASS_LABEL[moveClass(mv)]} · {TYPE_INFO[mv.type].name}
             </span>
           </span>
-          <span className="tiny muted">{moveText(mv)}</span>
+          <span className="tiny muted">{describe(mv)}</span>
         </button>
       ))}
     </div>

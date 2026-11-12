@@ -1,7 +1,7 @@
 import { TAP_CRIT_MULT } from '../../../game/battle/attack'
 import { COLLECTION_TIERS } from '../../../game/collection/typeCollection'
 import { MISSIONS_PER_DAY } from '../../../data/dailyMissions'
-import { BOOST_DURATION_MS, BOOST_EXP_MULT, BOOST_MAX_TAPS_PER_SECOND, BOOST_TAP_EXP } from '../../../game/run/expBoost'
+import { BOOST_DURATION_MS, BOOST_EXP_MULT, BOOST_TAP_EXP } from '../../../game/run/expBoost'
 import { LEVEL_MILESTONES, MILESTONE_STAT_BONUS, STAR_TYPE_BONUS, STAR_TYPE_BONUS_MAX } from '../../../game/team/milestones'
 import { formatBonus } from '../../shared/format'
 import { ICON } from '../../shared/icons'
@@ -38,7 +38,7 @@ export const PERKS_GUIDE: Guide = {
     {
       image: shot('perks-boost'),
       title: 'Bonificación de EXP',
-      text: `A veces, caminando, aparece un Huevo Suerte en la ruta. Tócalo: durante ${BOOST_DURATION_MS / 1000} s los combates dan ×${BOOST_EXP_MULT} de EXP y cada toque, +${BOOST_TAP_EXP} EXP (con un dedo y como mucho ${BOOST_MAX_TAPS_PER_SECOND} por segundo).`,
+      text: `A veces, caminando, aparece un Huevo Suerte en la ruta. Tócalo: durante ${BOOST_DURATION_MS / 1000} s los combates dan ×${BOOST_EXP_MULT} de EXP y cada toque, +${BOOST_TAP_EXP} EXP.`,
     },
   ],
 }
