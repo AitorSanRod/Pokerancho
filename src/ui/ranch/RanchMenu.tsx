@@ -64,27 +64,20 @@ export function RanchMenu({ game }: { game: GameState }) {
                 <h2 className="with-icon">
                   <ItemIcon item={ICON.Menu} size={32} /> Menú
                 </h2>
-                <MenuItem icon={ICON.Profile} title="Perfil" onClick={() => setPanel('profile')}>
-                  Tus medallas, la Pokédex, tus datos y tus puestos en los rankings
-                </MenuItem>
-                <MenuItem icon={ICON.Inbox} title="Notificaciones" count={inboxCount} onClick={() => setPanel('inbox')}>
-                  {inboxCount > 0 ? '¡Tienes cosas por recoger!' : 'Obsequio diario, premios de raid e intercambios'}
-                </MenuItem>
-                <MenuItem icon={ICON.Gift} title="Obsequio diario" dot={giftDot} onClick={() => setPanel('gift')}>
-                  {giftKey ? '¡Ya puedes recogerlo!' : 'Un regalo cada día, en ciclo'}
-                </MenuItem>
-                <MenuItem icon={ICON.Missions} title="Misiones" count={missionsReady} onClick={() => setPanel('missions')}>
-                  {missionsReady > 0 ? '¡Tienes misiones por cobrar!' : 'Misiones nuevas cada día, con su premio'}
-                </MenuItem>
-                <MenuItem icon={ICON.Bag} title="Mochila" onClick={() => setPanel('bag')}>
-                  Lo que has comprado y aún no has usado
-                </MenuItem>
-                <MenuItem icon={ICON.Ranking} title="Ranking" onClick={() => setPanel('ranking')}>
-                  La fiesta capitalista
-                </MenuItem>
-                <MenuItem icon={ICON.Tutorials} title="Tutoriales" onClick={() => setPanel('tutorials')}>
-                  Cómo jugar, raids, evolucionar, mejoras y ganar dinero
-                </MenuItem>
+                <div className="ranch-menu-grid">
+                  <MenuTile icon={ICON.Profile} title="Perfil" onClick={() => setPanel('profile')} />
+                  <MenuTile icon={ICON.Inbox} title="Notificaciones" count={inboxCount} onClick={() => setPanel('inbox')} />
+                  <MenuTile icon={ICON.Gift} title="Obsequio diario" dot={giftDot} onClick={() => setPanel('gift')} />
+                  <MenuTile
+                    icon={ICON.Missions}
+                    title="Misiones"
+                    count={missionsReady}
+                    onClick={() => setPanel('missions')}
+                  />
+                  <MenuTile icon={ICON.Bag} title="Mochila" onClick={() => setPanel('bag')} />
+                  <MenuTile icon={ICON.Ranking} title="Ranking" onClick={() => setPanel('ranking')} />
+                  <MenuTile icon={ICON.Tutorials} title="Tutoriales" onClick={() => setPanel('tutorials')} />
+                </div>
               </>
             )}
             <button className="btn primary wide" onClick={close}>
@@ -97,26 +90,22 @@ export function RanchMenu({ game }: { game: GameState }) {
   )
 }
 
-interface MenuItemProps {
+interface MenuTileProps {
   icon: Item
   title: string
   dot?: boolean
-  /** Contador rojo a la derecha; 0 o sin él, no se pinta */
+  /** Contador rojo en la esquina; 0 o sin él, no se pinta */
   count?: number
   onClick: () => void
-  children: string
 }
 
-function MenuItem({ icon, title, dot = false, count = 0, onClick, children }: MenuItemProps) {
+/** Una casilla de la cuadrícula del menú: icono y nombre, con el aviso en la esquina */
+function MenuTile({ icon, title, dot = false, count = 0, onClick }: MenuTileProps) {
   return (
-    <button className="ranch-menu-item" onClick={onClick}>
-      <ItemIcon item={icon} size={36} />
-      <span className="grow">
-        <strong>{title}</strong>
-        <span className="tiny muted ranch-menu-hint">{children}</span>
-      </span>
-      {dot && <span className="dot" />}
-      {count > 0 && <span className="count-badge">{count}</span>}
+    <button className="ranch-menu-tile" onClick={onClick}>
+      <ItemIcon item={icon} size={40} />
+      <strong>{title}</strong>
+      {count > 0 ? <span className="count-badge">{count}</span> : dot && <span className="dot" />}
     </button>
   )
 }
