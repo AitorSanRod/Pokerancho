@@ -1,4 +1,4 @@
-import { averageLegSteps, route, wildSpecies, type Route } from '../../data/maps'
+import { averageLegSteps, isGymRoute, route, wildSpecies, type Route } from '../../data/maps'
 import { species } from '../../data/species'
 import { expReward, moneyReward, pieceReward, ticketReward } from '../battle/rewards'
 import { isSeen } from '../collection/dex'
@@ -59,6 +59,7 @@ export function expeditionBlocker(s: GameState, uid: string): string | null {
 
 /** Por qué no se puede mandar a nadie a esa ruta (solo a las completadas y con sus salvajes vistos), o null si se puede */
 export function expeditionRouteBlocker(s: GameState, routeId: string): string | null {
+  if (isGymRoute(route(routeId))) return 'A los gimnasios no se va de expedición.'
   if (!s.completedRoutes.includes(routeId)) return 'Complétala primero para mandar expediciones a ella.'
   const missing = wildSpecies(route(routeId)).filter((id) => !isSeen(s, id)).length
   if (missing === 0) return null

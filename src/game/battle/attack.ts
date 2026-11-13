@@ -30,6 +30,20 @@ export function damage(atk: DamageSide, def: DamageSide, mv: Move, rng: Rng, ext
   return { dealt: eff === 0 ? 0 : Math.max(1, Math.floor(raw * mult)), eff, crit }
 }
 
+/** Daño que espera hacer `mv` a `def`, para comparar ataques: potencia por precisión, eficacia y el bonus de su tipo */
+const expectedDamage = (mv: Move, atk: Fighter, def: Fighter) =>
+  mv.power * (mv.accuracy / 100) * effectiveness(mv.type, def.types) * (atk.types.includes(mv.type) ? STAB : 1)
+
+/** De los ataques que tiene, el que más daño espera hacer al rival (en empate, el primero de la lista) */
+export const bestMove = (pool: Move[], atk: Fighter, def: Fighter): Move =>
+  pool.reduce((best, mv) => (expectedDamage(mv, atk, def) > expectedDamage(best, atk, def) ? mv : best))
+
+/** Si desde este ataque toca otro (cambio de ataque en pleno combate), lo pone */
+function switchMove(atk: Fighter) {
+  const current = atk.moveSwitches?.filter((s) => s.fromAttack <= atk.attacks).at(-1)
+  if (current) atk.move = current.move
+}
+
 /** Recupera PS (sin pasar del máximo) y lo anuncia */
 export function heal(f: Fighter, amount: number, push: Push) {
   const healed = Math.min(f.maxHp - f.hp, Math.ceil(amount))
@@ -67,10 +81,12 @@ export function attack(atk: Fighter, def: Fighter, push: Push, rng: Rng) {
   }
 
   atk.attacks++
+  switchMove(atk)
+  if (atk.movePool?.length) atk.move = bestMove(atk.movePool, atk, def)
   if (mustStruggle(atk, def)) return struggle(atk, def, push)
   const tapCrit = atk.tapCrits.includes(atk.attacks)
   const mv = atk.move
-  push({ kind: 'attack', side: atk.side, text: `${label(atk)} usó ${mv.name}.` })
+  push({ kind: 'attack', side: atk.side, text: `${label(atk)} usó ${mv.name}.`, ...(atk.moveSwitches?.length || atk.movePool?.length ? { move: mv } : {}) })
   if (rng() * 100 >= mv.accuracy) return push({ kind: 'miss', side: def.side, miss: 'miss', text: '¡Pero falló!' })
   if (def.bonus.dodge > 0 && rng() < def.bonus.dodge) return push({ kind: 'miss', side: def.side, miss: 'dodge', text: '¡Lo esquivó!' })
   const { dealt, eff, crit } = damage(atk, def, mv, rng, tapCrit ? TAP_CRIT_MULT : 1)

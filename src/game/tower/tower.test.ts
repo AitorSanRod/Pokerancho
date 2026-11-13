@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { POKEMON } from '../../data/pokemon'
+import { SPECIES } from '../../data/species'
 import type { Rng } from '../core/random'
 import { activeMon, initialState, MonPlace, monPlace, type GameState } from '../core/state'
 import { chooseStarter, seqRng } from '../core/test-utils'
@@ -16,19 +17,18 @@ import {
   closeTower,
   isHealFloor,
   nextFloor,
-  pickTowerMove,
+  setTowerMove,
   startTower,
   TOWER_HEAL_EVERY,
   TOWER_LAST_HEAL_FLOOR,
   towerBetweenFloors,
   TowerEnd,
   towerBlocker,
-  towerMovePickDue,
   TOWER_AWAY_FLOORS,
   TOWER_AWAY_GAP_MS,
 } from './tower'
 import { towerWeekBest } from './towerWeek'
-import { TOWER_MOVE_PICK_EVERY, towerMove, towerMoveChoices } from './towerMoves'
+import { towerMove, towerMoveChoices } from './towerMoves'
 import { sideMove } from '../battle/battle'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
@@ -49,11 +49,10 @@ const firstMove = (s: GameState) => towerMoveChoices(activeMon(s)!)[0].id
 /** Acaba el combate en curso, como si pasara el tiempo */
 const finishBattle = (s: GameState) => advanceTower(s, s.tower!.battleMsLeft)
 
-/** Sube piso a piso (eligiendo el mismo ataque cuando toca) hasta que cae o hasta `floors` pisos */
+/** Sube piso a piso hasta que cae o hasta `floors` pisos */
 function climb(s: GameState, rng: Rng, floors = MANY_FLOORS) {
   for (let i = 0; i < floors && s.tower!.end === null; i++) {
     finishBattle(s)
-    if (towerMovePickDue(s)) pickTowerMove(s, s.tower!.moveId)
     nextFloor(s, rng)
   }
 }
@@ -94,12 +93,12 @@ describe('torre infinita', () => {
     expect(s.tower!.battleMsLeft).toBeGreaterThan(0)
   })
 
-  it('con la app cerrada sube sola unos pocos pisos (hasta que toca elegir ataque) y después espera', () => {
+  it('con la app cerrada sube sola unos pocos pisos y después espera', () => {
     const s = withMon(MAX_LEVEL)
     startTower(s, firstMove(s), seqRng(0.3))
     advanceTower(s, Number.MAX_SAFE_INTEGER, seqRng(0.3))
     expect(towerBetweenFloors(s)).toBe(true)
-    expect(s.tower!.floor).toBe(Math.min(2 + TOWER_AWAY_FLOORS, TOWER_MOVE_PICK_EVERY + 1))
+    expect(s.tower!.floor).toBe(2 + TOWER_AWAY_FLOORS)
     expect(s.tower!.awayFloors).toBeLessThanOrEqual(TOWER_AWAY_FLOORS)
   })
 
@@ -131,17 +130,28 @@ describe('torre infinita', () => {
     expect(towerBetweenFloors(s)).toBe(true)
   })
 
-  it('pide elegir ataque cada pocos pisos', () => {
+  it('el ataque se cambia en pleno combate y vale desde el siguiente piso', () => {
     const s = withMon(MAX_LEVEL)
-    startTower(s, firstMove(s), seqRng(0.3))
-    climb(s, seqRng(0.3), TOWER_MOVE_PICK_EVERY - 1)
+    const mon = activeMon(s)!
+    mon.speciesId = SPECIES.find((sp) => towerMoveChoices({ ...mon, speciesId: sp.id }).length > 1)!.id
+    const [first, other] = towerMoveChoices(mon)
+    startTower(s, first.id, seqRng(0.3))
+    setTowerMove(s, other.id)
+    expect(s.tower!.moveId).toBe(other.id)
+    expect(s.tower!.lastBattle!.player.move!.id).toBe(first.id)
     finishBattle(s)
-    expect(s.tower!.floor).toBe(TOWER_MOVE_PICK_EVERY + 1)
-    expect(towerMovePickDue(s)).toBe(true)
-    nextFloor(s)
-    expect(towerBetweenFloors(s)).toBe(true)
-    pickTowerMove(s, firstMove(s))
-    expect(towerMovePickDue(s)).toBe(false)
+    nextFloor(s, seqRng(0.3))
+    expect(s.tower!.lastBattle!.player.move!.id).toBe(other.id)
+  })
+
+  it('solo acepta ataques que sabe y mientras sube', () => {
+    const s = withMon(MAX_LEVEL)
+    const move = firstMove(s)
+    setTowerMove(s, move)
+    expect(s.tower).toBeNull()
+    startTower(s, move, seqRng(0.3))
+    setTowerMove(s, 'no-existe')
+    expect(s.tower!.moveId).toBe(move)
   })
 
   it('sube mientras gana y, al caer, se acaba con el récord y lo ganado', () => {
@@ -168,7 +178,6 @@ describe('torre infinita', () => {
     s.tower!.floor = TOWER_HEAL_EVERY
     s.tower!.hp = 1
     finishBattle(s)
-    s.tower!.moveFloor = s.tower!.floor
     nextFloor(s, seqRng(0.5))
     const next = s.tower!.lastBattle!
     expect(next.events[0].playerHp).toBe(next.player.maxHp)

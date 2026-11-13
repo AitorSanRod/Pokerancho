@@ -61,6 +61,7 @@ export const ITEM = {
   LuckyEgg: 'lucky-egg',
   QuickClaw: 'quick-claw',
   MachoBrace: 'macho-brace',
+  PalPad: 'pal-pad',
 } as const
 export type Item = (typeof ITEM)[keyof typeof ITEM]
 

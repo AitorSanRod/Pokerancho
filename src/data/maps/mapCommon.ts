@@ -1,4 +1,5 @@
 import type { PassiveRef } from '../passives'
+import { GYMS, type GymId } from '../gyms'
 import type { Potion } from '../potions'
 import type { RaidTier } from '../raidBosses'
 
@@ -11,9 +12,11 @@ export interface Encounter {
 /**
  * Tipos de parada. `Raid`: jefe comunitario; al llegar empieza una pelea en sala con los que van llegando (ver
  * game/raid/routeRaid.ts). `Heal`: sin combate, el Pokémon se para y se cura con la poción de la parada (ver
- * game/run/runHeal.ts). Previstos para más adelante: entrenador, cofre y especial
+ * game/run/runHeal.ts). `Gym`: el líder del gimnasio (`gym`, ver data/gyms.ts) saca su equipo uno tras otro y el
+ * jugador puede cambiar de ataque en cualquier momento (ver game/run/runGym.ts). Previstos para más adelante:
+ * entrenador, cofre y especial
  */
-export const NodeKind = { Start: 'start', Wild: 'wild', Boss: 'boss', Raid: 'raid', Heal: 'heal' } as const
+export const NodeKind = { Start: 'start', Wild: 'wild', Boss: 'boss', Raid: 'raid', Heal: 'heal', Gym: 'gym' } as const
 export type NodeKind = (typeof NodeKind)[keyof typeof NodeKind]
 
 /** Fondo de la escena de caminar (ver src/ui/route/pixelScene/). PalletTown es solo de Pueblo Paleta */
@@ -33,7 +36,9 @@ export const RouteId = {
   Ruta4: 'ruta-4',
   MonteMoon: 'monte-moon',
   RutaMarina: 'ruta-marina',
-  CiudadCeleste: 'ciudad-celeste'
+  CiudadCeleste: 'ciudad-celeste',
+  GimnasioPlateada: 'gimnasio-plateada',
+  GimnasioCeleste: 'gimnasio-celeste',
 } as const
 export type RouteId = (typeof RouteId)[keyof typeof RouteId]
 
@@ -82,6 +87,8 @@ export interface RouteNode {
   boss?: Boss
   /** Obligatoria en las paradas de curación (`NodeKind.Heal`): la poción que usa el Pokémon al llegar */
   potion?: Potion
+  /** Obligatorio en las paradas de gimnasio (`NodeKind.Gym`): de qué gimnasio es su líder */
+  gym?: GymId
   /** Elemento que aparece en la escena al acercarse a esta parada y que se queda a su lado mientras está en ella */
   landmark?: StopLandmark
 }
@@ -172,6 +179,7 @@ export function pathSpecies(r: Route, path: string[]): number[] {
   const ids = path.flatMap((id) => {
     const n = node(r, id)
     if (n.boss) return [n.boss.speciesId]
+    if (n.gym) return GYMS[n.gym].team.map((b) => b.speciesId)
     return n.kind === NodeKind.Wild ? (n.encounters ?? r.encounters).map((e) => e.speciesId) : []
   })
   return [...new Set(ids)]
@@ -182,6 +190,9 @@ export function wildSpecies(r: Route): number[] {
   const lists = [r.encounters, ...r.nodes.filter((n) => n.kind === NodeKind.Wild).map((n) => n.encounters ?? [])]
   return [...new Set(lists.flat().map((e) => e.speciesId))]
 }
+
+/** Ruta de gimnasio: tiene una parada de gimnasio (no admite expediciones) */
+export const isGymRoute = (r: Route): boolean => r.nodes.some((n) => n.kind === NodeKind.Gym)
 
 /** Pasos medios que se andan por combate en el camino principal (los de expediciones, que no recorren tramos) */
 export function averageLegSteps(r: Route): number {

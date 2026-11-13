@@ -7,11 +7,10 @@ import {
   canContinueTower,
   isHealFloor,
   nextFloor,
-  pickTowerMove,
+  setTowerMove,
   TOWER_AWAY_FLOORS,
   towerBetweenFloors,
   towerMon,
-  towerMovePickDue,
 } from '../../game/tower/tower'
 import { pastLevelCap, towerLevel } from '../../game/tower/towerFoes'
 import { isPrizeFloor, nextPrizeFloor, towerPrize } from '../../game/tower/towerRewards'
@@ -22,26 +21,25 @@ import { RouteBattle } from '../route/RouteBattle'
 import { WalkScene } from '../route/WalkScene'
 import '../route/run.css'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
-import { TowerMovePick } from './TowerMovePick'
+import { TowerMoveBar, towerMoveBarRoom } from './TowerMoveBar'
 
 /** Milisegundos que camina entre un piso y el siguiente */
 const FLOOR_GAP_MS = 700
 
 /**
- * La subida en curso, a pantalla completa como una ruta: escena, cabecera encima y, abajo, seguir o elegir ataque. Entre
- * pisos, el siguiente sale solo mientras se mira. Al volver a la
- * pantalla (o tras pasar a segundo plano, en el que sube sola unos pisos) queda parada hasta «Seguir subiendo»; cada pocos pisos, elegir ataque
+ * La subida en curso, a pantalla completa como una ruta: escena, cabecera encima y, abajo, la barra de ataques de las
+ * incursiones (el cambio vale desde el siguiente piso). Entre pisos, el siguiente sale solo mientras se mira. Al volver a
+ * la pantalla (o tras pasar a segundo plano, en el que sube sola unos pisos) queda parada hasta «Seguir subiendo»
  */
 export function TowerClimb({ game }: { game: GameState }) {
   const t = game.tower!
   const mon = towerMon(game)
   const between = towerBetweenFloors(game)
-  const pickDue = towerMovePickDue(game)
   const canGo = canContinueTower(game)
   // Al llegar a la pantalla con la torre esperando, no sigue sola: se retoma a mano
   const [paused, setPaused] = useState(between)
   const [abandoning, setAbandoning] = useState(false)
-  const walking = between && canGo && !pickDue && !paused
+  const walking = between && canGo && !paused
   const pause = useCallback(() => setPaused(true), [])
   useNextFloor(walking, t.floor, pause)
   const battle = !between && t.lastBattle ? t.lastBattle : null
@@ -50,7 +48,7 @@ export function TowerClimb({ game }: { game: GameState }) {
   const biome = towerBiome(t.floor)
 
   return (
-    <div className="screen run tower-climb">
+    <div className="screen run tower-climb" style={mon ? { ['--move-bar-room' as string]: `${towerMoveBarRoom(mon)}px` } : undefined}>
       {mon && (
         <WalkScene
           key={biome}
@@ -91,27 +89,22 @@ export function TowerClimb({ game }: { game: GameState }) {
       {between && !walking && (
         <div className="tower-panel">
           {!canGo && <p className="notice small">{blockedText(game)}</p>}
-          {canGo && pickDue && mon && (
-            <TowerMovePick
-              mon={mon}
-              initialId={t.moveId}
-              title={`Piso ${t.floor}: elige ataque`}
-              confirmLabel="Seguir subiendo"
-              onConfirm={(id) => {
-                act((s) => {
-                  pickTowerMove(s, id)
-                  nextFloor(s)
-                })
-                setPaused(false)
-              }}
-            />
-          )}
-          {canGo && !pickDue && paused && (
+          {canGo && paused && (
             <button className="btn primary wide" onClick={() => setPaused(false)}>
               Seguir subiendo (piso {t.floor})
             </button>
           )}
         </div>
+      )}
+
+      {mon && (
+        <TowerMoveBar
+          mon={mon}
+          selectedId={t.moveId}
+          inUseId={battle?.player.move?.id ?? null}
+          hint="Toca otro para cambiarlo"
+          onPick={(id) => act((s) => setTowerMove(s, id))}
+        />
       )}
 
       {abandoning && (

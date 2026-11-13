@@ -21,8 +21,14 @@ export interface Fighter {
   stats: Stats
   hp: number
   maxHp: number
-  /** Su único ataque (ver signatureMove) */
+  /** Su ataque (ver signatureMove); con `moveSwitches`, el de ahora */
   move: Move
+  /** Cambios de ataque en pleno combate (gimnasios, ver run/runGym.ts): desde qué ataque usa cada uno */
+  moveSwitches?: MoveSwitch[]
+  /** Entrenador del rival (el líder del gimnasio); sin él, es un salvaje */
+  trainer?: string
+  /** Ataques entre los que elige en cada turno el que más daño espera hacer (Pokémon de los líderes, ver attack.ts) */
+  movePool?: Move[]
   /** Sus pasivas sumadas (las stats ya van aplicadas en `stats`) */
   bonus: CombatBonus
   /** Hitos y colección (solo los Pokémon de los jugadores; ver team/perks.ts): las stats ya van aplicadas en `stats` */
@@ -34,6 +40,12 @@ export interface Fighter {
   attacks: number
   /** Ataques (1 = el primero) que van con el toque crítico del jugador (ver run/tapCrit.ts) */
   tapCrits: number[]
+}
+
+/** Desde su ataque número `fromAttack` (1 = el primero) usa `move` */
+export interface MoveSwitch {
+  fromAttack: number
+  move: Move
 }
 
 export interface BattleEvent {
@@ -50,6 +62,8 @@ export interface BattleEvent {
   tapCrit?: boolean
   /** hit de un ataque: multiplicador de eficacia de tipos (2 = muy eficaz, 0,5 = poco eficaz) */
   eff?: number
+  /** attack: el ataque que usa, si cambia en pleno combate (si no, el de su lado del registro) */
+  move?: Move
   /** attack: usa Forcejeo; hit: su golpe al rival o su retroceso (sobre quien lo usa, con el texto «Retroceso») */
   struggle?: boolean
   /** miss: por qué no le hizo nada */
@@ -136,7 +150,7 @@ interface BattleResult {
 /** Registro de eventos del combate; cada uno guarda los PS de ambos en ese momento */
 export type Push = (e: Omit<BattleEvent, 'playerHp' | 'enemyHp' | 'playerStatus' | 'enemyStatus'>) => void
 
-export const label = (f: Fighter) => (f.side === 'enemy' ? `${f.name} salvaje` : f.name)
+export const label = (f: Fighter) => (f.side !== 'enemy' ? f.name : f.trainer ? `${f.name} de ${f.trainer}` : `${f.name} salvaje`)
 
 /** Combate automático por turnos: actúa primero el más rápido; al final de cada turno pesan los estados y la regeneración */
 export function simulateBattle(player: Fighter, enemy: Fighter, rng: Rng = Math.random): BattleResult {

@@ -1,0 +1,10 @@
+/* Medallas de gimnasio: las que aún no se tienen, en silueta gris */
+.badge-icon {
+  flex: none;
+  overflow: visible;
+  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 25%));
+}
+.badge-icon.off {
+  filter: grayscale(1) brightness(0.55);
+  opacity: 0.45;
+}

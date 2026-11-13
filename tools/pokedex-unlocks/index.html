@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pokémon desbloqueables</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./dex.css" />
+  </head>
+  <body>
+    <header class="top">
+      <h1>Pokémon desbloqueables</h1>
+      <div id="filters" class="filters"></div>
+      <input id="search" type="search" placeholder="Buscar por nombre o número" />
+    </header>
+    <main class="layout">
+      <div id="dex" class="dex"></div>
+      <aside id="detail" class="detail"><p class="muted">Toca un Pokémon para ver cómo se consigue.</p></aside>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

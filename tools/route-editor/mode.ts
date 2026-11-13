@@ -4,6 +4,8 @@
 export interface ModeDef<D extends object> {
   /** Nombre en la cabecera: «Ruta», «Incursión» */
   label: string
+  /** Texto del botón de empezar otra; sin él, «<label> nueva» */
+  newLabel?: string
   empty(): D
   load(): D
   save(d: D): void
@@ -30,6 +32,7 @@ export interface ModeDef<D extends object> {
 
 export interface EditorMode {
   label: string
+  newLabel: string
   pasteHint: string
   /** El borrador, para leer y escribir sus campos */
   root(): object
@@ -54,6 +57,7 @@ export function editorMode<D extends object>(def: ModeDef<D>): EditorMode {
   let draft = def.load()
   return {
     label: def.label,
+    newLabel: def.newLabel ?? `${def.label} nueva`,
     pasteHint: def.pasteHint,
     root: () => draft,
     reset: () => (draft = def.empty()),

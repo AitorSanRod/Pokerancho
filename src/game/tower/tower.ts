@@ -6,11 +6,11 @@ import { monPerks } from '../team/perks'
 import { ranchPassives } from '../team/ranchPassives'
 import { recordWeekFloor } from './towerWeek'
 import { towerFoe, towerLevel, towerStatMult } from './towerFoes'
-import { isMovePickFloor, towerMove, towerMoveChoices } from './towerMoves'
+import { towerMove, towerMoveChoices } from './towerMoves'
 import { floorPrize, noTowerEarned, rewardFloor, type FloorPrize, type TowerEarned } from './towerRewards'
 
 // Torre infinita: el compañero sube piso a piso contra rivales cada vez más fuertes (towerFoes.ts),
-// con el ataque que se elige cada pocos pisos (towerMoves.ts) y premios en cada piso (towerRewards.ts), hasta que cae.
+// con el ataque elegido, que se cambia cuando se quiera (towerMoves.ts), y premios en cada piso (towerRewards.ts), hasta que cae.
 // Lucha una copia con sus stats, pasivas e hitos (sus PS de verdad no cambian). El combate en curso sigue aunque no se
 // mire, pero el siguiente piso solo empieza cuando la pantalla lo pide (nextFloor): salir la deja parada entre pisos,
 // tal cual, para retomarla con el mismo compañero. Con la app cerrada sigue sola TOWER_AWAY_FLOORS pisos y luego espera.
@@ -32,10 +32,8 @@ export type TowerEnd = (typeof TowerEnd)[keyof typeof TowerEnd]
 export interface TowerRun {
   /** El Pokémon que sube (el compañero al empezar) */
   uid: string
-  /** Ataque elegido (de su repertorio de incursión) */
+  /** Ataque elegido (de su repertorio de incursión) para el siguiente piso */
   moveId: string
-  /** Piso antes del que se eligió el ataque por última vez */
-  moveFloor: number
   /** Piso en el que está luchando o, entre combates, el siguiente (1 = el primero) */
   floor: number
   /** PS que le quedan a la copia del Pokémon (en la escala del combate); null, todos */
@@ -61,10 +59,6 @@ export const towerBetweenFloors = (s: GameState): boolean => towerActive(s) && s
 
 /** El Pokémon que sube */
 export const towerMon = (s: GameState): OwnedMon | null => s.owned.find((m) => m.uid === s.tower?.uid) ?? null
-
-/** Antes del siguiente piso toca elegir ataque */
-export const towerMovePickDue = (s: GameState): boolean =>
-  towerBetweenFloors(s) && isMovePickFloor(s.tower!.floor) && s.tower!.moveFloor !== s.tower!.floor
 
 /** Puede seguir: está entre pisos, su Pokémon es el compañero y no está en una ruta */
 export const canContinueTower = (s: GameState): boolean => towerBetweenFloors(s) && activeMon(s)?.uid === s.tower!.uid && s.run === null
@@ -101,7 +95,6 @@ export function startTower(s: GameState, moveId: string, rng: Rng = Math.random)
   s.tower = {
     uid: mon.uid,
     moveId,
-    moveFloor: 1,
     floor: 1,
     hp: null,
     lastBattle: null,
@@ -115,17 +108,15 @@ export function startTower(s: GameState, moveId: string, rng: Rng = Math.random)
   fightFloor(s, mon, rng)
 }
 
-/** Elige el ataque antes del piso siguiente (cuando toca o cuando quiera, entre pisos) */
-export function pickTowerMove(s: GameState, moveId: string) {
+/** Cambia el ataque en cualquier momento de la subida: vale desde el siguiente piso (el combate en curso sigue con el suyo) */
+export function setTowerMove(s: GameState, moveId: string) {
   const mon = towerMon(s)
-  if (!towerBetweenFloors(s) || !mon || !knowsMove(mon, moveId)) return
-  s.tower!.moveId = moveId
-  s.tower!.moveFloor = s.tower!.floor
+  if (towerActive(s) && mon && knowsMove(mon, moveId)) s.tower!.moveId = moveId
 }
 
-/** Empieza el combate del siguiente piso, si se puede y no falta elegir ataque */
+/** Empieza el combate del siguiente piso, si se puede */
 export function nextFloor(s: GameState, rng: Rng = Math.random) {
-  if (!canContinueTower(s) || towerMovePickDue(s)) return
+  if (!canContinueTower(s)) return
   s.tower!.awayFloors = 0
   fightFloor(s, towerMon(s)!, rng)
 }
@@ -194,8 +185,8 @@ export function advanceTower(s: GameState, ms: number, rng: Rng = Math.random) {
   }
 }
 
-/** Puede empezar sola el siguiente piso: le quedan pisos sin la pantalla y no toca elegir ataque */
-const canGoAlone = (s: GameState): boolean => canContinueTower(s) && !towerMovePickDue(s) && s.tower!.awayFloors < TOWER_AWAY_FLOORS
+/** Puede empezar sola el siguiente piso: le quedan pisos sin la pantalla */
+const canGoAlone = (s: GameState): boolean => canContinueTower(s) && s.tower!.awayFloors < TOWER_AWAY_FLOORS
 
 /** El jugador la deja entre pisos: se acaba ahí, con lo ganado */
 export function abandonTower(s: GameState) {

@@ -1,7 +1,10 @@
 // Listas para los desplegables del editor, sacadas de los datos reales del juego (nada escrito a mano aquí).
 
+import { Badge } from '../../src/data/badges'
+import { GymId } from '../../src/data/gyms'
 import { Biome, KANTO, NodeKind, RouteId, StopLandmark } from '../../src/data/maps'
-import { STATUS_INFO, TYPE_PASSIVES, type PassiveEffect } from '../../src/data/passives'
+import { RANCH_PASSIVE_SCALE, STATUS_INFO, TYPE_PASSIVES, type PassiveEffect } from '../../src/data/passives'
+import { scaleEffect } from '../../src/game/battle/combatBonus'
 import { POKEMON } from '../../src/data/pokemon'
 import { Potion } from '../../src/data/potions'
 import { RaidTier } from '../../src/data/raidBosses'
@@ -12,7 +15,7 @@ import { pixelSceneFor } from '../../src/ui/route/pixelScene'
 
 export { KANTO, NodeKind, WILD_STAT_MULT }
 
-export const DICTS = { POKEMON, Biome, RouteId, StopLandmark, Potion, RaidTier, NodeKind } as const
+export const DICTS = { POKEMON, Biome, RouteId, StopLandmark, Potion, RaidTier, NodeKind, GymId, Badge } as const
 
 const MISSING_MARK = 'missing-key:'
 
@@ -34,6 +37,7 @@ export const KIND_LABELS: Record<string, string> = {
   Boss: 'Jefe',
   Raid: 'Jefe comunitario',
   Heal: 'Curación',
+  Gym: 'Gimnasio',
 }
 
 export const TYPES = Object.keys(TYPE_PASSIVES) as PokeType[]
@@ -54,10 +58,14 @@ const STAT_LABELS: Record<string, string> = {
 
 const pct = (n: number) => `${Math.round(n * 100)}%`
 
-/** Texto corto de lo que hace una pasiva: «Ataque +30% · Quemadura 10%» */
-export function passiveText(type: PokeType, level: 1 | 2): string {
-  const effect: PassiveEffect = TYPE_PASSIVES[type][level - 1]
+/**
+ * Texto corto de lo que hace una pasiva en combate: «Ataque +12% · Quemadura 4%». Por defecto, a RANCH_PASSIVE_SCALE de
+ * su efecto, como en rutas, jefes y gimnasios; en incursiones, `scale` 1 (allí cuentan enteras)
+ */
+export function passiveText(type: PokeType, level: 1 | 2, scale = RANCH_PASSIVE_SCALE): string {
+  const effect: PassiveEffect = scaleEffect(TYPE_PASSIVES[type][level - 1], scale)
   return Object.entries(effect)
+    .filter(([, v]) => v !== undefined)
     .map(([k, v]) => {
       if (k === 'inflict') return `${STATUS_INFO[v.status as keyof typeof STATUS_INFO].name} ${pct(v.chance)}`
       if (k === 'bonusVs') return `+${pct(v.damage)} de daño contra ${v.types.map(typeName).join(', ')}`

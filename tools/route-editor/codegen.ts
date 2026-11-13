@@ -39,6 +39,7 @@ function nodeFields(n: NodeDraft): string[] {
   if (n.kind === 'Wild' && n.ownEncounters) fields.push(`encounters: ${encCode(n.encounters)}`)
   if (n.kind === 'Boss' || n.kind === 'Raid') fields.push(bossCode(n))
   if (n.kind === 'Heal') fields.push(`potion: Potion.${n.potion}`)
+  if (n.kind === 'Gym') fields.push(`gym: GymId.${n.gym}`)
   return fields
 }
 

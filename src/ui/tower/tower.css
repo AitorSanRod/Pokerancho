@@ -2,7 +2,7 @@
 .tower-head {
   gap: 4px;
 }
-/* Lo de abajo de la subida (TowerClimb): seguir, elegir ataque o por qué no puede seguir, sobre la escena */
+/* Lo de abajo de la subida (TowerClimb): seguir o por qué no puede seguir, sobre la escena */
 .tower-panel {
   position: absolute;
   left: 12px;
@@ -26,8 +26,23 @@
   gap: 4px;
   line-height: 1.35;
 }
-.tower-pick {
-  gap: 8px;
+/* Antes de empezar: la barra de ataques de las incursiones en la página, con «Comenzar» debajo */
+.tower-begin {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.move-bar.inline {
+  position: static;
+}
+/* En la subida, la barra va fija abajo; la escena, los avisos y «Seguir subiendo» quedan encima (--move-bar-room, lo que
+   ocupa la barra según sus ataques, lo pone TowerClimb) */
+.tower-climb .scene {
+  bottom: var(--move-bar-room);
+}
+.tower-climb .tap-hint,
+.tower-climb .tower-panel {
+  bottom: calc(var(--move-bar-room) + 8px);
 }
 /* Fundido al cambiar el fondo de la torre (cada pocos pisos): la escena nueva sale de la oscuridad */
 .tower-fade {

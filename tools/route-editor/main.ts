@@ -1,9 +1,10 @@
-// Editor de rutas e incursiones: formulario visual que escribe el código para pegarlo en los datos del juego.
+// Editor de rutas, incursiones y gimnasios: formulario visual que escribe el código para pegarlo en los datos del juego.
 // Se abre con `npm run dev` en http://localhost:5173/tools/route-editor/
 
 import { DICTS, spriteOf, SPECIES_KEYS } from './catalog'
 import { esc } from './fields'
 import { MOVE_KEYS, moveText } from './incursion/incCatalog'
+import { GYM_MODE } from './gym/gymMode'
 import { INCURSION_MODE } from './incursion/incursionMode'
 import type { EditorMode } from './mode'
 import { setupPaste } from './pasteDialog'
@@ -21,7 +22,7 @@ const loadSelect = $<HTMLSelectElement>('load')
 const modeSelect = $<HTMLSelectElement>('mode')
 const writeButton = $<HTMLButtonElement>('write')
 
-const MODES: Record<string, EditorMode> = { route: ROUTE_MODE, incursion: INCURSION_MODE }
+const MODES: Record<string, EditorMode> = { route: ROUTE_MODE, incursion: INCURSION_MODE, gym: GYM_MODE }
 const MODE_KEY = 'route-editor-mode'
 
 let modeId = readMode()
@@ -78,7 +79,7 @@ function render() {
 
 function switchMode() {
   modeSelect.value = modeId
-  $<HTMLButtonElement>('reset').textContent = `${mode().label} nueva`
+  $<HTMLButtonElement>('reset').textContent = mode().newLabel
   writeButton.hidden = !mode().write
   setupLoad()
   render()
@@ -153,7 +154,7 @@ async function writeToGame() {
 
 writeButton.addEventListener('click', writeToGame)
 $<HTMLButtonElement>('reset').addEventListener('click', () => {
-  if (!confirm(`¿Empezar ${mode().label.toLowerCase()} nueva? Se pierde lo que hay en el formulario.`)) return
+  if (!confirm(`¿Empezar ${mode().newLabel.toLowerCase()}? Se pierde lo que hay en el formulario.`)) return
   mode().reset()
   render()
 })

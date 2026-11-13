@@ -1,4 +1,5 @@
 import { legSteps, NodeKind, type Boss, type Route, type RouteNode } from '../../data/maps'
+import type { Move } from '../../data/moves'
 import { makeFighter } from '../battle/battle'
 import { combineBonus } from '../battle/combatBonus'
 import { boostedMoney, expReward, moneyReward, pieceReward, ticketReward } from '../battle/rewards'
@@ -15,6 +16,7 @@ import { gainExp, maxHp } from '../team/stats'
 import { battleDuration } from './battleTimeline'
 import { boostActive, BOOST_EXP_MULT } from './expBoost'
 import { playSetup, rewardsFor } from './tapCrit'
+import { nextGymFoe, winGym } from './runGym'
 
 /**
  * Multiplicador de stats de los salvajes. Por debajo de 1 porque el jugador encadena combates y solo se cura en las
@@ -43,57 +45,78 @@ export function seeOnRoute(s: GameState, speciesId: number) {
   if (markSeen(s, speciesId)) s.run!.earned.discovered.push(speciesId)
 }
 
+/** Cómo es el combate que empieza: contra un jefe (stats completas y más premio) y, en los gimnasios, de quién es el rival */
+export interface BattleOpts {
+  boss: boolean
+  statMult: number
+  /** El ataque elegido (gimnasios); sin él, el suyo de siempre */
+  move?: Move
+  /** Entrenador del rival (el líder del gimnasio) */
+  trainer?: string
+  /** Ataques del rival, si no es el suyo de siempre: elige en cada turno (ver attack.ts › bestMove) */
+  foeMoves?: Move[]
+  /** Texto del principio del combate, si no es el de un salvaje que aparece */
+  intro?: string
+}
+
 /**
  * Resuelve el combate de la parada pero no lo aplica: PS, premio y derrota se aplican en `settleBattle` cuando
  * termina su tiempo, para que el estado no se adelante a lo que ve el jugador. Los jefes luchan con sus stats
- * completas (sin WILD_STAT_MULT), con sus pasivas del mapa, y dan más premio. El Pokémon del jugador lleva las pasivas
- * de su rancho. Se juega con una semilla y se guarda cómo empezó, para repetirlo con los toques críticos (tapCrit.ts).
+ * completas (sin WILD_STAT_MULT), con sus pasivas del mapa, y dan más premio.
  */
 export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng) {
+  const isBoss = n.kind === NodeKind.Boss
+  startBattle(s, r, rivalOf(r, n, rng), { boss: isBoss, statMult: n.statMult ?? (isBoss ? 1 : WILD_STAT_MULT) }, rng)
+}
+
+/**
+ * Empieza un combate de la ruta contra `foe`. El Pokémon del jugador lleva las pasivas de su rancho. Se juega con una
+ * semilla y se guarda cómo empezó, para repetirlo con los toques críticos y los cambios de ataque (tapCrit.ts)
+ */
+export function startBattle(s: GameState, r: Route, foe: Boss, opts: BattleOpts, rng: Rng) {
   const run = s.run!
   const mon = activeMon(s)!
-  const isBoss = n.kind === NodeKind.Boss
-  const { speciesId: enemyId, level, passives } = rivalOf(r, n, rng)
-  const statMult = n.statMult ?? (isBoss ? 1 : WILD_STAT_MULT)
-  const enemy = makeFighter('enemy', enemyId, level, { statMult, passives })
+  const { speciesId: enemyId, level, passives } = foe
+  const enemy = { ...makeFighter('enemy', enemyId, level, { statMult: opts.statMult, passives }), trainer: opts.trainer, movePool: opts.foeMoves }
   const player = makeFighter('player', mon.speciesId, mon.level, {
     hp: Math.floor(mon.hp),
     stars: mon.stars,
     nature: mon.nature,
     passives: ranchPassives(s, mon.ranch!),
     perks: monPerks(s, mon),
+    move: opts.move,
   })
   const prize = {
-    money: moneyReward(level, legSteps(r, run.path, run.stop), rng) * (isBoss ? BOSS_MONEY_MULT : 1),
-    tickets: isBoss ? BOSS_TICKETS : ticketReward(enemyId, rng),
-    exp: expReward(level, mon.level) * (isBoss ? BOSS_EXP_MULT : 1) * (boostActive(run) ? BOOST_EXP_MULT : 1),
+    money: moneyReward(level, legSteps(r, run.path, run.stop), rng) * (opts.boss ? BOSS_MONEY_MULT : 1),
+    tickets: opts.boss ? BOSS_TICKETS : ticketReward(enemyId, rng),
+    exp: expReward(level, mon.level) * (opts.boss ? BOSS_EXP_MULT : 1) * (boostActive(run) ? BOOST_EXP_MULT : 1),
     piece: pieceReward(enemyId, rng),
   }
-  run.battleSetup = { seed: Math.floor(rng() * 2 ** 31), player, enemy, prize, taps: [] }
+  run.battleSetup = { seed: Math.floor(rng() * 2 ** 31), player, enemy, prize, taps: [], intro: opts.intro }
   const result = playSetup(run.battleSetup, [])
   seeOnRoute(s, enemyId)
   run.earned.battles++
   run.lastBattle = {
-    player: { speciesId: mon.speciesId, name: player.name, level: mon.level, maxHp: player.maxHp },
+    player: { speciesId: mon.speciesId, name: player.name, level: mon.level, maxHp: player.maxHp, ...(opts.move ? { move: opts.move } : {}) },
     enemy: { speciesId: enemyId, name: enemy.name, level, maxHp: enemy.maxHp },
     events: result.events,
     outcome: result.outcome,
-    boss: isBoss,
+    boss: opts.boss,
     rewards: rewardsFor(prize, result.outcome),
   }
   run.battleMsLeft = battleDuration(run.lastBattle)
 }
 
 /** Gasta hasta `ms` del combate en curso; al acabarse, lo aplica. Devuelve el tiempo gastado. */
-export function spendBattleTime(s: GameState, r: Route, ms: number): number {
+export function spendBattleTime(s: GameState, r: Route, ms: number, rng: Rng = Math.random): number {
   const run = s.run!
   const spent = Math.min(ms, run.battleMsLeft)
   run.battleMsLeft -= spent
-  if (run.battleMsLeft === 0 && spent > 0) settleBattle(s, r)
+  if (run.battleMsLeft === 0 && spent > 0) settleBattle(s, r, rng)
   return spent
 }
 
-function settleBattle(s: GameState, r: Route) {
+function settleBattle(s: GameState, r: Route, rng: Rng) {
   const run = s.run!
   const record = run.lastBattle!
   const mon = activeMon(s)!
@@ -118,6 +141,9 @@ function settleBattle(s: GameState, r: Route) {
     }
     run.earned.wins++
     advanceMission(s, MissionKind.WinBattles)
+    // En el gimnasio, el líder saca el siguiente; al caer el último, la medalla
+    if (run.gym && nextGymFoe(s, r, rng)) return
+    if (run.gym) winGym(s)
   }
   if (run.stop === run.path.length - 1) completeRoute(s, r)
 }

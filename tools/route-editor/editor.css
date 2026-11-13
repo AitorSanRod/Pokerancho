@@ -227,6 +227,13 @@ button.wide {
 .kind-Heal {
   border-left-color: #f85888;
 }
+.kind-Gym {
+  border-left-color: #b8a038;
+}
+.leader-gif {
+  height: 80px;
+  image-rendering: pixelated;
+}
 .issues {
   margin: 0;
   padding-left: 18px;

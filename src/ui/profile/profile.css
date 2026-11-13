@@ -1,0 +1,59 @@
+/* Perfil del menú del rancho: tarjeta del entrenador, estuche de medallas en rejilla de 4 y datos en dos columnas */
+.profile-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+.profile-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.profile-name .muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge-case {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  background: linear-gradient(#3b2f5c, #2a2140);
+}
+.badge-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #b9b0d4;
+  text-align: center;
+}
+.badge-slot.earned {
+  color: #fff;
+}
+
+.profile-dex {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 14px;
+}
+.profile-stats dt {
+  color: var(--muted, #6a6a80);
+}
+.profile-stats dd {
+  margin: 0;
+  font-weight: 700;
+  text-align: right;
+}

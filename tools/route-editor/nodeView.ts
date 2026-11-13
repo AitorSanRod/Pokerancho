@@ -47,6 +47,7 @@ function kindFields(n: NodeDraft, p: string) {
   if (n.kind === 'Wild') return wildFields(n, p)
   if (n.kind === 'Boss' || n.kind === 'Raid') return bossFields(n, p)
   if (n.kind === 'Heal') return label('Poción', select(`${p}.potion`, n.potion, opts(DICTS.Potion)))
+  if (n.kind === 'Gym') return label('Gimnasio', select(`${p}.gym`, n.gym, opts(DICTS.GymId)))
   return ''
 }
 

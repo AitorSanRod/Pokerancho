@@ -25,6 +25,11 @@ import { HealStop } from './HealStop'
 import { StopTrack } from './StopTrack'
 import { ExpBoostBadge, ExpBoostSpawn } from './ExpBoost'
 import { WalkScene } from './WalkScene'
+import { defaultGymMove, pickGymMove, routeGym } from '../../game/run/runGym'
+import { towerMoveBarRoom } from '../tower/TowerMoveBar'
+import { gymScene } from './gym/gymScene'
+import { GymMoveBar } from './gym/GymMoveBar'
+import { badgeReward } from '../profile/badgeReward'
 import './run.css'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
@@ -54,9 +59,15 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
   const ended = run.phase === 'complete' || run.phase === 'fainted'
   const inView = landmarkInView(run)
   const landmark = inView && { key: `${run.routeId}:${inView.stop}`, id: inView.landmark }
+  // En los gimnasios, la barra de ataques va abajo toda la ruta (se cambia también en pleno combate)
+  const gymRoute = routeGym(r) !== null
+  const gym = battle ? gymScene(run) : null
 
   return (
-    <div className={`screen run ${defeated ? 'defeated' : ''}`}>
+    <div
+      className={`screen run ${defeated ? 'defeated' : ''} ${gymRoute ? 'gym-run' : ''}`}
+      style={gymRoute ? { ['--move-bar-room' as string]: `${towerMoveBarRoom(mon)}px` } : undefined}
+    >
       <WalkScene
         biome={r.biome}
         // En la pelea del jefe comunitario el Pokémon va con el grupo, no caminando (mientras se busca sala, espera solo)
@@ -74,6 +85,7 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
           <RouteBattle
             record={battle}
             frame={frame}
+            gym={gym}
             enemyOverlay={run.battleSetup && <CritRing record={battle} setup={run.battleSetup} msLeft={run.battleMsLeft} lastTick={game.lastTick} />}
           />
         )}
@@ -102,6 +114,10 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
       {walking && <div className="tap-hint">{boosted ? `Cada toque: +${BOOST_TAP_EXP} EXP` : 'Toca para avanzar más rápido'}</div>}
       {run.heal && <div className="tap-hint">Parada de curación</div>}
       {battle && !frame?.ended && <div className="tap-hint">Atento: si sale un anillo sobre el rival, toca cuando se cierre</div>}
+
+      {gymRoute && run.phase === 'walking' && (
+        <GymMoveBar mon={mon} moveId={run.gym?.moveId ?? defaultGymMove(mon)} onPick={(id) => act((s) => pickGymMove(s, id, Date.now()))} />
+      )}
 
       {ended && !battle && <RunSummary run={run} mon={mon} />}
     </div>
@@ -153,6 +169,7 @@ function RunSummary({ run, mon }: { run: Run; mon: OwnedMon }) {
   if (run.earned.raidMoneyMult < 1) {
     items.push({ key: 'repeat', icon: <ItemIcon item={ICON.Money} size={96} off />, title: 'Menos dinero del jefe', detail: repeatNote(run.earned.raidMoneyMult), color: '#6a6a80' })
   }
+  if (run.earned.badge) items.push(badgeReward(run.earned.badge))
   if (run.earned.levelsGained > 0) items.push(levelUpReward(mon.speciesId, mon.level))
   if (run.unlocked) {
     items.push({ key: 'unlock', icon: <ItemIcon item={ICON.Route} size={96} />, title: 'Nueva ruta', detail: route(run.unlocked).name, color: '#2f9e8f' })

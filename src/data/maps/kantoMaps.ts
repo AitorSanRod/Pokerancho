@@ -1,3 +1,4 @@
+import { GymId } from '../gyms'
 import { POKEMON } from '../pokemon'
 import { Potion } from '../potions'
 import { RaidTier } from '../raidBosses'
@@ -105,7 +106,7 @@ export const KANTO: GameMap = {
       levels: [14, 20],
       encounters: enc([POKEMON.Geodude, 20], [POKEMON.Sandshrew, 13], [POKEMON.Spearow, 15], [POKEMON.Pidgey, 15], [POKEMON.Diglett, 10], [POKEMON.Mankey, 5], [POKEMON.Rattata, 20], [POKEMON.Jigglypuff, 1], [POKEMON.Growlithe, 1]),
       reward: { tickets: 3, money: 400, exp: 200 },
-      unlocks: RouteId.CiudadPlateada2,
+      unlocks: RouteId.GimnasioPlateada,
       nodes: chain(
         { id: 's', name: 'Salida del bosque', kind: NodeKind.Start, steps: 0 },
         { id: 'a', name: 'Ruta 2', kind: NodeKind.Wild, steps: 80, encounters: enc([POKEMON.Pidgey, 30], [POKEMON.Spearow, 30], [POKEMON.Rattata, 25], [POKEMON.Mankey, 15]) },
@@ -116,6 +117,21 @@ export const KANTO: GameMap = {
         { id: 'p2', name: 'Tienda Pokémon', kind: NodeKind.Heal, steps: 15, potion: Potion.SuperPotion },
         { id: 'e', name: 'Gimnasio', kind: NodeKind.Wild, steps: 70, landmark: StopLandmark.Gym, levelBonus: 2 },
         { id: 'e2', name: 'Gimnasio', kind: NodeKind.Wild, steps: 70, levelBonus: 2 },
+      ),
+    },
+    {
+      id: RouteId.GimnasioPlateada,
+      name: 'Gimnasio de Ciudad Plateada',
+      description: 'Brock, el líder de roca, te espera con su equipo. Ganarle da la Medalla Roca.',
+      biome: Biome.PewterCity,
+      backdrop: { image: pewterCity, focusY: 45 },
+      levels: [20, 23],
+      encounters: [],
+      reward: { tickets: 3, money: 1000, exp: 400 },
+      unlocks: RouteId.CiudadPlateada2,
+      nodes: chain(
+        { id: 's', name: 'Entrada del gimnasio', kind: NodeKind.Start, steps: 0 },
+        { id: 'g', name: 'Brock', kind: NodeKind.Gym, steps: 20, landmark: StopLandmark.Gym, gym: GymId.Plateada },
       ),
     },
     {
@@ -229,13 +245,32 @@ export const KANTO: GameMap = {
       biome: Biome.CeruleanCity,
       backdrop: { image: ciudadCeleste, focusY: 45 },
       levels: [36, 42],
-      encounters: enc([POKEMON.Starmie, 100]),
+      encounters: enc([POKEMON.Poliwag, 25], [POKEMON.Goldeen, 20], [POKEMON.Krabby, 25], [POKEMON.Magikarp, 20], [POKEMON.Ralts, 5], [POKEMON.Noibat, 5]),
       reward: { tickets: 5, money: 5000, exp: 2100 },
+      unlocks: RouteId.GimnasioCeleste,
       nodes: chain(
         { id: 's', name: 'Inicio', kind: NodeKind.Start, steps: 0 },
-        { id: 'a', name: 'Primer combate Misty', kind: NodeKind.Boss, steps: 20, statMult: 1.5, boss: boss(POKEMON.Shellder, 36, [{ type: 'water', level: 2 }]) },
-        { id: 'b', name: 'Segundo combate Misty', kind: NodeKind.Boss, steps: 40, statMult: 1.5, boss: boss(POKEMON.Staryu, 40, [{ type: 'water', level: 1 }]) },
-        { id: 'c', name: 'Combate final', kind: NodeKind.Raid, steps: 60, boss: raidBoss(POKEMON.Starmie, 42, RaidTier.Mid, { soloMinutes: 30 }) },
+        { id: 'a', name: 'Paseo', kind: NodeKind.Wild, steps: 60 },
+        { id: 'b', name: 'Puente', kind: NodeKind.Wild, steps: 100, landmark: StopLandmark.Sign, levelBonus: 1, statMult: 1 },
+        { id: 'c', name: 'Fuente', kind: NodeKind.Wild, steps: 20, landmark: StopLandmark.Gym, levelBonus: 2, statMult: 1 },
+        { id: 'd', name: 'Fuente curativa', kind: NodeKind.Heal, steps: 20, potion: Potion.Potion },
+        { id: 'e', name: 'Paseo', kind: NodeKind.Wild, steps: 30, levelBonus: 3, statMult: 1 },
+        { id: 'f', name: 'Camino', kind: NodeKind.Wild, steps: 20, statMult: 1 },
+        { id: 'g', name: 'Gimnasio', kind: NodeKind.Wild, steps: 20, landmark: StopLandmark.Gym, levelBonus: 1, statMult: 1 },
+      ),
+    },
+    {
+      id: RouteId.GimnasioCeleste,
+      name: 'Gimnasio de Ciudad Celeste',
+      description: 'Misty, la líder de agua, te espera con su equipo. Ganarle da la Medalla Cascada.',
+      biome: Biome.CeruleanCity,
+      backdrop: { image: ciudadCeleste, focusY: 45 },
+      levels: [41, 44],
+      encounters: [],
+      reward: { tickets: 5, money: 6000, exp: 2500 },
+      nodes: chain(
+        { id: 's', name: 'Entrada del gimnasio', kind: NodeKind.Start, steps: 0 },
+        { id: 'g', name: 'Misty', kind: NodeKind.Gym, steps: 20, landmark: StopLandmark.Gym, gym: GymId.Celeste },
       ),
     },
   ],

@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { MoveClass, moveClass, type IncursionMove } from '../../data/incursionMoves'
-import { TYPE_INFO } from '../../data/types'
 import { findMon, type GameState } from '../../game/core/state'
 import type { ActiveIncursion } from '../../game/incursion/activeIncursion'
 import { monRepertoire } from '../../game/incursion/repertoire'
 import { BoxIcon } from '../shared/BoxIcon'
 import { CLASS_LABEL } from '../shared/moveText'
+import { MoveBarMoves } from './MoveBarMoves'
 import { PickDialog } from './PickDialog'
 import { choosePick, pickCandidates, pickNow } from './pickAction'
 import type { SceneState } from './sceneState'
@@ -45,20 +45,7 @@ export function MoveBar({ game, a, scene }: { game: GameState; a: ActiveIncursio
           i
         </button>
       </div>
-      <div className="move-bar-moves">
-        {monRepertoire(mon).map((mv) => (
-          <button
-            key={mv.id}
-            className={`move-bar-move ${mv.id === next.moveId ? 'selected' : ''} ${mv.id === applied.moveId ? 'in-use' : ''}`}
-            style={{ ['--type-color' as string]: TYPE_INFO[mv.type].color }}
-            onClick={() => pickMove(mv.id)}
-          >
-            <span className="move-bar-type">{TYPE_INFO[mv.type].name}</span>
-            <strong className="move-bar-name">{mv.name}</strong>
-            <span className="move-bar-meta">{moveMeta(mv)}</span>
-          </button>
-        ))}
-      </div>
+      <MoveBarMoves moves={monRepertoire(mon)} selectedId={next.moveId} inUseId={applied.moveId} meta={moveMeta} onPick={pickMove} />
       {candidates.length > 0 && (
         <div className="move-bar-targets">
           <span className="move-bar-to">Objetivo</span>

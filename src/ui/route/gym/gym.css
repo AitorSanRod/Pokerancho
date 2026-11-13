@@ -1,0 +1,94 @@
+/* Combate de gimnasio: el líder detrás de su Pokémon, a la derecha, con sus Poké Balls; al sacar a cada Pokémon, un
+   destello de Poké Ball. La barra de ataques va fija abajo y la escena acaba encima (--move-bar-room, lo pone RunView) */
+
+.gym-run .scene {
+  bottom: var(--move-bar-room);
+}
+.gym-run .tap-hint {
+  bottom: calc(var(--move-bar-room) + 8px);
+}
+
+/* El líder, a la derecha y un poco más al fondo que su Pokémon: más arriba y tapado en parte por él */
+.gym-leader {
+  position: absolute;
+  left: 86%;
+  translate: -50% 0;
+  bottom: calc(var(--ground) + 34px);
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+}
+.gym-leader-sprite {
+  width: 112px;
+  height: auto;
+  image-rendering: pixelated;
+  animation: gym-leader-throw 0.6s ease-out;
+}
+.gym-leader-team {
+  display: flex;
+  gap: 1px;
+  padding: 2px 4px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 35%);
+}
+/* El líder adelanta el brazo al lanzar la Poké Ball */
+@keyframes gym-leader-throw {
+  0% {
+    translate: 12px 0;
+    opacity: 0;
+  }
+  40% {
+    translate: -6px 0;
+    opacity: 1;
+  }
+  100% {
+    translate: 0 0;
+  }
+}
+
+/* El Pokémon del líder sale de la Poké Ball: crece desde un punto con un destello; va delante del líder */
+.route-fighter.enemy.gym-foe {
+  z-index: 1;
+  animation: gym-send-out 0.7s ease-out;
+}
+.route-fighter.enemy.gym-foe::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  width: 120px;
+  height: 120px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, rgb(255 255 255 / 70%) 35%, transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  animation: gym-flash 0.7s ease-out;
+}
+@keyframes gym-send-out {
+  0% {
+    scale: 0.05;
+    filter: brightness(4);
+  }
+  55% {
+    scale: 1.08;
+    filter: brightness(1.6);
+  }
+  100% {
+    scale: 1;
+    filter: none;
+  }
+}
+@keyframes gym-flash {
+  0% {
+    opacity: 1;
+    scale: 0.2;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.4;
+  }
+}

@@ -1,21 +1,22 @@
-import { activeMon, type GameState } from '../../game/core/state'
+import { useState } from 'react'
+import { activeMon, type GameState, type OwnedMon } from '../../game/core/state'
 import { act } from '../../game/core/store'
 import { startTower, towerBlocker, towerMon, TOWER_HEAL_EVERY, TOWER_LAST_HEAL_FLOOR, towerActive } from '../../game/tower/tower'
 import { towerWeekBest } from '../../game/tower/towerWeek'
 import { TOWER_LEVEL_CAP_FLOOR } from '../../game/tower/towerFoes'
-import { TOWER_MOVE_PICK_EVERY } from '../../game/tower/towerMoves'
+import { towerMoveChoices } from '../../game/tower/towerMoves'
 import { nextPrizeFloor, towerPrize } from '../../game/tower/towerRewards'
 import { giftText } from '../gift/giftText'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { TowerClimb } from './TowerClimb'
-import { TowerMovePick } from './TowerMovePick'
+import { TowerMoveBar } from './TowerMoveBar'
 import { TowerSummary } from './TowerSummary'
 import './tower.css'
 
 /**
  * Torre infinita: el compañero sube piso a piso contra rivales cada vez más fuertes hasta que cae.
- * Sin subida en curso, los premios de la que acaba de terminar (hasta cerrarlos) y elegir ataque para empezar otra; con ella, la subida a pantalla completa
+ * Sin subida en curso, los premios de la que acaba de terminar (hasta cerrarlos) y empezar otra; con ella, la subida a pantalla completa
  * (TowerClimb)
  */
 export function TowerScreen({ game }: { game: GameState }) {
@@ -63,17 +64,24 @@ function TowerStart({ game }: { game: GameState }) {
             Te curas cada {TOWER_HEAL_EVERY} pisos, hasta el {TOWER_LAST_HEAL_FLOOR}.
           </li>
           <li>Pasado el {TOWER_LEVEL_CAP_FLOOR}, rivales de todas partes, más fuertes en cada piso, y cada uno da un ticket suyo.</li>
-          <li>El ataque se elige ahora y cada {TOWER_MOVE_PICK_EVERY} pisos.</li>
+          <li>Elige el ataque y cámbialo cuando quieras durante la subida: vale desde el siguiente piso.</li>
           <li>Si sales, la torre te espera en el siguiente piso.</li>
         </ul>
       </div>
-      <TowerMovePick
-        mon={mon}
-        initialId={game.tower?.moveId ?? null}
-        title="Ataque para la subida"
-        confirmLabel="Comenzar"
-        onConfirm={(id) => act((s) => startTower(s, id))}
-      />
+      <TowerBegin mon={mon} />
     </>
+  )
+}
+
+/** Elegir el ataque con la barra de las incursiones y comenzar */
+function TowerBegin({ mon }: { mon: OwnedMon }) {
+  const [moveId, setMoveId] = useState(() => towerMoveChoices(mon)[0]?.id ?? '')
+  return (
+    <div className="tower-begin">
+      <TowerMoveBar mon={mon} selectedId={moveId} inUseId={null} hint="Toca uno para elegirlo" inline onPick={setMoveId} />
+      <button className="btn primary wide" disabled={!moveId} onClick={() => act((s) => startTower(s, moveId))}>
+        Comenzar
+      </button>
+    </div>
   )
 }

@@ -10,6 +10,7 @@ import { Stone } from '../../data/stones'
 import { isTm } from '../../data/tms'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
 import { ExpeditionFocus, isExpeditionFocus } from '../team/expeditionFocus'
+import { isBadge } from '../../data/badges'
 import { salvageMissions } from '../collection/missions'
 import { SERVER_GIFT_ID } from '../collection/serverGifts'
 import { createMon } from '../team/mons'
@@ -125,6 +126,7 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   formItems: (v) => listOf(v, isFormItem),
   mints: (v) => (isInt(v) ? v : undefined),
   towerBest: (v) => (isInt(v) ? v : undefined),
+  badges: (v) => listOf(v, isBadge),
   towerWeek: (v) => (isRecord(v) && isInt(v.week) && isInt(v.best) ? { week: v.week, best: v.best } : undefined),
   starItems: (v) => countsOf(v, isStarItem),
   tms: (v) => countsOf(v, isTm),

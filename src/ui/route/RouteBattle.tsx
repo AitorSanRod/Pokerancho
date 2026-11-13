@@ -7,6 +7,8 @@ import { Sprite } from '../shared/common'
 import { BattleHud } from './BattleHud'
 import { BattlePop } from './BattlePop'
 import { fighterClass, statusClass, type BattleFrame } from './battleFrame'
+import { GymLeader } from './gym/GymLeader'
+import { sendOutText, type GymScene } from './gym/gymScene'
 import { HitEffect } from './HitEffect'
 import { battleFit, BOSS_SPRITE_SIZE, ENEMY_SPRITE_SIZE } from './spriteSizes'
 import './battle.css'
@@ -22,9 +24,10 @@ const typeColor = (type: PokeType) => ({ ['--type-color' as string]: TYPE_INFO[t
  * Combate dentro de la escena de la ruta: el rival aparece delante del Pokémon, cada uno con su marcador (BattleHud) a sus pies,
  * el ataque se anuncia con su nombre y los golpes se ven como números flotantes con el efecto de su tipo; el crítico
  * destella y un estado alterado se ve en el sprite mientras dura. El sprite del jugador lo pinta `WalkScene`.
- * `enemyOverlay`: lo que va sobre el rival (el anillo del toque crítico).
+ * `enemyOverlay`: lo que va sobre el rival (el anillo del toque crítico). `gym`: contra el líder de un gimnasio, que se
+ * ve detrás y saca a cada Pokémon con un destello.
  */
-export function RouteBattle({ record, frame, enemyOverlay }: { record: BattleRecord; frame: BattleFrame; enemyOverlay?: ReactNode }) {
+export function RouteBattle({ record, frame, enemyOverlay, gym }: { record: BattleRecord; frame: BattleFrame; enemyOverlay?: ReactNode; gym?: GymScene | null }) {
   const { event, index } = frame
   const crit = !frame.ended && event.kind === 'hit' && event.crit
   const struck = (side: Side) => !frame.ended && event.kind === 'hit' && event.side === side
@@ -37,8 +40,9 @@ export function RouteBattle({ record, frame, enemyOverlay }: { record: BattleRec
         <BattlePop record={record} frame={frame} side="player" />
         <Hit record={record} frame={frame} side="player" />
       </div>
-      {record.boss && index < BOSS_WARNING_EVENTS && <div className="boss-warning">¡Un jefe te corta el paso!</div>}
-      <div className={`route-fighter enemy ${record.boss ? 'boss' : ''}`}>
+      {gym && <GymLeader gym={gym} />}
+      {record.boss && index < BOSS_WARNING_EVENTS && <div className="boss-warning">{gym ? sendOutText(gym) : '¡Un jefe te corta el paso!'}</div>}
+      <div key={gym ? `gym-${gym.index}` : 'foe'} className={`route-fighter enemy ${record.boss ? 'boss' : ''} ${gym ? 'gym-foe' : ''}`}>
         <MoveCallout record={record} frame={frame} side="enemy" />
         <BattlePop record={record} frame={frame} side="enemy" />
         <Hit record={record} frame={frame} side="enemy" />
@@ -60,7 +64,14 @@ export function RouteBattle({ record, frame, enemyOverlay }: { record: BattleRec
   )
 }
 
-const moveOf = (record: BattleRecord, side: Side) => sideMove(side === 'player' ? record.player : record.enemy)
+/** El ataque que usa `side` en el evento `index` o en su último ataque antes de él (cambia en los gimnasios) */
+function moveOf(record: BattleRecord, side: Side, index: number) {
+  for (let i = index; i >= 0; i--) {
+    const e = record.events[i]
+    if (e.kind === 'attack' && e.side === side && e.move) return e.move
+  }
+  return sideMove(side === 'player' ? record.player : record.enemy)
+}
 
 /**
  * Nombre del ataque, del color de su tipo, sobre quien lo usa: aparece al lanzarlo y sigue mientras se ve su resultado
@@ -71,7 +82,7 @@ function MoveCallout({ record, frame, side }: { record: BattleRecord; frame: Bat
   const { index, event } = frame
   const attackAt = event.kind === 'attack' ? index : record.events[index - 1]?.kind === 'attack' ? index - 1 : -1
   if (attackAt < 0 || record.events[attackAt].side !== side) return null
-  const mv = record.events[attackAt].struggle ? STRUGGLE : moveOf(record, side)
+  const mv = record.events[attackAt].struggle ? STRUGGLE : moveOf(record, side, attackAt)
   return (
     <span key={attackAt} className="move-callout" style={typeColor(mv.type)}>
       {mv.name}
@@ -91,6 +102,6 @@ function Hit({ record, frame, side }: { record: BattleRecord; frame: BattleFrame
     ? STATUS_INFO[event.status].type
     : event.struggle
       ? STRUGGLE.type
-      : moveOf(record, rival).type
+      : moveOf(record, rival, index).type
   return <HitEffect key={index} type={type} />
 }

@@ -17,6 +17,7 @@ import { stateFromSaved } from './cloudSave'
 import { migrateSave, SAVE_MIGRATIONS } from './saveMigration'
 import { ExpeditionFocus } from '../team/expeditionFocus'
 import { initialState, MonPlace, monPlace, SAVE_VERSION, type GameState } from './state'
+import { BADGE_IDS } from '../../data/badges'
 import { backupTeam } from './teamBackup'
 
 vi.mock('../../data/maps/kantoMaps', () => import('./test-map'))
@@ -67,6 +68,7 @@ function advancedGame(): GameState {
     raidPrizes: [{ bossSpeciesId: C, uid: first.uid, money: 80, tickets: 1, pieces: 1, exp: 5 }],
     routeRaidStreaks: { 'bosque-verde/g': { count: 2, lastAt: 1000 } },
     tradeStamp: 4,
+    badges: [BADGE_IDS[1], BADGE_IDS[0]],
     lastTick: Date.now() - 60_000,
   })
   return s
@@ -77,7 +79,7 @@ const fromOldVersion = (s: GameState, version = OLD) => JSON.parse(JSON.stringif
 
 const KEPT: (keyof GameState)[] = [
   'money', 'tickets', 'missingnoShards', 'seen', 'caught', 'favorites', 'pieces', 'upgrades', 'ranchTypeItems', 'ranchTypeOf', 'ranchExtraSlots', 'ranchNames', 'ranchBackdropOf',
-  'stones', 'formItems', 'incursionKeys', 'freeIncursionsPlayed', 'claimedServerGifts', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'lastTick',
+  'stones', 'formItems', 'incursionKeys', 'freeIncursionsPlayed', 'claimedServerGifts', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'badges', 'lastTick',
 ]
 
 /** El paso de verdad de la versión anterior, que algún test sustituye por uno de prueba */

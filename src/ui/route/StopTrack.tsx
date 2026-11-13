@@ -13,6 +13,7 @@ const STOP_ICON: Record<NodeKind, Item> = {
   [NodeKind.Boss]: ITEM.RelicCrown,
   [NodeKind.Raid]: ITEM.DynamaxBand,
   [NodeKind.Heal]: ITEM.Potion,
+  [NodeKind.Gym]: ITEM.VsSeeker,
 }
 
 /** Lo andado del tramo hacia la parada siguiente (0–1); fuera de un tramo, nada */

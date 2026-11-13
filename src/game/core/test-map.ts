@@ -1,4 +1,5 @@
 import { boss, chain, enc, NodeKind, raidBoss, RouteId, Biome, StopLandmark, type GameMap } from '../../data/maps/mapCommon'
+import { GymId } from '../../data/gyms'
 import { Potion } from '../../data/potions'
 import { RaidTier } from '../../data/raidBosses'
 import { POKEMON } from '../../data/pokemon'
@@ -65,6 +66,19 @@ export const KANTO: GameMap = {
         { id: 's', name: 'Inicio', kind: NodeKind.Start, steps: 0 },
         { id: 'p', name: 'Poción', kind: NodeKind.Heal, steps: 20, potion: Potion.Potion },
         { id: 'f', name: 'Restaurar todo', kind: NodeKind.Heal, steps: 20, potion: Potion.FullRestore },
+      ),
+    },
+    {
+      id: RouteId.GimnasioPlateada,
+      name: 'Ruta de gimnasio',
+      description: '',
+      biome: Biome.PewterCity,
+      levels: [5, 6],
+      encounters: [],
+      reward: { tickets: 1, money: 10, exp: 100 },
+      nodes: chain(
+        { id: 's', name: 'Inicio', kind: NodeKind.Start, steps: 0 },
+        { id: 'g', name: 'Líder', kind: NodeKind.Gym, steps: 20, gym: GymId.Plateada },
       ),
     },
   ],

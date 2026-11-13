@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { isValidPath, KANTO, node, NodeKind, pathFrom, pathSpecies, type Route } from './index'
+import { GYMS } from '../gyms'
+import { incursionMove, moveClass, MoveClass } from '../incursionMoves'
+import { isGymRoute, isValidPath, KANTO, node, NodeKind, pathFrom, pathSpecies, type Route } from './index'
 
 function reachableIds(r: Route): Set<string> {
   const byId = new Map(r.nodes.map((n) => [n.id, n]))
@@ -35,7 +37,8 @@ describe.each(KANTO.routes)('ruta $id', (r) => {
     expect(isValidPath(r, pathFrom(r))).toBe(true)
   })
 
-  it('cada lista de encuentros suma 100% y no tiene probabilidades a 0', () => {
+  it('cada lista de encuentros suma 100% y no tiene probabilidades a 0 (los gimnasios no tienen salvajes)', () => {
+    if (isGymRoute(r)) return expect(r.encounters).toEqual([])
     const pools = [r.encounters, ...r.nodes.map((n) => n.encounters ?? r.encounters)]
     for (const pool of pools) {
       expect(pool.reduce((sum, e) => sum + e.chance, 0)).toBe(100)
@@ -54,6 +57,17 @@ describe.each(KANTO.routes)('ruta $id', (r) => {
     for (const n of r.nodes) expect(n.potion !== undefined).toBe(n.kind === NodeKind.Heal)
   })
 
+  it('las paradas de gimnasio tienen su gimnasio con equipo, y las demás no', () => {
+    for (const n of r.nodes) {
+      expect(n.gym !== undefined).toBe(n.kind === NodeKind.Gym)
+      if (n.gym) expect(GYMS[n.gym].team.length).toBeGreaterThan(0)
+      for (const foe of n.gym ? GYMS[n.gym].team : []) {
+        expect(foe.statMult ?? 1).toBeGreaterThan(0)
+        for (const id of foe.moves ?? []) expect(moveClass(incursionMove(id)), id).toBe(MoveClass.Damage)
+      }
+    }
+  })
+
   it('los jefes comunitarios tienen categoría de premios', () => {
     for (const n of r.nodes) if (n.kind === NodeKind.Raid) expect(n.boss?.tier).toBeDefined()
   })
@@ -69,6 +83,7 @@ describe.each(KANTO.routes)('ruta $id', (r) => {
     for (const id of path) {
       const n = node(r, id)
       if (n.boss) expect(species).toContain(n.boss.speciesId)
+      else if (n.gym) for (const foe of GYMS[n.gym].team) expect(species).toContain(foe.speciesId)
       else if (n.kind === NodeKind.Wild) for (const e of n.encounters ?? r.encounters) expect(species).toContain(e.speciesId)
     }
   })

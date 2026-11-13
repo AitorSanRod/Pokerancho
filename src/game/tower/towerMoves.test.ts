@@ -5,7 +5,7 @@ import { POKEMON } from '../../data/pokemon'
 import { activeMon, initialState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
 import { MAX_LEVEL } from '../team/stats'
-import { isMovePickFloor, TOWER_MOVE_PICK_EVERY, towerMove, towerMoveChoices } from './towerMoves'
+import { towerMove, towerMoveChoices } from './towerMoves'
 
 function mon() {
   const s = initialState()
@@ -27,11 +27,5 @@ describe('ataques de la torre', () => {
     const chosen = towerMoveChoices(m)[0]
     expect(towerMove(m, chosen.id)).toEqual({ id: chosen.id, name: chosen.name, type: chosen.type, power: chosen.power, accuracy: chosen.accuracy })
     expect(towerMove(m, 'no-existe')).toEqual(signatureMove(m.speciesId))
-  })
-
-  it('se vuelve a elegir antes del primer piso y cada pocos pisos', () => {
-    expect(isMovePickFloor(1)).toBe(true)
-    expect(isMovePickFloor(2)).toBe(false)
-    expect(isMovePickFloor(1 + TOWER_MOVE_PICK_EVERY)).toBe(true)
   })
 })

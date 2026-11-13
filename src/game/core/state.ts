@@ -1,3 +1,4 @@
+import type { Badge } from '../../data/badges'
 import type { FormItem } from '../../data/forms'
 import type { IncursionId } from '../../data/incursions'
 import type { Nature } from '../../data/natures'
@@ -17,6 +18,7 @@ import type { ExpBoost } from '../run/expBoost'
 import type { ExpeditionFocus } from '../team/expeditionFocus'
 import type { RouteBattleSetup } from '../run/tapCrit'
 import type { TowerRun } from '../tower/tower'
+import type { RunGym } from '../run/runGym'
 import { RaidRotation } from '../raid/online/protocol'
 import type { Raid, RaidPrize } from '../raid/raidRoom'
 import type { UpgradeId } from '../team/upgrades'
@@ -95,6 +97,8 @@ export interface Run {
   boost: ExpBoost
   /** Ruta que se ha desbloqueado al completar esta por primera vez (null si no ha desbloqueado ninguna) */
   unlocked: string | null
+  /** Combate contra el líder en la parada de gimnasio: qué Pokémon suyo toca y el ataque elegido (ver run/runGym.ts); null fuera */
+  gym: RunGym | null
   /**
    * Lo ganado en la ruta; `pieces` son las especies de las piezas soltadas (una entrada por pieza) y `raidBosses`, los
    * jefes comunitarios derrotados en ella (su premio ya va sumado en lo demás)
@@ -112,6 +116,8 @@ export interface Run {
     raidMoneyMult: number
     /** Especies vistas por primera vez en esta ruta, en el orden en que aparecieron */
     discovered: number[]
+    /** Medalla ganada en esta ruta (la primera victoria contra el líder del gimnasio); null si ninguna */
+    badge: Badge | null
   }
 }
 
@@ -181,6 +187,8 @@ export interface GameState {
   towerBest: number
   /** Piso más alto superado esta semana (`week`, ver core/ranking.ts › rankingWeek): el que sale en su ranking, de cero cada lunes */
   towerWeek: { week: number; best: number }
+  /** Medallas de gimnasio ganadas, en el orden en que se ganaron (ver data/badges.ts) */
+  badges: Badge[]
   /** Buscando grupo para una incursión con otros jugadores (ver incursion/online/linkedIncursion.ts); null si no */
   incursionQueue: IncursionQueue | null
   tutorial: TutorialStep | null
@@ -214,7 +222,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 53
+export const SAVE_VERSION = 54
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 
@@ -254,6 +262,7 @@ export function initialState(): GameState {
     tower: null,
     towerBest: 0,
     towerWeek: { week: 0, best: 0 },
+    badges: [],
     tutorial: TutorialStep.Starter,
     unlockedRoutes: [RouteId.PuebloPaleta],
     completedRoutes: [],

@@ -36,6 +36,8 @@ export interface NodeDraft {
   encounters: EncDraft[]
   boss: BossDraft
   potion: string
+  /** Clave de GymId (paradas de gimnasio) */
+  gym: string
 }
 
 export interface RouteDraft {
@@ -71,6 +73,7 @@ export const emptyNode = (id: string, kind = 'Wild', steps = 20): NodeDraft => (
   encounters: [{ species: '', chance: 100 }],
   boss: emptyBoss(),
   potion: 'Potion',
+  gym: 'Plateada',
 })
 
 export const emptyRoute = (): RouteDraft => ({
@@ -107,6 +110,7 @@ function nodeDraft(n: RouteNode, steps: number): NodeDraft {
       ? { species: keyOf(DICTS.POKEMON, b.speciesId), level: b.level, passives: [...(b.passives ?? [])], tier: keyOf(DICTS.RaidTier, b.tier) || 'Low', soloMinutes: b.soloMinutes ?? null }
       : emptyBoss(),
     potion: keyOf(DICTS.Potion, n.potion) || 'Potion',
+    gym: keyOf(DICTS.GymId, n.gym) || 'Plateada',
   }
 }
 

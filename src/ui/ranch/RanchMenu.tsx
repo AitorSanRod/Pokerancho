@@ -7,6 +7,7 @@ import { BagSheet } from '../bag/BagSheet'
 import { DailyGiftSheet } from '../gift/DailyGiftSheet'
 import { InboxSheet } from '../inbox/InboxSheet'
 import { MissionsSheet } from '../missions/MissionsSheet'
+import { ProfileSheet } from '../profile/ProfileSheet'
 import { RankingSheet } from '../ranking/RankingSheet'
 import { useInboxCount } from '../inbox/useInboxCount'
 import { ICON } from '../shared/icons'
@@ -15,11 +16,11 @@ import { useUnseen } from '../shared/useUnseen'
 import { TutorialsSheet } from '../tutorials/TutorialsSheet'
 import { useMenuPending } from './useMenuPending'
 
-type Panel = 'menu' | 'gift' | 'missions' | 'bag' | 'tutorials' | 'inbox' | 'ranking'
+type Panel = 'menu' | 'profile' | 'gift' | 'missions' | 'bag' | 'tutorials' | 'inbox' | 'ranking'
 
 /**
- * Botón de menú del rancho (esquina inferior derecha) y lo que abre: Notificaciones (obsequio listo, premios de raid e
- * intercambios), obsequio diario, misiones del día, Mochila, ranking y tutoriales
+ * Botón de menú del rancho (esquina inferior derecha) y lo que abre: perfil, Notificaciones (obsequio listo, premios de
+ * raid e intercambios), obsequio diario, misiones del día, Mochila, ranking y tutoriales
  */
 export function RanchMenu({ game }: { game: GameState }) {
   const [panel, setPanel] = useState<Panel | null>(null)
@@ -44,7 +45,9 @@ export function RanchMenu({ game }: { game: GameState }) {
       {panel && (
         <div className="ranch-sheet-backdrop" onClick={close}>
           <div className="ranch-sheet" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            {panel === 'gift' ? (
+            {panel === 'profile' ? (
+              <ProfileSheet game={game} onBack={back} />
+            ) : panel === 'gift' ? (
               <DailyGiftSheet onBack={back} />
             ) : panel === 'missions' ? (
               <MissionsSheet game={game} onBack={back} />
@@ -61,6 +64,9 @@ export function RanchMenu({ game }: { game: GameState }) {
                 <h2 className="with-icon">
                   <ItemIcon item={ICON.Menu} size={32} /> Menú
                 </h2>
+                <MenuItem icon={ICON.Profile} title="Perfil" onClick={() => setPanel('profile')}>
+                  Tus medallas, la Pokédex, tus datos y tus puestos en los rankings
+                </MenuItem>
                 <MenuItem icon={ICON.Inbox} title="Notificaciones" count={inboxCount} onClick={() => setPanel('inbox')}>
                   {inboxCount > 0 ? '¡Tienes cosas por recoger!' : 'Obsequio diario, premios de raid e intercambios'}
                 </MenuItem>

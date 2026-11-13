@@ -70,4 +70,6 @@ export const ICON = {
   Crit: ITEM.QuickClaw,
   /** Torre infinita */
   Tower: ITEM.MachoBrace,
+  /** Perfil del jugador (menú del rancho) */
+  Profile: ITEM.PalPad,
 } as const

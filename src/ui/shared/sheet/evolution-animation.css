@@ -9,16 +9,21 @@
   color: #fff;
   animation: fade-in 0.4s ease-out;
 }
-/* Haces de luz que giran detrás; se intensifican durante la transformación y toman el color de su rareza al final */
+/*
+ * Haces de luz que giran detrás; se intensifican durante la transformación y toman el color de su rareza al final.
+ * Más grandes que la pantalla en cualquier giro, para que nunca asomen sus bordes; se difuminan con la máscara.
+ */
 .evo-rays {
+  --rays-fade: radial-gradient(circle, #000 0 80px, transparent 320px);
   position: absolute;
   left: 50%;
   top: 45%;
-  width: 760px;
-  height: 760px;
-  margin: -380px 0 0 -380px;
+  width: 200vmax;
+  height: 200vmax;
+  margin: -100vmax 0 0 -100vmax;
   background: repeating-conic-gradient(#fff3 0 6deg, transparent 6deg 24deg);
-  mask-image: radial-gradient(circle, #000 0 15%, transparent 60%);
+  -webkit-mask-image: var(--rays-fade);
+  mask-image: var(--rays-fade);
   animation:
     evo-spin 10s linear infinite,
     evo-rays-in var(--morph-ms) ease-in forwards;

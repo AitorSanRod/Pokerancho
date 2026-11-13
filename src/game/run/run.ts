@@ -7,6 +7,7 @@ import { stepsPerMinute } from '../team/stats'
 import { advanceExpBoost, boostActive, BOOST_TAP_EXP, newExpBoost } from './expBoost'
 import { completeRoute, gainRunExp, spendBattleTime, startStopBattle } from './runBattle'
 import { spendHealTime, drinkStopPotion } from './runHeal'
+import { enterGym } from './runGym'
 
 export function runBlocker(s: GameState): string | null {
   const mon = activeMon(s)
@@ -39,7 +40,8 @@ export function startRun(s: GameState, routeId: string, path = pathFrom(route(ro
     heal: null,
     boost: newExpBoost(rng),
     unlocked: null,
-    earned: { money: 0, tickets: 0, pieces: [], exp: 0, levelsGained: 0, wins: 0, battles: 0, raidBosses: [], raidMoneyMult: 1, discovered: [] },
+    gym: null,
+    earned: { money: 0, tickets: 0, pieces: [], exp: 0, levelsGained: 0, wins: 0, battles: 0, raidBosses: [], raidMoneyMult: 1, discovered: [], badge: null },
   }
 }
 
@@ -54,7 +56,7 @@ export function advanceRun(s: GameState, realMs: number, rng: Rng = Math.random)
   let left = realMs
   while (run && left > 0) {
     if (run.battleMsLeft > 0) {
-      left -= spendBattleTime(s, route(run.routeId), left)
+      left -= spendBattleTime(s, route(run.routeId), left, rng)
       continue
     }
     if (run.heal) {
@@ -111,6 +113,7 @@ function arrive(s: GameState, r: Route, rng: Rng) {
   if (n.kind === NodeKind.Wild || n.kind === NodeKind.Boss) startStopBattle(s, r, n, rng)
   else if (n.kind === NodeKind.Raid) enterRouteRaid(s, r, n, rng)
   else if (n.kind === NodeKind.Heal) drinkStopPotion(s, n)
+  else if (n.kind === NodeKind.Gym) enterGym(s, r, rng)
   else if (run.stop === run.path.length - 1) completeRoute(s, r)
 }
 
