@@ -17,13 +17,16 @@ interface Natural {
 }
 
 /**
- * Tamaño y posición de la imagen. Sin `fit`, a la escala del lienzo de 96. Con `fit`, el lado mayor del Pokémon mide
- * `fit` × size; si la imagen trae margen (`bounds`), se desplaza para que el Pokémon quede centrado y apoyado abajo.
+ * Tamaño y posición de la imagen. Sin `fit`, a la escala del lienzo de 96. Con `fit`, el lado mayor del cuerpo
+ * (`body`, medido en el PNG estático) mide `fit` × size. En el PNG, `body` es además el recorte: se desplaza para que
+ * el Pokémon quede centrado y apoyado abajo. El GIF ocupa todo lo que se mueve en la animación (alas, saltos…), así
+ * que se escala por el cuerpo y se coloca entero, centrado y apoyado abajo.
  */
-function imageStyle(natural: Natural, size: number, fit: number | undefined, bounds: SpriteBounds | null): CSSProperties {
+function imageStyle(natural: Natural, size: number, fit: number | undefined, body: SpriteBounds | null, isGif: boolean): CSSProperties {
   if (fit === undefined) return { width: natural.w * (size / SPRITE_CANVAS), height: natural.h * (size / SPRITE_CANVAS) }
-  const b = bounds ?? { x: 0, y: 0, w: natural.w, h: natural.h }
-  const scale = (fit * size) / Math.max(b.w, b.h)
+  const whole = { x: 0, y: 0, w: natural.w, h: natural.h }
+  const scale = (fit * size) / Math.max((body ?? whole).w, (body ?? whole).h)
+  const b = isGif ? whole : (body ?? whole)
   return {
     width: natural.w * scale,
     height: natural.h * scale,
@@ -65,9 +68,10 @@ export function Sprite({
   const src = fallback
     ? back ? sprite.back(id, shiny) : sprite.front(id, shiny)
     : back ? sprite.animatedBack(id, shiny) : sprite.animated(id, shiny)
-  // Los GIF ya vienen recortados; los PNG se miden para quitarles el margen
-  const bounds = useSpriteBounds(src, fit !== undefined && fallback)
-  const loaded = natural?.src === src && bounds !== undefined ? natural : null
+  // El cuerpo se mide siempre en el PNG estático (misma escala que el GIF, pero sin el margen de la animación)
+  const staticSrc = back ? sprite.back(id, shiny) : sprite.front(id, shiny)
+  const body = useSpriteBounds(staticSrc, fit !== undefined)
+  const loaded = natural?.src === src && body !== undefined ? natural : null
 
   return (
     <span className={`sprite ${silhouette ? 'silhouette' : ''} ${className}`} style={{ width: size, height: size }}>
@@ -77,7 +81,7 @@ export function Sprite({
         draggable={false}
         onError={() => setFallback(true)}
         onLoad={(e) => setNatural({ src, w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
-        style={loaded ? imageStyle(loaded, size, fit, bounds ?? null) : { visibility: 'hidden' }}
+        style={loaded ? imageStyle(loaded, size, fit, body ?? null, !fallback) : { visibility: 'hidden' }}
       />
     </span>
   )

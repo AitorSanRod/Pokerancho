@@ -1,6 +1,6 @@
 import { activeMon, type GameState } from '../../game/core/state'
 import { act } from '../../game/core/store'
-import { startTower, towerBlocker, TOWER_HEAL_EVERY, TOWER_LAST_HEAL_FLOOR, towerActive } from '../../game/tower/tower'
+import { startTower, towerBlocker, towerMon, TOWER_HEAL_EVERY, TOWER_LAST_HEAL_FLOOR, towerActive } from '../../game/tower/tower'
 import { towerWeekBest } from '../../game/tower/towerWeek'
 import { TOWER_LEVEL_CAP_FLOOR } from '../../game/tower/towerFoes'
 import { TOWER_MOVE_PICK_EVERY } from '../../game/tower/towerMoves'
@@ -15,7 +15,7 @@ import './tower.css'
 
 /**
  * Torre infinita: el compañero sube piso a piso contra rivales cada vez más fuertes hasta que cae.
- * Sin subida en curso, el resumen de la última y elegir ataque para empezar otra; con ella, la subida a pantalla completa
+ * Sin subida en curso, los premios de la que acaba de terminar (hasta cerrarlos) y elegir ataque para empezar otra; con ella, la subida a pantalla completa
  * (TowerClimb)
  */
 export function TowerScreen({ game }: { game: GameState }) {
@@ -24,7 +24,7 @@ export function TowerScreen({ game }: { game: GameState }) {
   return (
     <div className="screen scroll tower">
       <TowerHead game={game} />
-      {t && <TowerSummary tower={t} />}
+      {t && <TowerSummary tower={t} mon={towerMon(game)} />}
       <TowerStart game={game} />
     </div>
   )

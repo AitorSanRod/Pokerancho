@@ -201,3 +201,8 @@ const canGoAlone = (s: GameState): boolean => canContinueTower(s) && !towerMoveP
 export function abandonTower(s: GameState) {
   if (towerBetweenFloors(s)) s.tower!.end = TowerEnd.Left
 }
+
+/** Tras ver los premios de la subida acabada, se recoge (lo ganado ya estaba sumado) */
+export function closeTower(s: GameState) {
+  if (s.tower?.end !== null) s.tower = null
+}

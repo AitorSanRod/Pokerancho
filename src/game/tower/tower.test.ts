@@ -13,6 +13,7 @@ import {
   advanceTower,
   canContinueTower,
   canStartTower,
+  closeTower,
   isHealFloor,
   nextFloor,
   pickTowerMove,
@@ -182,6 +183,17 @@ describe('torre infinita', () => {
     abandonTower(s)
     expect(s.tower!.end).toBe(TowerEnd.Left)
     expect(canStartTower(s)).toBe(true)
+  })
+
+  it('la subida solo se recoge cuando ya ha acabado', () => {
+    const s = withMon(MAX_LEVEL)
+    startTower(s, firstMove(s), seqRng(0.5))
+    finishBattle(s)
+    closeTower(s)
+    expect(s.tower).not.toBeNull()
+    abandonTower(s)
+    closeTower(s)
+    expect(s.tower).toBeNull()
   })
 
   it('mientras sube, su Pokémon está en la torre y no puede ir a ninguna otra actividad', () => {

@@ -32,19 +32,28 @@ const POOLS = Object.fromEntries(
   (Object.keys(RARITY_INFO) as Rarity[]).map((r) => [r, SPECIES.filter((s) => rarityOf(s) === r)]),
 ) as Record<Rarity, typeof SPECIES>
 
-function rollRarity(rng: Rng): Rarity {
-  let roll = rng()
-  for (const r of [Rarity.Legendary, Rarity.Epic, Rarity.Rare]) {
+type SpeciesEntry = (typeof SPECIES)[number]
+
+/** Rareza al azar con las probabilidades del gacha, entre las de `allowed` (de la más alta a la más baja) */
+function rollRarity(rng: Rng, allowed: Rarity[]): Rarity {
+  let roll = rng() * allowed.reduce((sum, r) => sum + RARITY_INFO[r].rate, 0)
+  for (const r of allowed) {
     roll -= RARITY_INFO[r].rate
     if (roll < 0) return r
   }
-  return Rarity.Common
+  return allowed[allowed.length - 1]
 }
 
-/** Una especie al azar por rareza, con las probabilidades del gacha */
-export function rollPiece(rng: Rng): PieceDrop {
-  const rarity = rollRarity(rng)
-  const pool = POOLS[rarity]
+const BY_RARITY_DESC: Rarity[] = [Rarity.Legendary, Rarity.Epic, Rarity.Rare, Rarity.Common]
+
+/**
+ * Una especie al azar por rareza, con las probabilidades del gacha. Con `keep`, solo entre las que lo cumplen: las
+ * rarezas que se quedan sin ninguna no salen y las demás se reparten su probabilidad
+ */
+export function rollPiece(rng: Rng, keep: (sp: SpeciesEntry) => boolean = () => true): PieceDrop {
+  const pools = BY_RARITY_DESC.map((r) => [r, POOLS[r].filter(keep)] as const).filter(([, pool]) => pool.length > 0)
+  const rarity = rollRarity(rng, pools.map(([r]) => r))
+  const pool = pools.find(([r]) => r === rarity)![1]
   return { speciesId: pool[Math.floor(rng() * pool.length)].id, rarity }
 }
 

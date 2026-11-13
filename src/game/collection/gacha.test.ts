@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { Rarity } from '../../data/species'
+import { baseStatTotal, Rarity, rarityOf, SPECIES, species } from '../../data/species'
 import { initialState } from '../core/state'
 import { seqRng } from '../core/test-utils'
-import { buyTicket, maxTicketsToBuy, MONEY_PRIZES, MONEY_SLOT_CHANCE, PIECES_PER_PULL, pull, TICKET_PRICE } from './gacha'
+import { buyTicket, maxTicketsToBuy, MONEY_PRIZES, MONEY_SLOT_CHANCE, PIECES_PER_PULL, pull, rollPiece, TICKET_PRICE } from './gacha'
 import { piecesOf } from './pieces'
 
 // El primer número de cada tirada decide si sale dinero (y, si sale, el siguiente cuál); luego, si sale objeto
@@ -99,5 +99,22 @@ describe('buyTicket', () => {
     expect(buyTicket(s, 3)).toBe(true)
     expect(s.tickets).toBe(tickets + 3)
     expect(s.money).toBe(1)
+  })
+})
+
+describe('rollPiece con filtro', () => {
+  const rolls = [0, 0.3, 0.6, 0.99]
+  const strongest = Math.max(...SPECIES.filter((sp) => rarityOf(sp) === Rarity.Common).map(baseStatTotal))
+
+  it('solo da especies que cumplen el filtro', () => {
+    for (const a of rolls) for (const b of rolls) {
+      const id = rollPiece(seqRng(a, b), (sp) => baseStatTotal(sp) >= strongest).speciesId
+      expect(baseStatTotal(species(id))).toBeGreaterThanOrEqual(strongest)
+    }
+  })
+
+  it('una rareza que se queda sin especies no sale y su probabilidad pasa a las demás', () => {
+    const drop = rollPiece(seqRng(0.99, 0), (sp) => rarityOf(sp) !== Rarity.Common)
+    expect(drop.rarity).toBe(Rarity.Rare)
   })
 })

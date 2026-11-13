@@ -26,26 +26,6 @@
   gap: 4px;
   line-height: 1.35;
 }
-.tower-summary {
-  gap: 6px;
-}
-.tower-record {
-  color: var(--accent);
-}
-.tower-earned {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-}
-.tower-pieces {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-}
-.tower-piece {
-  display: inline-flex;
-  align-items: center;
-}
 .tower-pick {
   gap: 8px;
 }

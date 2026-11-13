@@ -1,4 +1,5 @@
-import { SPECIES } from '../../data/species'
+import { baseStatTotal, SPECIES } from '../../data/species'
+import { TOWER_CUTS } from '../../data/towerCuts'
 import { rollPiece } from '../collection/gacha'
 import type { Rng } from '../core/random'
 import type { GameState } from '../core/state'
@@ -6,7 +7,8 @@ import { MAX_LEVEL } from '../team/stats'
 
 // Rivales de la torre infinita: un nivel más por piso hasta el nivel máximo, solo especies que el jugador ya ha visto.
 // Pasado ese piso salen especies al azar por rareza (como en el gacha), sin apuntarse en la Pokédex, y sus stats van
-// subiendo poco a poco para que siga costando.
+// subiendo poco a poco para que siga costando. Desde ciertos pisos, los cortes de poder de data/towerCuts.ts dejan
+// fuera a las especies más débiles.
 
 /** Niveles que sube el rival en cada piso (el piso 1 es nivel TOWER_LEVELS_PER_FLOOR) */
 export const TOWER_LEVELS_PER_FLOOR = 1
@@ -29,12 +31,21 @@ export const towerLevel = (floor: number): number => Math.min(MAX_LEVEL, floor *
 /** Multiplicador de las stats del rival de ese piso */
 export const towerStatMult = (floor: number): number => TOWER_STAT_MULT * (1 + floorsPastCap(floor) * TOWER_STAT_GROWTH)
 
-const COLLECTED = new Set(SPECIES.map((sp) => sp.id))
+/** Total mínimo de stats base del rival en ese piso (el del último corte alcanzado de data/towerCuts.ts; 0 sin corte) */
+export function towerMinPower(floor: number): number {
+  return TOWER_CUTS.filter((c) => c.fromFloor <= floor).reduce((min, c) => Math.max(min, c.minPower), 0)
+}
 
-/** Especie del rival: una vista al azar o, pasado el último piso de nivel, una cualquiera por rareza */
+/**
+ * Especie del rival, siempre con el poder del corte del piso: una vista al azar (si no ha visto ninguna que llegue,
+ * una cualquiera que llegue) o, pasado el último piso de nivel, una cualquiera por rareza
+ */
 export function towerFoe(s: GameState, floor: number, rng: Rng): number {
-  if (pastLevelCap(floor)) return rollPiece(rng).speciesId
-  const seen = s.seen.filter((id) => COLLECTED.has(id))
-  const pool = seen.length > 0 ? seen : [...COLLECTED]
+  const minPower = towerMinPower(floor)
+  const strong = (sp: (typeof SPECIES)[number]) => baseStatTotal(sp) >= minPower
+  if (pastLevelCap(floor)) return rollPiece(rng, strong).speciesId
+  const allowed = new Set(SPECIES.filter(strong).map((sp) => sp.id))
+  const seen = s.seen.filter((id) => allowed.has(id))
+  const pool = seen.length > 0 ? seen : [...allowed]
   return pool[Math.floor(rng() * pool.length)]
 }

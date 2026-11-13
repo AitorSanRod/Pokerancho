@@ -74,7 +74,8 @@ export function species(id: number): Species {
   return s
 }
 
-function baseStatTotal(s: Species): number {
+/** Total de las 4 stats base: decide la rareza y los cortes de poder de la torre */
+export function baseStatTotal(s: Species): number {
   const b = s.base
   return b.hp + b.atk + b.def + b.spe
 }
