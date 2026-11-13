@@ -162,7 +162,7 @@ function PartyMon({ m, index, attack, struck, bossSpeciesId, timeScale }: PartyM
       <div className={attack ? roundClass(attack.seq, 'raid-lunge') : ''}>
         <div className={struck ? roundClass(struck.seq, 'raid-shake') : ''}>
           <div className={down ? '' : 'raid-idle'}>
-            <Sprite id={m.speciesId} size={PARTY_SPRITE_SIZE} fit={battleFit(m.speciesId)} />
+            <Sprite id={m.speciesId} size={PARTY_SPRITE_SIZE} fit={battleFit(m.speciesId)} shiny={m.shiny} />
           </div>
         </div>
       </div>

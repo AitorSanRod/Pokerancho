@@ -48,6 +48,8 @@ export interface MonSnapshot {
   stars: number
   /** Sin ella (clientes de antes de las naturalezas), neutra */
   nature?: Nature
+  /** Con los colores shiny; sin él (clientes de antes), normal */
+  shiny?: boolean
   /** PS con los que entra, como fracción de los máximos */
   hpFraction: number
   /** Pasivas de su rancho */

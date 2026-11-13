@@ -9,6 +9,7 @@ import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { formatMinutes } from '../shared/format'
 import { earningsRewards, levelUpReward } from '../shared/rewardItems'
 import { RewardOverlay, type RewardItem } from '../shared/RewardOverlay'
+import { FOCUS_INFO } from './focusText'
 import { RouteRow } from '../route/RouteRow'
 
 /** Pokémon de expedición: lo que les queda (con opción de cancelar) y, a los que han vuelto, el botón para recoger su premio */
@@ -46,7 +47,7 @@ export function ExpeditionList({ game }: { game: GameState }) {
                 {name} <span className="muted">Nv. {mon.level}</span>
               </strong>
               <span className="muted">
-                {route(e.routeId).name} · {done ? '¡Ha vuelto!' : `quedan ${formatMinutes(left)}`}
+                {route(e.routeId).name} · {FOCUS_INFO[e.focus].label} · {done ? '¡Ha vuelto!' : `quedan ${formatMinutes(left)}`}
               </span>
               {!done && <Bar value={e.elapsedMin} max={e.durationMin} kind="steps" />}
             </span>

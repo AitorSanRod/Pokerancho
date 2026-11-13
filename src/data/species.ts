@@ -92,6 +92,9 @@ export function rarityOf(s: Species): Rarity {
 const SPRITES = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon'
 
 const ANIMATED = `${SPRITES}/versions/generation-v/black-white/animated`
+/** Iconos de la caja: los de GBA (generación III) llegan hasta este número de la Pokédex; los demás, de la VII */
+const GBA_ICON_LAST = 386
+const iconDir = (id: number) => `${SPRITES}/versions/${id <= GBA_ICON_LAST ? 'generation-iii' : 'generation-vii'}/icons`
 /** Carpeta extra de los sprites shiny dentro de cada carpeta de PokeAPI */
 const shinyDir = (shiny: boolean) => (shiny ? 'shiny/' : '')
 
@@ -100,6 +103,8 @@ export const sprite = {
   back: (id: number, shiny = false) => `${SPRITES}/back/${shinyDir(shiny)}${id}.png`,
   animated: (id: number, shiny = false) => `${ANIMATED}/${shinyDir(shiny)}${id}.gif`,
   animatedBack: (id: number, shiny = false) => `${ANIMATED}/back/${shinyDir(shiny)}${id}.gif`,
+  /** Icono pequeño de la caja (no hay versión shiny) */
+  icon: (id: number) => `${iconDir(id)}/${id}.png`,
 }
 
 export const STARTERS: number[] = [POKEMON.Bulbasaur, POKEMON.Charmander, POKEMON.Squirtle]

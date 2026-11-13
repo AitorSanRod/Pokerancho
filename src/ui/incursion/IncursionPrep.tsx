@@ -42,7 +42,7 @@ export function IncursionPrep({ game, inc, onClose }: { game: GameState; inc: In
     <div className="confirm-overlay" onClick={onClose}>
       <div className="card route-start" role="dialog" aria-modal="true" aria-label={`Entrar en ${inc.name}`} onClick={(e) => e.stopPropagation()}>
         <HeroLayout compact scenery={BIOME_SCENERY[inc.biome]} name={inc.name} subtitle={`Nv. ${inc.minLevel}–${inc.maxLevel}`}>
-          {mon && <Sprite key={mon.uid} id={mon.speciesId} size={96} className="mon-hero-sprite idle-bounce" />}
+          {mon && <Sprite key={mon.uid} id={mon.speciesId} size={96} className="mon-hero-sprite idle-bounce" shiny={mon.shiny} />}
         </HeroLayout>
         <div className="route-start-body">
           <div className="label">¿Quién va?</div>

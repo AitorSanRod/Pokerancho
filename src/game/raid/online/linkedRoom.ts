@@ -41,7 +41,7 @@ function monSnapshot(s: GameState, raid: Raid): MonSnapshot | null {
   const mon = member && findMon(s, member.id)
   if (!mon) return null
   const passives = mon.ranch !== null ? ranchPassives(s, mon.ranch) : []
-  return { uid: mon.uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, hpFraction: member.hpFraction, passives, perks: monPerks(s, mon) }
+  return { uid: mon.uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, shiny: mon.shiny, hpFraction: member.hpFraction, passives, perks: monPerks(s, mon) }
 }
 
 /** Lo que toca pedir por la sala de `key`: entrar si espera sitio, ponerse al día si está enlazada; null, nada */

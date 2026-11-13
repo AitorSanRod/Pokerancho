@@ -13,11 +13,13 @@ import {
   expeditionWinRate,
   sendExpedition,
 } from '../../game/team/expedition'
+import { EXPEDITION_FOCUSES, ExpeditionFocus } from '../../game/team/expeditionFocus'
 import { Sprite } from '../shared/common'
 import { formatMinutes } from '../shared/format'
 import { MonPicker } from '../shared/MonPicker'
 import { HeroLayout } from '../shared/sheet/HeroLayout'
 import { BIOME_SCENERY } from '../shared/sheet/scenery'
+import { FOCUS_INFO } from './focusText'
 import '../shared/overlays.css'
 import '../route/route-start.css'
 
@@ -33,12 +35,13 @@ interface Props {
 export function ExpeditionStartDialog({ game, route: r, mons, onClose }: Props) {
   const [uid, setUid] = useState(mons[0].uid)
   const [duration, setDuration] = useState(EXPEDITION_DURATIONS[1])
+  const [focus, setFocus] = useState<ExpeditionFocus>(ExpeditionFocus.Exp)
   const mon = mons.find((m) => m.uid === uid) ?? mons[0]
   const blocker = expeditionBlocker(game, mon.uid)
   const winPct = Math.round(expeditionWinRate(mon, r) * 100)
 
   const send = () => {
-    act((s) => sendExpedition(s, mon.uid, r.id, duration))
+    act((s) => sendExpedition(s, mon.uid, r.id, duration, focus))
     onClose()
   }
 
@@ -59,12 +62,21 @@ export function ExpeditionStartDialog({ game, route: r, mons, onClose }: Props) 
               </button>
             ))}
           </div>
+          <div className="label">¿Qué busca?</div>
+          <div className="segmented">
+            {EXPEDITION_FOCUSES.map((f) => (
+              <button key={f} className={focus === f ? 'active' : ''} onClick={() => setFocus(f)}>
+                {FOCUS_INFO[f].label}
+              </button>
+            ))}
+          </div>
+          <p className="tiny center">{FOCUS_INFO[focus].note}</p>
           <p className="small center">
             <strong>{species(mon.speciesId).name}</strong> (Nv. {mon.level}): ~{expeditionBattles(duration)} combates · {winPct}% de victorias ·
-            premios ×{expeditionRewardMult(duration).toLocaleString('es')}
+            EXP y ₽ ×{expeditionRewardMult(duration).toLocaleString('es')}
           </p>
           <p className="tiny muted">
-            Cada victoria da EXP, ₽ y a veces tickets (sin EXP si los rivales tienen más de {EXP_LEVEL_GAP} niveles menos), sin riesgo. Puede
+            Cada victoria da EXP, ₽ y a veces tickets y piezas (sin EXP si los rivales tienen más de {EXP_LEVEL_GAP} niveles menos), sin riesgo. Las expediciones largas multiplican la EXP y los ₽, no el botín. Puede
             descubrir Pokémon nuevos. Se puede cancelar, pero entonces no gana nada.
           </p>
           {blocker && <p className="notice small">{blocker}</p>}

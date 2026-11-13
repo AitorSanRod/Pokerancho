@@ -9,6 +9,7 @@ import { accountId, player, type Api } from './test/accounts'
 
 vi.mock('./mail', async (original) => ({ ...(await original<typeof import('./mail')>()), sendMail: vi.fn() }))
 vi.mock('../src/data/maps/kantoMaps', () => import('../src/game/core/test-map'))
+vi.mock('../src/data/rankingCuts', () => ({ RANKING_EXTRA_CUTS: [] }))
 
 /** Un Pokémon de un jugador en una sala y el daño que hace */
 interface Fighter {

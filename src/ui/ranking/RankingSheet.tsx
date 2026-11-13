@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { WeeklyBoard } from '../../data/rankingPrizes'
 import { RankingCode } from '../../game/core/ranking'
 import { AccountStatus, setRanked, useAccount } from '../../net/account'
 import { fetchRanking, type RankingResult } from '../../net/ranking'
@@ -6,11 +7,15 @@ import { NicknameDialog } from '../raid/NicknameDialog'
 import { MenuSheetHeader } from '../ranch/MenuSheetHeader'
 import { ICON } from '../shared/icons'
 import { DamageBoard, MoneyBoard, TowerBoard } from './RankingBoards'
+import { WeeklyPrizes } from './WeeklyPrizes'
 import './ranking.css'
 
 /** Qué ranking se mira */
 const Board = { Money: 'money', Damage: 'damage', Tower: 'tower' } as const
 type Board = (typeof Board)[keyof typeof Board]
+
+/** Los rankings semanales, que dan premio cada lunes */
+const WEEKLY: Partial<Record<Board, WeeklyBoard>> = { [Board.Damage]: WeeklyBoard.Damage, [Board.Tower]: WeeklyBoard.Tower }
 
 /** Pestañas del ranking */
 const BOARD_TABS: { id: Board; label: string }[] = [
@@ -63,6 +68,7 @@ export function RankingSheet({ onBack }: { onBack: () => void }) {
         ))}
       </div>
       <p className="tiny muted">{BOARD_INTRO[board]}</p>
+      {WEEKLY[board] && <WeeklyPrizes board={WEEKLY[board]} />}
       {status !== AccountStatus.SignedIn ? (
         <p className="notice small">Para ver el ranking necesitas una cuenta. Entra o crea una en Ajustes › Cuenta.</p>
       ) : code === RankingCode.NoNickname ? (

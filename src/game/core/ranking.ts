@@ -1,6 +1,8 @@
 // Los rankings de dinero y de daño a jefes, tal y como los comparten la web y el servidor (worker/ranking.ts): quién
 // entra, cuántos se ven, cada cuánto se rehace la foto y desde cuándo cuenta el daño.
 
+import { RANKING_EXTRA_CUTS } from '../../data/rankingCuts'
+
 /** Jugadores que se ven en la lista del ranking */
 export const RANKING_SIZE = 25
 /** Horas que se rehace el ranking: una vez en cada hora en punto */
@@ -39,16 +41,26 @@ export const rankingDue = (builtAt: number | null, now: number): boolean =>
 /** Hora (ms) de la próxima foto */
 export const nextRankingAt = (now: number): number => (Math.floor(now / RANKING_REFRESH_MS) + 1) * RANKING_REFRESH_MS
 
-const DAY_MS = 24 * 60 * 60 * 1000
+export const DAY_MS = 24 * 60 * 60 * 1000
 const WEEK_DAYS = 7
+/** Una semana de los rankings semanales, en ms */
+export const RANKING_WEEK_MS = WEEK_DAYS * DAY_MS
 /** Días que van del lunes anterior al 1 de enero de 1970 (jueves), el día 0 de las fechas en ms */
 const EPOCH_AFTER_MONDAY_DAYS = 3
 
-/** Inicio (ms, lunes a las 00:00 UTC) de la semana de los rankings semanales (daño y torre): cada lunes empiezan de cero */
-export function rankingWeek(now: number): number {
+/** Lunes a las 00:00 UTC (ms) de la semana de `now` */
+function mondayOf(now: number): number {
   const day = Math.floor(now / DAY_MS)
   return (day - ((day + EPOCH_AFTER_MONDAY_DAYS) % WEEK_DAYS)) * DAY_MS
 }
+
+/**
+ * Inicio (ms) del periodo de los rankings semanales (daño y torre) en `now`: el último lunes a las 00:00 UTC o, si es
+ * más reciente, el último corte extra (`cuts`, ver data/rankingCuts.ts). En cada inicio empiezan de cero y se premia el
+ * periodo anterior
+ */
+export const rankingWeek = (now: number, cuts: readonly number[] = RANKING_EXTRA_CUTS): number =>
+  Math.max(mondayOf(now), ...cuts.filter((cut) => cut <= now))
 
 /** Daño que ha hecho un Pokémon de un jugador a un jefe (comunitario o de incursión), tal y como se apunta */
 export interface MonDamage {

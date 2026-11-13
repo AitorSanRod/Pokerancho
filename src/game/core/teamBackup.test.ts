@@ -9,6 +9,7 @@ import { ranchCount } from '../team/ranches'
 import { MAX_LEVEL } from '../team/stats'
 import { activeMon, initialState, TutorialStep } from './state'
 import { backupTeam, parseTeamBackup, restoreTeam, type TeamBackup } from './teamBackup'
+import { ExpeditionFocus } from '../team/expeditionFocus'
 import { tick } from './tick'
 
 
@@ -132,7 +133,7 @@ describe('copia del equipo', () => {
     /** El primer Pokémon del equipo, de expedición desde hace `elapsedMin` minutos */
     function onExpedition(elapsedMin = 1) {
       const s = stateWithTeam()
-      s.expeditions.push({ uid: s.owned[0].uid, routeId: RouteId.PuebloPaleta, durationMin: EXPEDITION_DURATIONS.at(-1)!, elapsedMin })
+      s.expeditions.push({ uid: s.owned[0].uid, routeId: RouteId.PuebloPaleta, durationMin: EXPEDITION_DURATIONS.at(-1)!, focus: ExpeditionFocus.Exp, elapsedMin })
       return s
     }
 
@@ -161,6 +162,16 @@ describe('copia del equipo', () => {
         expeditions: [good, { ...good }, { ...good, monIndex: 1, routeId: 'no-existe' }, { ...good, monIndex: 1, durationMin: -1 }],
       })
       expect(parsed!.expeditions).toEqual([good])
+    })
+
+    it('en una copia de antes del enfoque, la expedición sigue con el de EXP; uno que no existe se descarta', () => {
+      const backup = backupTeam(onExpedition())
+      const { focus: _, ...old } = backup.expeditions![0]
+      const fresh = initialState()
+      restoreTeam(fresh, roundTrip({ ...backup, expeditions: [old] })!)
+      expect(fresh.expeditions).toEqual([{ uid: fresh.owned[0].uid, routeId: old.routeId, durationMin: old.durationMin, focus: ExpeditionFocus.Exp, elapsedMin: old.elapsedMin }])
+      const bad = roundTrip({ ...backup, expeditions: [{ ...old, focus: 'nada' as ExpeditionFocus }] })
+      expect(bad!.expeditions).toEqual([])
     })
 
     it('las copias de antes, sin expediciones, siguen valiendo', () => {

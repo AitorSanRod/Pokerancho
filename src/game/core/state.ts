@@ -14,6 +14,7 @@ import type { DailyMissions } from '../collection/missions'
 import type { ActiveIncursion } from '../incursion/activeIncursion'
 import type { IncursionQueue } from '../incursion/online/linkedIncursion'
 import type { ExpBoost } from '../run/expBoost'
+import type { ExpeditionFocus } from '../team/expeditionFocus'
 import type { RouteBattleSetup } from '../run/tapCrit'
 import type { TowerRun } from '../tower/tower'
 import { RaidRotation } from '../raid/online/protocol'
@@ -120,6 +121,8 @@ export interface Expedition {
   routeId: string
   /** Minutos de juego que dura */
   durationMin: number
+  /** Qué se quiere sacar de ella (ver team/expeditionFocus.ts) */
+  focus: ExpeditionFocus
   elapsedMin: number
 }
 
@@ -211,7 +214,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 52
+export const SAVE_VERSION = 53
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 

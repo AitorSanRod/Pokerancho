@@ -24,7 +24,7 @@ describe('regalos del servidor', () => {
     await addGift(api.env.DB, 'caducado', Date.now() - 1)
     const { status, data } = await api.call('/api/server-gifts')
     expect(status).toBe(200)
-    expect(data.gifts).toEqual([{ id: 'vigente', title: 'Regalo', money: 500, incursionKeys: { [ID]: 1 }, mons: [{ speciesId: SPECIES_ID, level: 10, exp: 0, stars: 1 }] }])
+    expect(data.gifts).toEqual([{ id: 'vigente', title: 'Regalo', money: 500, missingnoShards: 0, tickets: 0, starItems: {}, incursionKeys: { [ID]: 1 }, mons: [{ speciesId: SPECIES_ID, level: 10, exp: 0, stars: 1 }] }])
   })
 
   it('el regalo de un jugador solo lo ve él, con su sesión', async () => {

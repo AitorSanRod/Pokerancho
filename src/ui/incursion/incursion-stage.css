@@ -138,3 +138,41 @@
   height: 6px;
   background: var(--yellow);
 }
+/* Apuntar tocando la escena: los que pueden recibir tu ataque llevan un aro a los pies; el objetivo, el aro amarillo
+   y la flecha del cursor de los juegos encima */
+.incursion-fighter.pickable {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.incursion-fighter.pickable::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  z-index: -1;
+  width: 74px;
+  height: 18px;
+  translate: -50% 0;
+  border: 2px dashed #ffffffb0;
+  border-radius: 50%;
+}
+.incursion-fighter.picked::after {
+  border: 3px solid #ffd400;
+  background: #ffd40040;
+  box-shadow: 0 0 10px #ffd400;
+}
+.incursion-aim {
+  width: 0;
+  height: 0;
+  margin-bottom: 4px;
+  border: 10px solid transparent;
+  border-bottom: 0;
+  border-top: 14px solid #ffd400;
+  filter: drop-shadow(0 2px 0 #2b2820);
+  animation: aim-bob 0.7s ease-in-out infinite alternate;
+}
+@keyframes aim-bob {
+  to {
+    translate: 0 -5px;
+  }
+}

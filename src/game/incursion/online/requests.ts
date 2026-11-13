@@ -39,7 +39,7 @@ function parseMember(incursionId: IncursionId, v: unknown): MemberState | null {
   const perks = parsePerks(v.perks)
   if (!perks) return null
   const nature = isNature(v.nature) ? v.nature : undefined
-  return { ...freshMember({ id: v.id, speciesId, level: v.level, stars: v.stars, nature, perks, moveId: v.moveId }), hpFraction: v.hpFraction }
+  return { ...freshMember({ id: v.id, speciesId, level: v.level, stars: v.stars, nature, shiny: v.shiny === true || undefined, perks, moveId: v.moveId }), hpFraction: v.hpFraction }
 }
 
 /** La petición si es válida; null si falta o sobra algo */

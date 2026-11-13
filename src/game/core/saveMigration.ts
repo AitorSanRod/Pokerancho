@@ -9,6 +9,7 @@ import { isStarItem, STAR_ITEMS } from '../../data/starItems'
 import { Stone } from '../../data/stones'
 import { isTm } from '../../data/tms'
 import { EXPEDITION_DURATIONS } from '../team/expedition'
+import { ExpeditionFocus, isExpeditionFocus } from '../team/expeditionFocus'
 import { salvageMissions } from '../collection/missions'
 import { SERVER_GIFT_ID } from '../collection/serverGifts'
 import { createMon } from '../team/mons'
@@ -30,7 +31,12 @@ type Save = Record<string, unknown>
  * Pasos de migración: SAVE_MIGRATIONS[v] convierte una partida de la versión v en una de la v + 1. Solo hace falta
  * cuando un campo cambia de nombre o de significado; los campos nuevos o quitados ya los resuelve el rescate
  */
-export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {}
+export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {
+  // Las expediciones eligen ahora qué sacar (enfoque); las que ya estaban fuera, EXP
+  52: (save) => {
+    if (Array.isArray(save.expeditions)) for (const e of save.expeditions) if (isRecord(e)) e.focus ??= ExpeditionFocus.Exp
+  },
+}
 
 /**
  * La incursión en curso se descarta en cualquier cambio de versión (IN_PROGRESS): su llave, gastada al entrar, vuelve a
@@ -158,6 +164,7 @@ function linkUp(s: GameState) {
       seenUids.has(e.uid) &&
       isRoute(e.routeId) &&
       EXPEDITION_DURATIONS.includes(e.durationMin) &&
+      isExpeditionFocus(e.focus) &&
       typeof e.elapsedMin === 'number' &&
       e.elapsedMin >= 0,
   )

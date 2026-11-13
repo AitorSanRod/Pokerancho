@@ -22,6 +22,8 @@ export interface SceneMon {
   /** Estados alterados, del más antiguo al más nuevo (un jefe puede llevar varios) */
   statuses: StatusId[]
   boss: boolean
+  /** Del grupo: con los colores shiny */
+  shiny?: boolean
   /** Del grupo: el ataque que lleva (cambia si el jugador lo cambia en plena pelea) */
   moveId?: string
 }
@@ -49,7 +51,7 @@ function partyAtStart(a: ActiveIncursion, p: IncursionProgress): SceneMon[] {
   const members = p.leg === 0 ? a.members : p.record.legs[p.leg - 1].next.members
   return members.map((m) => ({
     id: m.id, team: Team.Party, speciesId: m.speciesId, name: species(m.speciesId).name, level: m.level,
-    hp: Math.round(m.hpFraction * 100), maxHp: 100, out: m.out, statuses: m.status ? [m.status] : [], boss: false, moveId: m.moveId,
+    hp: Math.round(m.hpFraction * 100), maxHp: 100, out: m.out, statuses: m.status ? [m.status] : [], boss: false, moveId: m.moveId, shiny: m.shiny,
   }))
 }
 
@@ -65,7 +67,7 @@ function apply(scene: SceneState, e: IncursionEvent, seq: number) {
     for (const f of e.fighters ?? []) {
       const mon: SceneMon = { ...f, statuses: [] }
       if (f.team === Team.Foe) scene.foes.push(mon)
-      else scene.party = scene.party.map((p) => (p.id === f.id ? { ...mon, statuses: p.statuses, moveId: p.moveId } : p))
+      else scene.party = scene.party.map((p) => (p.id === f.id ? { ...mon, statuses: p.statuses, moveId: p.moveId, shiny: p.shiny } : p))
     }
   }
   const foe = scene.foes.find((m) => m.id === e.target || (e.kind === EventKind.Move && m.id === e.actor))

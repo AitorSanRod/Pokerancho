@@ -2,15 +2,13 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { incursionMove } from '../../data/incursionMoves'
 import { findMon, type GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
 import type { ActiveIncursion } from '../../game/incursion/activeIncursion'
-import { setIncursionPick } from '../../game/incursion/incursionPicks'
 import { PickSide, pickSide } from '../../game/incursion/movePicks'
 import { monRepertoire } from '../../game/incursion/repertoire'
-import { sendIncursionPick } from '../../net/incursionSync'
 import { Bar, Sprite } from '../shared/common'
 import { MovePicker } from './MovePicker'
-import type { SceneMon, SceneState } from './sceneState'
+import { choosePick, pickCandidates, type Pick } from './pickAction'
+import type { SceneState } from './sceneState'
 import '../shared/overlays.css'
 
 interface Props {
@@ -18,11 +16,9 @@ interface Props {
   a: ActiveIncursion
   scene: SceneState
   /** El ataque que lleva ahora (o el que tiene pendiente) */
-  current: { moveId: string; target: string | null }
+  current: Pick
   onClose: () => void
 }
-
-const up = (m: SceneMon) => m.hp > 0 && !m.out
 
 /**
  * Cambiar en plena pelea el ataque de tu Pokémon y a quién lo dirige: rival o aliado según el ataque, o «Automático».
@@ -34,12 +30,11 @@ export function PickDialog({ game, a, scene, current, onClose }: Props) {
   const [target, setTarget] = useState<string | null>(current.target)
   if (!mon) return null
   const side = pickSide(incursionMove(moveId))
-  const candidates = side === PickSide.Foes ? scene.foes.filter(up) : side === PickSide.Allies ? scene.party.filter(up) : []
+  const candidates = pickCandidates(moveId, scene)
   const chosen = candidates.some((c) => c.id === target) ? target : null
 
   const save = () => {
-    act((s) => setIncursionPick(s, { moveId, target: chosen }, Date.now()))
-    if (a.online) void sendIncursionPick(moveId, chosen)
+    choosePick(a, { moveId, target: chosen })
     onClose()
   }
 
@@ -57,7 +52,7 @@ export function PickDialog({ game, a, scene, current, onClose }: Props) {
               </button>
               {candidates.map((c) => (
                 <button key={c.id} className={`incursion-pick-target ${chosen === c.id ? 'selected' : ''}`} onClick={() => setTarget(c.id)}>
-                  <Sprite id={c.speciesId} size={40} animated={false} />
+                  <Sprite id={c.speciesId} size={40} animated={false} shiny={c.shiny} />
                   <span className="tiny">{c.name}</span>
                   <Bar value={c.hp} max={c.maxHp} kind="hp" />
                 </button>

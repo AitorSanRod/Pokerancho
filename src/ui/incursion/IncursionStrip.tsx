@@ -28,7 +28,7 @@ function StripMon({ m, mine }: { m: SceneMon; mine: boolean }) {
   const newest = m.statuses.at(-1)
   return (
     <div className={`incursion-strip-mon ${gone ? 'gone' : ''} ${mine ? 'mine' : ''} ${m.boss ? 'boss' : ''}`} title={m.name}>
-      <Sprite id={m.speciesId} size={36} animated={false} />
+      <Sprite id={m.speciesId} size={36} animated={false} shiny={m.shiny} />
       {newest && !gone && <span className="incursion-strip-status">{STATUS_INFO[newest].short}</span>}
       <Bar value={m.out ? 0 : m.hp} max={m.maxHp} kind="hp" />
     </div>

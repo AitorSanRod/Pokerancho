@@ -20,6 +20,7 @@ import {
   scaleCount,
   sendExpedition,
 } from './expedition'
+import { EXPEDITION_FOCUSES, ExpeditionFocus, focusMult } from './expeditionFocus'
 import { createMon } from './mons'
 import { buyUpgrade, UPGRADES } from './upgrades'
 
@@ -29,12 +30,12 @@ const DURATION = EXPEDITION_DURATIONS[0]
 const INVALID_DURATION = Math.max(...EXPEDITION_DURATIONS) + 1
 const ROUTE = RouteId.PuebloPaleta
 
-function stateOnExpedition(durationMin = DURATION) {
+function stateOnExpedition(durationMin = DURATION, focus: ExpeditionFocus = ExpeditionFocus.Exp) {
   const s = initialState()
   chooseStarter(s, POKEMON.Bulbasaur)
   const mon = activeMon(s)!
   readyForExpeditions(s, ROUTE)
-  sendExpedition(s, mon.uid, ROUTE, durationMin)
+  sendExpedition(s, mon.uid, ROUTE, durationMin, focus)
   return { s, mon }
 }
 
@@ -51,17 +52,17 @@ describe('expediciones', () => {
     s.unlockedRoutes.push(ROUTE)
     s.seen.push(...wildSpecies(route(ROUTE)))
     expect(expeditionRouteBlocker(s, ROUTE)).not.toBeNull()
-    sendExpedition(s, mon.uid, ROUTE, DURATION)
+    sendExpedition(s, mon.uid, ROUTE, DURATION, ExpeditionFocus.Exp)
     expect(s.expeditions).toHaveLength(0)
     s.completedRoutes.push(ROUTE)
     expect(expeditionRouteBlocker(s, ROUTE)).toBeNull()
-    sendExpedition(s, mon.uid, ROUTE, DURATION)
+    sendExpedition(s, mon.uid, ROUTE, DURATION, ExpeditionFocus.Exp)
     expect(s.expeditions).toHaveLength(1)
   })
 
-  it('solo acepta las duraciones previstas', () => {
-    const { s } = stateOnExpedition(INVALID_DURATION)
-    expect(s.expeditions).toHaveLength(0)
+  it('solo acepta las duraciones y los enfoques previstos', () => {
+    expect(stateOnExpedition(INVALID_DURATION).s.expeditions).toHaveLength(0)
+    expect(stateOnExpedition(DURATION, 'nada' as ExpeditionFocus).s.expeditions).toHaveLength(0)
   })
 
   it('no se puede recoger antes de tiempo', () => {
@@ -95,17 +96,37 @@ describe('expediciones', () => {
     expect(s.pieces[id]).toBe(result.pieces.filter((p) => p === id).length)
   })
 
-  it.each(EXPEDITION_DURATIONS)('multiplica EXP, ₽, tickets y piezas según la duración (%i min)', (duration) => {
-    const { s, mon } = stateOnExpedition(duration)
+  /** Lo que da una expedición de `duration` con el enfoque `focus`, al nivel de la ruta y con rng muy bajo */
+  function collectWith(duration: number, focus: ExpeditionFocus) {
+    const { s, mon } = stateOnExpedition(duration, focus)
     // Al nivel de la ruta sus rivales sí dan EXP
     mon.level = route(RouteId.PuebloPaleta).levels[0]
     advanceExpeditions(s, duration)
-    const mult = expeditionRewardMult(duration)
-    // Con rng muy bajo, la parte decimal del multiplicador siempre suma una unidad más
-    const result = collectExpedition(s, mon.uid, () => 0.001)!
-    expect(result.exp).toBeGreaterThan(0)
-    expect(result.tickets).toBe(result.battles * Math.ceil(mult))
-    expect(result.pieces).toHaveLength(result.battles * Math.ceil(mult))
+    // Con rng muy bajo se gana todo, cada salvaje suelta ticket y pieza y la parte decimal siempre suma una unidad más
+    return collectExpedition(s, mon.uid, () => 0.001)!
+  }
+
+  it.each(EXPEDITION_FOCUSES)('el botín (tickets y piezas) va según el enfoque y no crece con la duración (%s)', (focus) => {
+    for (const duration of EXPEDITION_DURATIONS) {
+      const result = collectWith(duration, focus)
+      const perWin = Math.ceil(focusMult(focus, ExpeditionFocus.Loot))
+      expect(result.tickets).toBe(result.battles * perWin)
+      expect(result.pieces).toHaveLength(result.battles * perWin)
+    }
+  })
+
+  it('la EXP y los ₽ crecen con la duración y con su enfoque', () => {
+    const duration = EXPEDITION_DURATIONS.at(-1)!
+    const forExp = collectWith(duration, ExpeditionFocus.Exp)
+    const forMoney = collectWith(duration, ExpeditionFocus.Money)
+    expect(forExp.exp).toBeGreaterThan(forMoney.exp)
+    expect(forMoney.money).toBeGreaterThan(forExp.money)
+    const short = collectWith(EXPEDITION_DURATIONS[0], ExpeditionFocus.Exp)
+    expect(forExp.exp / forExp.battles).toBeGreaterThan(short.exp / short.battles)
+  })
+
+  it('al elegir botín salen más tickets que con otro enfoque', () => {
+    expect(collectWith(DURATION, ExpeditionFocus.Loot).tickets).toBeGreaterThan(collectWith(DURATION, ExpeditionFocus.Exp).tickets)
   })
 
   it('redondea las unidades: la parte decimal suma una más con su probabilidad y sin decimales no tira', () => {
@@ -129,7 +150,7 @@ describe('expediciones', () => {
     s.seen = s.seen.filter((id) => id !== unseen)
     s.seen.push(...rest)
     expect(expeditionRouteBlocker(s, ROUTE)).toMatch(/1 Pokémon/)
-    sendExpedition(s, mon.uid, ROUTE, DURATION)
+    sendExpedition(s, mon.uid, ROUTE, DURATION, ExpeditionFocus.Exp)
     expect(s.expeditions).toHaveLength(0)
     s.seen.push(unseen)
     expect(expeditionRouteBlocker(s, ROUTE)).toBeNull()
@@ -167,7 +188,7 @@ describe('expediciones', () => {
     const second = createMon(POKEMON.Pidgey, 5)
     s.owned.push(second)
     expect(expeditionBlocker(s, second.uid)).toMatch(/huecos/)
-    sendExpedition(s, second.uid, RouteId.PuebloPaleta, DURATION)
+    sendExpedition(s, second.uid, RouteId.PuebloPaleta, DURATION, ExpeditionFocus.Exp)
     expect(s.expeditions).toHaveLength(1)
   })
 
@@ -188,7 +209,7 @@ describe('expediciones', () => {
     s.owned.push(second)
     s.money = UPGRADES.expeditionSlots.prices[0]
     buyUpgrade(s, 'expeditionSlots')
-    sendExpedition(s, second.uid, RouteId.PuebloPaleta, DURATION)
+    sendExpedition(s, second.uid, RouteId.PuebloPaleta, DURATION, ExpeditionFocus.Exp)
     expect(s.expeditions).toHaveLength(2)
   })
 

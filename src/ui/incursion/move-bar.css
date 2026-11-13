@@ -1,0 +1,206 @@
+/* Barra de ataques de la incursión, como el menú de combate de los juegos: crema con borde oscuro (igual que los
+   marcadores de PS), ataques en rejilla 2×2 con el color de su tipo y, debajo, a quién va. La escena acaba encima */
+
+.incursion-view {
+  --move-bar-room: 224px;
+}
+.incursion-view:has(.move-bar) .incursion-stage {
+  bottom: var(--move-bar-room);
+}
+.move-bar {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px 10px;
+  border: 3px solid #2b2820;
+  border-radius: 14px 6px 14px 6px;
+  background: linear-gradient(#fdfcf4, #ecead9);
+  color: #1a1814;
+  box-shadow:
+    inset 0 -3px 0 #0000001a,
+    0 4px 0 #0005;
+}
+.move-bar-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.move-bar-head strong,
+.move-bar-to {
+  flex: none;
+  color: #5a5446;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.move-bar-head > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.move-bar-hint {
+  color: var(--muted);
+}
+.move-bar-next {
+  color: var(--accent);
+  font-weight: 800;
+}
+.move-bar-info {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 2px solid #2b2820;
+  border-radius: 50%;
+  background: #fff;
+  color: #1a1814;
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-weight: 900;
+}
+
+/* Los ataques: dos por fila; si hay más de cuatro, la rejilla se desliza */
+.move-bar-moves {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  max-height: 126px;
+  overflow-y: auto;
+  padding: 4px 4px 3px 10px;
+  margin: -4px -4px 0 -10px;
+}
+.move-bar-move {
+  position: relative;
+  display: grid;
+  grid-template-areas:
+    'name type'
+    'meta meta';
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 6px;
+  min-height: 52px;
+  padding: 6px 10px 6px 12px;
+  border: 2px solid #2b2820;
+  border-radius: 10px;
+  background: linear-gradient(color-mix(in srgb, var(--type-color) 22%, #fff), color-mix(in srgb, var(--type-color) 38%, #fff));
+  color: #1a1814;
+  text-align: left;
+  box-shadow:
+    inset 0 -3px 0 #0000001f,
+    0 2px 0 #0004;
+}
+.move-bar-move:active {
+  translate: 0 2px;
+  box-shadow: inset 0 -1px 0 #0000001f;
+}
+.move-bar-name {
+  grid-area: name;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 900;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.move-bar-meta {
+  grid-area: meta;
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+.move-bar-type {
+  grid-area: type;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--type-color);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 #0006;
+}
+/* El elegido: relleno del color de su tipo, con marco amarillo y la flecha del menú de los juegos */
+.move-bar-move.selected {
+  background: linear-gradient(color-mix(in srgb, var(--type-color) 85%, #fff), var(--type-color));
+  color: #fff;
+  text-shadow: 0 1px 0 #0007;
+  outline: 3px solid #ffd400;
+  outline-offset: 1px;
+}
+.move-bar-move.selected .move-bar-type {
+  background: #0003;
+}
+.move-bar-move.selected::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -10px;
+  translate: 0 -50%;
+  border: 7px solid transparent;
+  border-right: 0;
+  border-left: 8px solid #2b2820;
+}
+/* El que se usa este turno, si ya has elegido otro para el próximo */
+.move-bar-move.in-use:not(.selected) {
+  border-style: dashed;
+}
+
+/* A quién va: «Auto» y un círculo por cada posible, con su icono de la caja */
+.move-bar-targets {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 3px 2px;
+  margin: -3px -2px;
+}
+.move-bar-target .box-icon {
+  scale: 1.25;
+}
+/* Los círculos encogen un poco si hay muchos (el grupo entero, para una cura) */
+.move-bar-target {
+  flex: 0 1 44px;
+  display: grid;
+  place-items: center;
+  min-width: 38px;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 2px solid #2b2820;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #fff, #e4e1d0);
+  box-shadow: 0 2px 0 #0004;
+}
+.move-bar-target.auto {
+  flex: none;
+  aspect-ratio: auto;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 99px;
+  color: #1a1814;
+  font-size: 12px;
+  font-weight: 900;
+}
+.move-bar-target.selected {
+  background: radial-gradient(circle at 50% 35%, #fff6b0, #ffd400);
+  box-shadow:
+    0 0 0 3px #ffd40066,
+    0 2px 0 #0004;
+}
+.move-bar-tip {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

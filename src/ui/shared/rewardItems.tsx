@@ -102,11 +102,11 @@ export function giftRewards(gift: GiftContents): RewardItem[] {
   return items
 }
 
-/** Lo que da un regalo del servidor: ₽, cada Pokémon y cada llave de incursión */
+/** Lo que da un regalo del servidor: ₽, trozos, tickets, objetos estelares, cada Pokémon y cada llave de incursión */
 export function serverGiftRewards(gift: ServerGift): RewardItem[] {
   const mons = gift.mons.map((mon, i) => ({
     key: `mon-${mon.speciesId}-${i}`,
-    icon: <Sprite id={mon.speciesId} size={96} />,
+    icon: <Sprite id={mon.speciesId} size={96} shiny={mon.shiny} />,
     title: `${species(mon.speciesId).name} · Nv. ${mon.level}${mon.stars ? ` ${'★'.repeat(mon.stars)}` : ''}`,
     color: RARITY_INFO[rarityOf(species(mon.speciesId))].color,
   }))
@@ -116,7 +116,7 @@ export function serverGiftRewards(gift: ServerGift): RewardItem[] {
     title: `Llave: ${incursion(id).name} ×${n}`,
     color: '#1f5f86',
   }))
-  return [...moneyAndTickets(gift.money, 0), ...mons, ...keys]
+  return [...giftRewards(gift), ...mons, ...keys]
 }
 
 /** Premios de los jefes comunitarios derrotados, sumados: cada jefe, y después EXP, ₽, tickets y tickets de cada jefe */

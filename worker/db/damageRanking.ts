@@ -1,4 +1,5 @@
 import { rankingWeek, RANKING_SIZE, type DamageRankingEntry, type DamageRankingView, type MonDamage } from '../../src/game/core/ranking'
+import { prizedWeek } from '../../src/game/core/rankingPrizes'
 import { RANKED_USERS } from './users'
 
 // El ranking semanal de daño a los jefes (comunitarios y de incursión) en D1 (tablas boss_damage y damage_ranking,
@@ -31,10 +32,10 @@ function addDamageRows(db: D1Database, tally: MonDamage[], week: number) {
 
 /**
  * Sentencias que rehacen la foto con la semana de `now`: daño total de cada cuenta visible y su Pokémon que más ha
- * hecho; los empates comparten puesto. Borran el daño de las semanas pasadas
+ * hecho; los empates comparten puesto. Borran el daño de antes de la semana pasada (la pasada aún se premia)
  */
 export const rebuildDamageStatements = (db: D1Database, now: number): D1PreparedStatement[] => [
-  db.prepare('DELETE FROM boss_damage WHERE week < ?').bind(rankingWeek(now)),
+  db.prepare('DELETE FROM boss_damage WHERE week < ?').bind(prizedWeek(now)),
   db.prepare('DELETE FROM damage_ranking'),
   db
     .prepare(

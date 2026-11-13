@@ -15,12 +15,15 @@ import { createMon } from '../team/mons'
 import { UPGRADES } from '../team/upgrades'
 import { stateFromSaved } from './cloudSave'
 import { migrateSave, SAVE_MIGRATIONS } from './saveMigration'
+import { ExpeditionFocus } from '../team/expeditionFocus'
 import { initialState, MonPlace, monPlace, SAVE_VERSION, type GameState } from './state'
 import { backupTeam } from './teamBackup'
 
 vi.mock('../../data/maps/kantoMaps', () => import('./test-map'))
 
 const OLD = SAVE_VERSION - 1
+/** Última versión sin el enfoque de las expediciones */
+const ENFOQUE_VERSION = 52
 const [A, B, C] = STARTERS
 const UNKNOWN_SPECIES = -7
 const OTHER_BACKDROP = Object.values(RanchBackdrop).find((b) => b !== DEFAULT_RANCH_BACKDROP)!
@@ -58,8 +61,8 @@ function advancedGame(): GameState {
     completedRoutes: [RouteId.PuebloPaleta],
     // El activo también puede estar de expedición (sin ruta en curso)
     expeditions: [
-      { uid: second.uid, routeId: RouteId.PuebloPaleta, durationMin: EXPEDITION_DURATIONS[0], elapsedMin: 2 },
-      { uid: first.uid, routeId: RouteId.PuebloPaleta, durationMin: EXPEDITION_DURATIONS.at(-1)!, elapsedMin: 7 },
+      { uid: second.uid, routeId: RouteId.PuebloPaleta, durationMin: EXPEDITION_DURATIONS[0], focus: ExpeditionFocus.Loot, elapsedMin: 2 },
+      { uid: first.uid, routeId: RouteId.PuebloPaleta, durationMin: EXPEDITION_DURATIONS.at(-1)!, focus: ExpeditionFocus.Money, elapsedMin: 7 },
     ],
     raidPrizes: [{ bossSpeciesId: C, uid: first.uid, money: 80, tickets: 1, pieces: 1, exp: 5 }],
     routeRaidStreaks: { 'bosque-verde/g': { count: 2, lastAt: 1000 } },
@@ -236,6 +239,15 @@ describe('al actualizar el juego no se pierde nada', () => {
     const migrated = migrateSave(save)!
     expect(migrated.seen).toEqual(expect.arrayContaining(save.caught))
     expect(migrated.unlockedRoutes).toEqual(expect.arrayContaining(save.completedRoutes))
+  })
+
+  it('las expediciones de antes del enfoque siguen fuera, con el de EXP', () => {
+    const s = advancedGame()
+    const save = fromOldVersion(s, ENFOQUE_VERSION)
+    for (const e of save.expeditions) delete e.focus
+    const migrated = migrateSave(save)!
+    expect(migrated.expeditions.map((e) => e.uid)).toEqual(s.expeditions.map((e) => e.uid))
+    expect(migrated.expeditions.every((e) => e.focus === ExpeditionFocus.Exp)).toBe(true)
   })
 
   it('si un campo cambia de significado, su paso de SAVE_MIGRATIONS lo convierte antes del rescate', () => {

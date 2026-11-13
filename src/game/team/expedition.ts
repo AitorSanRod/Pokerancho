@@ -9,14 +9,11 @@ import { pickEncounter, randInt, type Rng } from '../core/random'
 import { findMon, MonPlace, monPlace, type Expedition, type GameState, type OwnedMon } from '../core/state'
 import { gainExp, type LevelUpResult } from './stats'
 import { upgradeLevel } from './upgrades'
+import { ExpeditionFocus, focusMult, isExpeditionFocus } from './expeditionFocus'
 
 /** Duraciones que se pueden elegir, en minutos de juego */
 export const EXPEDITION_DURATIONS = [15, 60, 240, 480]
-/**
- * Multiplicador de EXP, ₽, tickets y piezas de cada victoria según la duración en minutos (las más largas ya tienen
- * más combates). Si no es entero, cada ticket o pieza suelta saca el número de arriba con la probabilidad de la parte
- * decimal (×2,5: 2 o 3, de media 2,5)
- */
+/** Multiplicador de EXP y ₽ de cada victoria según la duración en minutos (las más largas ya tienen más combates) */
 const DURATION_REWARD_MULT: Record<number, number> = { 15: 1, 60: 2.5, 240: 3, 480: 3 }
 /** Pokémon que pueden estar de expedición a la vez sin mejoras (cada mejora de la tienda suma 1) */
 const BASE_EXPEDITION_SLOTS = 1
@@ -73,10 +70,11 @@ export function cancelBlockedExpeditions(s: GameState) {
   s.expeditions = s.expeditions.filter((e) => !expeditionRouteBlocker(s, e.routeId))
 }
 
-export function sendExpedition(s: GameState, uid: string, routeId: string, durationMin: number) {
+/** Manda al Pokémon de expedición, con lo que se quiere sacar de ella (`focus`) */
+export function sendExpedition(s: GameState, uid: string, routeId: string, durationMin: number, focus: ExpeditionFocus) {
   if (expeditionBlocker(s, uid) || expeditionRouteBlocker(s, routeId)) return
-  if (!EXPEDITION_DURATIONS.includes(durationMin)) return
-  s.expeditions.push({ uid, routeId, durationMin, elapsedMin: 0 })
+  if (!EXPEDITION_DURATIONS.includes(durationMin) || !isExpeditionFocus(focus)) return
+  s.expeditions.push({ uid, routeId, durationMin, focus, elapsedMin: 0 })
 }
 
 export function advanceExpeditions(s: GameState, minutes: number) {
@@ -98,7 +96,10 @@ export const expeditionBattles = (durationMin: number): number =>
 
 export const expeditionRewardMult = (durationMin: number): number => DURATION_REWARD_MULT[durationMin]
 
-/** `amount × mult` en unidades enteras: la parte decimal se convierte en una unidad más con esa probabilidad */
+/**
+ * `amount × mult` en unidades enteras: la parte decimal se convierte en una unidad más con esa probabilidad (×1,5: 1 o
+ * 2, de media 1,5)
+ */
 export function scaleCount(amount: number, mult: number, rng: Rng): number {
   const scaled = amount * mult
   const whole = Math.floor(scaled)
@@ -112,8 +113,8 @@ export function expeditionWinRate(mon: OwnedMon, r: Route): number {
 }
 
 /**
- * Recoge una expedición terminada: simula sus combates de forma resumida y entrega el premio, multiplicado según la
- * duración. La EXP sale de las victorias, como en las rutas (sin EXP de rivales muy inferiores al Pokémon).
+ * Recoge una expedición terminada: simula sus combates de forma resumida y entrega el premio según su enfoque (EXP y ₽,
+ * también según la duración). La EXP sale de las victorias, como en las rutas (sin EXP de rivales muy inferiores al Pokémon).
  */
 export function collectExpedition(s: GameState, uid: string, rng: Rng = Math.random): ExpeditionResult | null {
   const e = s.expeditions.find((x) => x.uid === uid)
@@ -122,6 +123,9 @@ export function collectExpedition(s: GameState, uid: string, rng: Rng = Math.ran
   const r = route(e.routeId)
   const winRate = expeditionWinRate(mon, r)
   const mult = expeditionRewardMult(e.durationMin)
+  const expMult = mult * focusMult(e.focus, ExpeditionFocus.Exp)
+  const moneyMult = mult * focusMult(e.focus, ExpeditionFocus.Money)
+  const lootMult = focusMult(e.focus, ExpeditionFocus.Loot)
   const result = {
     battles: expeditionBattles(e.durationMin),
     wins: 0,
@@ -136,10 +140,10 @@ export function collectExpedition(s: GameState, uid: string, rng: Rng = Math.ran
     const level = randInt(r.levels[0], r.levels[1], rng)
     if (rng() >= winRate) continue
     result.wins++
-    result.exp += Math.round(expReward(level, mon.level) * mult)
-    result.money += Math.round(moneyReward(level, averageLegSteps(r), rng) * mult)
-    result.tickets += scaleCount(ticketReward(enemyId, rng), mult, rng)
-    if (pieceReward(enemyId, rng)) result.pieces.push(...Array<number>(scaleCount(1, mult, rng)).fill(enemyId))
+    result.exp += Math.round(expReward(level, mon.level) * expMult)
+    result.money += Math.round(moneyReward(level, averageLegSteps(r), rng) * moneyMult)
+    result.tickets += scaleCount(ticketReward(enemyId, rng), lootMult, rng)
+    if (pieceReward(enemyId, rng)) result.pieces.push(...Array<number>(scaleCount(1, lootMult, rng)).fill(enemyId))
   }
 
   s.expeditions = s.expeditions.filter((x) => x !== e)

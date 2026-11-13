@@ -69,4 +69,10 @@ describe('peticiones al servidor de salas', () => {
     expect(cleanNickname('   ')).toBe(DEFAULT_NICKNAME)
     expect(cleanNickname(42)).toBe(DEFAULT_NICKNAME)
   })
+
+  it('el Pokémon conserva si es shiny; cualquier otro valor cuenta como normal', () => {
+    const monOf = (shiny: unknown) => (parseRequest(join({ mon: { ...snap('a'), shiny } })) as JoinRequest).mon
+    expect(monOf(true).shiny).toBe(true)
+    expect(monOf('sí').shiny).toBeUndefined()
+  })
 })

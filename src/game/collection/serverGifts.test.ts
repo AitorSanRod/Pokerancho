@@ -8,17 +8,20 @@ import { createMon } from '../team/mons'
 import { BOX_SLOTS } from '../team/ranches'
 import { MAX_LEVEL, MAX_STARS } from '../team/stats'
 import { DUPLICATE_MONEY } from '../trade/tradeReceive'
+import { giftContents } from '../../data/dailyGifts'
+import { StarItem } from '../../data/starItems'
 import { claimServerGift, parseServerGifts, pendingServerGifts, serverGiftBlocker, type ServerGift } from './serverGifts'
 
 const ID = INCURSIONS[0].id
 const [STARTER, GIFTED] = SPECIES.map((sp) => sp.id)
-const gift: ServerGift = { id: 'regalo-1', title: 'Un regalo', money: 0, incursionKeys: { [ID]: 1 }, mons: [] }
-const monGift: ServerGift = { id: 'perdon-1', title: 'Te devolvemos tu Pokémon', money: 0, incursionKeys: {}, mons: [{ speciesId: GIFTED, level: 13, exp: 0, stars: 2 }] }
+const NOTHING = giftContents({})
+const gift: ServerGift = { id: 'regalo-1', title: 'Un regalo', ...NOTHING, incursionKeys: { [ID]: 1 }, mons: [] }
+const monGift: ServerGift = { id: 'perdon-1', title: 'Te devolvemos tu Pokémon', ...NOTHING, incursionKeys: {}, mons: [{ speciesId: GIFTED, level: 13, exp: 0, stars: 2 }] }
 
 describe('regalos del servidor', () => {
   it('se descarta lo que no tiene buena forma y las incursiones que no existen', () => {
     const parsed = parseServerGifts([gift, { id: 'MAL ID', title: 'x', incursionKeys: {} }, { ...gift, id: 'otro', incursionKeys: { quitada: 2, [ID]: -1 } }, 'basura'])
-    expect(parsed).toEqual([gift, { id: 'otro', title: gift.title, money: 0, incursionKeys: {}, mons: [] }])
+    expect(parsed).toEqual([gift, { id: 'otro', title: gift.title, ...NOTHING, incursionKeys: {}, mons: [] }])
     expect(parseServerGifts(null)).toEqual([])
   })
 
@@ -29,6 +32,17 @@ describe('regalos del servidor', () => {
     expect(bad.money).toBe(0)
     expect(claimServerGift(s, parsed)).toBe(true)
     expect(s.money).toBe(money + 500)
+  })
+
+  it('da trozos, tickets y objetos estelares; los que no existen o no son un entero positivo no cuentan', () => {
+    const s = initialState()
+    const before = { shards: s.missingnoShards, tickets: s.tickets }
+    const [parsed] = parseServerGifts([{ ...gift, missingnoShards: 30, tickets: 4, starItems: { [StarItem.Stardust]: 2, nada: 3, [StarItem.StarPiece]: -1 } }])
+    expect(parsed.starItems).toEqual({ [StarItem.Stardust]: 2 })
+    expect(claimServerGift(s, parsed)).toBe(true)
+    expect(s.missingnoShards).toBe(before.shards + 30)
+    expect(s.tickets).toBe(before.tickets + 4)
+    expect(s.starItems[StarItem.Stardust]).toBe(2)
   })
 
   it('los Pokémon de especies que no existen o con nivel o ★ fuera de rango se descartan o se arreglan', () => {

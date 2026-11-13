@@ -31,6 +31,7 @@ import { TOWER_MOVE_PICK_EVERY, towerMove, towerMoveChoices } from './towerMoves
 import { sideMove } from '../battle/battle'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
+vi.mock('../../data/rankingCuts', () => ({ RANKING_EXTRA_CUTS: [] }))
 
 /** Pisos de sobra para que caiga */
 const MANY_FLOORS = 1000

@@ -57,7 +57,7 @@ function InRaid({ game, raid, uid }: { game: GameState; raid: Raid; uid: string 
           onCancel={() => setConfirming(false)}
         >
           <div className="row gap">
-            <Sprite id={mon.speciesId} size={64} animated={false} />
+            <Sprite id={mon.speciesId} size={64} animated={false} shiny={mon.shiny} />
             <p className="small confirm-text">
               Vuelve al rancho con los PS que le queden.{' '}
               {earnsPrize({ ...member, left: true }, raid.elapsedMs)

@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { rankingWeek, nextRankingAt, RANKING_REFRESH_MS, rankingDue } from './ranking'
+
+vi.mock('../../data/rankingCuts', () => ({ RANKING_EXTRA_CUTS: [] }))
 
 describe('ranking', () => {
   const start = 10 * RANKING_REFRESH_MS
@@ -25,5 +27,14 @@ describe('ranking', () => {
     expect(rankingWeek(Date.UTC(2026, 10, 15, 23, 59))).toBe(monday)
     expect(rankingWeek(Date.UTC(2026, 10, 16))).toBe(Date.UTC(2026, 10, 16))
     expect(rankingWeek(monday - 1)).toBe(Date.UTC(2026, 10, 2))
+  })
+
+  it('un corte extra empieza un periodo nuevo hasta el lunes siguiente', () => {
+    const monday = Date.UTC(2026, 10, 9)
+    const cut = Date.UTC(2026, 10, 13, 8)
+    expect(rankingWeek(cut - 1, [cut])).toBe(monday)
+    expect(rankingWeek(cut, [cut])).toBe(cut)
+    expect(rankingWeek(Date.UTC(2026, 10, 15, 23, 59), [cut])).toBe(cut)
+    expect(rankingWeek(Date.UTC(2026, 10, 16), [cut])).toBe(Date.UTC(2026, 10, 16))
   })
 })

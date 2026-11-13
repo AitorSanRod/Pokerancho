@@ -49,7 +49,7 @@ export function startIncursion(s: GameState, id: IncursionId, uid: string, moveI
   if (incursionBlocker(s, id, uid, moveId)) return
   const mon = findMon(s, uid)!
   spendKey(s, id)
-  const player = { ...freshMember({ id: uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, perks: monPerks(s, mon), moveId }), hpFraction: mon.hp / maxHp(mon) }
+  const player = { ...freshMember({ id: uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, shiny: mon.shiny, perks: monPerks(s, mon), moveId }), hpFraction: mon.hp / maxHp(mon) }
   s.incursion = {
     incursionId: id,
     uid,

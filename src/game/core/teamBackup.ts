@@ -10,6 +10,7 @@ import { isNature } from '../team/natures'
 import { RANCH_EXPANSION_MAX, RANCH_EXPANSION_SLOTS } from '../team/ranchExpansion'
 import { expToNext, MAX_LEVEL, MAX_STARS } from '../team/stats'
 import { UPGRADES } from '../team/upgrades'
+import { ExpeditionFocus, isExpeditionFocus } from '../team/expeditionFocus'
 import type { GameState } from './state'
 
 /**
@@ -39,6 +40,8 @@ interface BackedUpExpedition {
   monIndex: number
   routeId: string
   durationMin: number
+  /** Las copias de antes del enfoque no lo tienen: EXP */
+  focus?: ExpeditionFocus
   elapsedMin: number
 }
 
@@ -64,7 +67,7 @@ export function backupTeam(s: GameState): TeamBackup {
     activeIndex: active >= 0 ? active : null,
     mons: s.owned.map(({ speciesId, level, exp, stars, nature, ranch, shiny }) => ({ speciesId, level, exp, stars, nature, ranch, shiny })),
     expeditions: s.expeditions
-      .map(({ uid, routeId, durationMin, elapsedMin }) => ({ monIndex: indexOf(uid), routeId, durationMin, elapsedMin }))
+      .map(({ uid, routeId, durationMin, focus, elapsedMin }) => ({ monIndex: indexOf(uid), routeId, durationMin, focus, elapsedMin }))
       .filter((e) => e.monIndex >= 0),
     savedAt: s.lastTick,
     ranchExtraSlots: { ...s.ranchExtraSlots },
@@ -93,6 +96,7 @@ function parseExpeditions(raw: unknown, mons: number): BackedUpExpedition[] {
       !seen.has(e.monIndex) &&
       knownRoute(e.routeId) &&
       EXPEDITION_DURATIONS.includes(e.durationMin) &&
+      (e.focus === undefined || isExpeditionFocus(e.focus)) &&
       typeof e.elapsedMin === 'number' &&
       e.elapsedMin >= 0 &&
       e.elapsedMin <= e.durationMin
@@ -164,7 +168,7 @@ export function restoreTeam(s: GameState, backup: TeamBackup) {
   s.activeUid = (active ?? s.owned[0]).uid
   s.tutorial = null
   for (const e of backup.expeditions ?? []) {
-    s.expeditions.push({ uid: s.owned[e.monIndex].uid, routeId: e.routeId, durationMin: e.durationMin, elapsedMin: e.elapsedMin })
+    s.expeditions.push({ uid: s.owned[e.monIndex].uid, routeId: e.routeId, durationMin: e.durationMin, focus: e.focus ?? ExpeditionFocus.Exp, elapsedMin: e.elapsedMin })
   }
   if (backup.savedAt !== undefined && backup.savedAt < s.lastTick) s.lastTick = backup.savedAt
 }

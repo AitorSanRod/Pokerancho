@@ -1,0 +1,4 @@
+.box-icon {
+  object-fit: contain;
+  image-rendering: pixelated;
+}

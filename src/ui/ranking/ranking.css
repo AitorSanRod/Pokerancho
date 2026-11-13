@@ -83,3 +83,14 @@
   gap: 4px;
   font-weight: 400;
 }
+
+.weekly-prizes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.weekly-prizes ul {
+  margin: 0;
+  padding-left: 18px;
+}

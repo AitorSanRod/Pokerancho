@@ -17,6 +17,7 @@ export function CombineResultAnimation({ result, onClose }: { result: CombineRes
       title={star ? '¡Mejora!' : 'Tickets cambiados'}
       speciesId={result.speciesId}
       name={sp.name}
+      shiny={result.shiny}
       detail={star ? `${'★'.repeat(result.stars ?? 0)} · +4% a todas las stats` : `+₽ ${result.money}`}
       color={color}
       onClose={onClose}

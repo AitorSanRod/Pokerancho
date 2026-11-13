@@ -20,7 +20,7 @@ function GoodIcon({ good }: { good: TradeGood }) {
   if (speciesId === null) return <ItemIcon item={COUNT_ICON[good.kind as keyof typeof COUNT_ICON]} size={56} />
   return (
     <span className="trade-good-sprite">
-      <Sprite id={speciesId} size={80} animated={false} />
+      <Sprite id={speciesId} size={80} animated={false} shiny={good.kind === GoodKind.Mon && good.mon.shiny} />
       {good.kind === GoodKind.Pieces && <ItemIcon item={ICON.Piece} size={22} className="trade-good-piece" />}
     </span>
   )

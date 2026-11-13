@@ -36,7 +36,7 @@ export interface CombineResult {
   level?: number
   /** La naturaleza con la que sale al crearlo */
   nature?: Nature
-  /** Si ha salido shiny al crearlo */
+  /** Si es shiny (al crearlo, si ha salido shiny) */
   shiny?: boolean
   stars?: number
   money?: number
@@ -139,7 +139,7 @@ export function combine(s: GameState, speciesId: number, rng: Rng = Math.random)
   if (kind === CombineKind.Star) {
     const mon = ownedOfSpecies(s, speciesId)!
     mon.stars++
-    return { kind, speciesId, stars: mon.stars }
+    return { kind, speciesId, stars: mon.stars, shiny: mon.shiny }
   }
   const money = surplusMoney(speciesId)
   s.money += money

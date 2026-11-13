@@ -35,4 +35,9 @@ describe('peticiones de incursión', () => {
     expect(parseIncursionRequest({ action: IncursionAction.Vote, ...who, groupId: 'abcdef12' })).toBeNull()
     expect(parseIncursionRequest({ action: IncursionAction.Ready, ...who, groupId: 'abcdef12' })).not.toBeNull()
   })
+
+  it('el Pokémon conserva si es shiny; cualquier otro valor cuenta como normal', () => {
+    expect(parseIncursionRequest(queue({ shiny: true }))).toMatchObject({ member: { shiny: true } })
+    expect(parseIncursionRequest(queue({ shiny: 1 }))).toMatchObject({ member: { shiny: undefined } })
+  })
 })

@@ -34,7 +34,7 @@ export function queueRequest(s: GameState): Pick<QueueRequest, 'action' | 'incur
   const q = s.incursionQueue
   const mon = q && findMon(s, q.uid)
   if (!q || !mon) return null
-  const member = { ...freshMember({ id: mon.uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, perks: monPerks(s, mon), moveId: q.moveId }), hpFraction: mon.hp / maxHp(mon) }
+  const member = { ...freshMember({ id: mon.uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, shiny: mon.shiny, perks: monPerks(s, mon), moveId: q.moveId }), hpFraction: mon.hp / maxHp(mon) }
   return { action: IncursionAction.Queue, incursionId: q.incursionId, member }
 }
 

@@ -28,6 +28,8 @@ export interface RaidMember {
   stars: number
   /** Sin ella (bots y salas de antes de las naturalezas), neutra */
   nature?: Nature
+  /** Con los colores shiny; sin él (bots y salas de antes), normal */
+  shiny?: boolean
   /** PS actuales como fracción de sus PS máximos (0 = debilitado) */
   hpFraction: number
   /** Milisegundos de juego que le quedan para revivir; 0 si está luchando */
@@ -149,7 +151,7 @@ export interface RaidPrize {
   exp: number
 }
 
-type MemberIdentity = Pick<RaidMember, 'id' | 'kind' | 'trainer' | 'speciesId' | 'level' | 'stars' | 'nature'>
+type MemberIdentity = Pick<RaidMember, 'id' | 'kind' | 'trainer' | 'speciesId' | 'level' | 'stars' | 'nature' | 'shiny'>
 
 /** Participante recién llegado: en pie, sin daño ni tiempo dentro */
 export function newMember(who: MemberIdentity, hpFraction = 1, stayMs: number | null = null): RaidMember {

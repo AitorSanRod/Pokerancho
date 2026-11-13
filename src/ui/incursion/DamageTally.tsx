@@ -24,7 +24,7 @@ export function DamageTally({ p, party, uid, nicknames }: Props) {
         return (
           <div key={id} className={`incursion-line ${id === uid ? 'mine' : ''}`}>
             <span className="incursion-damage-rank tiny">{i + 1}.</span>
-            <Sprite id={m.speciesId} size={32} animated={false} />
+            <Sprite id={m.speciesId} size={32} animated={false} shiny={m.shiny} />
             <div className="incursion-line-main">
               <span className="incursion-line-name tiny">
                 <strong>{m.name}</strong>

@@ -8,6 +8,7 @@ import { initialState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
 import { createMon, NEW_MON_LEVEL } from './mons'
 import { maxesPassives, passiveThreshold, passiveWeightOf, ranchPassives, ranchTypeCounts } from './ranchPassives'
+import { ExpeditionFocus } from './expeditionFocus'
 import { buyRanchType, placeRanchType } from './ranchTypes'
 
 const isCommon = (sp: (typeof SPECIES)[number]) => rarityOf(sp) === Rarity.Common
@@ -36,7 +37,7 @@ describe('ranchTypeCounts', () => {
 
   it('cuentan todos los del rancho, también el activo y los que están de expedición, y no los de otros ranchos', () => {
     const s = ranchWith('normal', 3)
-    s.expeditions.push({ uid: s.owned[1].uid, routeId: RouteId.PuebloPaleta, durationMin: 15, elapsedMin: 0 })
+    s.expeditions.push({ uid: s.owned[1].uid, routeId: RouteId.PuebloPaleta, durationMin: 15, focus: ExpeditionFocus.Exp, elapsedMin: 0 })
     s.owned.push(createMon(pureOf('normal'), NEW_MON_LEVEL, 1))
     expect(ranchTypeCounts(s, 0).normal).toBe(3)
   })

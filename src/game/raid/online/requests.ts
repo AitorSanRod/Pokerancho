@@ -54,7 +54,7 @@ function parseMon(v: unknown): MonSnapshot | null {
   const passives = parsePassives(v.passives)
   const perks = parsePerks(v.perks)
   if (!passives || !perks) return null
-  return { uid: v.uid, speciesId: v.speciesId, level: v.level, stars: v.stars, nature: isNature(v.nature) ? v.nature : undefined, hpFraction: v.hpFraction, passives, perks }
+  return { uid: v.uid, speciesId: v.speciesId, level: v.level, stars: v.stars, nature: isNature(v.nature) ? v.nature : undefined, shiny: v.shiny === true || undefined, hpFraction: v.hpFraction, passives, perks }
 }
 
 /** Parada de ruta que existe y tiene jefe comunitario */

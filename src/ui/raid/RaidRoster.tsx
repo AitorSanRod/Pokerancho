@@ -32,7 +32,7 @@ function MemberRow({ m, timeScale }: { m: RaidMember; timeScale: number }) {
   const down = m.downMs > 0
   return (
     <BackdropRow image={TYPE_SCENERY[sp.types[0]]} className={`raid-row ${m.kind} ${down ? 'down' : ''}`}>
-      <Sprite id={m.speciesId} size={56} animated={false} className="raid-row-sprite" />
+      <Sprite id={m.speciesId} size={56} animated={false} className="raid-row-sprite" shiny={m.shiny} />
       <span className="grow small raid-row-info">
         <strong>{trainerName(m)}</strong>
         <span className="raid-row-pill">

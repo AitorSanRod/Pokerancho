@@ -432,7 +432,7 @@ completar.
   src/game/core/state.ts     incursion (la de ahora) e incursionKeys; MonPlace.Incursion
   src/ui/incursion/          IncursionScreen (pestaña), IncursionList + IncursionInfo + IncursionPrep, MovePicker,
                              IncursionView (en curso, a pantalla completa): IncursionStage (escena, stageSpots),
-                             sceneState, IncursionStrip (PS, en la cabecera), IncursionMenu (botón «Menú»: ataque y plegables:
+                             sceneState, IncursionStrip (PS, en la cabecera), MoveBar (barra de ataques, abajo), IncursionMenu (botón «Menú»: plegables:
                              IncursionRoster, DamageTally, pasivas, RetreatVote), RegroupPanel, IncursionSummary
   src/ui/shared/moveText.ts  cómo se cuenta cada ataque de incursión; sheet/MovesInfo, todos los ataques de una especie
   src/ui/shop/IncursionKeyShop.tsx, Mochila (game/team/bag.ts)

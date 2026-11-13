@@ -68,7 +68,7 @@ export function addPlayer(s: GameState, raid: Raid, mon: OwnedMon, lives: number
   const before = raid.members.find((m) => m.id === mon.uid)
   if (before) Object.assign(before, { left: false, hpFraction, downMs: 0, lives: before.lives ?? lives })
   else {
-    const who = { id: mon.uid, kind: RaidMemberKind.Player, trainer: PLAYER_TRAINER, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, perks: monPerks(s, mon) }
+    const who = { id: mon.uid, kind: RaidMemberKind.Player, trainer: PLAYER_TRAINER, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, shiny: mon.shiny, perks: monPerks(s, mon) }
     raid.members.push({ ...newMember(who, hpFraction), lives })
   }
   markSeen(s, raid.boss.speciesId)
@@ -108,7 +108,7 @@ function syncPlayers(s: GameState, raid: Raid) {
       continue
     }
     if (m.downMs === 0) gainExp(mon, raidExpPerRound(raid.boss))
-    Object.assign(m, { level: mon.level, stars: mon.stars, nature: mon.nature, perks: monPerks(s, mon) })
+    Object.assign(m, { level: mon.level, stars: mon.stars, nature: mon.nature, shiny: mon.shiny, perks: monPerks(s, mon) })
   }
 }
 

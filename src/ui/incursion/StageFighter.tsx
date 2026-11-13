@@ -10,7 +10,6 @@ import type { SceneMon, SceneState } from './sceneState'
 import { StagePop } from './StagePop'
 import type { Spot } from './stageSpots'
 
-
 interface Props {
   m: SceneMon
   spot: Spot
@@ -19,6 +18,8 @@ interface Props {
   scene: SceneState
   /** Desfase del balanceo, para que no se muevan todos a la vez */
   idleDelay: number
+  /** Si se le puede apuntar tocándolo (y si ya es el objetivo): al tocarlo, `onPick` */
+  target?: { chosen: boolean; onPick: () => void }
 }
 
 /**
@@ -26,7 +27,7 @@ interface Props {
  * estado…); el efecto del golpe; embiste al atacar, tiembla al recibir, el estado alterado se ve
  * en el sprite y, al caer, el rival se va y el del grupo se queda tumbado
  */
-export function StageFighter({ m, spot, side, mine, scene, idleDelay }: Props) {
+export function StageFighter({ m, spot, side, mine, scene, idleDelay, target }: Props) {
   const { current: e, seq } = scene
   const mineEvent = e?.target === m.id ? e : null
   const acting = e?.kind === EventKind.Move && e.actor === m.id
@@ -42,9 +43,11 @@ export function StageFighter({ m, spot, side, mine, scene, idleDelay }: Props) {
   } as CSSProperties
   const size = m.boss ? BOSS_SPRITE_SIZE : ENEMY_SPRITE_SIZE
   const fallen = down ? (side === 'foe' ? 'fainted' : 'down') : ''
+  const aim = target ? (target.chosen ? 'pickable picked' : 'pickable') : ''
 
   return (
-    <div className={`incursion-fighter ${side} ${fallen}`} style={style}>
+    <div className={`incursion-fighter ${side} ${fallen} ${aim}`} style={style} onClick={target?.onPick}>
+      {target?.chosen && <span className="incursion-aim" />}
       {mineEvent && <StagePop e={mineEvent} seq={seq} />}
       {fxType && <HitEffect key={`fx-${seq}`} type={fxType} />}
       {mine && <span className="raid-mine-tag">Tú</span>}
@@ -53,7 +56,7 @@ export function StageFighter({ m, spot, side, mine, scene, idleDelay }: Props) {
           <div className={down ? '' : 'raid-idle'}>
             <div className={statusClass(down ? null : (m.statuses.at(-1) ?? null))}>
               <div className="scene-shadow" />
-              <Sprite id={m.speciesId} size={size} fit={battleFit(m.speciesId)} />
+              <Sprite id={m.speciesId} size={size} fit={battleFit(m.speciesId)} shiny={m.shiny} />
             </div>
           </div>
         </div>

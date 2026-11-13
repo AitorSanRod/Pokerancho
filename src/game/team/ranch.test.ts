@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { ExpeditionFocus } from './expeditionFocus'
 import { RouteId } from '../../data/maps'
 import { POKEMON } from '../../data/pokemon'
 import { activeMon, initialState } from '../core/state'
@@ -41,7 +42,7 @@ describe('rancho', () => {
     const mon = activeMon(s)!
     mon.hp = 5
     readyForExpeditions(s, RouteId.PuebloPaleta)
-    sendExpedition(s, mon.uid, RouteId.PuebloPaleta, EXPEDITION_DURATIONS[0])
+    sendExpedition(s, mon.uid, RouteId.PuebloPaleta, EXPEDITION_DURATIONS[0], ExpeditionFocus.Exp)
     restInRanch(s, 60)
     expect(mon.hp).toBe(5)
   })

@@ -23,6 +23,12 @@ describe('sala compartida', () => {
     expect(present(stop)[0].lives).toBe(ROUTE_RAID_LIVES)
   })
 
+  it('los demás jugadores ven si su Pokémon es shiny', () => {
+    const room = tabRoom()
+    seatPlayer(room, player(1), 'Ana', { ...snap('a'), shiny: true })
+    expect(present(room)[0].shiny).toBe(true)
+  })
+
   it('si la sala está llena de bots, echa a uno para que entre el jugador', () => {
     const room = tabRoom()
     fillWithBots(room)

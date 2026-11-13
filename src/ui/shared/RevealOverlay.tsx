@@ -11,6 +11,7 @@ export function RevealOverlay({
   speciesId,
   name,
   detail,
+  shiny = false,
   color,
   onClose,
 }: {
@@ -18,6 +19,8 @@ export function RevealOverlay({
   speciesId: number
   name: string
   detail?: string
+  /** Con los colores shiny */
+  shiny?: boolean
   /** Color del halo de detrás (el de su rareza) */
   color: string
   onClose: () => void
@@ -26,7 +29,7 @@ export function RevealOverlay({
     <div className="reward-overlay reveal-overlay" onClick={onClose} style={{ ['--reward' as string]: color }}>
       <h2 className="reward-title">{title}</h2>
       <div className="reveal-mon">
-        <Sprite id={speciesId} size={160} />
+        <Sprite id={speciesId} size={160} shiny={shiny} />
       </div>
       <strong className="reveal-name">{name}</strong>
       {detail && <span className="small">{detail}</span>}

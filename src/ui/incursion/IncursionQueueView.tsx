@@ -17,7 +17,7 @@ export function IncursionQueueView({ game, q }: { game: GameState; q: IncursionQ
     <div className="screen scroll incursion-view">
       <section className="card incursion-queue">
         <h3>{incursion(q.incursionId).name}</h3>
-        {mon && <Sprite id={mon.speciesId} size={96} className="idle-bounce" />}
+        {mon && <Sprite id={mon.speciesId} size={96} className="idle-bounce" shiny={mon.shiny} />}
         <p className="incursion-queue-count">
           Buscando grupo… {server ? `${server.waiting}/${PARTY_SIZE}` : ''}
         </p>

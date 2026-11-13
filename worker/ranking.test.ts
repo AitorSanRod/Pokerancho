@@ -10,6 +10,7 @@ import { testWorker } from './test/api'
 
 vi.mock('./mail', async (original) => ({ ...(await original<typeof import('./mail')>()), sendMail: vi.fn() }))
 vi.mock('../src/data/maps/kantoMaps', () => import('../src/game/core/test-map'))
+vi.mock('../src/data/rankingCuts', () => ({ RANKING_EXTRA_CUTS: [] }))
 
 /** Sube una partida con ese dinero y, en la torre, ese piso como el mejor de la semana `week` (por defecto, esta) */
 async function upload(api: Api, money: number, towerFloor = 0, week = rankingWeek(Date.now())) {

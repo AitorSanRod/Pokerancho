@@ -37,7 +37,7 @@ function RosterLine({ m, note, move }: { m: SceneMon; note: string; move?: strin
   const gone = m.out || m.hp === 0
   return (
     <div className={`incursion-line ${gone ? 'gone' : ''}`}>
-      <Sprite id={m.speciesId} size={32} animated={false} />
+      <Sprite id={m.speciesId} size={32} animated={false} shiny={m.shiny} />
       <div className="incursion-line-main">
         <span className="incursion-line-name tiny">
           <strong>{m.name}</strong> Nv. {m.level}

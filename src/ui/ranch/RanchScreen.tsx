@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
-import { findMon, type GameState } from '../../game/core/state'
+import { baseSpeciesOf } from '../../data/species'
+import { findMon, ownedOfSpecies, type GameState } from '../../game/core/state'
 import { act } from '../../game/core/store'
 import { moveBlocker, moveMon, placeMon, ranchCount } from '../../game/team/ranches'
 import { SettingsMenu } from '../settings/SettingsMenu'
@@ -21,15 +22,16 @@ const NOTICE_MS = 2500
 /** El rancho ocupa toda la pantalla; tocar un Pokémon abre su ficha a pantalla completa y la Caja sube desde abajo */
 export function RanchScreen({ game }: { game: GameState }) {
   const [view, setView] = useState(0)
-  const [selectedUid, setSelectedUid] = useState<string | null>(null)
+  // Especie de la ficha abierta (no el uid: al volver a crearlo cambia y la ficha debe seguir abierta con su animación)
+  const [sheetSpeciesId, setSheetSpeciesId] = useState<number | null>(null)
   const [boxOpen, setBoxOpen] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
   const noticeTimer = useRef<number | undefined>(undefined)
   const count = ranchCount(game)
   const ranch = Math.min(view, count - 1)
-  const mon = selectedUid ? findMon(game, selectedUid) : undefined
+  const selectedUid = sheetSpeciesId === null ? null : (ownedOfSpecies(game, sheetSpeciesId)?.uid ?? null)
   const close = () => {
-    setSelectedUid(null)
+    setSheetSpeciesId(null)
     setBoxOpen(false)
   }
   const showNotice = (text: string) => {
@@ -44,7 +46,11 @@ export function RanchScreen({ game }: { game: GameState }) {
     act((s) => moveMon(s, uid, null))
   }
   const carousel = useRanchCarousel(count, ranch, setView)
-  const pageProps = { game, selectedUid, onSelect: setSelectedUid, onDrop }
+  const select = (uid: string) => {
+    const mon = findMon(game, uid)
+    if (mon) setSheetSpeciesId(baseSpeciesOf(mon.speciesId))
+  }
+  const pageProps = { game, selectedUid, onSelect: select, onDrop }
 
   return (
     <div className="screen ranch">
@@ -71,7 +77,7 @@ export function RanchScreen({ game }: { game: GameState }) {
         <SettingsMenu />
       </div>
 
-      {mon && <PokemonSheet key={mon.uid} game={game} speciesId={mon.speciesId} onClose={close} />}
+      {sheetSpeciesId !== null && <PokemonSheet key={sheetSpeciesId} game={game} speciesId={sheetSpeciesId} onClose={close} />}
       {boxOpen && (
         <div className="ranch-sheet-backdrop" onClick={close}>
           <div className="ranch-sheet" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>

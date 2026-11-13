@@ -76,6 +76,8 @@ export interface MemberState {
   stars: number
   /** Sin ella (bots y clientes de antes de las naturalezas), neutra */
   nature?: Nature
+  /** Con los colores shiny; sin él (bots y clientes de antes), normal */
+  shiny?: boolean
   /** Hitos y colección (team/perks.ts); sin ellos (bots y clientes de antes), ninguno */
   perks?: MonPerks
   moveId: string

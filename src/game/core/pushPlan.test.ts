@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { ExpeditionFocus } from '../team/expeditionFocus'
 import { RouteId } from '../../data/maps'
 import { STARTERS } from '../../data/species'
 import { startRun } from '../run/run'
@@ -19,7 +20,7 @@ function withExpedition() {
   const mon = createMon(STARTERS[1], s.owned[0].level, 0)
   s.owned.push(mon)
   readyForExpeditions(s, RouteId.PuebloPaleta)
-  sendExpedition(s, mon.uid, RouteId.PuebloPaleta, EXPEDITION_DURATIONS[0])
+  sendExpedition(s, mon.uid, RouteId.PuebloPaleta, EXPEDITION_DURATIONS[0], ExpeditionFocus.Exp)
   return { s, mon }
 }
 
