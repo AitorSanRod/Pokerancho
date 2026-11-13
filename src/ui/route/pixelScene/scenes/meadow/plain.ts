@@ -7,11 +7,11 @@ import { bush } from '../../elements/shrubs'
 import { broadTree, type TreePalette } from '../../elements/trees'
 import { between, makeRng, type Rng } from '../../paint/noise'
 import { Pixmap } from '../../paint/pixmap'
-import { DIRT, MEADOW, MEADOW_TREES, TRUNK, TRUNK_INK } from './palette'
+import { DAY, type MeadowColors } from './palette'
 
-const TREES: TreePalette = { leaves: { colors: MEADOW_TREES, ink: MEADOW_TREES[0] }, trunk: { colors: TRUNK, ink: TRUNK_INK } }
+const treesOf = (c: MeadowColors): TreePalette => ({ leaves: { colors: c.meadowTrees, ink: c.meadowTrees[0] }, trunk: { colors: c.trunk, ink: c.trunkInk } })
 /** Sendero lejano: tonos claros de la tierra, para que no destaque tanto como el camino */
-const TRAIL = { fill: DIRT[3], top: DIRT[2], ink: DIRT[1] }
+const trailOf = (c: MeadowColors) => ({ fill: c.dirt[3], top: c.dirt[2], ink: c.dirt[1] })
 
 interface Planted {
   x: number
@@ -28,40 +28,40 @@ function grove(rng: Rng, cx: number, top: (x: number) => number, count: number, 
   })
 }
 
-function plant(pix: Pixmap, rng: Rng, trees: Planted[]) {
-  for (const t of [...trees].sort((a, b) => a.y - b.y)) broadTree(pix, rng, t.x, t.y, t.size, Math.round(t.size * 0.8), TREES)
+function plant(pix: Pixmap, rng: Rng, trees: Planted[], palette: TreePalette) {
+  for (const t of [...trees].sort((a, b) => a.y - b.y)) broadTree(pix, rng, t.x, t.y, t.size, Math.round(t.size * 0.8), palette)
 }
 
 /** Plano lejano: césped claro con dos o tres grupitos de árboles pequeños repartidos sin orden */
-export function farMeadow(seed: number): Pixmap {
+export function farMeadow(seed: number, c: MeadowColors = DAY): Pixmap {
   const rng = makeRng(seed + 40)
   const pix = new Pixmap(640, 58)
-  const top = lawn(pix, rng, 32, [MEADOW[1], MEADOW[2], MEADOW[3]], seed + 41)
+  const top = lawn(pix, rng, 32, [c.meadow[1], c.meadow[2], c.meadow[3]], seed + 41)
   const groups = Math.round(between(rng, 2, 4))
   const trees = Array.from({ length: groups }, (_, i) => {
     const cx = ((i + between(rng, 0.1, 0.8)) * pix.w) / groups
     return grove(rng, cx, top, Math.round(between(rng, 1, 4)), [4, 7], 14)
   }).flat()
-  plant(pix, rng, trees)
+  plant(pix, rng, trees, treesOf(c))
   return pix
 }
 
 /** Plano cercano: césped degradado con un sendero de tierra ondulado, árboles sueltos y alguna mata */
-export function meadow(seed: number): Pixmap {
+export function meadow(seed: number, c: MeadowColors = DAY): Pixmap {
   const rng = makeRng(seed + 42)
   const pix = new Pixmap(720, 70)
-  const top = lawn(pix, rng, 46, MEADOW, seed + 43)
-  const trailY = lane(pix, top, 16, 3, TRAIL, 4, rng() * Math.PI * 2)
+  const top = lawn(pix, rng, 46, c.meadow, seed + 43)
+  const trailY = lane(pix, top, 16, 3, trailOf(c), 4, rng() * Math.PI * 2)
   const trees = Array.from({ length: Math.round(between(rng, 2, 4)) }, () => {
     const x = Math.round(rng() * pix.w)
     const behind = rng() < 0.5
     const y = behind ? trailY(x) - Math.round(between(rng, 2, 8)) : trailY(x) + Math.round(between(rng, 8, 22))
     return { x, y, size: behind ? Math.round(between(rng, 7, 10)) : Math.round(between(rng, 10, 14)) }
   })
-  plant(pix, rng, trees)
+  plant(pix, rng, trees, treesOf(c))
   for (let i = 0; i < 2; i++) {
     const x = Math.round(rng() * pix.w)
-    bush(pix, rng, x, trailY(x) + Math.round(between(rng, 10, 20)), between(rng, 14, 22), between(rng, 8, 12), TREES.leaves)
+    bush(pix, rng, x, trailY(x) + Math.round(between(rng, 10, 20)), between(rng, 14, 22), between(rng, 8, 12), treesOf(c).leaves)
   }
   return pix
 }

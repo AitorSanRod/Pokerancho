@@ -8,7 +8,8 @@ Escenas hechas: **Prado** (bioma `Meadow`: Ruta 1 y Ruta 1 - Final), **Pueblo Pa
 **Bosque Verde** (`Forest`), **Ciudad Plateada** (`PewterCity`, ciudad de piedra de día con el museo y el gimnasio),
 **Cueva** (`Cave`, la incursión Cueva Helada y las raids: penumbra violeta, estalactitas y cristales), **Monte Moon**
 (`MtMoon`, ver abajo), **Mar** (`Sea`, ruta marina: islotes,
-rocas con espuma y agua en la que nada el Pokémon) y **Ciudad Celeste** (`CeruleanCity`, ver abajo). Todos los biomas
+rocas con espuma y agua en la que nada el Pokémon) , **Ciudad Celeste** (`CeruleanCity`, ver abajo), **Ciudad Carmín** (`VermilionCity`, ver abajo) y **Prado al
+atardecer** (`MeadowDusk`, Rutas 5 y 6, ver abajo). Todos los biomas
 tienen escena pixel art.
 
 **Ciudad Celeste** (`scenes/ceruleanCity/`) es una ciudad de puerto en azules: el mar hasta el horizonte con veleros
@@ -17,6 +18,18 @@ blancas de tejados azules (sin fila lejana, para que se vea el mar) con el gimna
 casa del pescador, un canal animado (`canal.ts`: boyas y barca que se mecen, barandilla, farolas y anclas), calle de
 adoquín azulado con la acera del muelle detrás y gaviotas de tarde en tarde (`particles.ts`). Paradas: cartel,
 gimnasio y casa del pescador.
+
+**Ciudad Carmín** (`scenes/vermilionCity/`) es el puerto cálido de día: el mar de Celeste (reutiliza `farSea`,
+`sailboats` y `shore`) con un gran barco de pasajeros amarrado (`elements/liner`, tesela ancha: se ve de vez en
+cuando), casas de pared crema y tejados naranjas con el gimnasio eléctrico (`elements/electricGym`: nave de paneles,
+franja amarilla, cartel con rayo y pararrayos) y la tienda del toldo naranja, una dársena con muelle de madera
+(`dock.ts` con `elements/pier`: tablones, pilotes, valla de cuerda y bolardos), barca, boyas y farolas, y calle de losa
+arenisca. Gaviotas de Celeste. Paradas: cartel, gimnasio y casa.
+
+**Prado al atardecer** (`scenes/meadowDusk/`) es el prado con luz de tarde dorada: las piezas del prado reciben sus
+colores (`MeadowColors`; `meadowSceneOf` en `meadow/index.ts` monta las capas con un `MeadowLook`), con cielo de azul
+violeta a naranja, nubes más altas y rosadas, colinas lilas y el sol bajo medio escondido tras las colinas (capa con
+parallax 0 detrás de todo, `sky.ts`).
 
 **Laboratorio** (`scenes/lab/`, bioma `Lab`, todavía sin ninguna ruta) es el primer interior y la base para los
 demás: pared clara con zócalo menta y rodapié, ventanales altos que siguen por detrás del techo y dejan ver cielo,
@@ -239,6 +252,8 @@ Parallax habitual: nubes 0,02–0,03 · colinas 0,05–0,1 · plano lejano 0,1�
 | `museum`, `gym` | Museo de frontón y columnas con escalinata; gimnasio de sillares con cuerpo central, emblema de roca y peñascos |
 | `waterGym`, `shop`, `fisherHut` | Gimnasio acuático (cúpula con nervios, friso de olas, ojos de buey, gota); tienda (casa con toldo a rayas); casa del pescador de tablones con red y salvavidas |
 | `harbor` | `railing` (barandilla con postes), `anchor` (ancla de dibujo fijo), `buoy` (boya a franjas), `rowboat` (barca de remos) |
+| `pier` | Muelle de madera: `plankEdge` (borde de tablones), `ropeFence` (postes con cuerda), `bollard` (bolardo), `piling` (pilote en el agua) |
+| `liner`, `electricGym` | Barco de pasajeros grande amarrado; gimnasio eléctrico (nave de paneles, cartel con rayo, pararrayos) |
 | `pavedStreet` | `pavedStreet(seed, palette)`: calle de losas entre bordillos; la franja de detrás y la de delante (`Verge`) las pone cada escena (césped, muelle…) |
 | `lamppost` | `lamppost`: farola de hierro con farol encendido y halo semitransparente solo sobre lo vacío |
 | `rocks` | `spike` (estalactita o estalagmita), `boulder` (peñasco de varias bolas), `crag` (roca de caras planas y cantos), `crystals` (racimo de cristales con halo), `rockMass` (pared de roca de fondo sin contorno) |

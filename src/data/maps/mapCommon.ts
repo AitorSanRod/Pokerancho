@@ -20,7 +20,7 @@ export const NodeKind = { Start: 'start', Wild: 'wild', Boss: 'boss', Raid: 'rai
 export type NodeKind = (typeof NodeKind)[keyof typeof NodeKind]
 
 /** Fondo de la escena de caminar (ver src/ui/route/pixelScene/). PalletTown es solo de Pueblo Paleta */
-export const Biome = { Meadow: 'meadow', PalletTown: 'pallet-town', PewterCity: 'pewter-city', CeruleanCity: 'cerulean-city', Forest: 'forest', Cave: 'cave', MtMoon: 'mt-moon', Sea: 'sea', Lab: 'lab' } as const
+export const Biome = { Meadow: 'meadow', PalletTown: 'pallet-town', PewterCity: 'pewter-city', CeruleanCity: 'cerulean-city', Forest: 'forest', Cave: 'cave', MtMoon: 'mt-moon', Sea: 'sea', Lab: 'lab', VermilionCity: 'vermilion-city', MeadowDusk: 'meadow-dusk' } as const
 export type Biome = (typeof Biome)[keyof typeof Biome]
 
 /** Rutas por su id. El valor se guarda en la partida: no cambiarlo sin subir SAVE_VERSION */
@@ -39,6 +39,9 @@ export const RouteId = {
   CiudadCeleste: 'ciudad-celeste',
   GimnasioPlateada: 'gimnasio-plateada',
   GimnasioCeleste: 'gimnasio-celeste',
+  Ruta5: 'ruta-5',
+  Ruta6: 'ruta-6',
+  GimnasioCarmin: 'gimnasio-carmin',
 } as const
 export type RouteId = (typeof RouteId)[keyof typeof RouteId]
 

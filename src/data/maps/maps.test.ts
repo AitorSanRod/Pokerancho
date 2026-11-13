@@ -61,6 +61,7 @@ describe.each(KANTO.routes)('ruta $id', (r) => {
     for (const n of r.nodes) {
       expect(n.gym !== undefined).toBe(n.kind === NodeKind.Gym)
       if (n.gym) expect(GYMS[n.gym].team.length).toBeGreaterThan(0)
+      if (n.gym) expect(GYMS[n.gym].maxLevel).toBeGreaterThan(0)
       for (const foe of n.gym ? GYMS[n.gym].team : []) {
         expect(foe.statMult ?? 1).toBeGreaterThan(0)
         for (const id of foe.moves ?? []) expect(moveClass(incursionMove(id)), id).toBe(MoveClass.Damage)

@@ -38,6 +38,14 @@ export function routeGym(r: Route): Gym | null {
   return id ? GYMS[id] : null
 }
 
+/** Por qué el compañero no puede entrar en el gimnasio de la ruta (pasa de su nivel máximo); null si puede o no es un gimnasio */
+export function gymLevelBlocker(s: GameState, r: Route): string | null {
+  const gym = routeGym(r)
+  const mon = activeMon(s)
+  if (!gym || !mon || mon.level <= gym.maxLevel) return null
+  return `${species(mon.speciesId).name} (Nv. ${mon.level}) es demasiado fuerte: a este gimnasio solo entran Pokémon de hasta Nv. ${gym.maxLevel}.`
+}
+
 /** En la parada del gimnasio, luchando contra el líder */
 export const atGym = (s: GameState): boolean => currentGym(s) !== null && s.run!.gym !== null
 

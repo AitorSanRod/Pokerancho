@@ -7,10 +7,12 @@ import { labScene } from '../../src/ui/route/pixelScene/scenes/lab'
 import { ceruleanCityScene } from '../../src/ui/route/pixelScene/scenes/ceruleanCity'
 import { forestScene } from '../../src/ui/route/pixelScene/scenes/forest'
 import { meadowScene } from '../../src/ui/route/pixelScene/scenes/meadow'
+import { meadowDuskScene } from '../../src/ui/route/pixelScene/scenes/meadowDusk'
 import { mtMoonScene } from '../../src/ui/route/pixelScene/scenes/mtMoon'
 import { palletTownScene } from '../../src/ui/route/pixelScene/scenes/palletTown'
 import { pewterCityScene } from '../../src/ui/route/pixelScene/scenes/pewterCity'
 import { seaScene } from '../../src/ui/route/pixelScene/scenes/sea'
+import { vermilionCityScene } from '../../src/ui/route/pixelScene/scenes/vermilionCity'
 
 /** Píxeles de pantalla por píxel de arte */
 const PIXEL = 3
@@ -19,6 +21,8 @@ const AUTO_LANDMARK_SECONDS = 12
 
 /** Escenas en pruebas; el código vive en src/ui/route/pixelScene (el mismo que usa el juego) */
 const SCENES: Record<string, (seed: number) => SceneDef> = {
+  'Ciudad Carmín': vermilionCityScene,
+  'Prado al atardecer (Rutas 5 y 6)': meadowDuskScene,
   Laboratorio: labScene,
   'Ciudad Celeste': ceruleanCityScene,
   'Monte Moon': mtMoonScene,

@@ -6,11 +6,13 @@ import { caveScene } from './scenes/cave'
 import { ceruleanCityScene } from './scenes/ceruleanCity'
 import { forestScene } from './scenes/forest'
 import { meadowScene } from './scenes/meadow'
+import { meadowDuskScene } from './scenes/meadowDusk'
 import { mtMoonScene } from './scenes/mtMoon'
 import { palletTownScene } from './scenes/palletTown'
 import { pewterCityScene } from './scenes/pewterCity'
 import { labScene } from './scenes/lab'
 import { seaScene } from './scenes/sea'
+import { vermilionCityScene } from './scenes/vermilionCity'
 
 export { usePixelScene, type SceneLandmark } from './usePixelScene'
 
@@ -29,6 +31,8 @@ const BUILDERS: Record<Biome, (seed: number) => SceneDef> = {
   [Biome.MtMoon]: mtMoonScene,
   [Biome.Sea]: seaScene,
   [Biome.Lab]: labScene,
+  [Biome.VermilionCity]: vermilionCityScene,
+  [Biome.MeadowDusk]: meadowDuskScene,
 }
 const cache = new Map<string, SceneDef>()
 

@@ -54,6 +54,7 @@ export function gymForm(d: GymDraft): string {
       ${label('Valor del id', textInput('idValue', d.idValue, gymIdValue(d) || 'carmin'), 'solo si es nuevo')}
       ${label('Líder', textInput('leader', d.leader, 'Lt. Surge'))}
       ${label('Medalla', select('badge', d.badge, BADGE_OPTIONS))}
+      ${label('Nivel máximo para entrar', numInput('maxLevel', d.maxLevel), 'un Pokémon por encima no puede entrar')}
       <div class="full">${leaderPreview(d)}</div>
     </div>
   </section>

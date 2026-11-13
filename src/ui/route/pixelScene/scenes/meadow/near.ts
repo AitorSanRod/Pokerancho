@@ -5,7 +5,7 @@ import { BROAD_LEAVES, leafFrames, makeClump, type LeafClump } from '../../eleme
 import { broadTree } from '../../elements/trees'
 import { between, makeRng, pick } from '../../paint/noise'
 import { Pixmap } from '../../paint/pixmap'
-import { BUTTERCUP, DAISY, FERN, GRASS, NEAR_TREES, NEAR_TREES_INK, PLANTS, TRUNK, TRUNK_INK } from './palette'
+import { DAY, type MeadowColors } from './palette'
 
 /** Ancho y alto de la tira de plantas, en píxeles de arte */
 const STRIP = { width: 360, height: 40 }
@@ -14,7 +14,7 @@ const GROUPS = { size: [1, 3], spacing: [12, 20], gap: [24, 70] } as const
 /** Balanceo de las hojas, en radianes en la punta */
 const PLANT_SWAY = 0.05
 
-export function plants(seed: number, frames: number): Pixmap[] {
+export function plants(seed: number, frames: number, c: MeadowColors = DAY): Pixmap[] {
   const rng = makeRng(seed + 5)
   const clumps: LeafClump[] = []
   for (let x = between(rng, 0, 20); x < STRIP.width - GROUPS.spacing[1]; x += between(rng, ...GROUPS.gap))
@@ -23,33 +23,33 @@ export function plants(seed: number, frames: number): Pixmap[] {
   const flowers = Array.from({ length: 6 }, () => ({
     x: Math.round(rng() * STRIP.width),
     y: STRIP.height - Math.round(between(rng, 4, 10)),
-    colors: pick(rng, [DAISY, DAISY, BUTTERCUP]),
+    colors: pick(rng, [c.daisy, c.daisy, c.buttercup]),
   }))
-  return leafFrames(STRIP.width, STRIP.height, clumps, PLANTS, frames, PLANT_SWAY).map((pix) => {
-    for (const f of flowers) daisy(pix, f.x, f.y, f.colors, GRASS[1])
+  return leafFrames(STRIP.width, STRIP.height, clumps, c.plants, frames, PLANT_SWAY).map((pix) => {
+    for (const f of flowers) daisy(pix, f.x, f.y, f.colors, c.grass[1])
     return pix
   })
 }
 
-const TREES = { leaves: { colors: NEAR_TREES, ink: NEAR_TREES_INK }, trunk: { colors: TRUNK, ink: TRUNK_INK } }
 
 /**
  * Árboles redondos cercanos, pocos y a distancias irregulares, cada uno de su tamaño: la tesela es ancha para que
  * aparezcan solo de vez en cuando.
  */
-export function nearTrees(seed: number): Pixmap {
+export function nearTrees(seed: number, c: MeadowColors = DAY): Pixmap {
   const rng = makeRng(seed + 11)
+  const trees = { leaves: { colors: c.nearTrees, ink: c.nearTreesInk }, trunk: { colors: c.trunk, ink: c.trunkInk } }
   const pix = new Pixmap(760, 80)
   for (let x = between(rng, 40, 140); x < pix.w - 60; x += between(rng, 160, 320)) {
     const size = Math.round(between(rng, 12, 22))
-    broadTree(pix, rng, x, pix.h - 1, size, Math.round(size * between(rng, 0.8, 1.1)), TREES)
+    broadTree(pix, rng, x, pix.h - 1, size, Math.round(size * between(rng, 0.8, 1.1)), trees)
   }
   return pix
 }
 
 /** Grandes hojas oscuras que pasan de vez en cuando por delante de todo */
-export function ferns(seed: number, frames: number): Pixmap[] {
+export function ferns(seed: number, frames: number, c: MeadowColors = DAY): Pixmap[] {
   const rng = makeRng(seed + 10)
   const clumps = [makeClump(rng, 60, 46), makeClump(rng, 470, 36)]
-  return leafFrames(720, 52, clumps, FERN, frames)
+  return leafFrames(720, 52, clumps, c.fern, frames)
 }

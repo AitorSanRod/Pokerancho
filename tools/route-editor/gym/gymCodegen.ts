@@ -25,6 +25,7 @@ export function gymCode(d: GymDraft): string {
     `  [GymId.${d.idKey || '¿?'}]: {`,
     `    leader: ${str(d.leader)},`,
     `    badge: Badge.${d.badge || '¿?'},`,
+    `    maxLevel: ${d.maxLevel},`,
     '    team: [',
     ...d.team.map((f) => `      ${foeCode(f)},`),
     '    ],',

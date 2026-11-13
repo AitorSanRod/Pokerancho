@@ -9,7 +9,7 @@ import { expeditionRouteBlocker } from '../team/expedition'
 import { towerMove, towerMoveChoices } from '../tower/towerMoves'
 import { BATTLE_EVENT_MS } from './battleTimeline'
 import { advanceRun, startRun, walk } from './run'
-import { defaultGymMove, pickGymMove, routeGym } from './runGym'
+import { defaultGymMove, gymLevelBlocker, pickGymMove, routeGym } from './runGym'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
 /** Nivel del primer Pokémon del líder de prueba */
@@ -23,7 +23,7 @@ vi.mock('../../data/gyms', async (original) => {
     { speciesId: P.Snorlax, level: TANK_LEVEL },
     { speciesId: P.Pidgey, level: 2 },
   ]
-  return { ...real, GYMS: { ...real.GYMS, [real.GymId.Plateada]: { leader: 'Líder', badge: Badge.Boulder, team } } }
+  return { ...real, GYMS: { ...real.GYMS, [real.GymId.Plateada]: { leader: 'Líder', badge: Badge.Boulder, maxLevel: 100, team } } }
 })
 
 const ROUTE = RouteId.GimnasioPlateada
@@ -122,6 +122,18 @@ describe('gimnasio', () => {
     startRun(outside, RouteId.PuebloPaleta)
     pickGymMove(outside, towerMoveChoices(activeMon(outside)!)[0].id, outside.lastTick)
     expect(outside.run!.gym).toBeNull()
+  })
+
+  it('un Pokémon por encima de su nivel máximo no puede entrar', () => {
+    const s = initialState()
+    chooseStarter(s, POKEMON.Squirtle)
+    s.unlockedRoutes.push(ROUTE)
+    activeMon(s)!.level = GYM.maxLevel
+    expect(gymLevelBlocker(s, route(ROUTE))).toBeNull()
+    activeMon(s)!.level = GYM.maxLevel + 1
+    expect(gymLevelBlocker(s, route(ROUTE))).not.toBeNull()
+    startRun(s, ROUTE)
+    expect(s.run).toBeNull()
   })
 
   it('a los gimnasios no se va de expedición', () => {

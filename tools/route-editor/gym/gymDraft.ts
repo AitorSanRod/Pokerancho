@@ -27,6 +27,8 @@ export interface GymDraft {
   leader: string
   /** Clave de Badge: `Cascade` */
   badge: string
+  /** Nivel máximo para entrar */
+  maxLevel: number
   team: GymFoeDraft[]
 }
 
@@ -39,7 +41,7 @@ export const badgeName = (key: string): string => (key in BADGES_BY_KEY ? BADGES
 
 export const emptyGymFoe = (): GymFoeDraft => ({ species: '', level: 20, statMult: null, passives: [], moves: [] })
 
-export const emptyGym = (): GymDraft => ({ idKey: '', idValue: '', leader: '', badge: Object.keys(BADGES_BY_KEY)[0], team: [emptyGymFoe()] })
+export const emptyGym = (): GymDraft => ({ idKey: '', idValue: '', leader: '', badge: Object.keys(BADGES_BY_KEY)[0], maxLevel: 30, team: [emptyGymFoe()] })
 
 /** Clave de IMOVE a partir del id guardado en los datos */
 const moveKey = (id: string): string => Object.keys(MOVE_IDS).find((k) => MOVE_IDS[k] === id) ?? (keyOf({}, id) || id)
@@ -58,6 +60,7 @@ export const fromGym = (idKey: string, idValue: string, g: Gym): GymDraft => ({
   idValue,
   leader: g.leader,
   badge: keyOf(DICTS.Badge, g.badge),
+  maxLevel: g.maxLevel,
   team: g.team.map(foeDraft),
 })
 

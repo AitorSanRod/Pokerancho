@@ -4,7 +4,7 @@ import { cumulus } from '../../elements/clouds'
 import { between, makeRng, periodicWave, periodicWaveSlope, valueNoise } from '../../paint/noise'
 import { Pixmap, type Color } from '../../paint/pixmap'
 import { ramp, verticalGradient } from '../../paint/shade'
-import { CLOUD, FAR_HILLS, HILLS, SKY } from './palette'
+import { DAY, SKY, type MeadowColors } from './palette'
 
 /** Altura sobre el borde inferior donde el cielo llega a su tono más claro (detrás de las colinas) */
 const HORIZON = 150
@@ -19,19 +19,19 @@ export function sky(height: number): Pixmap {
 }
 
 /** Una nube grande apoyada sobre las colinas y otra pequeña, por tesela */
-export function clouds(seed: number): Pixmap {
+export function clouds(seed: number, c: MeadowColors = DAY): Pixmap {
   const rng = makeRng(seed)
   const pix = new Pixmap(360, 56)
-  cumulus(pix, rng, { x: 90, baseY: 54, width: 130, height: 40 }, CLOUD)
-  cumulus(pix, rng, { x: 280, baseY: 46, width: 44, height: 12 }, CLOUD)
+  cumulus(pix, rng, { x: 90, baseY: 54, width: 130, height: 40 }, c.cloud)
+  cumulus(pix, rng, { x: 280, baseY: 46, width: 44, height: 12 }, c.cloud)
   return pix
 }
 
 /** Nubecillas sueltas en lo alto del cielo */
-export function wisps(seed: number): Pixmap {
+export function wisps(seed: number, c: MeadowColors = DAY): Pixmap {
   const rng = makeRng(seed + 1)
   const pix = new Pixmap(300, 40)
-  for (let i = 0; i < 4; i++) cumulus(pix, rng, { x: i * 75 + between(rng, 0, 40), baseY: Math.round(between(rng, 8, 38)), width: between(rng, 8, 18), height: between(rng, 3, 5) }, CLOUD)
+  for (let i = 0; i < 4; i++) cumulus(pix, rng, { x: i * 75 + between(rng, 0, 40), baseY: Math.round(between(rng, 8, 38)), width: between(rng, 8, 18), height: between(rng, 3, 5) }, c.cloud)
   return pix
 }
 
@@ -49,18 +49,18 @@ function hillRange(pix: Pixmap, base: number, waves: Waves, colors: readonly Col
   }
 }
 
-export function farHills(seed: number): Pixmap {
+export function farHills(seed: number, c: MeadowColors = DAY): Pixmap {
   const rng = makeRng(seed + 2)
   const pix = new Pixmap(320, 48)
   const p = () => rng() * Math.PI * 2
-  hillRange(pix, 30, [[2, 7, p()], [3, 4, p()]], FAR_HILLS, seed)
+  hillRange(pix, 30, [[2, 7, p()], [3, 4, p()]], c.farHills, seed)
   return pix
 }
 
-export function hills(seed: number): Pixmap {
+export function hills(seed: number, c: MeadowColors = DAY): Pixmap {
   const rng = makeRng(seed + 3)
   const pix = new Pixmap(288, 44)
   const p = () => rng() * Math.PI * 2
-  hillRange(pix, 22, [[2, 6, p()], [4, 3, p()]], HILLS, seed + 5)
+  hillRange(pix, 22, [[2, 6, p()], [4, 3, p()]], c.hills, seed + 5)
   return pix
 }

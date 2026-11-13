@@ -12,6 +12,9 @@ const route3 = asset(new URL('../../assets/routes/route-3.webp', import.meta.url
 const mtMoon = asset(new URL('../../assets/routes/mt-moon.webp', import.meta.url))
 const ruta4 = asset(new URL('../../assets/routes/route-4.webp', import.meta.url))
 const ciudadCeleste = asset(new URL('../../assets/routes/cerulean-city.webp', import.meta.url))
+const ruta5 = asset(new URL('../../assets/routes/route-5.webp', import.meta.url))
+const ruta6 = asset(new URL('../../assets/routes/route-6.webp', import.meta.url))
+const ciudadCarmin = asset(new URL('../../assets/routes/vermilion-city.webp', import.meta.url))
 
 export const KANTO: GameMap = {
   id: 'kanto',
@@ -267,10 +270,64 @@ export const KANTO: GameMap = {
       backdrop: { image: ciudadCeleste, focusY: 45 },
       levels: [41, 44],
       encounters: [],
+      unlocks: RouteId.Ruta5,
       reward: { tickets: 5, money: 6000, exp: 2500 },
       nodes: chain(
         { id: 's', name: 'Entrada del gimnasio', kind: NodeKind.Start, steps: 0 },
         { id: 'g', name: 'Misty', kind: NodeKind.Gym, steps: 20, landmark: StopLandmark.Gym, gym: GymId.Celeste },
+      ),
+    },
+    {
+      id: RouteId.Ruta5,
+      name: 'Ruta 5',
+      description: 'Camino hacia Ciudad Carmin',
+      backdrop: { image: ruta5, focusY: 50 },
+      biome: Biome.MeadowDusk,
+      levels: [45, 50],
+      encounters: enc([POKEMON.Shinx, 10], [POKEMON.Marill, 10], [POKEMON.Pancham, 1], [POKEMON.Charcadet, 1], [POKEMON.Psyduck, 18], [POKEMON.Tangela, 20], [POKEMON.Slowpoke, 20], [POKEMON.Dodrio, 10], [POKEMON.Ivysaur, 10]),
+      unlocks: RouteId.Ruta6,
+      reward: { tickets: 5, money: 7000, exp: 5000 },
+      nodes: chain(
+        { id: 's', name: 'Inicio', kind: NodeKind.Start, steps: 0, landmark: StopLandmark.Sign },
+        { id: 'a', name: 'Hierba alta', kind: NodeKind.Wild, steps: 30, statMult: 1.1 },
+        { id: 'b', name: 'Pueblo del camino', kind: NodeKind.Wild, steps: 60, landmark: StopLandmark.House, statMult: 1 },
+        { id: 'c', name: 'Camino', kind: NodeKind.Heal, steps: 20, potion: Potion.Potion },
+        { id: 'd', name: 'Pasadizo', kind: NodeKind.Boss, steps: 60, statMult: 2.5, boss: boss(POKEMON.Whimsicott, 50, [{ type: 'dragon', level: 2 }]) },
+        { id: 'e', name: 'Camino', kind: NodeKind.Wild, steps: 20, landmark: StopLandmark.Sign, statMult: 1.2 },
+      ),
+    },
+    {
+      id: RouteId.Ruta6,
+      name: 'Ruta 6',
+      description: 'Camino hacia Ciudad Carmin',
+      backdrop: { image: ruta6, focusY: 50 },
+      biome: Biome.MeadowDusk,
+      levels: [48, 53],
+      encounters: enc([POKEMON.Marill, 10], [POKEMON.Psyduck, 18], [POKEMON.Tangela, 20], [POKEMON.Slowpoke, 20], [POKEMON.Charmeleon, 12], [POKEMON.Tentacool, 10], [POKEMON.Vanillite, 5], [POKEMON.Horsea, 5]),
+      reward: { tickets: 5, money: 7000, exp: 5000 },
+      unlocks: RouteId.GimnasioCarmin,
+      nodes: chain(
+        { id: 's', name: 'Inicio', kind: NodeKind.Start, steps: 0, landmark: StopLandmark.Sign },
+        { id: 'a', name: 'Hierba alta', kind: NodeKind.Wild, steps: 30, statMult: 1.1 },
+        { id: 'e', name: 'Orilla del estanque', kind: NodeKind.Wild, steps: 20, landmark: StopLandmark.Sign, statMult: 1.2 },
+        { id: 'b', name: 'Pueblo del camino', kind: NodeKind.Wild, steps: 60, landmark: StopLandmark.House, statMult: 1 },
+        { id: 'c', name: 'Casa de descanso', kind: NodeKind.Heal, steps: 20, potion: Potion.Potion },
+        { id: 'd', name: 'Pasadizo', kind: NodeKind.Boss, steps: 60, statMult: 2, boss: boss(POKEMON.Lickitung, 53, [{ type: 'normal', level: 2 }]) },
+        { id: 'g', name: 'Ciudad Carmin', kind: NodeKind.Boss, steps: 60, statMult: 3, boss: boss(POKEMON.Pinsir, 55, [{ type: 'bug', level: 2 }]) },
+      ),
+    },
+    {
+      id: RouteId.GimnasioCarmin,
+      name: 'Gimnasio de Ciudad Carmín',
+      description: 'Lt. Surge, el líder eléctrico, te espera con su equipo. Ganarle da la Medalla Trueno.',
+      biome: Biome.VermilionCity,
+      backdrop: { image: ciudadCarmin, focusY: 30 },
+      levels: [50, 55],
+      encounters: [],
+      reward: { tickets: 6, money: 8000, exp: 5500 },
+      nodes: chain(
+        { id: 's', name: 'Entrada del gimnasio', kind: NodeKind.Start, steps: 0 },
+        { id: 'g', name: 'Lt. Surge', kind: NodeKind.Gym, steps: 20, landmark: StopLandmark.Gym, gym: GymId.CiudadCarmin },
       ),
     },
   ],

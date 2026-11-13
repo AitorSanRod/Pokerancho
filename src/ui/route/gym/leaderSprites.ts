@@ -1,6 +1,7 @@
 import { GymId } from '../../../data/gyms'
 import brock from '../../../assets/gyms/brock.gif'
 import misty from '../../../assets/gyms/misty.gif'
+import surge from '../../../assets/gyms/surge.gif'
 
 /**
  * GIF de cada líder de gimnasio (sacados de WikiDex, los de Oro HeartGold y Plata SoulSilver). Un gimnasio sin el suyo
@@ -9,4 +10,5 @@ import misty from '../../../assets/gyms/misty.gif'
 export const LEADER_SPRITES: Partial<Record<GymId, string>> = {
   [GymId.Plateada]: brock,
   [GymId.Celeste]: misty,
+  [GymId.CiudadCarmin]: surge,
 }

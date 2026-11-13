@@ -7,7 +7,7 @@ import { stepsPerMinute } from '../team/stats'
 import { advanceExpBoost, boostActive, BOOST_TAP_EXP, newExpBoost } from './expBoost'
 import { completeRoute, gainRunExp, spendBattleTime, startStopBattle } from './runBattle'
 import { spendHealTime, drinkStopPotion } from './runHeal'
-import { enterGym } from './runGym'
+import { enterGym, gymLevelBlocker } from './runGym'
 
 export function runBlocker(s: GameState): string | null {
   const mon = activeMon(s)
@@ -24,7 +24,7 @@ export function runBlocker(s: GameState): string | null {
 
 /** Sale a la ruta con el camino ya elegido; a partir de aquí todo es automático */
 export function startRun(s: GameState, routeId: string, path = pathFrom(route(routeId)), rng: Rng = Math.random) {
-  if (runBlocker(s) || !s.unlockedRoutes.includes(routeId) || !isValidPath(route(routeId), path)) return
+  if (runBlocker(s) || !s.unlockedRoutes.includes(routeId) || !isValidPath(route(routeId), path) || gymLevelBlocker(s, route(routeId))) return
   if (s.tutorial === TutorialStep.Route) s.tutorial = null
   s.run = {
     routeId,

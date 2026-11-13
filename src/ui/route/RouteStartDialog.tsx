@@ -7,7 +7,7 @@ import { TutorialStep, type GameState, type OwnedMon } from '../../game/core/sta
 import { act } from '../../game/core/store'
 import { pathRaidMoneyMult } from '../../game/raid/routeRaidStreak'
 import { startRun } from '../../game/run/run'
-import { defaultGymMove, pickGymMove, routeGym } from '../../game/run/runGym'
+import { defaultGymMove, gymLevelBlocker, pickGymMove, routeGym } from '../../game/run/runGym'
 import { GymMoveBar } from './gym/GymMoveBar'
 import { maxHp } from '../../game/team/stats'
 import { Bar, Sprite } from '../shared/common'
@@ -30,6 +30,7 @@ export function RouteStartDialog({ game, route: r, mon, onClose }: { game: GameS
   const guided = game.tutorial === TutorialStep.Route
   const raidMoney = pathRaidMoneyMult(game, r, path, game.lastTick)
   const gym = routeGym(r)
+  const tooStrong = gymLevelBlocker(game, r)
   const [gymMove, setGymMove] = useState(() => defaultGymMove(mon))
   const start = () =>
     act((s) => {
@@ -60,7 +61,8 @@ export function RouteStartDialog({ game, route: r, mon, onClose }: { game: GameS
           <p className="small center">
             {gym ? (
               <>
-                Sale <strong>{sp.name}</strong> (Nv. {mon.level}) contra <strong>{gym.leader}</strong> y sus {gym.team.length} Pokémon, uno tras otro.
+                Sale <strong>{sp.name}</strong> (Nv. {mon.level}) contra <strong>{gym.leader}</strong> y sus {gym.team.length} Pokémon, uno tras otro. Solo
+                entran Pokémon de hasta Nv. {gym.maxLevel}.
               </>
             ) : (
               <>
@@ -68,7 +70,8 @@ export function RouteStartDialog({ game, route: r, mon, onClose }: { game: GameS
               </>
             )}
           </p>
-          {gym && <GymMoveBar mon={mon} moveId={gymMove} inline onPick={setGymMove} />}
+          {tooStrong && <p className="notice small">{tooStrong}</p>}
+          {gym && !tooStrong && <GymMoveBar mon={mon} moveId={gymMove} inline onPick={setGymMove} />}
           <div className="label">Pueden aparecer</div>
           <div className="route-start-species">
             {pathSpecies(r, path).map((id) =>
@@ -81,7 +84,7 @@ export function RouteStartDialog({ game, route: r, mon, onClose }: { game: GameS
             <button className="btn grow" onClick={onClose}>
               Cancelar
             </button>
-            <button className={`btn primary grow ${guided ? 'tutorial-target' : ''}`} onClick={start}>
+            <button className={`btn primary grow ${guided ? 'tutorial-target' : ''}`} disabled={!!tooStrong} onClick={start}>
               ¡En marcha!
             </button>
           </div>

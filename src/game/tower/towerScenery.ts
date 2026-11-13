@@ -15,6 +15,8 @@ export const TOWER_BIOMES: Biome[] = [
   Biome.Sea,
   Biome.CeruleanCity,
   Biome.PalletTown,
+  Biome.VermilionCity,
+  Biome.MeadowDusk,
 ]
 
 /** Fondo del piso: el mismo durante TOWER_BIOME_EVERY pisos y luego el siguiente de la lista, en bucle */

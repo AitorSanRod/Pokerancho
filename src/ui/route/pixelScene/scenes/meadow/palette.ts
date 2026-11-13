@@ -1,7 +1,7 @@
 // Colores del prado, sacados de la captura de referencia: cielo azul limpio, colinas azuladas y verdes,
 // llanura verde viva y camino naranja. Cada rampa va de oscuro a claro.
 
-import { hex, palette } from '../../paint/pixmap'
+import { hex, palette, type Color } from '../../paint/pixmap'
 
 export const SKY = palette('#1784e4', '#2290ea', '#34a0ee', '#4caef0', '#68bcf2', '#88ccf4')
 export const CLOUD = palette('#a8c4ec', '#c8dcf4', '#e8f2fc', '#ffffff')
@@ -39,3 +39,50 @@ export const WOOD = palette('#583018', '#805028', '#a06830', '#c88848', '#e8b068
 
 export const DAISY = { petals: hex('#ffffff'), shade: hex('#d4d8e4'), center: hex('#f4c020') }
 export const BUTTERCUP = { petals: hex('#f8d030'), shade: hex('#d89a18'), center: hex('#c06a10') }
+
+/** Colores de todas las piezas del prado: el de día y el del atardecer (`meadowDusk`) comparten el dibujo */
+export interface MeadowColors {
+  cloud: readonly Color[]
+  farHills: readonly Color[]
+  hills: readonly Color[]
+  meadow: readonly Color[]
+  meadowTrees: readonly Color[]
+  trunk: readonly Color[]
+  trunkInk: Color
+  fern: readonly Color[]
+  plants: readonly Color[]
+  nearTrees: readonly Color[]
+  nearTreesInk: Color
+  grass: readonly Color[]
+  grassInk: Color
+  dirt: readonly Color[]
+  dirtInk: Color
+  house: typeof HOUSE
+  wood: readonly Color[]
+  daisy: Flower
+  buttercup: Flower
+}
+
+type Flower = typeof DAISY
+
+export const DAY: MeadowColors = {
+  cloud: CLOUD,
+  farHills: FAR_HILLS,
+  hills: HILLS,
+  meadow: MEADOW,
+  meadowTrees: MEADOW_TREES,
+  trunk: TRUNK,
+  trunkInk: TRUNK_INK,
+  fern: FERN,
+  plants: PLANTS,
+  nearTrees: NEAR_TREES,
+  nearTreesInk: NEAR_TREES_INK,
+  grass: GRASS,
+  grassInk: GRASS_INK,
+  dirt: DIRT,
+  dirtInk: DIRT_INK,
+  house: HOUSE,
+  wood: WOOD,
+  daisy: DAISY,
+  buttercup: BUTTERCUP,
+}

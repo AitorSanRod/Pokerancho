@@ -25,6 +25,7 @@ export function gymIssues(d: GymDraft): string[] {
   if (!(d.badge in BADGES_BY_KEY)) out.push('Elige su medalla')
   const owner = badgeOwner(d.badge, d.idKey)
   if (owner) out.push(`La ${badgeName(d.badge)} ya la da el gimnasio ${owner}`)
+  if (!(d.maxLevel >= 1 && d.maxLevel <= MAX_LEVEL)) out.push(`El nivel máximo para entrar va de 1 a ${MAX_LEVEL}`)
   if (d.team.length === 0) out.push('El líder necesita al menos un Pokémon')
   d.team.forEach((f, i) => out.push(...foeIssues(f, i + 1)))
   return out
@@ -33,5 +34,5 @@ export function gymIssues(d: GymDraft): string[] {
 export function gymSummary(d: GymDraft): string {
   const levels = d.team.map((f) => f.level)
   const range = levels.length ? ` · Nv. ${Math.min(...levels)}–${Math.max(...levels)}` : ''
-  return `${d.leader || 'Sin líder'} · ${d.team.length} Pokémon${range} · ${badgeName(d.badge) || 'sin medalla'}`
+  return `${d.leader || 'Sin líder'} · ${d.team.length} Pokémon${range} · entran hasta Nv. ${d.maxLevel} · ${badgeName(d.badge) || 'sin medalla'}`
 }
