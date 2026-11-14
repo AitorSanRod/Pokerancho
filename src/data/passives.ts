@@ -1,20 +1,15 @@
 import type { PokeType } from './types'
 
-// Pasivas de rancho: con varios Pokémon del mismo tipo en el rancho del activo, este gana la pasiva de ese tipo en las
-// rutas. Este fichero es para editarlo a mano: umbrales, efectos de cada nivel y estados alterados.
+// Pasivas de tipo: con varios Pokémon del mismo tipo (cada uno vale según su rareza, `RARITY_INFO.passiveWeight`), se
+// gana la pasiva de ese tipo. En rutas, jefes, gimnasios, raids y torre cuentan los del rancho del Pokémon
+// (game/team/ranchPassives.ts); en las incursiones, los del grupo (game/incursion/groupPassives.ts). Este fichero es
+// para editarlo a mano: umbrales, efectos de cada nivel y estados alterados.
 
-/** Pokémon del mismo tipo que hacen falta en el rancho para el nivel 1 y el nivel 2 de su pasiva */
-export const PASSIVE_THRESHOLDS = [3, 5] as const
+/** Peso de un tipo que hace falta para el nivel 1, 2 y 3 de su pasiva */
+export const PASSIVE_THRESHOLDS = [3, 4, 5] as const
 
-/**
- * Parte del efecto de las pasivas de rancho que cuenta en combate (0.4 = al 40 %), en rutas, jefes, torre y expediciones
- * (no en incursiones): ayudan sin decidir el combate. Se aplica a todos sus números (stats, probabilidades, curas, daño
- * extra), así que `TYPE_PASSIVES` guarda el efecto «entero» y lo que se ve en el juego ya va multiplicado
- */
-export const RANCH_PASSIVE_SCALE = 0.4
-
-/** Nivel de una pasiva: 1 o 2 */
-export type PassiveLevel = 1 | 2
+/** Nivel de una pasiva: 1, 2 o 3 */
+export type PassiveLevel = 1 | 2 | 3
 
 export const StatusId = { Burn: 'burn', Poison: 'poison', Paralysis: 'paralysis', Freeze: 'freeze', Confusion: 'confusion', Sleep: 'sleep' } as const
 export type StatusId = (typeof StatusId)[keyof typeof StatusId]
@@ -61,8 +56,6 @@ export interface PassiveEffect {
   spe?: number
   /** Probabilidad, en cada golpe que acierta, de infligir un estado al rival */
   inflict?: { status: StatusId; chance: number }
-  /** Fracción de los PS máximos que recupera al final de cada turno */
-  regen?: number
   /** Fracción del daño hecho que recupera como PS */
   drain?: number
   /** Fracción del daño recibido que se evita (0.2 = recibe un 20% menos) */
@@ -71,47 +64,48 @@ export interface PassiveEffect {
   dodge?: number
   /** Probabilidad de golpe crítico (×1.5 de daño) */
   crit?: number
-  /** Fracción de los PS máximos que recupera al ganar un combate (además de la cura normal) */
-  winHeal?: number
-  /** Más daño contra rivales de estos tipos (0.15 = +15%) */
-  bonusVs?: { types: PokeType[]; damage: number }
+  /** Fracción de los PS máximos que recupera cada vez que derrota a un rival con un ataque */
+  koHeal?: number
+  /** Fracción de los PS máximos que le puede quitar como mucho un ataque (0.9 = nunca más del 90 %) */
+  maxHitTaken?: number
+  /** Etapas de Velocidad que sube cada vez que ataca (acierte o no), hasta el tope de etapas */
+  speedPerAttack?: number
 }
 
-/** Pasiva de cada tipo: nivel 1 y nivel 2 (el doble, salvo que se cambie aquí) */
-export const TYPE_PASSIVES: Record<PokeType, [PassiveEffect, PassiveEffect]> = {
-  normal: [{ hp: 0.2 }, { hp: 0.4 }],
-  fire: [
-    { atk: 0.3, inflict: { status: StatusId.Burn, chance: 0.1 } },
-    { atk: 0.6, inflict: { status: StatusId.Burn, chance: 0.2 } },
-  ],
-  water: [
-    { def: 0.2, regen: 0.05 },
-    { def: 0.4, regen: 0.1 },
-  ],
-  grass: [{ drain: 0.15 }, { drain: 0.3 }],
-  electric: [
-    { spe: 0.2, inflict: { status: StatusId.Paralysis, chance: 0.1 } },
-    { spe: 0.4, inflict: { status: StatusId.Paralysis, chance: 0.2 } },
-  ],
-  ice: [{ inflict: { status: StatusId.Freeze, chance: 0.1 } }, { inflict: { status: StatusId.Freeze, chance: 0.2 } }],
-  fighting: [{ atk: 0.2 }, { atk: 0.4 }],
-  poison: [{ inflict: { status: StatusId.Poison, chance: 0.15 } }, { inflict: { status: StatusId.Poison, chance: 0.3 } }],
-  ground: [{ def: 0.25 }, { def: 0.5 }],
-  flying: [{ spe: 0.25 }, { spe: 0.5 }],
-  psychic: [{ inflict: { status: StatusId.Confusion, chance: 0.1 } }, { inflict: { status: StatusId.Confusion, chance: 0.2 } }],
-  bug: [{ bonusVs: { types: ['grass', 'psychic'], damage: 0.15 } }, { bonusVs: { types: ['grass', 'psychic'], damage: 0.3 } }],
-  rock: [{ damageReduction: 0.2 }, { damageReduction: 0.4 }],
-  ghost: [{ dodge: 0.15 }, { dodge: 0.3 }],
-  dragon: [
-    { hp: 0.15, atk: 0.15, def: 0.15, spe: 0.15 },
-    { hp: 0.3, atk: 0.3, def: 0.3, spe: 0.3 },
-  ],
-  dark: [{ crit: 0.15 }, { crit: 0.3 }],
-  steel: [{ damageReduction: 0.25 }, { damageReduction: 0.5 }],
-  fairy: [{ winHeal: 0.25 }, { winHeal: 0.5 }],
+const inflicts =
+  (status: StatusId) =>
+  (chance: number): PassiveEffect => ({ inflict: { status, chance } })
+const burns = inflicts(StatusId.Burn)
+const paralyzes = inflicts(StatusId.Paralysis)
+const freezes = inflicts(StatusId.Freeze)
+const poisons = inflicts(StatusId.Poison)
+const confuses = inflicts(StatusId.Confusion)
+const allStats = (v: number): PassiveEffect => ({ hp: v, atk: v, def: v, spe: v })
+
+/** Pasiva de cada tipo: nivel 1, 2 y 3, tal y como cuentan en combate */
+export const TYPE_PASSIVES: Record<PokeType, [PassiveEffect, PassiveEffect, PassiveEffect]> = {
+  normal: [{ hp: 0.05 }, { hp: 0.1 }, { hp: 0.15 }],
+  fire: [burns(0.1), burns(0.2), burns(0.25)],
+  water: [{ def: 0.1 }, { def: 0.2 }, { def: 0.25 }],
+  grass: [{ drain: 0.06 }, { drain: 0.15 }, { drain: 0.2 }],
+  electric: [paralyzes(0.05), paralyzes(0.1), paralyzes(0.15)],
+  ice: [freezes(0.05), freezes(0.1), freezes(0.15)],
+  fighting: [{ atk: 0.1 }, { atk: 0.2 }, { atk: 0.25 }],
+  poison: [poisons(0.1), poisons(0.2), poisons(0.25)],
+  ground: [{ def: 0.1 }, { def: 0.2 }, { def: 0.25 }],
+  flying: [{ spe: 0.1 }, { spe: 0.2 }, { spe: 0.3 }],
+  psychic: [confuses(0.1), confuses(0.15), confuses(0.2)],
+  // Bicho solo da algo en el nivel 3
+  bug: [{}, {}, { speedPerAttack: 1 }],
+  rock: [{ damageReduction: 0.08 }, { damageReduction: 0.16 }, { damageReduction: 0.2 }],
+  ghost: [{ dodge: 0.05 }, { dodge: 0.08 }, { dodge: 0.15 }],
+  dragon: [allStats(0.06), allStats(0.12), allStats(0.15)],
+  dark: [{ crit: 0.05 }, { crit: 0.1 }, { crit: 0.15 }],
+  steel: [{ maxHitTaken: 0.9 }, { maxHitTaken: 0.85 }, { maxHitTaken: 0.7 }],
+  fairy: [{ koHeal: 0.1 }, { koHeal: 0.2 }, { koHeal: 0.25 }],
 }
 
-/** Una pasiva concreta: de qué tipo y de qué nivel (en los jefes se escriben a mano en el mapa) */
+/** Una pasiva concreta: de qué tipo y de qué nivel (en los rivales se escriben a mano) */
 export interface PassiveRef {
   type: PokeType
   level: PassiveLevel

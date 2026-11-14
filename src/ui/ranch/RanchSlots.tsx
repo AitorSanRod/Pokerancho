@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import type { Item } from '../../data/items'
+import { RANCH_BACKDROPS } from '../../data/ranchBackdrops'
 import { RANCH_TYPES } from '../../data/ranchTypes'
 import { species } from '../../data/species'
 import { MonPlace, monPlace, type GameState } from '../../game/core/state'
 import { placedRanchType, ranchPassives } from '../../game/team/ranchPassives'
+import { ranchBackdrop } from '../../game/team/ranchBackdrops'
 import { ranchName } from '../../game/team/ranchNames'
 import { ranchCapacity, usedSlots } from '../../game/team/ranches'
 import { Sprite } from '../shared/common'
+import { FoldSection } from '../shared/FoldSection'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { PassiveList } from './PassiveList'
@@ -60,22 +63,29 @@ export function RanchSlots({ game, ranch }: { game: GameState; ranch: number }) 
                 Cambiar nombre
               </button>
             </div>
-            <div className="label">Fondo</div>
-            <RanchBackdropPicker game={game} ranch={ranch} />
-            <div className="label">Tipo de rancho</div>
-            <RanchTypeSection game={game} ranch={ranch} />
-            <div className="label">Pasivas para el Pokémon que sale de ruta</div>
-            <PassiveList game={game} ranch={ranch} />
-            {away.length > 0 && <div className="label">Fuera, guardando su hueco</div>}
-            {away.map((m) => (
-              <div key={m.uid} className="row gap small">
-                <Sprite id={m.speciesId} size={32} animated={false} shiny={m.shiny} />
-                <span className="grow">{species(m.speciesId).name}</span>
-                <span className="tiny muted with-icon">
-                  <ItemIcon item={OUT_LABEL[monPlace(game, m.uid)]!.icon} size={16} /> {OUT_LABEL[monPlace(game, m.uid)]!.text}
-                </span>
-              </div>
-            ))}
+            <FoldSection title="Fondo" aside={RANCH_BACKDROPS[ranchBackdrop(game, ranch)].name}>
+              <RanchBackdropPicker game={game} ranch={ranch} />
+            </FoldSection>
+            <FoldSection title="Tipo de rancho" aside={placed ? RANCH_TYPES[placed].name : 'Normal'}>
+              <RanchTypeSection game={game} ranch={ranch} />
+            </FoldSection>
+            <FoldSection title="Pasivas" aside={passives === 1 ? '1 activa' : `${passives} activas`}>
+              <p className="tiny muted">Las llevan los Pokémon de este rancho a rutas, gimnasios, raids y torre.</p>
+              <PassiveList game={game} ranch={ranch} />
+            </FoldSection>
+            {away.length > 0 && (
+              <FoldSection title="Fuera, guardando su hueco" aside={away.length}>
+                {away.map((m) => (
+                  <div key={m.uid} className="row gap small">
+                    <Sprite id={m.speciesId} size={32} animated={false} shiny={m.shiny} />
+                    <span className="grow">{species(m.speciesId).name}</span>
+                    <span className="tiny muted with-icon">
+                      <ItemIcon item={OUT_LABEL[monPlace(game, m.uid)]!.icon} size={16} /> {OUT_LABEL[monPlace(game, m.uid)]!.text}
+                    </span>
+                  </div>
+                ))}
+              </FoldSection>
+            )}
             <button className="btn primary wide" onClick={() => setOpen(false)}>
               Aceptar
             </button>

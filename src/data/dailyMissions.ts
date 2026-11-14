@@ -32,16 +32,16 @@ export interface MissionTemplate {
 }
 
 /** Misiones que salen cada día */
-export const MISSIONS_PER_DAY = 3
+export const MISSIONS_PER_DAY = 3;
 
 /** Todas las misiones posibles, con su objetivo y su premio */
 export const DAILY_MISSIONS: MissionTemplate[] = [
-  { kind: MissionKind.WinBattles, goal: 20, reward: giftContents({ money: 3000 }) },
-  { kind: MissionKind.CompleteRoutes, goal: 3, reward: giftContents({ tickets: 3 }) },
+  { kind: MissionKind.WinBattles, goal: 20, reward: giftContents({ money: 5000, missingnoShards: 100 }) },
+  { kind: MissionKind.CompleteRoutes, goal: 3, reward: giftContents({ tickets: 5, missingnoShards: 100 }) },
   { kind: MissionKind.CompleteRoute, goal: 1, reward: giftContents({ money: 2500 }) },
-  { kind: MissionKind.CompleteRouteWith, goal: 1, reward: giftContents({ money: 2000, tickets: 2 }) },
+  { kind: MissionKind.CompleteRouteWith, goal: 1, reward: giftContents({ money: 3000, tickets: 3 }) },
   { kind: MissionKind.SpendMoney, goal: 10000, reward: giftContents({ missingnoShards: 100 }) },
   { kind: MissionKind.CreateMons, goal: 1, reward: giftContents({ tickets: 3 }) },
-  { kind: MissionKind.PullGacha, goal: 5, reward: giftContents({ money: 2500 }) },
-  { kind: MissionKind.FinishExpeditions, goal: 2, reward: giftContents({ missingnoShards: 80 }) },
+  { kind: MissionKind.PullGacha, goal: 5, reward: giftContents({ money: 5000 }) },
+  { kind: MissionKind.FinishExpeditions, goal: 2, reward: giftContents({ money: 2000,missingnoShards: 80 }) },
 ]

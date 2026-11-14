@@ -1,7 +1,7 @@
 import type { BoostStat } from '../../data/incursionMoves'
 
-// Subidas y bajadas de stats por etapas, como en los juegos: cada stat va de −MAX_STAGES a +MAX_STAGES y duran hasta
-// acabar la sala (restRooms.ts › leaveRoom) o hasta caer.
+// Subidas y bajadas de stats por etapas, como en los juegos: cada stat va de −MAX_STAGES a +MAX_STAGES. En las incursiones
+// duran hasta acabar la sala (incursion/restRooms.ts › leaveRoom) o hasta caer; en las rutas, lo que dura el combate.
 
 /** Etapas que puede subir o bajar como mucho una stat */
 export const MAX_STAGES = 6

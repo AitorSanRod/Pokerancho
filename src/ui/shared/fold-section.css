@@ -1,0 +1,44 @@
+/* Sección plegable de un panel (FoldSection): cabecera con título y resumen; la flecha gira al abrirla */
+.fold-section {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+}
+.fold-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  cursor: pointer;
+  list-style: none;
+}
+.fold-section-head::-webkit-details-marker {
+  display: none;
+}
+.fold-section-head::after {
+  content: '▾';
+  color: var(--muted);
+  transition: rotate 0.2s;
+}
+.fold-section[open] > .fold-section-head::after {
+  rotate: 180deg;
+}
+.fold-section-title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+.fold-section-aside {
+  color: var(--text);
+  font-weight: 700;
+}
+.fold-section-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px 12px;
+}

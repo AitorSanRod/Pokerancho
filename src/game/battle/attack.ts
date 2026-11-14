@@ -4,7 +4,8 @@ import { effectiveness } from '../../data/types'
 import type { Rng } from '../core/random'
 import { label, type Fighter, type Push } from './battle'
 import { perkDamageMult, type MonPerks } from '../team/perks'
-import { bonusVsMult } from './combatBonus'
+import { cappedHit, koHealAmount } from './combatBonus'
+import { MAX_STAGES } from './statStages'
 import { blockedByStatus, inflictStatus } from './status'
 
 /** Multiplicador de daño si el movimiento es del mismo tipo que el Pokémon */
@@ -26,7 +27,7 @@ export function damage(atk: DamageSide, def: DamageSide, mv: Move, rng: Rng, ext
   const roll = 0.85 + rng() * 0.15
   // Sin pasiva no se tira el dado: así los combates sin pasivas siguen el mismo azar que antes
   const crit = atk.bonus.crit > 0 && rng() < atk.bonus.crit
-  const mult = stab * eff * roll * perkDamageMult(atk.perks, mv.type) * bonusVsMult(atk.bonus, def.types) * (crit ? CRIT_MULT : 1) * extraMult * (1 - def.bonus.damageReduction)
+  const mult = stab * eff * roll * perkDamageMult(atk.perks, mv.type) * (crit ? CRIT_MULT : 1) * extraMult * (1 - def.bonus.damageReduction)
   return { dealt: eff === 0 ? 0 : Math.max(1, Math.floor(raw * mult)), eff, crit }
 }
 
@@ -37,6 +38,11 @@ const expectedDamage = (mv: Move, atk: Fighter, def: Fighter) =>
 /** De los ataques que tiene, el que más daño espera hacer al rival (en empate, el primero de la lista) */
 export const bestMove = (pool: Move[], atk: Fighter, def: Fighter): Move =>
   pool.reduce((best, mv) => (expectedDamage(mv, atk, def) > expectedDamage(best, atk, def) ? mv : best))
+
+/** Pasiva de Bicho: cada vez que ataca, sube etapas de Velocidad (sin pasar del tope) */
+function speedUp(atk: Fighter) {
+  atk.speStages = Math.min(MAX_STAGES, atk.speStages + atk.bonus.speedPerAttack)
+}
 
 /** Si desde este ataque toca otro (cambio de ataque en pleno combate), lo pone */
 function switchMove(atk: Fighter) {
@@ -81,6 +87,7 @@ export function attack(atk: Fighter, def: Fighter, push: Push, rng: Rng) {
   }
 
   atk.attacks++
+  speedUp(atk)
   switchMove(atk)
   if (atk.movePool?.length) atk.move = bestMove(atk.movePool, atk, def)
   if (mustStruggle(atk, def)) return struggle(atk, def, push)
@@ -91,10 +98,14 @@ export function attack(atk: Fighter, def: Fighter, push: Push, rng: Rng) {
   if (def.bonus.dodge > 0 && rng() < def.bonus.dodge) return push({ kind: 'miss', side: def.side, miss: 'dodge', text: '¡Lo esquivó!' })
   const { dealt, eff, crit } = damage(atk, def, mv, rng, tapCrit ? TAP_CRIT_MULT : 1)
 
-  def.hp = Math.max(0, def.hp - dealt)
+  const taken = cappedHit(dealt, def.bonus, def.maxHp)
+  def.hp = Math.max(0, def.hp - taken)
   const note = [crit || tapCrit ? '¡Crítico!' : '', eff > 1 ? '¡Es muy eficaz!' : eff < 1 ? 'No es muy eficaz…' : ''].filter(Boolean).join(' ')
   push({ kind: 'hit', side: def.side, crit: crit || tapCrit, tapCrit, eff, text: note })
-  if (atk.bonus.drain > 0) heal(atk, dealt * atk.bonus.drain, push)
-  if (def.hp === 0) return push({ kind: 'faint', side: def.side, text: `¡${label(def)} se debilitó!` })
+  if (atk.bonus.drain > 0) heal(atk, taken * atk.bonus.drain, push)
+  if (def.hp === 0) {
+    push({ kind: 'faint', side: def.side, text: `¡${label(def)} se debilitó!` })
+    return heal(atk, koHealAmount(atk.bonus, atk.maxHp), push)
+  }
   for (const { status, chance } of atk.bonus.inflicts) if (rng() < chance) inflictStatus(def, status, push)
 }

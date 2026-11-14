@@ -93,7 +93,7 @@ export interface Run {
   raidRejoinHp: number | null
   /** Cura de la parada de poción en la que está parado el Pokémon; mientras `msLeft` sea > 0 no se dan pasos */
   heal: StopHeal | null
-  /** Bonificación de EXP: el objeto que aparece al caminar y el rato que dura al tocarlo (ver run/expBoost.ts) */
+  /** Huevo Suerte: si sale en esta ruta y dónde, y si la ruta va con uno usado (ver run/expBoost.ts) */
   boost: ExpBoost
   /** Ruta que se ha desbloqueado al completar esta por primera vez (null si no ha desbloqueado ninguna) */
   unlocked: string | null
@@ -165,6 +165,10 @@ export interface GameState {
   formItems: FormItem[]
   /** Mentas aleatorias compradas y aún sin usar (ver team/mints.ts) */
   mints: number
+  /** Huevos Suerte cogidos en ruta y aún sin usar (ver run/expBoost.ts) */
+  luckyEggs: number
+  /** Se ha usado un Huevo Suerte: la próxima ruta que se empiece irá con su bonificación */
+  luckyEggArmed: boolean
   /** Objetos estelares sin gastar (ver collection/starItems.ts) */
   starItems: Partial<Record<StarItem, number>>
   /** Tiradas seguidas del gacha sin que haya salido cada objeto estelar con garantía */
@@ -222,7 +226,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 54
+export const SAVE_VERSION = 55
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 
@@ -250,6 +254,8 @@ export function initialState(): GameState {
     stones: {},
     formItems: [],
     mints: 0,
+    luckyEggs: 0,
+    luckyEggArmed: false,
     starItems: {},
     gachaPity: {},
     tms: {},

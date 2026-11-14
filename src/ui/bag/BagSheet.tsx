@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import { FORM_ITEMS } from '../../data/forms'
 import { incursion } from '../../data/incursions'
 import { RANCH_TYPES } from '../../data/ranchTypes'
@@ -12,6 +11,8 @@ import { Sprite } from '../shared/common'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { RanchTypeGems } from '../shop/RanchTypeShop'
+import { BagGroup, BagTile } from './BagParts'
+import { LuckyEggGroup } from './LuckyEggGroup'
 import './bag.css'
 
 /** Mochila (menú del rancho): lo comprado o ganado y aún sin usar, con dónde se usa cada cosa */
@@ -20,7 +21,7 @@ export function BagSheet({ game, onBack }: { game: GameState; onBack: () => void
   return (
     <>
       <MenuSheetHeader icon={ICON.Bag} title="Mochila" onBack={onBack} />
-      {isBagEmpty(bag) ? (
+      {isBagEmpty(bag) && !game.luckyEggArmed ? (
         <p className="notice small">La mochila está vacía. Lo que compres en la Tienda o ganes y aún no hayas usado aparecerá aquí.</p>
       ) : (
         <>
@@ -50,6 +51,7 @@ export function BagSheet({ game, onBack }: { game: GameState; onBack: () => void
               <BagTile icon={<ItemIcon item={ICON.Mint} size={44} />} name="Menta aleatoria" count={bag.mints} />
             </BagGroup>
           )}
+          {(bag.luckyEggs > 0 || game.luckyEggArmed) && <LuckyEggGroup game={game} />}
           {bag.ranchTypes.length > 0 && (
             <BagGroup title="Tipos de rancho" hint="Se colocan desde el botón de arriba a la izquierda del rancho.">
               {bag.ranchTypes.map(({ id, count }) => (
@@ -74,27 +76,5 @@ export function BagSheet({ game, onBack }: { game: GameState; onBack: () => void
         </>
       )}
     </>
-  )
-}
-
-function BagGroup({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
-  return (
-    <section className="bag-group">
-      <h3 className="bag-group-title">{title}</h3>
-      <p className="tiny muted">{hint}</p>
-      <div className="bag-grid">{children}</div>
-    </section>
-  )
-}
-
-function BagTile({ icon, name, count }: { icon: ReactNode; name: string; count: number }) {
-  return (
-    <div className="bag-tile">
-      <span className="bag-tile-icon">
-        {icon}
-        <span className="bag-tile-count">×{count}</span>
-      </span>
-      <span className="tiny">{name}</span>
-    </div>
   )
 }

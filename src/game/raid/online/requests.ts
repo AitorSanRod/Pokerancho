@@ -1,5 +1,5 @@
 import { NodeKind, node, route } from '../../../data/maps'
-import type { PassiveRef } from '../../../data/passives'
+import { PASSIVE_THRESHOLDS, type PassiveRef } from '../../../data/passives'
 import { species } from '../../../data/species'
 import { TYPE_INFO, type PokeType } from '../../../data/types'
 import { isNature } from '../../team/natures'
@@ -43,7 +43,7 @@ const knownSpecies = (id: number) => {
 
 function parsePassives(v: unknown): PassiveRef[] | null {
   if (!Array.isArray(v) || v.length > MAX_PASSIVES) return null
-  const ok = v.every((p) => isObject(p) && typeof p.type === 'string' && p.type in TYPE_INFO && (p.level === 1 || p.level === 2))
+  const ok = v.every((p) => isObject(p) && typeof p.type === 'string' && p.type in TYPE_INFO && isInt(p.level, 1, PASSIVE_THRESHOLDS.length))
   return ok ? v.map((p) => ({ type: p.type as PokeType, level: p.level })) : null
 }
 

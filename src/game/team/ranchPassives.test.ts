@@ -7,7 +7,7 @@ import type { PokeType } from '../../data/types'
 import { initialState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
 import { createMon, NEW_MON_LEVEL } from './mons'
-import { maxesPassives, passiveThreshold, passiveWeightOf, ranchPassives, ranchTypeCounts } from './ranchPassives'
+import { passiveLevel, passiveThreshold, passiveWeightOf, ranchPassives, ranchTypeCounts } from './ranchPassives'
 import { ExpeditionFocus } from './expeditionFocus'
 import { buyRanchType, placeRanchType } from './ranchTypes'
 
@@ -53,10 +53,11 @@ describe('ranchTypeCounts', () => {
 })
 
 describe('ranchPassives', () => {
-  it(`con ${LEVEL_1} del mismo tipo da el nivel 1 y con ${LEVEL_2}, el nivel 2`, () => {
+  it('con el peso de cada umbral da su nivel, y por debajo del primero, ninguno', () => {
     expect(ranchPassives(ranchWith('fire', LEVEL_1 - 1), 0)).toEqual([])
-    expect(ranchPassives(ranchWith('fire', LEVEL_1), 0)).toEqual([{ type: 'fire', level: 1 }])
-    expect(ranchPassives(ranchWith('fire', LEVEL_2), 0)).toEqual([{ type: 'fire', level: 2 }])
+    for (const [i, threshold] of PASSIVE_THRESHOLDS.entries()) {
+      expect(ranchPassives(ranchWith('fire', threshold), 0)).toEqual([{ type: 'fire', level: i + 1 }])
+    }
   })
 
   it('un tipo de rancho que favorece al tipo rebaja los umbrales', () => {
@@ -69,12 +70,13 @@ describe('ranchPassives', () => {
     expect(ranchPassives(s, 0)).toEqual([{ type: 'water', level: 1 }])
   })
 
-  it('un legendario sube él solo la pasiva de sus tipos al nivel máximo, y no las de otros tipos', () => {
-    const legendary = SPECIES.find((sp) => maxesPassives(sp.id))!
+  it('cada uno suma a sus tipos el peso de su rareza, y no a los demás tipos', () => {
+    const legendary = SPECIES.find((sp) => rarityOf(sp) === Rarity.Legendary)!
     const other = (['normal', 'fire', 'water', 'grass'] as PokeType[]).find((t) => !legendary.types.includes(t))!
     const s = ranchWith(other, 1)
     s.owned.push(createMon(legendary.id, NEW_MON_LEVEL))
-    expect(ranchPassives(s, 0)).toEqual(legendary.types.map((type) => ({ type, level: 2 })))
+    const level = passiveLevel(passiveWeightOf(legendary.id))
+    expect(ranchPassives(s, 0)).toEqual(level ? legendary.types.map((type) => ({ type, level })) : [])
     expect(ranchPassives(s, 1)).toEqual([])
   })
 

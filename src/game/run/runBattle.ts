@@ -1,7 +1,6 @@
 import { legSteps, NodeKind, type Boss, type Route, type RouteNode } from '../../data/maps'
 import type { Move } from '../../data/moves'
 import { makeFighter } from '../battle/battle'
-import { combineBonus } from '../battle/combatBonus'
 import { boostedMoney, expReward, moneyReward, pieceReward, ticketReward } from '../battle/rewards'
 import { MissionKind } from '../../data/dailyMissions'
 import { baseSpeciesOf } from '../../data/species'
@@ -66,7 +65,10 @@ export interface BattleOpts {
  */
 export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng) {
   const isBoss = n.kind === NodeKind.Boss
-  startBattle(s, r, rivalOf(r, n, rng), { boss: isBoss, statMult: n.statMult ?? (isBoss ? 1 : WILD_STAT_MULT) }, rng)
+  const rival = rivalOf(r, n, rng)
+  // Con el Huevo Suerte usado, los rivales de las paradas salen al nivel del Pokémon del jugador
+  const foe = boostActive(s.run!) ? { ...rival, level: activeMon(s)!.level } : rival
+  startBattle(s, r, foe,{ boss: isBoss, statMult: n.statMult ?? (isBoss ? 1 : WILD_STAT_MULT) }, rng)
 }
 
 /**
@@ -127,9 +129,6 @@ function settleBattle(s: GameState, r: Route, rng: Rng) {
     return
   }
   if (record.outcome === 'win') {
-    // Ganar no cura; solo la pasiva de rancho que lo da
-    const winHeal = combineBonus(ranchPassives(s, mon.ranch!)).winHeal
-    mon.hp = Math.min(maxHp(mon), mon.hp + Math.ceil(maxHp(mon) * winHeal))
     s.money += record.rewards.money
     s.tickets += record.rewards.tickets
     run.earned.money += record.rewards.money

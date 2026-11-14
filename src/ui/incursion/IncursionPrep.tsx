@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { RARITY_WEIGHT } from '../../data/incursionPassives'
 import type { Incursion } from '../../data/incursions'
-import { rarityOf, species } from '../../data/species'
+import { species } from '../../data/species'
 import { TYPE_INFO } from '../../data/types'
 import { MonPlace, monPlace, type GameState, type OwnedMon } from '../../game/core/state'
 import { act } from '../../game/core/store'
@@ -12,6 +11,7 @@ import { freePrizeSpent } from '../../game/incursion/freeIncursions'
 import { keysOf, needsKey } from '../../game/incursion/keys'
 import { enterQueue } from '../../game/incursion/online/linkedIncursion'
 import { monRepertoire } from '../../game/incursion/repertoire'
+import { passiveWeightOf } from '../../game/team/ranchPassives'
 import { Sprite } from '../shared/common'
 import { MonPicker } from '../shared/MonPicker'
 import { HeroLayout } from '../shared/sheet/HeroLayout'
@@ -83,7 +83,7 @@ const entryNote = (game: GameState, inc: Incursion) =>
 /** Lo que aporta a las pasivas de grupo: el peso de su rareza en cada uno de sus tipos */
 function PassiveShare({ mon }: { mon: OwnedMon }) {
   const sp = species(mon.speciesId)
-  const weight = RARITY_WEIGHT[rarityOf(sp)]
+  const weight = passiveWeightOf(sp.id)
   return (
     <p className="tiny center">
       Suma <strong>{weight}</strong> a las pasivas de {sp.types.map((t) => TYPE_INFO[t].name).join(' y ')}

@@ -2,7 +2,7 @@ import { incursionMove } from '../../data/incursionMoves'
 import type { Battlefield } from './battlefield'
 import { EventKind, on } from './events'
 import { isUp, type GroupFighter } from './fighter'
-import { addStages } from './statStages'
+import { addStages } from '../battle/statStages'
 
 // Lo que hace distintos a los jefes de incursión (data/incursions.ts › BossMechanics): furia, golpes en área y fases.
 

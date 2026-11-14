@@ -5,15 +5,15 @@ import { ItemIcon } from '../shared/ItemIcon'
 import './exp-boost.css'
 
 /**
- * El objeto de la bonificación de EXP, saltando en la escena mientras se puede tocar (`spot`: de 0, izquierda, a 1,
- * derecha). Tocarlo no cuenta como un paso
+ * El Huevo Suerte, saltando en la escena mientras se puede tocar (`spot`: de 0, izquierda, a 1, derecha). Tocarlo lo
+ * guarda en la Mochila y no cuenta como un paso
  */
 export function ExpBoostSpawn({ spot }: { spot: number }) {
   return (
     <button
       className="exp-boost-spawn"
       style={{ left: `${12 + spot * 70}%` }}
-      aria-label="Bonificación de EXP"
+      aria-label="Huevo Suerte"
       onPointerDown={(e) => {
         e.stopPropagation()
         act(catchExpBoost)
@@ -24,14 +24,19 @@ export function ExpBoostSpawn({ spot }: { spot: number }) {
   )
 }
 
-/** Aviso en la cabecera de la ruta mientras dura la bonificación, con lo que le queda */
-export function ExpBoostBadge({ msLeft }: { msLeft: number }) {
+/** Aviso en la cabecera de la ruta: va con un Huevo Suerte usado o se ha cogido el de esta ruta */
+export function ExpBoostBadge({ active }: { active: boolean }) {
   return (
     <div className="exp-boost-badge">
       <ItemIcon item={ICON.ExpBoost} size={22} />
-      <strong>EXP ×{BOOST_EXP_MULT}</strong>
-      <span className="grow tiny">Cada toque da EXP</span>
-      <strong>{Math.ceil(msLeft / 1000)} s</strong>
+      {active ? (
+        <>
+          <strong>EXP ×{BOOST_EXP_MULT}</strong>
+          <span className="grow tiny">Cada toque da EXP · rivales a tu nivel</span>
+        </>
+      ) : (
+        <span className="grow tiny">¡Huevo Suerte guardado en la Mochila!</span>
+      )}
     </div>
   )
 }

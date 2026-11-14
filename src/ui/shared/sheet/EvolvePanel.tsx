@@ -3,7 +3,7 @@ import { evolutionsOf, evolutionTo, type Evolution } from '../../../data/evoluti
 import { species } from '../../../data/species'
 import { STAR_ITEMS } from '../../../data/starItems'
 import { STONES } from '../../../data/stones'
-import { starItemFor, starItemsOf } from '../../../game/collection/starItems'
+import { starItemFor } from '../../../game/collection/starItems'
 import type { GameState, OwnedMon } from '../../../game/core/state'
 import { act } from '../../../game/core/store'
 import { evolve, evolveBlocker, evolvePrice, type EvolveResult } from '../../../game/team/evolution'
@@ -12,6 +12,7 @@ import { ConfirmDialog } from '../ConfirmDialog'
 import { ICON } from '../icons'
 import { ItemIcon } from '../ItemIcon'
 import { MonSection } from './MonSheet'
+import { StarItemNeed } from './StarItemNeed'
 
 /** Botón de evolucionar (uno por opción: Eevee tiene tres), con su aviso si aún no puede. No se pinta si la especie no evoluciona. */
 export function EvolvePanel({ game, mon, onEvolved }: { game: GameState; mon: OwnedMon; onEvolved: (result: EvolveResult) => void }) {
@@ -44,6 +45,7 @@ export function EvolvePanel({ game, mon, onEvolved }: { game: GameState; mon: Ow
 function EvolveOption({ game, mon, evo, onPick }: { game: GameState; mon: OwnedMon; evo: Evolution; onPick: () => void }) {
   const blocker = evolveBlocker(game, mon.uid, evo.into)
   const stone = evo.stone && STONES[evo.stone]
+  const starItem = starItemFor(evo.into)
   return (
     <div className="evolve-option">
       <button className="btn big-action" disabled={!!blocker} onClick={onPick}>
@@ -51,13 +53,12 @@ function EvolveOption({ game, mon, evo, onPick }: { game: GameState; mon: OwnedM
         <span className="grow">
           Evolucionar a {species(evo.into).name}
           <span className="tiny muted evolve-requirement">
-            {[stone ? `${stone.name} · tienes ${stonesOf(game, evo.stone!)}` : `A partir de Nv. ${evo.level}`, starItemText(game, evo.into)]
-              .filter(Boolean)
-              .join(' · ')}
+            {stone ? `${stone.name} · tienes ${stonesOf(game, evo.stone!)}` : `A partir de Nv. ${evo.level}`}
           </span>
         </span>
         <span className="big-action-price">₽ {evolvePrice(evo.into)}</span>
       </button>
+      {starItem && <StarItemNeed game={game} item={starItem} action="Evolucionar" />}
       {blocker && <p className="tiny muted">{blocker}</p>}
     </div>
   )
@@ -70,10 +71,4 @@ function confirmText(mon: OwnedMon, intoId: number): string {
   const parts = [`₽ ${evolvePrice(intoId)}`, stone && `una ${STONES[stone].name}`, item && `un ${STAR_ITEMS[item].name}`].filter(Boolean)
   const cost = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} y ${parts.at(-1)}` : parts[0]
   return `${name} evolucionará a ${species(intoId).name}: conserva su nivel y su EXP, pierde sus ★. Cuesta ${cost}. En la Pokédex, ${name} volverá a quedar solo como visto.`
-}
-
-/** El objeto estelar que pide la evolución y cuántos hay; null si no pide ninguno */
-function starItemText(game: GameState, intoId: number): string | null {
-  const item = starItemFor(intoId)
-  return item && `${STAR_ITEMS[item].name} · tienes ${starItemsOf(game, item)}`
 }

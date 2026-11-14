@@ -20,3 +20,7 @@
   align-items: center;
   gap: 4px;
 }
+/* Poción de curar, a la altura de los PS como en la ficha: la cabecera compacta tiene menos margen abajo */
+.route-start .mon-hero-corner.bottom-left {
+  bottom: 2px;
+}

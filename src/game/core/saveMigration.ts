@@ -125,6 +125,7 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   stones: (v) => countsOf(v, (k) => (Object.values(Stone) as string[]).includes(k)),
   formItems: (v) => listOf(v, isFormItem),
   mints: (v) => (isInt(v) ? v : undefined),
+  luckyEggs: (v) => (isInt(v) ? v : undefined),
   towerBest: (v) => (isInt(v) ? v : undefined),
   badges: (v) => listOf(v, isBadge),
   towerWeek: (v) => (isRecord(v) && isInt(v.week) && isInt(v.best) ? { week: v.week, best: v.best } : undefined),

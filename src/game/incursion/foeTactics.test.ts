@@ -5,7 +5,7 @@ import { seqRng } from '../core/test-utils'
 import { ally, enemy, field } from './incursion-test-utils'
 import { chooseFoeMove, FOE_HEAL_BELOW, isUseful, stillUseful } from './foeTactics'
 import { inflict as afflict } from './groupStatus'
-import { MAX_STAGES } from './statStages'
+import { MAX_STAGES } from '../battle/statStages'
 
 // Ataques de prueba, para no depender de los datos
 const HIT = move('prueba-golpe', 'Golpe', 'normal', 40)

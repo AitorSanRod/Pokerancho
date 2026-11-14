@@ -1,6 +1,6 @@
 // Formulario del gimnasio: id, líder (con su GIF si ya lo tiene), medalla y equipo, un Pokémon tras otro.
 
-import { passiveText, typeName, TYPES } from '../catalog'
+import { PASSIVE_LEVEL_OPTS, passiveText, typeName, TYPES } from '../catalog'
 import { button, esc, label, numInput, optNumInput, select, speciesInput, textInput } from '../fields'
 import { moveList } from '../incursion/foeView'
 import { BADGE_OPTIONS, isNewGym, leaderSprite } from './gymCatalog'
@@ -12,7 +12,7 @@ function passiveList(f: GymFoeDraft, p: string) {
     .map(
       (ps, i) => `<div class="passive">
         ${select(`${p}.passives.${i}.type`, ps.type, TYPES.map((t) => [t, typeName(t)]))}
-        ${select(`${p}.passives.${i}.level`, String(ps.level), [['1', 'Nivel 1'], ['2', 'Nivel 2']], undefined, 'num')}
+        ${select(`${p}.passives.${i}.level`, String(ps.level), PASSIVE_LEVEL_OPTS, undefined, 'num')}
         <small>${passiveText(ps.type, ps.level)}</small>
         ${button('remove', '×', `data-list="${p}.passives" data-index="${i}"`, 'icon')}
       </div>`,

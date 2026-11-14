@@ -19,7 +19,7 @@ export interface BagEntry<Id> {
 }
 
 /**
- * Lo comprado o ganado y aún sin usar: objetos estelares, objetos evolutivos y mentas sin gastar, objetos de forma (no se gastan),
+ * Lo comprado o ganado y aún sin usar: objetos estelares, objetos evolutivos, mentas y Huevos Suerte sin gastar, objetos de forma (no se gastan),
  * tipos de rancho sin colocar, llaves de incursión y MTs
  */
 export interface Bag {
@@ -28,6 +28,8 @@ export interface Bag {
   formItems: BagEntry<FormItem>[]
   /** Mentas aleatorias: un solo tipo, solo cuenta cuántas hay */
   mints: number
+  /** Huevos Suerte cogidos en ruta (ver run/expBoost.ts) */
+  luckyEggs: number
   ranchTypes: BagEntry<RanchTypeId>[]
   incursionKeys: BagEntry<IncursionId>[]
   tms: BagEntry<Tm>[]
@@ -42,6 +44,7 @@ export function bagContents(s: GameState): Bag {
     stones: held(STONE_IDS, (id) => stonesOf(s, id)),
     formItems: held(FORM_ITEM_IDS, (id) => (hasFormItem(s, id) ? 1 : 0)),
     mints: mintsOf(s),
+    luckyEggs: s.luckyEggs,
     ranchTypes: held(RANCH_TYPE_IDS, (id) => ranchTypeAvailable(s, id)),
     incursionKeys: held(INCURSIONS.map((i) => i.id), (id) => keysOf(s, id)),
     tms: held(TM_IDS, (id) => tmsOf(s, id)),

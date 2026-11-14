@@ -7,7 +7,8 @@ import { EventKind, on } from './events'
 import { damageSide, isUp, type GroupFighter } from './fighter'
 import { inflict } from './groupStatus'
 import { healAmount } from './healing'
-import { addStages } from './statStages'
+import { cappedHit, koHealAmount } from '../battle/combatBonus'
+import { addStages, MAX_STAGES } from '../battle/statStages'
 import { tapMult } from './tapWindow'
 import { debuffTarget, healTarget, inflictTarget, strikeTarget } from './targeting'
 
@@ -39,12 +40,14 @@ function strike(bf: Battlefield, actor: GroupFighter, target: GroupFighter, mv: 
   const { dealt, eff, crit } = damage(damageSide(actor), damageSide(target), mv, rng)
   if (eff === 0) return miss(bf, actor, target, 'immune')
   const boost = tapMult(bf, actor)
-  const taken = Math.max(1, Math.floor(dealt * mult * boost * (1 - (target.taunt?.guard ?? 0))))
+  const raw = Math.max(1, Math.floor(dealt * mult * boost * (1 - (target.taunt?.guard ?? 0))))
+  const taken = cappedHit(raw, target.bonus, target.maxHp)
   const note = [crit ? '¡Crítico!' : '', eff > 1 ? '¡Es muy eficaz!' : eff < 1 ? 'No es muy eficaz…' : ''].filter(Boolean).join(' ')
   hurt(bf, target, taken, { kind: EventKind.Hit, actor: actor.id, crit, eff, potent: boost > 1, type: mv.type, text: note })
   if (target.team === actor.team) return taken
   if (actor.bonus.drain > 0) restore(bf, actor, taken * actor.bonus.drain)
-  if (isUp(target)) for (const { status, chance } of actor.bonus.inflicts) if (rng() < chance) inflict(bf, target, status)
+  if (!isUp(target)) restore(bf, actor, koHealAmount(actor.bonus, actor.maxHp))
+  else for (const { status, chance } of actor.bonus.inflicts) if (rng() < chance) inflict(bf, target, status)
   return taken
 }
 
@@ -121,6 +124,12 @@ function statusMove(bf: Battlefield, actor: GroupFighter, mv: IncursionMove, rng
   if (!targets.filter((t) => onFoe(bf, mv, t, rng)).length) miss(bf, actor, actor, 'miss')
 }
 
+/** Pasiva de Bicho: cada movimiento que usa le sube etapas de Velocidad (sin pasar del tope, y sin anunciarlo si no sube) */
+function speedUp(bf: Battlefield, actor: GroupFighter) {
+  const stages = actor.bonus.speedPerAttack
+  if (stages > 0 && isUp(actor) && actor.stages.spe < MAX_STAGES) change(bf, actor, [{ stat: 'spe', stages }])
+}
+
 export function performMove(bf: Battlefield, actor: GroupFighter, rng: Rng, bossArea = false) {
   const mv = actor.move
   bf.log({ kind: EventKind.Move, actor: actor.id, moveId: mv.id, text: `${actor.name} usó ${mv.name}.` })
@@ -128,4 +137,5 @@ export function performMove(bf: Battlefield, actor: GroupFighter, rng: Rng, boss
   if (cls === MoveClass.Damage) damageMove(bf, actor, mv, rng, bossArea)
   else if (cls === MoveClass.Heal) healMove(bf, actor, mv)
   else statusMove(bf, actor, mv, rng)
+  speedUp(bf, actor)
 }

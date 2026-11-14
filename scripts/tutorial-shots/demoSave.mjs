@@ -55,8 +55,8 @@ export async function buildDemoSave(scenario) {
     for (const sp of grassAndFire) markCaught(s, sp.id)
   }
   if (scenario.run) startRun(s, RouteId.Ruta1)
-  // El objeto de la bonificación de EXP sale enseguida
-  if (scenario.boost) s.run.boost.spawnInMs = 1500
+  // El Huevo Suerte sale enseguida
+  if (scenario.boost) s.run.boost.spawnAt = { stop: 0, steps: 1 }
   if (scenario.expedition) {
     sendExpedition(s, uidOf(P.Pidgey), RouteId.Ruta1, EXPEDITION_DURATIONS[1])
     sendExpedition(s, uidOf(P.Rattata), RouteId.PuebloPaleta, EXPEDITION_DURATIONS[0])

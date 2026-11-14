@@ -9,7 +9,7 @@ import { chooseStarter } from '../core/test-utils'
 import { createMon } from '../team/mons'
 import { ranchPassives } from '../team/ranchPassives'
 import { maxHp, stepsPerMinute } from '../team/stats'
-import { advanceRun, endRun, runBlocker, startRun, tapRun, walk } from './run'
+import { advanceRun, endRun, restartBlocker, restartRun, runBlocker, startRun, tapRun, walk } from './run'
 import { battleDuration } from './battleTimeline'
 import { BOSS_MONEY_MULT, BOSS_TICKETS } from './runBattle'
 
@@ -271,6 +271,37 @@ describe('endRun', () => {
     endRun(s)
     expect(s.run).toBeNull()
     expect(s.money).toBe(money)
+  })
+})
+
+describe('restartRun', () => {
+  it('vuelve a salir desde el principio conservando lo ganado', () => {
+    const s = stateOnRoute(50)
+    walk(s, firstLeg(s))
+    advanceRun(s, s.run!.battleMsLeft)
+    walk(s, 1)
+    const money = s.money
+    restartRun(s)
+    expect(s.run).toMatchObject({ routeId: ROUTE, stop: 0, steps: 0, phase: 'walking', lastBattle: null, path: pathFrom(route(ROUTE)) })
+    expect(s.run!.earned.battles).toBe(0)
+    expect(s.money).toBe(money)
+  })
+
+  it('no reinicia una ruta ya terminada', () => {
+    const s = stateOnRoute(50)
+    s.run!.phase = 'complete'
+    expect(restartBlocker(s)).not.toBeNull()
+    const run = s.run
+    restartRun(s)
+    expect(s.run).toBe(run)
+  })
+
+  it('no reinicia con el Pokémon debilitado ni lo deja sin ruta', () => {
+    const s = stateOnRoute()
+    activeMon(s)!.hp = 0
+    const run = s.run
+    restartRun(s)
+    expect(s.run).toBe(run)
   })
 })
 

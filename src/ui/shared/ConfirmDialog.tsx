@@ -12,6 +12,7 @@ export function ConfirmDialog({
   confirmLabel,
   cancelLabel = 'Cancelar',
   confirmDisabled = false,
+  extraAction,
   onConfirm,
   onCancel,
 }: {
@@ -22,6 +23,8 @@ export function ConfirmDialog({
   cancelLabel?: string
   /** Sin poder aceptar aún (falta elegir algo o se está esperando al servidor) */
   confirmDisabled?: boolean
+  /** Otra acción, a lo ancho encima de Cancelar y aceptar (p. ej. «Reiniciar ruta» al abandonar) */
+  extraAction?: ReactNode
   onConfirm: () => void
   onCancel: () => void
 }) {
@@ -30,6 +33,7 @@ export function ConfirmDialog({
       <div className="card confirm-dialog" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
         <h3>{title}</h3>
         {children}
+        {extraAction && <div className="confirm-actions confirm-extra">{extraAction}</div>}
         <div className="row gap confirm-actions">
           <button className="btn grow" onClick={onCancel}>
             {cancelLabel}

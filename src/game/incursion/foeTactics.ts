@@ -3,7 +3,7 @@ import type { Rng } from '../core/random'
 import { allies, enemies, type Battlefield } from './battlefield'
 import { hasStatusRoom } from './groupStatus'
 import type { GroupFighter } from './fighter'
-import { MAX_STAGES } from './statStages'
+import { MAX_STAGES } from '../battle/statStages'
 import { debuffTarget, taunter } from './targeting'
 
 // Qué ataque usa un rival de los que lleva, de forma más o menos coherente: no repite lo que ya no hace nada (confundir a

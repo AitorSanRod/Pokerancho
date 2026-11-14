@@ -1,0 +1,47 @@
+/* Tabla de pasivas del rancho (PassiveList): tipo, efecto y valor; la fila activa, resaltada */
+.passive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.passive-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 4px;
+}
+.passive-table th {
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.passive-table td {
+  padding: 6px 8px;
+  vertical-align: top;
+  opacity: 0.6;
+}
+.passive-table tr.on td {
+  opacity: 1;
+  background: color-mix(in srgb, var(--yellow) 25%, var(--card));
+}
+.passive-table tr.on td:first-child {
+  border-radius: 10px 0 0 10px;
+}
+.passive-table tr.on td:last-child {
+  border-radius: 0 10px 10px 0;
+}
+/* Varias líneas en una celda (Dragón, o el progreso bajo el efecto) */
+.passive-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.passive-effect {
+  font-weight: 600;
+}
+.passive-table .passive-value {
+  text-align: right;
+  white-space: nowrap;
+}

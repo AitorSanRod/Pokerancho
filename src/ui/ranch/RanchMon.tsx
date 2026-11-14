@@ -83,7 +83,7 @@ export function RanchMon({ mon, selected, active, onClick, onDrop }: Props) {
           {active && <ItemIcon item={ICON.Active} size={18} className="ranch-badge" />}
           {/* Los dos sprites se cargan y se muestra uno: así, al pararse, el GIF no parpadea */}
           <Sprite id={mon.speciesId} size={SPRITE_PX} animated={false} className="ranch-still" shiny={mon.shiny} />
-          <Sprite id={mon.speciesId} size={SPRITE_PX} className="ranch-gif" shiny={mon.shiny} />
+          <Sprite id={mon.speciesId} size={SPRITE_PX} className="ranch-gif" shiny={mon.shiny} grounded />
         </span>
       </span>
     </button>

@@ -1,6 +1,6 @@
 import type { GiftContents } from '../../data/dailyGifts'
 import { TOWER_LATE_PRIZE, TOWER_PRIZE_EVERY, TOWER_PRIZES } from '../../data/towerPrizes'
-import { boostedMoney, moneyPerStep } from '../battle/rewards'
+import { boostedMoney, expForLevel, moneyPerStep } from '../battle/rewards'
 import { applyGift } from '../collection/dailyGift'
 import { addPieces } from '../collection/pieces'
 import type { GameState, OwnedMon } from '../core/state'
@@ -11,7 +11,7 @@ import { floorsPastCap, pastLevelCap, TOWER_STAT_GROWTH, towerLevel } from './to
 // pasado el último piso de nivel, con lo que suben sus stats); cada pocos pisos, el premio de data/towerPrizes.ts la
 // primera vez que se gana ese piso, y, pasado el último piso de nivel, un ticket del Pokémon derrotado.
 
-/** EXP por victoria por cada nivel del rival (en las rutas, battle/rewards.ts › EXP_PER_LEVEL) */
+/** EXP por victoria por cada nivel del rival, antes de crecer con el nivel (en las rutas, battle/rewards.ts › EXP_PER_LEVEL y expForLevel) */
 export const TOWER_EXP_PER_LEVEL = 4
 /** Pasos de ruta a los que equivale cada piso para el ₽ (se paga como un combate de ruta tras tantos pasos) */
 export const TOWER_MONEY_STEPS = 20
@@ -30,7 +30,7 @@ export const noTowerEarned = (): TowerEarned => ({ money: 0, exp: 0, levelsGaine
 /** Cuánto más dan los pisos pasado el último de nivel: lo mismo que suben las stats del rival */
 const pastCapMult = (floor: number): number => 1 + floorsPastCap(floor) * TOWER_STAT_GROWTH
 
-export const floorExp = (floor: number): number => Math.round(towerLevel(floor) * TOWER_EXP_PER_LEVEL * pastCapMult(floor))
+export const floorExp = (floor: number): number => Math.round(expForLevel(towerLevel(floor), TOWER_EXP_PER_LEVEL) * pastCapMult(floor))
 
 export const floorMoney = (floor: number): number => Math.max(1, boostedMoney(moneyPerStep(towerLevel(floor)) * TOWER_MONEY_STEPS * pastCapMult(floor)))
 

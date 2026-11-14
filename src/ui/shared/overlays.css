@@ -151,3 +151,8 @@
     opacity: 0;
   }
 }
+/* Acción extra de ConfirmDialog, a lo ancho sobre los dos botones */
+.confirm-extra {
+  display: flex;
+  margin-bottom: 8px;
+}

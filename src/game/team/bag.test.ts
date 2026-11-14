@@ -66,4 +66,11 @@ describe('mochila', () => {
     expect(bagContents(s).mints).toBe(2)
     expect(isBagEmpty(bagContents(s))).toBe(false)
   })
+
+  it('guarda los Huevos Suerte sin usar', () => {
+    const s = initialState()
+    s.luckyEggs = 1
+    expect(bagContents(s).luckyEggs).toBe(1)
+    expect(isBagEmpty(bagContents(s))).toBe(false)
+  })
 })

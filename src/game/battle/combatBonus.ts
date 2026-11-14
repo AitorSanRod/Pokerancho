@@ -1,20 +1,20 @@
-import { RANCH_PASSIVE_SCALE, TYPE_PASSIVES, type PassiveEffect, type PassiveRef, type StatusId } from '../../data/passives'
-import type { PokeType } from '../../data/types'
+import { TYPE_PASSIVES, type PassiveEffect, type PassiveRef, type StatusId } from '../../data/passives'
 
-/** Todas las pasivas de un combatiente sumadas: los porcentajes se suman y los estados y bonos por tipo se acumulan */
+/** Todas las pasivas de un combatiente sumadas: los porcentajes se suman y los estados se acumulan */
 export interface CombatBonus {
   hp: number
   atk: number
   def: number
   spe: number
   inflicts: { status: StatusId; chance: number }[]
-  regen: number
   drain: number
   damageReduction: number
   dodge: number
   crit: number
-  winHeal: number
-  bonusVs: { types: PokeType[]; damage: number }[]
+  koHeal: number
+  /** Lo más que le quita un ataque, en fracción de sus PS máximos (1 = sin tope; con varias, la más baja) */
+  maxHitTaken: number
+  speedPerAttack: number
 }
 
 /** Tope de reducción de daño, esquiva y crítico, para que ningún combate quede decidido de antemano */
@@ -26,44 +26,19 @@ const NO_BONUS: CombatBonus = {
   def: 0,
   spe: 0,
   inflicts: [],
-  regen: 0,
   drain: 0,
   damageReduction: 0,
   dodge: 0,
   crit: 0,
-  winHeal: 0,
-  bonusVs: [],
+  koHeal: 0,
+  maxHitTaken: 1,
+  speedPerAttack: 0,
 }
 
-/**
- * Suma de las pasivas de rancho, cada una a `scale` de su efecto (por defecto, RANCH_PASSIVE_SCALE; 1 = entera); la
- * reducción de daño, la esquiva y el crítico no pasan del 90%
- */
-export const combineBonus = (passives: PassiveRef[], scale = RANCH_PASSIVE_SCALE): CombatBonus =>
-  sumEffects(passives.map(({ type, level }) => scaleEffect(TYPE_PASSIVES[type][level - 1], scale)))
+/** Suma de las pasivas de tipo; la reducción de daño, la esquiva y el crítico no pasan del 90% */
+export const combineBonus = (passives: PassiveRef[]): CombatBonus =>
+  sumEffects(passives.map(({ type, level }) => TYPE_PASSIVES[type][level - 1]))
 
-const scaled = (value: number | undefined, scale: number) => (value === undefined ? undefined : value * scale)
-
-/** La pasiva con todos sus números (stats, probabilidades, curas, daño extra) multiplicados por `scale` */
-export function scaleEffect(e: PassiveEffect, scale: number): PassiveEffect {
-  if (scale === 1) return e
-  return {
-    hp: scaled(e.hp, scale),
-    atk: scaled(e.atk, scale),
-    def: scaled(e.def, scale),
-    spe: scaled(e.spe, scale),
-    inflict: e.inflict && { ...e.inflict, chance: e.inflict.chance * scale },
-    regen: scaled(e.regen, scale),
-    drain: scaled(e.drain, scale),
-    damageReduction: scaled(e.damageReduction, scale),
-    dodge: scaled(e.dodge, scale),
-    crit: scaled(e.crit, scale),
-    winHeal: scaled(e.winHeal, scale),
-    bonusVs: e.bonusVs && { ...e.bonusVs, damage: e.bonusVs.damage * scale },
-  }
-}
-
-/** Suma de efectos de pasiva sueltos (también las de grupo de las incursiones), con los mismos topes */
 export function sumEffects(effects: PassiveEffect[]): CombatBonus {
   const total = structuredClone(NO_BONUS)
   for (const e of effects) {
@@ -71,14 +46,14 @@ export function sumEffects(effects: PassiveEffect[]): CombatBonus {
     total.atk += e.atk ?? 0
     total.def += e.def ?? 0
     total.spe += e.spe ?? 0
-    total.regen += e.regen ?? 0
     total.drain += e.drain ?? 0
     total.damageReduction += e.damageReduction ?? 0
     total.dodge += e.dodge ?? 0
     total.crit += e.crit ?? 0
-    total.winHeal += e.winHeal ?? 0
+    total.koHeal += e.koHeal ?? 0
+    total.maxHitTaken = Math.min(total.maxHitTaken, e.maxHitTaken ?? 1)
+    total.speedPerAttack += e.speedPerAttack ?? 0
     if (e.inflict) total.inflicts.push(e.inflict)
-    if (e.bonusVs) total.bonusVs.push(e.bonusVs)
   }
   total.damageReduction = Math.min(MAX_CHANCE, total.damageReduction)
   total.dodge = Math.min(MAX_CHANCE, total.dodge)
@@ -86,6 +61,9 @@ export function sumEffects(effects: PassiveEffect[]): CombatBonus {
   return total
 }
 
-/** Multiplicador de daño extra contra un rival de estos tipos */
-export const bonusVsMult = (bonus: CombatBonus, defender: PokeType[]): number =>
-  1 + bonus.bonusVs.filter((b) => b.types.some((t) => defender.includes(t))).reduce((sum, b) => sum + b.damage, 0)
+/** El daño de un ataque con el tope de la pasiva de quien lo recibe (nunca menos de 1) */
+export const cappedHit = (dealt: number, bonus: CombatBonus, maxHp: number): number =>
+  bonus.maxHitTaken < 1 ? Math.min(dealt, Math.max(1, Math.ceil(maxHp * bonus.maxHitTaken))) : dealt
+
+/** PS que recupera al derrotar a un rival con un ataque */
+export const koHealAmount = (bonus: CombatBonus, maxHp: number): number => maxHp * bonus.koHeal

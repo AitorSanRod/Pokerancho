@@ -3,8 +3,7 @@
 import { Badge } from '../../src/data/badges'
 import { GymId } from '../../src/data/gyms'
 import { Biome, KANTO, NodeKind, RouteId, StopLandmark } from '../../src/data/maps'
-import { RANCH_PASSIVE_SCALE, STATUS_INFO, TYPE_PASSIVES, type PassiveEffect } from '../../src/data/passives'
-import { scaleEffect } from '../../src/game/battle/combatBonus'
+import { PASSIVE_THRESHOLDS, TYPE_PASSIVES } from '../../src/data/passives'
 import { POKEMON } from '../../src/data/pokemon'
 import { Potion } from '../../src/data/potions'
 import { RaidTier } from '../../src/data/raidBosses'
@@ -43,36 +42,11 @@ export const KIND_LABELS: Record<string, string> = {
 export const TYPES = Object.keys(TYPE_PASSIVES) as PokeType[]
 export const typeName = (t: PokeType) => TYPE_INFO[t].name
 
-const STAT_LABELS: Record<string, string> = {
-  hp: 'PS',
-  atk: 'Ataque',
-  def: 'Defensa',
-  spe: 'Velocidad',
-  regen: 'regenera por turno',
-  drain: 'roba del daño hecho',
-  damageReduction: 'menos daño recibido',
-  dodge: 'esquiva',
-  crit: 'crítico',
-  winHeal: 'cura al ganar',
-}
+/** Lo que hace una pasiva en combate, como en el juego */
+export { passiveText } from '../../src/ui/shared/passiveText'
 
-const pct = (n: number) => `${Math.round(n * 100)}%`
-
-/**
- * Texto corto de lo que hace una pasiva en combate: «Ataque +12% · Quemadura 4%». Por defecto, a RANCH_PASSIVE_SCALE de
- * su efecto, como en rutas, jefes y gimnasios; en incursiones, `scale` 1 (allí cuentan enteras)
- */
-export function passiveText(type: PokeType, level: 1 | 2, scale = RANCH_PASSIVE_SCALE): string {
-  const effect: PassiveEffect = scaleEffect(TYPE_PASSIVES[type][level - 1], scale)
-  return Object.entries(effect)
-    .filter(([, v]) => v !== undefined)
-    .map(([k, v]) => {
-      if (k === 'inflict') return `${STATUS_INFO[v.status as keyof typeof STATUS_INFO].name} ${pct(v.chance)}`
-      if (k === 'bonusVs') return `+${pct(v.damage)} de daño contra ${v.types.map(typeName).join(', ')}`
-      return ['hp', 'atk', 'def', 'spe'].includes(k) ? `${STAT_LABELS[k]} +${pct(v)}` : `${pct(v)} ${STAT_LABELS[k] ?? k}`
-    })
-    .join(' · ')
-}
+/** Opciones del desplegable de nivel de una pasiva */
+export const PASSIVE_LEVEL_OPTS: [string, string][] = PASSIVE_THRESHOLDS.map((_, i) => [String(i + 1), `Nivel ${i + 1}`])
 
 /** Claves de `StopLandmark` que dibuja la escena del bioma */
 export function landmarksOf(biomeKey: string): string[] {

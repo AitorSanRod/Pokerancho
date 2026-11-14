@@ -1,6 +1,5 @@
 import { STATUS_INFO, type StatusId } from '../../data/passives'
 import type { Rng } from '../core/random'
-import { heal } from './attack'
 import { label, type Fighter, type Push } from './battle'
 
 /** Le pone un estado si no tiene ya uno (como en los juegos, solo uno a la vez) */
@@ -29,7 +28,7 @@ export function blockedByStatus(f: Fighter, push: Push, rng: Rng): 'skip' | 'sel
   return null
 }
 
-/** Final del turno: quemadura y veneno quitan PS; después, quien regenera recupera los suyos */
+/** Final del turno: quemadura y veneno quitan PS */
 export function endOfTurn(fighters: Fighter[], push: Push) {
   for (const f of fighters) {
     const perTurn = f.status ? STATUS_INFO[f.status].damagePerTurn : undefined
@@ -38,5 +37,4 @@ export function endOfTurn(fighters: Fighter[], push: Push) {
     push({ kind: 'hit', side: f.side, status: f.status!, text: STATUS_INFO[f.status!].name })
     if (f.hp === 0) push({ kind: 'faint', side: f.side, text: `¡${label(f)} se debilitó!` })
   }
-  for (const f of fighters) if (f.hp > 0 && f.bonus.regen > 0) heal(f, f.maxHp * f.bonus.regen, push)
 }

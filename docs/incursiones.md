@@ -136,7 +136,7 @@ Esto aporta:
   │      debilitar→ baja Defensa del rival o le pone un estado   │
   │    Rivales: aliado al azar; si alguien provoca, a ese.       │
   │    Jefes: además, ataques en área y mecánicas propias        │
-  │ 5. Fin de turno: estados (quemadura, veneno…), regeneración  │
+  │ 5. Fin de turno: estados (quemadura, veneno…)                │
   │ 6. ¿Todos los rivales caídos? → siguiente sala               │
   │    ¿Todo el grupo caído y sin revivires? → derrota           │
   └──────────────────────────────────────────────────────────────┘
@@ -233,7 +233,7 @@ sino que suma su mejora al daño y a la cura de cada compañero ese turno (vario
 
 Los golpes, bajadas y estados contra un solo rival van al que provoca, si hay alguno.
 
-**Etapas de stats** (`game/incursion/statStages.ts`), como en los juegos: Ataque, Defensa y Velocidad van de −6 a +6;
+**Etapas de stats** (`game/battle/statStages.ts`), como en los juegos: Ataque, Defensa y Velocidad van de −6 a +6;
 cada uso suma sus etapas y, al tope, no hace nada («¡no puede subir más!»). +1 es ×1,5 y +6, ×4 (+300%); −1 es ×2/3 y
 −6, ×1/4. Duran hasta acabar la sala o hasta caer. Como en los juegos, Danza Dragón, Danza Aleteo y Corpulencia suben
 solo al que las usa (`raiseSelf`); Viento Afín (Velocidad +2) y Velo Aurora (Defensa +2), a todo el grupo. Ataque
@@ -260,12 +260,12 @@ aprender. El servidor no ve las MTs de cada Pokémon: acepta el ataque de una MT
 (`tms.ts › mayKnow`), igual que se fía de su nivel. En la ficha del Pokémon (rancho y Pokédex), la «i» junto a su ataque abre todos sus ataques: el de rutas y
 jefes y el repertorio de incursión nivel a nivel (`repertoire.ts › learnTimeline`).
 
-Cada tipo tiene su papel en el grupo por su ataque de apoyo (y sus pasivas de grupo van en la misma línea):
+Cada tipo tiene su papel en el grupo por su ataque de apoyo:
 
 | Papel | Tipos |
 |---|---|
-| Aguantar (provocar) | Acero (el que más aguanta) y roca. Sus pasivas de grupo son las más defensivas |
-| Curar | Planta (la cura más fuerte a uno) y agua (la única que cura a todo el grupo); sus pasivas regeneran. Normal, psíquico y hada curan menos |
+| Aguantar (provocar) | Acero (el que más aguanta) y roca |
+| Curar | Planta (la cura más fuerte a uno) y agua (la única que cura a todo el grupo). Normal, psíquico y hada curan menos |
 | Subir stats al grupo | Hielo (Defensa), lucha, bicho y dragón (Ataque y Velocidad), volador (Velocidad) |
 | Bajar stats a los rivales | Tierra (Ataque de todos), siniestro (Defensa de uno) |
 | Estados | Fuego (quemar), eléctrico (paralizar), veneno (envenenar), fantasma (confundir) |
@@ -286,12 +286,12 @@ tenga sentido (`game/incursion/foeTactics.ts`):
 
 ## Pasivas de grupo
 
-Cada Pokémon del grupo suma a cada uno de sus tipos un **peso según su rareza**. Las pasivas son propias de incursión
-(`data/incursionPassives.ts`, editable a mano) y valen para los 5. Se recalculan al empezar cada turno: un caído sin
-revivir deja de sumar. Cuando se rehagan las pasivas de rancho, se unifican con estas.
+Son las **mismas pasivas de tipo que las del rancho** (`data/passives.ts › TYPE_PASSIVES`, con los mismos pesos y
+umbrales), pero cuentan los Pokémon del grupo en lugar de los del rancho, y las que salen valen para los 5. Se
+recalculan al empezar cada turno: un caído sin revivir deja de sumar. El tipo de rancho no rebaja los umbrales aquí.
 
 ```
-  Peso por rareza:  Común 1 · Rara 2 · Épica 3 · Legendaria 4   (los de dos tipos suman en ambos)
+  Peso por rareza:  Común 1 · Rara 2 · Épica 3 · Legendaria 5   (los de dos tipos suman en ambos)
 
   Ejemplo de grupo:
     Charizard (épico, fuego/volador) → fuego +3, volador +3
@@ -300,11 +300,11 @@ revivir deja de sumar. Cuando se rehagan las pasivas de rancho, se unifican con 
     Lapras    (épico, agua/hielo)    → agua +3, hielo +3
     Clefable  (rara, hada)           → hada +2
 
-    Fuego 8 → nivel 2      Volador 3 → nivel 1      Agua 3 → nivel 1      Hielo 3 → nivel 1
+    Fuego 8 → nivel 3      Volador 3 → nivel 1      Agua 3 → nivel 1      Hielo 3 → nivel 1
 
-  Umbrales: 3 → nivel 1 · 6 → nivel 2 · 10 → nivel 3
+  Umbrales: 3 → nivel 1 · 4 → nivel 2 · 5 → nivel 3
 
-  Si cae Charizard y no quedan revivires: fuego 5 → nivel 1 y volador 0 → sin pasiva.
+  Si cae Charizard y no quedan revivires: fuego 5 → nivel 3 y volador 0 → sin pasiva.
 ```
 
 ## Llaves y premios
@@ -361,7 +361,7 @@ completar.
 |---|---|---|
 | PS de los rivales | ×8 (los jefes, además, su `hpMult`) | `game/incursion/fighter.ts › FOE_HP_MULT` |
 | Ataque de los rivales | ×0,85 | `fighter.ts › FOE_ATK_MULT` |
-| Etapas de stats | de −6 (×1/4) a +6 (×4) | `statStages.ts › MAX_STAGES, stageMult` |
+| Etapas de stats | de −6 (×1/4) a +6 (×4) | `game/battle/statStages.ts › MAX_STAGES, stageMult` |
 | Bajada máxima de una stat por pasivas | hasta el 25% de la suya | `fighter.ts › MIN_STAT_MULT` |
 | Furia de los jefes | +1 etapa de Ataque cada 6 turnos desde el 15 (Cueva Helada) | `enrage` de cada jefe en `data/incursions/` |
 | Estados alterados | 5 turnos como mucho | `groupStatus.ts › STATUS_MAX_TURNS` |
@@ -378,7 +378,7 @@ completar.
 | Toques | 5 s de ventana + 1,5 s de resultado; cada ataque dice sus toques y su mejora (100 y +10% por defecto); el servidor cierra a los 0,75 s | `tapWindow.ts › TAP_WINDOW_MS, TAP_SETTLE_MS`, `data/incursionMoves/effects.ts › DEFAULT_TAP_GOAL, DEFAULT_TAP_BONUS`, `online/sharedIncursion.ts › TAP_CLOSE_DELAY_MS` |
 | Catálogo de ataques | +10 de precisión a la de los juegos (+5 si era 90; hasta 100); curas de 70 a uno y 30 al grupo; los que atraen golpes, −40% de daño | `data/incursionMoves/catalog/catalogMove.ts › CATALOG_ACCURACY_BONUS, CATALOG_ACCURACY_BONUS_AT_90, SINGLE_HEAL_POWER, TEAM_HEAL_POWER, REDIRECT_GUARD` |
 | Ritmo en pantalla | ms de cada evento | `incursionTimeline.ts › INCURSION_EVENT_MS` |
-| Pasivas | pesos 1/2/3/4, umbrales 3/6/10 | `data/incursionPassives.ts` |
+| Pasivas | las de tipo del rancho: pesos 1/2/3/5, umbrales 3/4/5 | `data/passives.ts`, `RARITY_INFO.passiveWeight` |
 | Llaves | 5.000 / 10.000 / 30.000 / 50.000 ₽, máx. 10 | `data/incursions.ts › KEY_PRICE, MAX_KEYS` |
 
 | Reorganizar | 90 s | `activeIncursion.ts › REGROUP_MS` |
@@ -392,7 +392,6 @@ completar.
   src/data/
     incursions/              types (forma, llaves, `foe`), index (lista e `incursion(id)`), un fichero por incursión:
                              cuevaHelada, prueba (corta y de nivel bajo)
-    incursionPassives.ts     pasivas de grupo por tipo, pesos por rareza y umbrales
     incursionMoves/          ataques de incursión: effects (efectos, clases, `move`), damage (daño por tipo y rareza),
                              support (apoyo por tipo), catalog/ (catálogo por tipo y `catalogMove`), index (`IMOVE`,
                              `incursionMove(id)`)
@@ -404,7 +403,6 @@ completar.
     groupBattle.ts           un combate N contra M por turnos (orden: prioridad y Velocidad); refresca las pasivas
     battlefield.ts           los dos bandos, revivires, golpear, curar, quién gana la sala
     fighter.ts               combatiente de incursión y sus stats (pasivas y etapas)
-    statStages.ts            etapas de stats: tope, multiplicador y sumarlas
     moveEffects.ts           qué hace cada ataque según su clase y sus efectos
     healing.ts               potencia → PS de cura
     targeting.ts             a quién va cada movimiento

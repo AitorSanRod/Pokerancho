@@ -1,47 +1,37 @@
 import { describe, expect, it } from 'vitest'
-import { CRIT_MULT, RANCH_PASSIVE_SCALE, STATUS_INFO, StatusId, TYPE_PASSIVES } from '../../data/passives'
+import { CRIT_MULT, STATUS_INFO, StatusId, TYPE_PASSIVES } from '../../data/passives'
 import { POKEMON } from '../../data/pokemon'
 import { seqRng } from '../core/test-utils'
 import { calcStats } from '../team/stats'
 import { makeFighter, simulateBattle } from './battle'
-import { combineBonus } from './combatBonus'
+import { cappedHit, combineBonus, sumEffects } from './combatBonus'
 
 const LEVEL = 30
 const SPECIES_ID = POKEMON.Charmander
 const RIVAL_ID = POKEMON.Bulbasaur
 
 describe('combineBonus', () => {
-  it('suma las pasivas (enteras) y acumula sus estados', () => {
-    const bonus = combineBonus(
-      [
-        { type: 'fire', level: 1 },
-        { type: 'electric', level: 2 },
-      ],
-      1,
-    )
-    expect(bonus.atk).toBe(TYPE_PASSIVES.fire[0].atk)
-    expect(bonus.spe).toBe(TYPE_PASSIVES.electric[1].spe)
-    expect(bonus.inflicts).toEqual([TYPE_PASSIVES.fire[0].inflict, TYPE_PASSIVES.electric[1].inflict])
-  })
-
-  it('a una parte de su efecto, todos sus números bajan en esa proporción', () => {
-    const scale = 0.5
+  it('suma las pasivas tal cual y acumula sus estados', () => {
     const passives = [
+      { type: 'fighting', level: 1 },
+      { type: 'flying', level: 3 },
       { type: 'fire', level: 2 },
-      { type: 'steel', level: 2 },
-      { type: 'bug', level: 1 },
     ] as const
-    const full = combineBonus([...passives], 1)
-    const part = combineBonus([...passives], scale)
-    expect(part.atk).toBeCloseTo(full.atk * scale)
-    expect(part.damageReduction).toBeCloseTo(full.damageReduction * scale)
-    expect(part.inflicts[0].chance).toBeCloseTo(full.inflicts[0].chance * scale)
-    expect(part.bonusVs[0].damage).toBeCloseTo(full.bonusVs[0].damage * scale)
+    const bonus = combineBonus([...passives])
+    expect(bonus).toEqual(sumEffects(passives.map((p) => TYPE_PASSIVES[p.type][p.level - 1])))
+    expect(bonus.inflicts).toHaveLength(passives.filter((p) => TYPE_PASSIVES[p.type][p.level - 1].inflict).length)
   })
 
-  it('por defecto cuentan a RANCH_PASSIVE_SCALE de su efecto', () => {
-    const ref = [{ type: 'fighting', level: 2 }] as const
-    expect(combineBonus([...ref]).atk).toBeCloseTo(combineBonus([...ref], 1).atk * RANCH_PASSIVE_SCALE)
+  it('el tope de golpe se queda con el más bajo; sin pasiva, no hay tope', () => {
+    expect(sumEffects([]).maxHitTaken).toBe(1)
+    expect(sumEffects([{ maxHitTaken: 0.9 }, { maxHitTaken: 0.7 }]).maxHitTaken).toBe(0.7)
+  })
+
+  it('ningún golpe pasa del tope de sus PS máximos, y el que no llega no cambia', () => {
+    const bonus = sumEffects([{ maxHitTaken: 0.7 }])
+    expect(cappedHit(500, bonus, 100)).toBe(70)
+    expect(cappedHit(30, bonus, 100)).toBe(30)
+    expect(cappedHit(500, sumEffects([]), 100)).toBe(500)
   })
 
   it('sin pasivas no cambia nada', () => {
@@ -54,7 +44,7 @@ describe('pasivas en combate', () => {
   it('las de stats suben la stat en su porcentaje, y los PS actuales en proporción', () => {
     const base = calcStats(SPECIES_ID, LEVEL)
     const f = makeFighter('player', SPECIES_ID, LEVEL, { hp: base.hp, passives: [{ type: 'normal', level: 1 }] })
-    expect(f.maxHp).toBe(Math.round(base.hp * (1 + TYPE_PASSIVES.normal[0].hp! * RANCH_PASSIVE_SCALE)))
+    expect(f.maxHp).toBe(Math.round(base.hp * (1 + TYPE_PASSIVES.normal[0].hp!)))
     expect(f.hp).toBe(f.maxHp)
   })
 
@@ -132,5 +122,37 @@ describe('pasivas en combate', () => {
     const enemy = makeFighter('enemy', RIVAL_ID, LEVEL)
     const result = simulateBattle(player, enemy, seqRng(0.5))
     expect(result.events.some((e) => e.kind === 'heal' && e.side === 'player')).toBe(true)
+  })
+
+  it('con tope de golpe, un ataque nunca le quita más de esa parte de sus PS máximos', () => {
+    const player = makeFighter('player', SPECIES_ID, 5)
+    player.bonus.maxHitTaken = 0.1
+    player.stats.spe = 1
+    const enemy = makeFighter('enemy', RIVAL_ID, 80)
+    const { events } = simulateBattle(player, enemy, seqRng(0.5))
+    const hit = events.find((e) => e.kind === 'hit' && e.side === 'player')!
+    expect(player.maxHp - hit.playerHp).toBe(Math.ceil(player.maxHp * 0.1))
+  })
+
+  it('al derrotar al rival con un ataque se cura su parte de los PS máximos', () => {
+    const player = makeFighter('player', SPECIES_ID, 80, { hp: 10 })
+    player.bonus.koHeal = 0.25
+    const enemy = makeFighter('enemy', RIVAL_ID, 2)
+    const { events } = simulateBattle(player, enemy, seqRng(0.5))
+    const faint = events.findIndex((e) => e.kind === 'faint' && e.side === 'enemy')
+    expect(events[faint + 1]).toMatchObject({ kind: 'heal', side: 'player', playerHp: 10 + Math.ceil(player.maxHp * 0.25) })
+  })
+
+  it('subiendo Velocidad con cada ataque acaba adelantando a un rival más rápido', () => {
+    const player = makeFighter('player', SPECIES_ID, LEVEL)
+    player.bonus.speedPerAttack = 1
+    const enemy = makeFighter('enemy', RIVAL_ID, LEVEL)
+    enemy.stats.spe = player.stats.spe * 2
+    for (const f of [player, enemy]) f.stats.atk = 1
+    const { events } = simulateBattle(player, enemy, seqRng(0.5))
+    const attackers = events.filter((e) => e.kind === 'attack').map((e) => e.side)
+    // Con +3 etapas (×2,5) ya pasa al rival, que va al doble: desde el cuarto turno, ataca primero
+    expect(attackers.slice(0, 2)).toEqual(['enemy', 'player'])
+    expect(attackers.slice(6, 8)).toEqual(['player', 'enemy'])
   })
 })

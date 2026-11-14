@@ -6,10 +6,10 @@ import { species } from '../../data/species'
 import type { BoostStat } from '../../data/incursionMoves'
 import type { PokeType } from '../../data/types'
 import type { DamageSide } from '../battle/attack'
-import { combineBonus, sumEffects, type CombatBonus } from '../battle/combatBonus'
+import { combineBonus, type CombatBonus } from '../battle/combatBonus'
 import { noPerks, type MonPerks } from '../team/perks'
 import { calcStats, type Stats } from '../team/stats'
-import { noStages, stageMult, type Stages } from './statStages'
+import { noStages, stageMult, type Stages } from '../battle/statStages'
 
 // Un combatiente de una incursión: del grupo (cinco, de sala en sala) o rival de una sala.
 
@@ -20,8 +20,6 @@ export type Team = (typeof Team)[keyof typeof Team]
 export const FOE_HP_MULT = 8
 /** Multiplicador del Ataque de los rivales de incursión: son varios a la vez y no deben tumbar al grupo de dos golpes */
 export const FOE_ATK_MULT = 0.85
-/** Las pasivas de los rivales de incursión cuentan enteras (1 = al 100 %): el recorte de RANCH_PASSIVE_SCALE no llega aquí */
-const INCURSION_FOE_PASSIVE_SCALE = 1
 
 /** Lo menos que puede quedar una stat con las pasivas a la baja (0.25 = un 25% de la suya); las etapas, aparte */
 export const MIN_STAT_MULT = 0.25
@@ -56,7 +54,7 @@ export interface GroupFighter {
   perks: MonPerks
   /** Estados alterados que lleva, del más antiguo al más nuevo: uno como mucho, salvo los jefes (groupStatus.ts) */
   statuses: Affliction[]
-  /** Etapas que lleva subidas o bajadas cada stat (statStages.ts); se pierden al acabar la sala o al caer */
+  /** Etapas que lleva subidas o bajadas cada stat (battle/statStages.ts); se pierden al acabar la sala o al caer */
   stages: Stages
   taunt: { turns: number; guard: number } | null
   /** Del grupo: a quién dirige su movimiento, elegido por el jugador (ver movePicks.ts); null, el que toque */
@@ -94,7 +92,7 @@ function fighter(id: string, team: Team, speciesId: number, level: number, base:
   const moves = moveIds.map(incursionMove)
   return {
     id, team, speciesId, name: sp.name, level, types: sp.types, base, hp: base.hp, maxHp: base.hp,
-    move: moves[0], moves, bonus: sumEffects([]), perks: noPerks(), statuses: [], stages: noStages(), taunt: null,
+    move: moves[0], moves, bonus: combineBonus([]), perks: noPerks(), statuses: [], stages: noStages(), taunt: null,
     out: false, fellAt: null, boss: null, target: null,
   }
 }
@@ -122,7 +120,7 @@ export function foeFighter(foe: IncursionFoe, id: string): GroupFighter {
   base.hp = Math.round(base.hp * FOE_HP_MULT * (foe.hpMult ?? 1))
   base.atk = Math.round(base.atk * FOE_ATK_MULT)
   const f = fighter(id, Team.Foe, foe.speciesId, foe.level, base, foe.moveIds)
-  return { ...f, bonus: combineBonus(foe.passives ?? [], INCURSION_FOE_PASSIVE_SCALE), boss: foe.boss ?? null }
+  return { ...f, bonus: combineBonus(foe.passives ?? []), boss: foe.boss ?? null }
 }
 
 /** Lo que sale del tramo para el siguiente */

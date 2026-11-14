@@ -5,7 +5,7 @@ import { formatPercent } from '../../shared/format'
 import { ICON } from '../../shared/icons'
 import { shot, type Guide } from './guide'
 
-const [PASSIVE_LEVEL_1, PASSIVE_LEVEL_2] = PASSIVE_THRESHOLDS
+const PASSIVE_LEVELS = PASSIVE_THRESHOLDS.join(', ')
 
 export const EVOLVE_GUIDE: Guide = {
   id: 'evolve',
@@ -41,7 +41,7 @@ export const EVOLVE_GUIDE: Guide = {
     {
       image: shot('evo-passives'),
       title: 'Pasivas de rancho',
-      text: `Con ${PASSIVE_LEVEL_1} Pokémon de un tipo en el rancho de tu compañero, él gana en las rutas la pasiva de ese tipo; con ${PASSIVE_LEVEL_2}, el nivel 2. Se ven tocando el botón de arriba a la izquierda del rancho. Un tipo de rancho de la Tienda rebaja en uno los que hacen falta.`,
+      text: `Con ${PASSIVE_LEVELS} Pokémon de un tipo en el rancho de tu compañero (un raro cuenta como 2, un épico como 3 y un legendario como 5), él gana en rutas, raids y torre el nivel 1, 2 o 3 de la pasiva de ese tipo. Se ven tocando el botón de arriba a la izquierda del rancho. Un tipo de rancho de la Tienda rebaja en uno los que hacen falta.`,
     },
   ],
 }

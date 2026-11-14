@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { species } from '../../../data/species'
-import { STAR_ITEMS } from '../../../data/starItems'
 import { isSeen, knownName } from '../../../game/collection/dex'
 import {
   canCombine,
@@ -15,7 +14,6 @@ import {
   surplusMoney,
   type CombineResult,
 } from '../../../game/collection/pieces'
-import { starItemsOf } from '../../../game/collection/starItems'
 import { buyPiece, maxPiecesToBuy, pieceShardPrice } from '../../../game/collection/shredder'
 import { TutorialStep, type GameState } from '../../../game/core/state'
 import { act } from '../../../game/core/store'
@@ -26,6 +24,7 @@ import { CombineResultAnimation } from './CombineResultAnimation'
 import { RecreateAction } from './RecreateAction'
 import { ShinyCombineAction } from './ShinyCombineAction'
 import { BigAction, MonSection } from './MonSheet'
+import { StarItemNeed } from './StarItemNeed'
 import { StepperAction } from './StepperAction'
 
 const COMBINE_LABEL: Record<CombineKind, string> = {
@@ -63,11 +62,7 @@ export function TicketsSection({ game, speciesId }: { game: GameState; speciesId
       {seen && blocker && pieces >= PIECES_PER_COMBINE && <p className="tiny muted center">{blocker}</p>}
       {guided && <TutorialHint>Junta los {PIECES_PER_COMBINE} tickets para conseguir a {species(speciesId).name}.</TutorialHint>}
 
-      {starItem && (
-        <p className="tiny muted center">
-          Crearlo gasta también un {STAR_ITEMS[starItem].name} (tienes {starItemsOf(game, starItem)}).
-        </p>
-      )}
+      {starItem && <StarItemNeed game={game} item={starItem} action="Crearlo también" />}
       <BigAction
         icon={ICON.Piece}
         label={COMBINE_LABEL[kind]}

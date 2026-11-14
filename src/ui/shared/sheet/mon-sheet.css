@@ -247,6 +247,36 @@
   display: block;
   font-weight: 600;
 }
+/* Objeto estelar que gasta crear o evolucionar: tarjeta con su icono y cuántos tienes */
+.star-item-need {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border: 2px solid var(--yellow-dark);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--yellow) 22%, var(--card));
+}
+.star-item-need .grow {
+  display: flex;
+  flex-direction: column;
+}
+.star-item-need-held {
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--hp-ok);
+  white-space: nowrap;
+}
+.star-item-need.missing {
+  border-color: var(--red);
+  background: color-mix(in srgb, var(--red) 10%, var(--card));
+}
+.star-item-need.missing .star-item-need-held {
+  background: var(--red);
+}
 /* Mover a otro rancho o a la Caja */
 .move-options {
   display: grid;

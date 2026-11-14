@@ -26,7 +26,7 @@ export const MAX_KEYS = 10
 
 /** Mecánicas de jefe: lo que lo hace exigente */
 export interface BossMechanics {
-  /** Desde el turno `fromTurn`, cada `every` turnos su Ataque sube `atk` etapas (hasta el tope, statStages.ts) */
+  /** Desde el turno `fromTurn`, cada `every` turnos su Ataque sube `atk` etapas (hasta el tope, game/battle/statStages.ts) */
   enrage?: { fromTurn: number; every: number; atk: number }
   /** Cada tantos turnos su golpe da a todo el grupo (con el daño rebajado, ver bossMechanics.ts) */
   areaEvery?: number

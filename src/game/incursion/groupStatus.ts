@@ -1,6 +1,6 @@
 import { STATUS_INFO, StatusId } from '../../data/passives'
 import type { Rng } from '../core/random'
-import { hurt, restore, type Battlefield } from './battlefield'
+import { hurt, type Battlefield } from './battlefield'
 import { EventKind, on } from './events'
 import { isUp, type Affliction, type GroupFighter } from './fighter'
 
@@ -105,13 +105,12 @@ function skipsTurn(bf: Battlefield, f: GroupFighter, status: StatusId, rng: Rng)
 }
 
 /**
- * Final del turno: quemadura y veneno quitan PS (cada uno lo suyo), se regenera quien pueda y se gastan los turnos de
+ * Final del turno: quemadura y veneno quitan PS (cada uno lo suyo) y se gastan los turnos de
  * los cambios y de los estados (al acabarse, se le pasa)
  */
 export function endOfTurn(bf: Battlefield) {
   const everyone = [...bf.party, ...bf.foes]
   for (const f of everyone) for (const { status } of f.statuses) statusDamage(bf, f, status)
-  for (const f of everyone.filter(isUp)) if (f.bonus.regen > 0) restore(bf, f, f.maxHp * f.bonus.regen)
   for (const f of everyone.filter(isUp)) wearOff(bf, f)
   for (const f of everyone) if (f.taunt) f.taunt = f.taunt.turns > 1 ? { ...f.taunt, turns: f.taunt.turns - 1 } : null
 }

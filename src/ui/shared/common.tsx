@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { move } from '../../data/moves'
-import { sprite } from '../../data/species'
+import { hasAnimatedSprite, sprite } from '../../data/species'
 import { TYPE_INFO, type PokeType } from '../../data/types'
 import { useSpriteBounds, type SpriteBounds } from './spriteBounds'
 
@@ -23,7 +23,7 @@ interface Natural {
  * que se escala por el cuerpo y se coloca entero, centrado y apoyado abajo.
  */
 function imageStyle(natural: Natural, size: number, fit: number | undefined, body: SpriteBounds | null, isGif: boolean): CSSProperties {
-  if (fit === undefined) return { width: natural.w * (size / SPRITE_CANVAS), height: natural.h * (size / SPRITE_CANVAS) }
+  if (fit === undefined) return canvasStyle(natural, size, isGif ? body : null)
   const whole = { x: 0, y: 0, w: natural.w, h: natural.h }
   const scale = (fit * size) / Math.max((body ?? whole).w, (body ?? whole).h)
   const b = isGif ? whole : (body ?? whole)
@@ -34,6 +34,16 @@ function imageStyle(natural: Natural, size: number, fit: number | undefined, bod
     left: (natural.w / 2 - (b.x + b.w / 2)) * scale,
     top: (natural.h - (b.y + b.h)) * scale,
   }
+}
+
+/**
+ * A la escala del lienzo de 96. Con `body` (el contorno del PNG), el GIF sube lo que el PNG deja de margen
+ * transparente abajo: así los pies quedan a la misma altura al cambiar de una imagen a la otra.
+ */
+function canvasStyle(natural: Natural, size: number, body: SpriteBounds | null): CSSProperties {
+  const scale = size / SPRITE_CANVAS
+  const lift = body ? (SPRITE_CANVAS - (body.y + body.h)) * scale : 0
+  return { width: natural.w * scale, height: natural.h * scale, position: 'relative', top: -lift }
 }
 
 /**
@@ -50,6 +60,7 @@ export function Sprite({
   className = '',
   silhouette = false,
   shiny = false,
+  grounded = false,
 }: {
   id: number
   back?: boolean
@@ -60,9 +71,12 @@ export function Sprite({
   silhouette?: boolean
   /** Con los colores shiny */
   shiny?: boolean
+  /** Sin `fit`: el GIF apoya los pies donde los tiene el PNG estático (para alternar entre los dos sin saltos) */
+  grounded?: boolean
 }) {
   // Si el GIF animado no existe o falla, se usa el sprite estático
-  const [fallback, setFallback] = useState(!animated)
+  const [failed, setFailed] = useState(false)
+  const fallback = failed || !animated || !hasAnimatedSprite(id, shiny)
   // Tamaño real de la imagen cargada; hasta saberlo no se muestra, para que no salte de tamaño
   const [natural, setNatural] = useState<Natural | null>(null)
   const src = fallback
@@ -70,7 +84,7 @@ export function Sprite({
     : back ? sprite.animatedBack(id, shiny) : sprite.animated(id, shiny)
   // El cuerpo se mide siempre en el PNG estático (misma escala que el GIF, pero sin el margen de la animación)
   const staticSrc = back ? sprite.back(id, shiny) : sprite.front(id, shiny)
-  const body = useSpriteBounds(staticSrc, fit !== undefined)
+  const body = useSpriteBounds(staticSrc, fit !== undefined || grounded)
   const loaded = natural?.src === src && body !== undefined ? natural : null
 
   return (
@@ -79,7 +93,7 @@ export function Sprite({
         src={src}
         alt=""
         draggable={false}
-        onError={() => setFallback(true)}
+        onError={() => setFailed(true)}
         onLoad={(e) => setNatural({ src, w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
         style={loaded ? imageStyle(loaded, size, fit, body ?? null, !fallback) : { visibility: 'hidden' }}
       />

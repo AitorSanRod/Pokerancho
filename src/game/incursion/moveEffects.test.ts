@@ -6,7 +6,7 @@ import { stat, type GroupFighter } from './fighter'
 import { healAmount } from './healing'
 import { ally, enemy, field } from './incursion-test-utils'
 import { AREA_DAMAGE_MULT, performMove } from './moveEffects'
-import { MAX_STAGES } from './statStages'
+import { MAX_STAGES } from '../battle/statStages'
 
 // Ataques de prueba hechos con el mismo constructor que los de verdad, para no depender de los datos
 const POWER = 40

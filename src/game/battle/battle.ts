@@ -9,6 +9,7 @@ import { calcStats, type Stats } from '../team/stats'
 import { attack } from './attack'
 import { combineBonus, type CombatBonus } from './combatBonus'
 import { endOfTurn } from './status'
+import { stageMult } from './statStages'
 
 export type Side = 'player' | 'enemy'
 
@@ -36,6 +37,8 @@ export interface Fighter {
   status: StatusId | null
   /** Turnos que le quedan sin poder moverse por la congelación */
   frozenTurns: number
+  /** Etapas de Velocidad que lleva subidas en el combate (pasiva de Bicho, ver statStages.ts) */
+  speStages: number
   /** Ataques que ha hecho en el combate (cuenta el que está haciendo) */
   attacks: number
   /** Ataques (1 = el primero) que van con el toque crítico del jugador (ver run/tapCrit.ts) */
@@ -136,6 +139,7 @@ export function makeFighter(
     perks,
     status: null,
     frozenTurns: 0,
+    speStages: 0,
     attacks: 0,
     tapCrits: [],
   }
@@ -152,7 +156,10 @@ export type Push = (e: Omit<BattleEvent, 'playerHp' | 'enemyHp' | 'playerStatus'
 
 export const label = (f: Fighter) => (f.side !== 'enemy' ? f.name : f.trainer ? `${f.name} de ${f.trainer}` : `${f.name} salvaje`)
 
-/** Combate automático por turnos: actúa primero el más rápido; al final de cada turno pesan los estados y la regeneración */
+/** Velocidad con sus etapas: decide quién actúa primero */
+const speedOf = (f: Fighter): number => f.stats.spe * stageMult(f.speStages)
+
+/** Combate automático por turnos: actúa primero el más rápido; al final de cada turno pesan los estados */
 export function simulateBattle(player: Fighter, enemy: Fighter, rng: Rng = Math.random): BattleResult {
   const events: BattleEvent[] = []
   const push: Push = (e) =>
@@ -162,7 +169,8 @@ export function simulateBattle(player: Fighter, enemy: Fighter, rng: Rng = Math.
   push({ kind: 'info', text: `¡Un ${enemy.name} salvaje de Nv. ${enemy.level} apareció!` })
 
   for (let turn = 1; turn <= MAX_TURNS; turn++) {
-    const playerFirst = player.stats.spe > enemy.stats.spe || (player.stats.spe === enemy.stats.spe && rng() < 0.5)
+    const [mine, theirs] = [speedOf(player), speedOf(enemy)]
+    const playerFirst = mine > theirs || (mine === theirs && rng() < 0.5)
     for (const [atk, def] of playerFirst ? [[player, enemy], [enemy, player]] : [[enemy, player], [player, enemy]]) {
       attack(atk, def, push, rng)
       const ended = outcome()

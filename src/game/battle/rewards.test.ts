@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { Rarity } from '../../data/species'
 import { speciesOfRarity } from '../core/test-utils'
+import { expToNext } from '../team/stats'
 import {
   boostedMoney,
   EXP_LEVEL_GAP,
+  EXP_LEVEL_SCALE,
   EXP_PER_LEVEL,
+  expForLevel,
   expReward,
   MONEY_GAIN_MULT,
   moneyPerStep,
@@ -61,8 +64,17 @@ describe('moneyReward', () => {
 
 describe('expReward', () => {
   it('da EXP según el nivel del rival', () => {
-    expect(expReward(10, 10)).toBe(10 * EXP_PER_LEVEL)
+    expect(expReward(10, 10)).toBe(expForLevel(10))
     expect(expReward(12, 10)).toBeGreaterThan(expReward(10, 10))
+  })
+
+  it('crece más deprisa que el nivel del rival', () => {
+    expect(expForLevel(EXP_LEVEL_SCALE)).toBe(2 * EXP_LEVEL_SCALE * EXP_PER_LEVEL)
+    expect(expForLevel(2 * EXP_LEVEL_SCALE) / expForLevel(EXP_LEVEL_SCALE)).toBeGreaterThan(2)
+  })
+
+  it('hacen falta menos victorias por nivel que el propio nivel', () => {
+    for (const level of [20, 40, 60, 90]) expect(expToNext(level) / expForLevel(level)).toBeLessThan(level)
   })
 
   it(`no da EXP si el rival tiene más de ${EXP_LEVEL_GAP} niveles menos`, () => {

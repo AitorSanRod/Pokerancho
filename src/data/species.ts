@@ -34,7 +34,7 @@ interface RarityInfo {
   createPrice: number
   /** ₽ que cuesta evolucionar a un Pokémon de esta rareza (la de la evolución, no la del que evoluciona) */
   evolvePrice: number
-  /** Pokémon de su tipo que cuenta para las pasivas de rancho (el legendario las sube al máximo, ver ranchPassives.ts) */
+  /** Cuánto suma a cada uno de sus tipos para las pasivas (data/passives.ts › PASSIVE_THRESHOLDS) */
   passiveWeight: number
 }
 
@@ -42,7 +42,7 @@ export const RARITY_INFO: Record<Rarity, RarityInfo> = {
   [Rarity.Common]: { name: 'Común', color: '#888070', rate: 0.68, surplusMoney: 20, createPrice: 1000, evolvePrice: 1000, passiveWeight: 1 },
   [Rarity.Rare]: { name: 'Raro', color: '#1a6fbf', rate: 0.24, surplusMoney: 50, createPrice: 2500, evolvePrice: 2500, passiveWeight: 2 },
   [Rarity.Epic]: { name: 'Épico', color: '#a040a0', rate: 0.07, surplusMoney: 150, createPrice: 5000, evolvePrice: 5000, passiveWeight: 3 },
-  [Rarity.Legendary]: { name: 'Legendario', color: '#e0a000', rate: 0.01, surplusMoney: 500, createPrice: 10000, evolvePrice: 10000, passiveWeight: 3 },
+  [Rarity.Legendary]: { name: 'Legendario', color: '#e0a000', rate: 0.01, surplusMoney: 500, createPrice: 10000, evolvePrice: 10000, passiveWeight: 5 },
 }
 
 interface RawSpecies extends Omit<Species, 'base'> {
@@ -98,6 +98,11 @@ const GBA_ICON_LAST = 386
 const iconDir = (id: number) => `${SPRITES}/versions/${id <= GBA_ICON_LAST ? 'generation-iii' : 'generation-vii'}/icons`
 /** Carpeta extra de los sprites shiny dentro de cada carpeta de PokeAPI */
 const shinyDir = (shiny: boolean) => (shiny ? 'shiny/' : '')
+/** Especies cuyo GIF shiny de PokeAPI es el normal (Pangoro, de frente y de espaldas): shiny, solo con el sprite fijo */
+const NORMAL_SHINY_GIFS: ReadonlySet<number> = new Set([675])
+
+/** Si el GIF animado de la especie se ve con sus colores (shiny o no) */
+export const hasAnimatedSprite = (id: number, shiny: boolean) => !shiny || !NORMAL_SHINY_GIFS.has(id)
 
 export const sprite = {
   front: (id: number, shiny = false) => `${SPRITES}/${shinyDir(shiny)}${id}.png`,

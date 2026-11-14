@@ -13,7 +13,7 @@ export const BOSQUE_VERDE: Incursion = {
   biome: Biome.Forest,
   tier: IncursionTier.VeryEasy,
   minLevel: 15,
-  maxLevel: 30,
+  maxLevel: 40,
   rooms: [
     {
       kind: RoomKind.Battle,
@@ -62,8 +62,8 @@ export const BOSQUE_VERDE: Incursion = {
       foes: [
         foe(POKEMON.Nidoking, 30, [IMOVE.FuerzaEquina.id, IMOVE.Toxico.id], {
           hpMult: 2.5,
-          passives: [{ type: PokeType.Fighting, level: 1 }],
-          boss: { enrage: { fromTurn: 15, every: 6, atk: 1 }, areaEvery: 4, phase: { belowHp: 0.3, moveIds: [IMOVE.Terremoto.id] } },
+          passives: [],
+          boss: { enrage: { fromTurn: 15, every: 6, atk: 1 }, areaEvery: 4, phase: { belowHp: 0.2, moveIds: [IMOVE.Terremoto.id] } },
         }),
         foe(POKEMON.Nidoqueen, 29, [IMOVE.Taladradora.id, IMOVE.Paralizador.id], {
           hpMult: 2.5,

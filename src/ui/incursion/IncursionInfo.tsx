@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import { GROUP_PASSIVE_THRESHOLDS, RARITY_WEIGHT } from '../../data/incursionPassives'
+import { PASSIVE_THRESHOLDS } from '../../data/passives'
 import { MAX_KEYS } from '../../data/incursions'
 import { RARITY_INFO, Rarity } from '../../data/species'
 import { REGROUP_MS } from '../../game/incursion/activeIncursion'
@@ -9,7 +9,7 @@ import { INCURSION_REVIVES, REVIVE_HP } from '../../game/incursion/revives'
 import '../shared/overlays.css'
 
 const pct = (n: number) => `${Math.round(n * 100)}%`
-const weights = Object.values(Rarity).map((r) => `${RARITY_INFO[r].name.toLowerCase()} ${RARITY_WEIGHT[r]}`).join(', ')
+const weights = Object.values(Rarity).map((r) => `${RARITY_INFO[r].name.toLowerCase()} ${RARITY_INFO[r].passiveWeight}`).join(', ')
 
 const SECTIONS: { title: string; text: string }[] = [
   {
@@ -30,7 +30,7 @@ const SECTIONS: { title: string; text: string }[] = [
   },
   {
     title: 'Pasivas de grupo',
-    text: `Cada Pokémon suma a cada uno de sus tipos según su rareza (${weights}). Con ${GROUP_PASSIVE_THRESHOLDS.join(', ')} de un tipo, todo el grupo gana el nivel 1, 2 o 3 de su pasiva. Un Pokémon caído que ya no puede volver deja de sumar.`,
+    text: `Cada Pokémon suma a cada uno de sus tipos según su rareza (${weights}). Con ${PASSIVE_THRESHOLDS.join(', ')} de un tipo, todo el grupo gana el nivel 1, 2 o 3 de su pasiva: las mismas pasivas que da el rancho, pero contando solo a los del grupo. Un Pokémon caído que ya no puede volver deja de sumar.`,
   },
   {
     title: 'Revivires',

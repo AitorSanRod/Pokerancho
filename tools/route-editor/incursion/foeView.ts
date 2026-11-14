@@ -1,11 +1,8 @@
 // Campos de un rival de incursión: especie, nivel, ataques, PS extra, pasivas y mecánicas de jefe.
 
-import { passiveText, typeName, TYPES } from '../catalog'
+import { PASSIVE_LEVEL_OPTS, passiveText, typeName, TYPES } from '../catalog'
 import { button, checkbox, esc, label, numInput, optNumInput, select, speciesInput } from '../fields'
 import { moveText } from './incCatalog'
-
-/** En las incursiones las pasivas de los rivales cuentan enteras (game/incursion/fighter.ts) */
-const INCURSION_PASSIVE_SCALE = 1
 import type { FoeDraft } from './incDraft'
 
 /** Lista de ataques (claves de IMOVE) con buscador y lo que es cada uno al lado */
@@ -27,8 +24,8 @@ function passiveList(f: FoeDraft, p: string) {
     .map(
       (ps, i) => `<div class="passive">
         ${select(`${p}.passives.${i}.type`, ps.type, TYPES.map((t) => [t, typeName(t)]))}
-        ${select(`${p}.passives.${i}.level`, String(ps.level), [['1', 'Nivel 1'], ['2', 'Nivel 2']], undefined, 'num')}
-        <small>${passiveText(ps.type, ps.level, INCURSION_PASSIVE_SCALE)}</small>
+        ${select(`${p}.passives.${i}.level`, String(ps.level), PASSIVE_LEVEL_OPTS, undefined, 'num')}
+        <small>${passiveText(ps.type, ps.level)}</small>
         ${button('remove', '×', `data-list="${p}.passives" data-index="${i}"`, 'icon')}
       </div>`,
     )

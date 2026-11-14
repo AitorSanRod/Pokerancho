@@ -5,7 +5,7 @@ import { act } from '../../game/core/store'
 import { isSearching } from '../../game/raid/raidEngine'
 import { isEnding } from '../../game/raid/raidEnding'
 import { currentRouteRaid } from '../../game/raid/routeRaid'
-import { endRun, tapRun } from '../../game/run/run'
+import { endRun, restartBlocker, restartRun, tapRun } from '../../game/run/run'
 import { boostActive, BOOST_TAP_EXP } from '../../game/run/expBoost'
 import { landmarkInView } from '../../game/run/runLandmark'
 import { tapBattle } from '../../game/run/tapCrit'
@@ -100,10 +100,10 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
           <span className="small">
             Parada {run.stop}/{lastStop}
           </span>
-          {run.phase === 'walking' && <AbandonButton />}
+          {run.phase === 'walking' && <AbandonButton game={game} />}
           {routeRaid && !isEnding(routeRaid) && <RetreatButton />}
         </div>
-        {boosted && <ExpBoostBadge msLeft={run.boost.activeMs} />}
+        {(boosted || run.boost.found) && <ExpBoostBadge active={boosted} />}
         <StopTrack run={run} />
         {/* En el combate de la última parada la ruta sigue 'walking' hasta que acaba, pero ya no hay tramo siguiente */}
         {run.phase === 'walking' && run.stop < lastStop && <LegProgress game={game} run={run} spm={spm} />}
@@ -138,9 +138,13 @@ function LegProgress({ game, run, spm }: { game: GameState; run: Run; spm: numbe
   )
 }
 
-/** Salir de la ruta a medias pide confirmación: se conserva lo ganado, pero no el premio final */
-function AbandonButton() {
+/**
+ * Salir de la ruta a medias pide confirmación: se conserva lo ganado, pero no el premio final. Desde ahí también se
+ * puede reiniciar: sale otra vez a la misma ruta con paradas y rivales nuevos
+ */
+function AbandonButton({ game }: { game: GameState }) {
   const [confirming, setConfirming] = useState(false)
+  const restartBlocked = restartBlocker(game)
   return (
     <>
       <button className="btn ghost small hud-abandon" onClick={() => setConfirming(true)}>
@@ -152,9 +156,15 @@ function AbandonButton() {
           confirmLabel="Abandonar"
           onConfirm={() => act(endRun)}
           onCancel={() => setConfirming(false)}
+          extraAction={
+            <button className="btn grow" disabled={!!restartBlocked} title={restartBlocked ?? undefined} onClick={() => act(restartRun)}>
+              Reiniciar ruta
+            </button>
+          }
         >
           <p className="small confirm-text">
-            Tu Pokémon volverá al rancho. Conservas lo ganado hasta ahora, pero no recibirás el premio de completarla.
+            Tu Pokémon volverá al rancho. Conservas lo ganado hasta ahora, pero no recibirás el premio de completarla. Si la
+            reinicias, vuelve a salir desde el principio con otros Pokémon por el camino.
           </p>
         </ConfirmDialog>
       )}

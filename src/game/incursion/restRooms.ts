@@ -3,7 +3,7 @@ import { restore, type Battlefield } from './battlefield'
 import { isUp } from './fighter'
 import { clearStatus } from './groupStatus'
 import { raise, resolveFallen } from './revives'
-import { noStages } from './statStages'
+import { noStages } from '../battle/statStages'
 
 // Lo que pasa en las salas sin combate y al salir de una sala de combate.
 

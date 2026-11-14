@@ -37,9 +37,19 @@ export const EXP_PER_LEVEL = 3
 /** Un rival con más de estos niveles por debajo del Pokémon del jugador no da EXP */
 export const EXP_LEVEL_GAP = 3
 
-/** EXP por victoria: nivel del rival × EXP_PER_LEVEL, o nada si el rival es más de EXP_LEVEL_GAP niveles inferior */
+/**
+ * Cuánto crece la EXP por victoria con el nivel del rival: con 40, uno de nivel 40 da ×2 y uno de nivel 80, ×3. Compensa
+ * que la EXP de cada nivel crezca con el cuadrado del nivel, para que subir cueste más con el nivel pero sin dispararse
+ */
+export const EXP_LEVEL_SCALE = 40
+
+/** EXP por victoria contra un rival de ese nivel, sin contar la diferencia de niveles: nivel × EXP_PER_LEVEL × (1 + nivel / EXP_LEVEL_SCALE) */
+export const expForLevel = (enemyLevel: number, perLevel = EXP_PER_LEVEL): number =>
+  Math.round(enemyLevel * perLevel * (1 + enemyLevel / EXP_LEVEL_SCALE))
+
+/** EXP por victoria: la de `expForLevel`, o nada si el rival es más de EXP_LEVEL_GAP niveles inferior */
 export function expReward(enemyLevel: number, playerLevel: number): number {
-  return enemyLevel < playerLevel - EXP_LEVEL_GAP ? 0 : enemyLevel * EXP_PER_LEVEL
+  return enemyLevel < playerLevel - EXP_LEVEL_GAP ? 0 : expForLevel(enemyLevel)
 }
 
 export function pieceReward(enemySpeciesId: number, rng: Rng): boolean {

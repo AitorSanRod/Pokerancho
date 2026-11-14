@@ -235,6 +235,7 @@ RouteStartDialog (camino principal, pathFrom) → startRun(routeId, path) → 'w
           → última parada: completeRoute → 'complete'
           → si no: sigue 'walking'
   → endRun (al volver al rancho o abandonando)
+  → restartRun (desde «Abandonar»): endRun + startRun de la misma ruta, con paradas y rivales sorteados de nuevo
 ```
 
 El motor **nunca espera a la UI**: el combate se resuelve entero al llegar (`simulateBattle` devuelve la lista

@@ -44,19 +44,19 @@ export const GYMS: Record<GymId, Gym> = {
   [GymId.Celeste]: {
     leader: 'Misty',
     badge: Badge.Cascade,
-    maxLevel: 49,
+    maxLevel: 50,
     team: [
-      { speciesId: POKEMON.Staryu, level: 41, passives: [{ type: 'water', level: 2 }, { type: 'psychic', level: 1 }], statMult: 1.2, moves: [IMOVE.PistolaAgua.id, IMOVE.Buceo.id] },
-      { speciesId: POKEMON.Starmie, level: 44, passives: [{ type: 'water', level: 2 }, { type: 'ghost', level: 1 }, { type: 'psychic', level: 1 }], statMult: 2, moves: [IMOVE.Psiquico.id, IMOVE.RayoAurora.id]  },
+      { speciesId: POKEMON.Staryu, level: 41, passives: [{ type: 'water', level: 2 }], statMult: 1.2, moves: [IMOVE.PistolaAgua.id, IMOVE.Buceo.id] },
+      { speciesId: POKEMON.Starmie, level: 43, passives: [{ type: 'water', level: 2 }], statMult: 1.5, moves: [IMOVE.Confusion.id, IMOVE.Hidropulso.id]  },
     ],
   },
   [GymId.CiudadCarmin]: {
     leader: 'Lt. Surge',
     badge: Badge.Thunder,
-    maxLevel: 50,
+    maxLevel: 60,
     team: [
-      { speciesId: POKEMON.Pikachu, level: 50, passives: [{ type: 'electric', level: 2 }], statMult: 2, moves: [IMOVE.PlacajeElectrico.id, IMOVE.VelocidadExtrema.id, IMOVE.Surf.id] },
-      { speciesId: POKEMON.Raichu, level: 55, passives: [{ type: 'electric', level: 2 }, { type: 'ghost', level: 1 }], statMult: 3, moves: [IMOVE.Trueno.id, IMOVE.DobleFilo.id] },
+      { speciesId: POKEMON.Pikachu, level: 50, passives: [{ type: 'electric', level: 2 }], statMult: 1.4, moves: [IMOVE.PlacajeElectrico.id, IMOVE.VelocidadExtrema.id, IMOVE.Surf.id] },
+      { speciesId: POKEMON.Raichu, level: 55, passives: [{ type: 'electric', level: 2 }, { type: 'ghost', level: 1 }], statMult: 1.8, moves: [IMOVE.Trueno.id, IMOVE.DobleFilo.id] },
     ],
   },
 }

@@ -1,6 +1,6 @@
 import { EventKind, on, type IncursionEvent, type Log } from './events'
 import { isUp, Team, type GroupFighter } from './fighter'
-import { noStages } from './statStages'
+import { noStages } from '../battle/statStages'
 import type { GroupPassive } from './groupPassives'
 
 // Todo lo que comparte una sala en juego: los dos bandos, los revivires que le quedan al grupo y el registro.

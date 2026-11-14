@@ -2,6 +2,7 @@
 // `Sign`…) para que el código generado use `POKEMON.Pikachu`, `Biome.Forest`, `StopLandmark.Sign`.
 
 import type { Route, RouteNode } from '../../src/data/maps'
+import type { PassiveLevel } from '../../src/data/passives'
 import type { PokeType } from '../../src/data/types'
 import { DICTS, keyOf } from './catalog'
 import { loadStored, store } from './mode'
@@ -13,7 +14,7 @@ export interface EncDraft {
 
 export interface PassiveDraft {
   type: PokeType
-  level: 1 | 2
+  level: PassiveLevel
 }
 
 export interface BossDraft {

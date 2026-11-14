@@ -1,6 +1,6 @@
 // Tarjeta de una parada: los campos comunes y, según su tipo, los suyos.
 
-import { DICTS, KIND_LABELS, landmarksOf, passiveText, typeName, TYPES, WILD_STAT_MULT } from './catalog'
+import { DICTS, KIND_LABELS, landmarksOf, PASSIVE_LEVEL_OPTS, passiveText, typeName, TYPES, WILD_STAT_MULT } from './catalog'
 import type { NodeDraft } from './draft'
 import { button, checkbox, label, numInput, optNumInput, select, speciesInput, textInput } from './fields'
 import { encounterList } from './routeView'
@@ -21,7 +21,7 @@ function bossFields(n: NodeDraft, p: string) {
     .map(
       (ps, i) => `<div class="passive">
         ${select(`${p}.boss.passives.${i}.type`, ps.type, TYPES.map((t) => [t, typeName(t)]))}
-        ${select(`${p}.boss.passives.${i}.level`, String(ps.level), [['1', 'Nivel 1'], ['2', 'Nivel 2']], undefined, 'num')}
+        ${select(`${p}.boss.passives.${i}.level`, String(ps.level), PASSIVE_LEVEL_OPTS, undefined, 'num')}
         <small>${passiveText(ps.type, ps.level)}</small>
         ${button('remove', '×', `data-list="${p}.boss.passives" data-index="${i}"`, 'icon')}
       </div>`,
