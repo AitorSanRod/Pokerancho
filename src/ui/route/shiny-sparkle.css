@@ -1,0 +1,59 @@
+/* Estrellas de un rival shiny al aparecer (ShinySparkle): empiezan al acabar su entrada y duran ~1,5 s */
+
+.shiny-sparkle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  pointer-events: none;
+}
+/* Estrella de cuatro puntas dorada con brillo blanco: crece girando y se apaga */
+.shiny-sparkle i {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: var(--size);
+  margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+  background: radial-gradient(circle, #fff 0 20%, var(--yellow) 55%);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  filter: drop-shadow(0 0 4px #fff);
+  opacity: 0;
+  animation: shiny-star 0.8s ease-out 2 both;
+}
+.shiny-sparkle i:nth-child(odd) {
+  animation-name: shiny-star-alt;
+}
+@keyframes shiny-star {
+  from {
+    opacity: 0;
+    transform: scale(0) rotate(0);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1.2) rotate(45deg);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.4) rotate(90deg);
+  }
+}
+@keyframes shiny-star-alt {
+  from {
+    opacity: 0;
+    transform: scale(0) rotate(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(-45deg);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.3) rotate(-90deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shiny-sparkle {
+    display: none;
+  }
+}

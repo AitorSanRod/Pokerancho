@@ -1,5 +1,6 @@
 import { boss, chain, enc, NodeKind, raidBoss, RouteId, Biome, StopLandmark, type GameMap } from '../../data/maps/mapCommon'
 import { GymId } from '../../data/gyms'
+import { TrainerId } from '../../data/trainers'
 import { Potion } from '../../data/potions'
 import { RaidTier } from '../../data/raidBosses'
 import { POKEMON } from '../../data/pokemon'
@@ -79,6 +80,20 @@ export const KANTO: GameMap = {
       nodes: chain(
         { id: 's', name: 'Inicio', kind: NodeKind.Start, steps: 0 },
         { id: 'g', name: 'Líder', kind: NodeKind.Gym, steps: 20, gym: GymId.Plateada },
+      ),
+    },
+    {
+      id: RouteId.SSAnne,
+      name: 'Ruta con entrenador',
+      description: '',
+      biome: Biome.Ship,
+      levels: [4, 5],
+      encounters: enc([POKEMON.Pidgey, 100]),
+      reward: { tickets: 1, money: 10, exp: 100 },
+      nodes: chain(
+        { id: 's', name: 'Inicio', kind: NodeKind.Start, steps: 0 },
+        { id: 't', name: 'Entrenador', kind: NodeKind.Trainer, steps: 20, trainer: TrainerId.MarineroDani },
+        { id: 'a', name: 'Salvaje', kind: NodeKind.Wild, steps: 20 },
       ),
     },
   ],

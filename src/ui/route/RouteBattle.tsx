@@ -7,9 +7,10 @@ import { Sprite } from '../shared/common'
 import { BattleHud } from './BattleHud'
 import { BattlePop } from './BattlePop'
 import { fighterClass, statusClass, type BattleFrame } from './battleFrame'
-import { GymLeader } from './gym/GymLeader'
-import { sendOutText, type GymScene } from './gym/gymScene'
+import { FoeTrainer } from './gym/FoeTrainer'
+import { sendOutText, type TrainerScene } from './gym/trainerScene'
 import { HitEffect } from './HitEffect'
+import { ShinySparkle } from './ShinySparkle'
 import { battleFit, BOSS_SPRITE_SIZE, ENEMY_SPRITE_SIZE } from './spriteSizes'
 import './battle.css'
 import './battle-callouts.css'
@@ -24,10 +25,10 @@ const typeColor = (type: PokeType) => ({ ['--type-color' as string]: TYPE_INFO[t
  * Combate dentro de la escena de la ruta: el rival aparece delante del Pokémon, cada uno con su marcador (BattleHud) a sus pies,
  * el ataque se anuncia con su nombre y los golpes se ven como números flotantes con el efecto de su tipo; el crítico
  * destella y un estado alterado se ve en el sprite mientras dura. El sprite del jugador lo pinta `WalkScene`.
- * `enemyOverlay`: lo que va sobre el rival (el anillo del toque crítico). `gym`: contra el líder de un gimnasio, que se
+ * `enemyOverlay`: lo que va sobre el rival (el anillo del toque crítico). `trainer`: contra un líder de gimnasio o un entrenador, que se
  * ve detrás y saca a cada Pokémon con un destello.
  */
-export function RouteBattle({ record, frame, enemyOverlay, gym }: { record: BattleRecord; frame: BattleFrame; enemyOverlay?: ReactNode; gym?: GymScene | null }) {
+export function RouteBattle({ record, frame, enemyOverlay, trainer }: { record: BattleRecord; frame: BattleFrame; enemyOverlay?: ReactNode; trainer?: TrainerScene | null }) {
   const { event, index } = frame
   const crit = !frame.ended && event.kind === 'hit' && event.crit
   const struck = (side: Side) => !frame.ended && event.kind === 'hit' && event.side === side
@@ -40,9 +41,9 @@ export function RouteBattle({ record, frame, enemyOverlay, gym }: { record: Batt
         <BattlePop record={record} frame={frame} side="player" />
         <Hit record={record} frame={frame} side="player" />
       </div>
-      {gym && <GymLeader gym={gym} />}
-      {record.boss && index < BOSS_WARNING_EVENTS && <div className="boss-warning">{gym ? sendOutText(gym) : '¡Un jefe te corta el paso!'}</div>}
-      <div key={gym ? `gym-${gym.index}` : 'foe'} className={`route-fighter enemy ${record.boss ? 'boss' : ''} ${gym ? 'gym-foe' : ''}`}>
+      {trainer && <FoeTrainer trainer={trainer} />}
+      {(record.boss || trainer) && index < BOSS_WARNING_EVENTS && <div className="boss-warning">{trainer ? sendOutText(trainer) : '¡Un jefe te corta el paso!'}</div>}
+      <div key={trainer ? `trainer-${trainer.index}` : 'foe'} className={`route-fighter enemy ${record.boss ? 'boss' : ''} ${trainer ? 'gym-foe' : ''}`}>
         <MoveCallout record={record} frame={frame} side="enemy" />
         <BattlePop record={record} frame={frame} side="enemy" />
         <Hit record={record} frame={frame} side="enemy" />
@@ -50,8 +51,9 @@ export function RouteBattle({ record, frame, enemyOverlay, gym }: { record: Batt
         <div className={`route-enemy ${fighterClass(record, frame, 'enemy')}`}>
           <div className="scene-shadow" />
           <div className={statusClass(event.enemyStatus)}>
-            <Sprite id={record.enemy.speciesId} size={record.boss ? BOSS_SPRITE_SIZE : ENEMY_SPRITE_SIZE} fit={battleFit(record.enemy.speciesId)} />
+            <Sprite id={record.enemy.speciesId} shiny={record.enemy.shiny} size={record.boss ? BOSS_SPRITE_SIZE : ENEMY_SPRITE_SIZE} fit={battleFit(record.enemy.speciesId)} />
           </div>
+          {record.enemy.shiny && <ShinySparkle />}
         </div>
       </div>
       <div className="battle-hud-slot player">

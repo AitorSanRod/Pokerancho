@@ -8,13 +8,14 @@ import { POKEMON } from '../../src/data/pokemon'
 import { Potion } from '../../src/data/potions'
 import { RaidTier } from '../../src/data/raidBosses'
 import { sprite } from '../../src/data/species'
+import { TrainerId, TrainerLook } from '../../src/data/trainers'
 import { TYPE_INFO, type PokeType } from '../../src/data/types'
 import { WILD_STAT_MULT } from '../../src/game/run/runBattle'
 import { pixelSceneFor } from '../../src/ui/route/pixelScene'
 
 export { KANTO, NodeKind, WILD_STAT_MULT }
 
-export const DICTS = { POKEMON, Biome, RouteId, StopLandmark, Potion, RaidTier, NodeKind, GymId, Badge } as const
+export const DICTS = { POKEMON, Biome, RouteId, StopLandmark, Potion, RaidTier, NodeKind, GymId, TrainerId, TrainerLook, Badge } as const
 
 const MISSING_MARK = 'missing-key:'
 
@@ -29,6 +30,7 @@ export function keyOf(dict: Record<string, unknown>, value: unknown): string {
 
 export const SPECIES_KEYS = Object.keys(POKEMON)
 export const spriteOf = (key: string): string => (key in POKEMON ? sprite.front(POKEMON[key as keyof typeof POKEMON]) : '')
+export const spriteById = (id: number): string => sprite.front(id)
 
 export const KIND_LABELS: Record<string, string> = {
   Start: 'Inicio',
@@ -37,6 +39,7 @@ export const KIND_LABELS: Record<string, string> = {
   Raid: 'Jefe comunitario',
   Heal: 'Curación',
   Gym: 'Gimnasio',
+  Trainer: 'Entrenador',
 }
 
 export const TYPES = Object.keys(TYPE_PASSIVES) as PokeType[]

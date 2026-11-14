@@ -2,22 +2,11 @@
 
 import { kebab } from '../codegen'
 import { esc } from '../fields'
+import { str, teamCode } from '../team/teamCode'
 import { isNewGym, leaderSprite } from './gymCatalog'
-import type { GymDraft, GymFoeDraft } from './gymDraft'
-
-const str = (s: string) => `'${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
+import type { GymDraft } from './gymDraft'
 
 export const gymIdValue = (d: GymDraft) => d.idValue || kebab(d.idKey)
-
-/** Un Pokémon del líder en una línea: `{ speciesId: POKEMON.Staryu, level: 41, passives: [...], statMult: 1.2, moves: [...] }` */
-export function foeCode(f: GymFoeDraft): string {
-  const fields = [`speciesId: POKEMON.${f.species || '¿?'}`, `level: ${f.level}`]
-  if (f.passives.length) fields.push(`passives: [${f.passives.map((p) => `{ type: '${p.type}', level: ${p.level} }`).join(', ')}]`)
-  if (f.statMult !== null && f.statMult !== 1) fields.push(`statMult: ${f.statMult}`)
-  const moves = f.moves.filter(Boolean)
-  if (moves.length) fields.push(`moves: [${moves.map((m) => `IMOVE.${m}.id`).join(', ')}]`)
-  return `{ ${fields.join(', ')} }`
-}
 
 /** La entrada del gimnasio dentro de GYMS (sangrado de 2 espacios, como en el fichero) */
 export function gymCode(d: GymDraft): string {
@@ -26,9 +15,7 @@ export function gymCode(d: GymDraft): string {
     `    leader: ${str(d.leader)},`,
     `    badge: Badge.${d.badge || '¿?'},`,
     `    maxLevel: ${d.maxLevel},`,
-    '    team: [',
-    ...d.team.map((f) => `      ${foeCode(f)},`),
-    '    ],',
+    ...teamCode(d.team),
     '  },',
   ].join('\n')
 }

@@ -6,7 +6,8 @@ import { duplicateItem, listAt, moveItem, removeItem } from '../paths'
 import { GYM_ENTRIES, GYMS } from './gymCatalog'
 import { gymIssues, gymSummary } from './gymChecks'
 import { gymCode, gymCodeHint, gymExtra } from './gymCodegen'
-import { emptyGym, emptyGymFoe, fromGym, loadGymDraft, saveGymDraft, type GymDraft } from './gymDraft'
+import { emptyFoe } from '../team/teamDraft'
+import { emptyGym, fromGym, loadGymDraft, saveGymDraft, type GymDraft } from './gymDraft'
 import { parseGym } from './gymPaste'
 import { gymForm } from './gymView'
 import { writeGym } from './gymWrite'
@@ -34,7 +35,7 @@ export const GYM_MODE = editorMode<GymDraft>({
   issues: gymIssues,
   summary: gymSummary,
   actions: {
-    'add-foe': (d) => d.team.push(emptyGymFoe()),
+    'add-foe': (d) => d.team.push(emptyFoe()),
     'add-move': push(() => ''),
     'add-passive': push(() => ({ type: 'normal', level: 1 })),
     remove: removeItem,

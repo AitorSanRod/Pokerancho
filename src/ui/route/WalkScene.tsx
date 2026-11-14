@@ -31,6 +31,7 @@ export function WalkScene({
   floaterText = '»',
   landmark = null,
   signText,
+  walkerOverlay,
   children,
 }: {
   biome: Biome
@@ -45,6 +46,8 @@ export function WalkScene({
   floaterText?: string
   landmark?: SceneLandmark | null
   signText?: string
+  /** Lo que va sobre el Pokémon que camina (p. ej. la subida de nivel) */
+  walkerOverlay?: ReactNode
   children?: ReactNode
 }) {
   const scene = pixelSceneFor(biome, signText)
@@ -75,6 +78,7 @@ export function WalkScene({
         <div className={`scene-walker ${walkerClass}`}>
           <div className="scene-shadow" />
           <Sprite id={speciesId} size={ENEMY_SPRITE_SIZE} fit={battleFit(speciesId)} shiny={shiny} />
+          {walkerOverlay}
         </div>
       )}
       <canvas ref={front} className="scene-canvas front" />

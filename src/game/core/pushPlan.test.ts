@@ -40,12 +40,15 @@ describe('avisos que programa el móvil', () => {
     const s = initialState()
     chooseStarter(s, STARTERS[0])
     startRun(s, RouteId.PuebloPaleta)
+    // Las dos simulaciones deben dar lo mismo: mismo azar en cada una (y ningún rival shiny)
+    vi.spyOn(Math, 'random').mockReturnValue(0.99)
     const end = predictRunEnd(s, NOW)
     expect(end).not.toBeNull()
     expect(end!.at).toBeGreaterThan(NOW)
     expect(clientPushPlan(s, NOW)).toMatchObject([{ topic: PushTopic.Run, dueAt: end!.at }])
     // La simulación es sobre una copia: la partida no cambia
     expect(s.run!.stop).toBe(0)
+    vi.restoreAllMocks()
   })
 
   it('sin ruta no hay aviso de ruta', () => {

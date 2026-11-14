@@ -202,6 +202,12 @@ En los tests se pasa un rng determinista. Una función nueva con azar **debe** s
   descarta lo que está a medias (`IN_PROGRESS`: la ruta, la sala de raid y la incursión en curso; el Pokémon vuelve al
   rancho). Lo ganado en la ruta ya está sumado y la llave de la incursión se devuelve, así que jugar sin conexión con
   la versión anterior y actualizar después no quita nada.
+- Las expediciones en curso **nunca se pierden** al cambiar de versión ni al cargar: cada una guarda al salir sus
+  condiciones (`Expedition.terms`: niveles y salvajes de la ruta, combates y multiplicadores) y termina con ellas;
+  los cambios de reglas o de rutas valen para las siguientes. En las dos cargas, `team/expeditionSalvage.ts ›
+  repairExpeditions` deja terminables las de partidas antiguas o con una ruta, duración o enfoque que ya no existen
+  (sin condiciones, las de su ruta ahora o, si ya no está o no tiene salvajes, las de la más avanzada que haya
+  completado el jugador). Solo se quitan las de un Pokémon que ya no existe, repetidas o ilegibles.
 - En las dos cargas se abren las rutas que desbloquean las ya completadas (`run/routeUnlocks.ts ›
   unlockReachedRoutes`): una ruta añadida al final del mapa aparece abierta para quien ya completó la anterior.
   También se da por capturada la línea evolutiva anterior de lo capturado (`collection/dex.ts › markEvolutionLines`);

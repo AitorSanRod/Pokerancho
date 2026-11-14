@@ -2,24 +2,14 @@
 // src/data/incursions/ y, si es nueva, la da de alta en types.ts e index.ts.
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import type { IncomingMessage, ServerResponse } from 'node:http'
 import { join } from 'node:path'
-import type { Plugin } from 'vite'
 import { addIncursionId, addToIncursionList, hasIncursionId, parseWrite } from './incursionFiles.ts'
+import { toolWriter } from './toolHttp.ts'
 
 /** Lo llama tools/route-editor/incursion/incWrite.ts */
 const INCURSION_WRITE_URL = '/__tools/incursion'
 
 const DIR = 'src/data/incursions'
-
-function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let body = ''
-    req.on('data', (chunk: Buffer) => (body += chunk.toString('utf8')))
-    req.on('end', () => resolve(body))
-    req.on('error', reject)
-  })
-}
 
 /** Escribe la incursión; devuelve qué ha hecho, para el aviso del editor */
 function writeIncursion(root: string, body: unknown) {
@@ -43,25 +33,4 @@ function writeIncursion(root: string, body: unknown) {
   return { file: `${DIR}/${file}`, created: !existed, registered: isNew }
 }
 
-function send(res: ServerResponse, status: number, data: unknown) {
-  res.statusCode = status
-  res.setHeader('Content-Type', 'application/json')
-  res.end(JSON.stringify(data))
-}
-
-export function incursionWriter(): Plugin {
-  return {
-    name: 'incursion-writer',
-    apply: 'serve',
-    configureServer(server) {
-      server.middlewares.use(INCURSION_WRITE_URL, async (req, res) => {
-        if (req.method !== 'POST') return send(res, 405, { error: 'Solo POST' })
-        try {
-          send(res, 200, writeIncursion(server.config.root, JSON.parse(await readBody(req))))
-        } catch (e) {
-          send(res, 400, { error: (e as Error).message })
-        }
-      })
-    },
-  }
-}
+export const incursionWriter = () => toolWriter('incursion-writer', INCURSION_WRITE_URL, writeIncursion)

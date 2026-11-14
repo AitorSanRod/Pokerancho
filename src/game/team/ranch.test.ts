@@ -6,7 +6,8 @@ import { activeMon, initialState } from '../core/state'
 import { chooseStarter, readyForExpeditions } from '../core/test-utils'
 import { startRun } from '../run/run'
 import { EXPEDITION_DURATIONS, sendExpedition } from './expedition'
-import { healCost, healInstant, maxTrainSessions, restInRanch, train, trainCost, trainPlan } from './ranch'
+import { createMon, NEW_MON_LEVEL } from './mons'
+import { canBeCompanion, healCost, healInstant, maxTrainSessions, restInRanch, setActive, train, trainCost, trainPlan } from './ranch'
 import { MAX_LEVEL, maxHp } from './stats'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
@@ -35,6 +36,17 @@ describe('rancho', () => {
     mon.hp = 1
     expect(healInstant(s, mon.uid)).toBe(false)
     expect(train(s, mon.uid)).toBeNull()
+  })
+
+  it('con el compañero en ruta no se puede elegir otro hasta que vuelva', () => {
+    const s = stateWithStarter()
+    const companion = activeMon(s)!
+    const other = createMon(companion.speciesId, NEW_MON_LEVEL, companion.ranch)
+    s.owned.push(other)
+    startRun(s, RouteId.PuebloPaleta)
+    expect(canBeCompanion(s, other.uid)).toBe(false)
+    setActive(s, other.uid)
+    expect(s.activeUid).toBe(companion.uid)
   })
 
   it('los Pokémon de expedición no descansan', () => {

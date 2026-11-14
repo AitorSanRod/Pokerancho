@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { RouteId } from '../../data/maps'
 import { Nature, NEUTRAL_NATURE } from '../../data/natures'
 import { POKEMON } from '../../data/pokemon'
-import { EXPEDITION_DURATIONS } from '../team/expedition'
+import { collectExpedition, EXPEDITION_DURATIONS } from '../team/expedition'
 import { createMon } from '../team/mons'
 import { RANCH_EXPANSION_MAX, RANCH_EXPANSION_SLOTS } from '../team/ranchExpansion'
 import { ranchCount } from '../team/ranches'
@@ -10,8 +10,11 @@ import { MAX_LEVEL } from '../team/stats'
 import { activeMon, initialState, TutorialStep } from './state'
 import { backupTeam, parseTeamBackup, restoreTeam, type TeamBackup } from './teamBackup'
 import { ExpeditionFocus } from '../team/expeditionFocus'
+import { testExpedition } from './test-utils'
 import { tick } from './tick'
 
+/** Una duración que no se puede elegir (de una versión con otras duraciones) */
+const INVALID_DURATION = Math.max(...EXPEDITION_DURATIONS) + 1
 
 function stateWithTeam() {
   const s = initialState()
@@ -133,7 +136,7 @@ describe('copia del equipo', () => {
     /** El primer Pokémon del equipo, de expedición desde hace `elapsedMin` minutos */
     function onExpedition(elapsedMin = 1) {
       const s = stateWithTeam()
-      s.expeditions.push({ uid: s.owned[0].uid, routeId: RouteId.PuebloPaleta, durationMin: EXPEDITION_DURATIONS.at(-1)!, focus: ExpeditionFocus.Exp, elapsedMin })
+      s.expeditions.push(testExpedition(s.owned[0].uid, RouteId.PuebloPaleta, { durationMin: EXPEDITION_DURATIONS.at(-1)!, elapsedMin }))
       return s
     }
 
@@ -154,24 +157,30 @@ describe('copia del equipo', () => {
       expect(fresh.expeditions[0].elapsedMin).toBeCloseTo(s.expeditions[0].elapsedMin + 5)
     })
 
-    it('se descartan las que no encajan (ruta que no existe, duración que no hay, el mismo Pokémon dos veces)', () => {
+    it('solo se descartan las que no se pueden leer (sin duración, el mismo Pokémon dos veces)', () => {
       const backup = backupTeam(onExpedition())
       const good = backup.expeditions![0]
-      const parsed = roundTrip({
-        ...backup,
-        expeditions: [good, { ...good }, { ...good, monIndex: 1, routeId: 'no-existe' }, { ...good, monIndex: 1, durationMin: -1 }],
-      })
+      const parsed = roundTrip({ ...backup, expeditions: [good, { ...good }, { ...good, monIndex: 1, durationMin: -1 }] })
       expect(parsed!.expeditions).toEqual([good])
     })
 
-    it('en una copia de antes del enfoque, la expedición sigue con el de EXP; uno que no existe se descarta', () => {
+    it('una de antes del enfoque y de guardar sus condiciones sigue con el de EXP y las de su ruta', () => {
       const backup = backupTeam(onExpedition())
-      const { focus: _, ...old } = backup.expeditions![0]
+      const { focus: _, terms: __, ...old } = backup.expeditions![0]
       const fresh = initialState()
       restoreTeam(fresh, roundTrip({ ...backup, expeditions: [old] })!)
-      expect(fresh.expeditions).toEqual([{ uid: fresh.owned[0].uid, routeId: old.routeId, durationMin: old.durationMin, focus: ExpeditionFocus.Exp, elapsedMin: old.elapsedMin }])
-      const bad = roundTrip({ ...backup, expeditions: [{ ...old, focus: 'nada' as ExpeditionFocus }] })
-      expect(bad!.expeditions).toEqual([])
+      expect(fresh.expeditions).toEqual([testExpedition(fresh.owned[0].uid, old.routeId, { durationMin: old.durationMin, elapsedMin: old.elapsedMin })])
+    })
+
+    it('una a una ruta quitada, con duración y enfoque que ya no existen, sigue y se puede terminar', () => {
+      const backup = backupTeam(onExpedition())
+      const { terms: _, ...old } = backup.expeditions![0]
+      const gone = { ...old, routeId: 'ruta-quitada', durationMin: INVALID_DURATION, focus: 'nada' as ExpeditionFocus, elapsedMin: INVALID_DURATION }
+      const fresh = initialState()
+      restoreTeam(fresh, roundTrip({ ...backup, expeditions: [gone] })!)
+      expect(fresh.expeditions).toMatchObject([{ routeId: 'ruta-quitada', focus: ExpeditionFocus.Exp }])
+      expect(collectExpedition(fresh, fresh.owned[0].uid)).not.toBeNull()
+      expect(fresh.expeditions).toEqual([])
     })
 
     it('las copias de antes, sin expediciones, siguen valiendo', () => {

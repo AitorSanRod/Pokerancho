@@ -2,6 +2,7 @@ import type { PassiveRef } from '../passives'
 import { GYMS, type GymId } from '../gyms'
 import type { Potion } from '../potions'
 import type { RaidTier } from '../raidBosses'
+import { TRAINERS, type TrainerId } from '../trainers'
 
 export interface Encounter {
   speciesId: number
@@ -13,14 +14,15 @@ export interface Encounter {
  * Tipos de parada. `Raid`: jefe comunitario; al llegar empieza una pelea en sala con los que van llegando (ver
  * game/raid/routeRaid.ts). `Heal`: sin combate, el Pokémon se para y se cura con la poción de la parada (ver
  * game/run/runHeal.ts). `Gym`: el líder del gimnasio (`gym`, ver data/gyms.ts) saca su equipo uno tras otro y el
- * jugador puede cambiar de ataque en cualquier momento (ver game/run/runGym.ts). Previstos para más adelante:
- * entrenador, cofre y especial
+ * jugador puede cambiar de ataque en cualquier momento (ver game/run/runGym.ts). `Trainer`: un entrenador (`trainer`, ver
+ * data/trainers.ts) saca su equipo uno tras otro y cada Pokémon suyo da más EXP (ver game/run/runTrainer.ts). Previstos
+ * para más adelante: cofre y especial
  */
-export const NodeKind = { Start: 'start', Wild: 'wild', Boss: 'boss', Raid: 'raid', Heal: 'heal', Gym: 'gym' } as const
+export const NodeKind = { Start: 'start', Wild: 'wild', Boss: 'boss', Raid: 'raid', Heal: 'heal', Gym: 'gym', Trainer: 'trainer' } as const
 export type NodeKind = (typeof NodeKind)[keyof typeof NodeKind]
 
 /** Fondo de la escena de caminar (ver src/ui/route/pixelScene/). PalletTown es solo de Pueblo Paleta */
-export const Biome = { Meadow: 'meadow', PalletTown: 'pallet-town', PewterCity: 'pewter-city', CeruleanCity: 'cerulean-city', Forest: 'forest', Cave: 'cave', MtMoon: 'mt-moon', Sea: 'sea', Lab: 'lab', VermilionCity: 'vermilion-city', MeadowDusk: 'meadow-dusk' } as const
+export const Biome = { Meadow: 'meadow', PalletTown: 'pallet-town', PewterCity: 'pewter-city', CeruleanCity: 'cerulean-city', Forest: 'forest', Cave: 'cave', MtMoon: 'mt-moon', Sea: 'sea', Lab: 'lab', VermilionCity: 'vermilion-city', MeadowDusk: 'meadow-dusk', Ship: 'ship' } as const
 export type Biome = (typeof Biome)[keyof typeof Biome]
 
 /** Rutas por su id. El valor se guarda en la partida: no cambiarlo sin subir SAVE_VERSION */
@@ -30,7 +32,6 @@ export const RouteId = {
   Ruta1Boss: 'ruta-1-boss',
   BosqueVerde: 'bosque-verde',
   CiudadPlateada: 'ciudad-plateada',
-  CiudadPlateada2: 'ciudad-plateada2',
   CiudadPlateada3: 'ciudad-plateada3',
   Ruta3: 'ruta-3',
   Ruta4: 'ruta-4',
@@ -42,6 +43,8 @@ export const RouteId = {
   Ruta5: 'ruta-5',
   Ruta6: 'ruta-6',
   GimnasioCarmin: 'gimnasio-carmin',
+  SSAnne: 'ss-anne',
+  SSAnne2: 'ss-anne2',
 } as const
 export type RouteId = (typeof RouteId)[keyof typeof RouteId]
 
@@ -49,7 +52,7 @@ export type RouteId = (typeof RouteId)[keyof typeof RouteId]
  * Elemento que se ve en la escena al llegar a una parada (cartel, casa, fuente…). Cada escena dibuja los suyos
  * (`landmarks` de src/ui/route/pixelScene/scenes/<bioma>); el de una parada tiene que existir en la escena de su ruta.
  */
-export const StopLandmark = { Sign: 'sign', House: 'house', Fountain: 'fountain', Log: 'log', Museum: 'museum', Gym: 'gym' } as const
+export const StopLandmark = { Sign: 'sign', House: 'house', Fountain: 'fountain', Log: 'log', Museum: 'museum', Gym: 'gym', Bench: 'bench', Luggage: 'luggage' } as const
 export type StopLandmark = (typeof StopLandmark)[keyof typeof StopLandmark]
 
 /** Rival fijo de una parada de jefe; `passives` son sus pasivas de tipo, escritas a mano (sin ellas no tiene) */
@@ -92,6 +95,8 @@ export interface RouteNode {
   potion?: Potion
   /** Obligatorio en las paradas de gimnasio (`NodeKind.Gym`): de qué gimnasio es su líder */
   gym?: GymId
+  /** Obligatorio en las paradas de entrenador (`NodeKind.Trainer`): qué entrenador espera en ella */
+  trainer?: TrainerId
   /** Elemento que aparece en la escena al acercarse a esta parada y que se queda a su lado mientras está en ella */
   landmark?: StopLandmark
 }
@@ -183,6 +188,7 @@ export function pathSpecies(r: Route, path: string[]): number[] {
     const n = node(r, id)
     if (n.boss) return [n.boss.speciesId]
     if (n.gym) return GYMS[n.gym].team.map((b) => b.speciesId)
+    if (n.trainer) return TRAINERS[n.trainer].team.map((b) => b.speciesId)
     return n.kind === NodeKind.Wild ? (n.encounters ?? r.encounters).map((e) => e.speciesId) : []
   })
   return [...new Set(ids)]
@@ -194,14 +200,17 @@ export function wildSpecies(r: Route): number[] {
   return [...new Set(lists.flat().map((e) => e.speciesId))]
 }
 
-/** Ruta de gimnasio: tiene una parada de gimnasio (no admite expediciones) */
-export const isGymRoute = (r: Route): boolean => r.nodes.some((n) => n.kind === NodeKind.Gym)
+/** Ruta en la que solo luchan líderes de gimnasio o entrenadores (ni salvajes ni jefes): no lleva salvajes ni expediciones */
+export const onlyTrainerFights = (r: Route): boolean => !r.nodes.some((n) => n.kind === NodeKind.Wild || n.kind === NodeKind.Boss || n.kind === NodeKind.Raid)
+
+/** Paradas con combate de la ruta (la de entrenador cuenta como una, aunque saque varios Pokémon) */
+const FIGHT_STOPS: NodeKind[] = [NodeKind.Wild, NodeKind.Boss, NodeKind.Trainer]
 
 /** Pasos medios que se andan por combate en el camino principal (los de expediciones, que no recorren tramos) */
 export function averageLegSteps(r: Route): number {
   const path = pathFrom(r)
   const steps = path.slice(1).reduce((sum, _, i) => sum + legSteps(r, path, i + 1), 0)
-  const fights = path.filter((id) => node(r, id).kind === NodeKind.Wild || node(r, id).kind === NodeKind.Boss).length
+  const fights = path.filter((id) => FIGHT_STOPS.includes(node(r, id).kind)).length
   return steps / Math.max(1, fights)
 }
 

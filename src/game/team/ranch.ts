@@ -87,9 +87,16 @@ export function train(s: GameState, uid: string, sessions = 1): LevelUpResult | 
   return { levelsGained: m.level - startLevel }
 }
 
-/** Elige compañero: uno del rancho o, para retomar la subida, el que está en la torre */
+/** Actividades del compañero (ruta o torre): mientras dura alguna, no se puede cambiar de compañero */
+const COMPANION_ACTIVITIES: readonly MonPlace[] = [MonPlace.Run, MonPlace.Tower]
+
+/** Si el compañero actual está en ruta o en la torre y no puede cambiarse hasta que vuelva al rancho */
+export const companionBusy = (s: GameState): boolean =>
+  s.activeUid !== null && COMPANION_ACTIVITIES.includes(monPlace(s, s.activeUid))
+
+/** Elige compañero: uno del rancho o, para retomar la subida, el que está en la torre; nunca con el actual fuera */
 export const canBeCompanion = (s: GameState, uid: string): boolean =>
-  !s.run && uid !== s.activeUid && [MonPlace.Ranch, MonPlace.Tower].some((place) => place === monPlace(s, uid))
+  !companionBusy(s) && uid !== s.activeUid && [MonPlace.Ranch, MonPlace.Tower].some((place) => place === monPlace(s, uid))
 
 export function setActive(s: GameState, uid: string) {
   if (!canBeCompanion(s, uid)) return

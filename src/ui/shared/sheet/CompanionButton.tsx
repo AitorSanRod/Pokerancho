@@ -1,12 +1,18 @@
 import type { GameState, OwnedMon } from '../../../game/core/state'
 import { act } from '../../../game/core/store'
-import { canBeCompanion, setActive } from '../../../game/team/ranch'
+import { canBeCompanion, companionBusy, setActive } from '../../../game/team/ranch'
 
 /** Poké Ball de la esquina izquierda de la cabecera: vacía si no es el compañero de viaje y llena si lo es; tocarla lo elige */
 export function CompanionButton({ game, mon }: { game: GameState; mon: OwnedMon }) {
   const isActive = mon.uid === game.activeUid
   const canChoose = canBeCompanion(game, mon.uid)
-  const hint = isActive ? 'Es tu compañero de viaje' : canChoose ? 'Elegir como compañero de viaje' : 'Solo se puede elegir desde el rancho y sin ruta en curso'
+  const hint = isActive
+    ? 'Es tu compañero de viaje'
+    : canChoose
+      ? 'Elegir como compañero de viaje'
+      : companionBusy(game)
+        ? 'Tu compañero está en ruta o en la torre: espera a que vuelva al rancho'
+        : 'Solo se puede elegir desde el rancho'
   return (
     <button
       className={`companion-button ${isActive ? 'on' : ''}`}

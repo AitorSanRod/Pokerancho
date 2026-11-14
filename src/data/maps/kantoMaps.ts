@@ -2,6 +2,7 @@ import { GymId } from '../gyms'
 import { POKEMON } from '../pokemon'
 import { Potion } from '../potions'
 import { RaidTier } from '../raidBosses'
+import { TrainerId } from '../trainers'
 import { asset, Biome, boss, chain, enc, NodeKind, raidBoss, RouteId, StopLandmark, type GameMap } from './mapCommon'
 
 const palletTown = asset(new URL('../../assets/routes/pallet-town.webp', import.meta.url))
@@ -15,6 +16,7 @@ const ciudadCeleste = asset(new URL('../../assets/routes/cerulean-city.webp', im
 const ruta5 = asset(new URL('../../assets/routes/route-5.webp', import.meta.url))
 const ruta6 = asset(new URL('../../assets/routes/route-6.webp', import.meta.url))
 const ciudadCarmin = asset(new URL('../../assets/routes/vermilion-city.webp', import.meta.url))
+const ssAnne = asset(new URL('../../assets/routes/ss-anne.webp', import.meta.url))
 
 export const KANTO: GameMap = {
   id: 'kanto',
@@ -131,25 +133,10 @@ export const KANTO: GameMap = {
       levels: [20, 23],
       encounters: [],
       reward: { tickets: 3, money: 1000, exp: 400 },
-      unlocks: RouteId.CiudadPlateada2,
-      nodes: chain(
-        { id: 's', name: 'Entrada del gimnasio', kind: NodeKind.Start, steps: 0 },
-        { id: 'g', name: 'Brock', kind: NodeKind.Gym, steps: 20, landmark: StopLandmark.Gym, gym: GymId.Plateada },
-      ),
-    },
-    {
-      id: RouteId.CiudadPlateada2,
-      name: 'Ciudad Plateada - Lider',
-      description: 'La ciudad de piedra: su museo guarda fósiles y su gimnasio, Pokémon de tipo roca.',
-      biome: Biome.PewterCity,
-      backdrop: { image: pewterCity, focusY: 45 },
-      levels: [14, 20],
-      encounters: enc([POKEMON.Geodude, 20], [POKEMON.Sandshrew, 15], [POKEMON.Spearow, 15], [POKEMON.Pidgey, 15], [POKEMON.Diglett, 10], [POKEMON.Mankey, 10], [POKEMON.Rattata, 10], [POKEMON.Jigglypuff, 5]),
-      reward: { tickets: 3, money: 1000, exp: 500 },
       unlocks: RouteId.CiudadPlateada3,
       nodes: chain(
         { id: 's', name: 'Entrada del gimnasio', kind: NodeKind.Start, steps: 0 },
-        { id: 'a', name: 'Líder del gimnasio', kind: NodeKind.Raid, steps: 20, boss: raidBoss(POKEMON.Onix, 23, RaidTier.Low, { soloMinutes: 30 }) },
+        { id: 'g', name: 'Brock', kind: NodeKind.Gym, steps: 20, landmark: StopLandmark.Gym, gym: GymId.Plateada },
       ),
     },
     {
@@ -325,9 +312,53 @@ export const KANTO: GameMap = {
       levels: [50, 55],
       encounters: [],
       reward: { tickets: 6, money: 8000, exp: 5500 },
+      unlocks: RouteId.SSAnne,
       nodes: chain(
         { id: 's', name: 'Entrada del gimnasio', kind: NodeKind.Start, steps: 0 },
         { id: 'g', name: 'Lt. Surge', kind: NodeKind.Gym, steps: 20, landmark: StopLandmark.Gym, gym: GymId.CiudadCarmin },
+      ),
+    },
+    {
+      // El crucero atracado en Ciudad Carmín: de la pasarela a la bodega, donde el Team Rocket esconde lo robado
+      id: RouteId.SSAnne,
+      name: 'S. S. Anne',
+      description: 'El Team Rocket se ha colado en el crucero: marineros y reclutas cortan el paso en cada cubierta.',
+      biome: Biome.Ship,
+      backdrop: { image: ssAnne, focusY: 55 },
+      levels: [53, 58],
+      encounters: enc([POKEMON.Vulpix, 20], [POKEMON.Magnemite, 10], [POKEMON.Shellder, 10], [POKEMON.Ditto, 5], [POKEMON.Nidorina, 15], [POKEMON.Nidorino, 15], [POKEMON.Machop, 5], [POKEMON.Wartortle, 19], [POKEMON.Porygon, 1]),
+      reward: { tickets: 5, money: 5000, exp: 6000 },
+      unlocks: RouteId.SSAnne2,
+      nodes: chain(
+        { id: 's', name: 'Pasarela de embarque', kind: NodeKind.Start, steps: 0 },
+        { id: 'a', name: 'Recibidor', kind: NodeKind.Wild, steps: 25, landmark: StopLandmark.Luggage, statMult: 1 },
+        { id: 'b', name: 'Pasillo de camarotes', kind: NodeKind.Wild, steps: 30, statMult: 1 },
+        { id: 'c', name: 'Camarote de la tripulación', kind: NodeKind.Trainer, steps: 25, trainer: TrainerId.MarineroDani },
+        { id: 'd', name: 'Salón de baile', kind: NodeKind.Trainer, steps: 40, trainer: TrainerId.ReclutaRocketSalon },
+        { id: 'e', name: 'Pasillo de primera clase', kind: NodeKind.Wild, steps: 25, statMult: 1.2 },
+        { id: 'g', name: 'Enfermería del barco', kind: NodeKind.Heal, steps: 20, landmark: StopLandmark.Bench, potion: Potion.Potion },
+        { id: 'h', name: 'Escalera a la cubierta inferior', kind: NodeKind.Wild, steps: 35, statMult: 1 },
+        { id: 'i', name: 'Sala de máquinas', kind: NodeKind.Trainer, steps: 30, trainer: TrainerId.MarineroHugo },
+        { id: 'j', name: 'Pasillo del capitán', kind: NodeKind.Trainer, steps: 40, trainer: TrainerId.ReclutaRocketCapitan },
+        { id: 'k', name: 'Camarote del capitán', kind: NodeKind.Heal, steps: 15, landmark: StopLandmark.Bench, potion: Potion.Potion },
+        { id: 'm', name: 'Bodega de carga', kind: NodeKind.Wild, steps: 25, statMult: 1.5 },
+        { id: 'n', name: 'Almacén del contrabando', kind: NodeKind.Wild, steps: 25, landmark: StopLandmark.Luggage, statMult: 1.5 },
+        { id: 'o', name: 'Botín del Team Rocket', kind: NodeKind.Trainer, steps: 40, trainer: TrainerId.JefeRocketBodega },
+      ),
+    },
+    {
+      // El crucero atracado en Ciudad Carmín: de la pasarela a la bodega, donde el Team Rocket esconde lo robado
+      id: RouteId.SSAnne2,
+      name: 'S. S. Anne',
+      description: 'Cuidado, el Jefe Rocket está aquí.',
+      biome: Biome.Ship,
+      backdrop: { image: ssAnne, focusY: 55 },
+      levels: [55, 58],
+      encounters: [],
+      reward: { tickets: 5, money: 5000, exp: 6000 },
+      nodes: chain(
+        { id: 's', name: 'Pasarela de embarque', kind: NodeKind.Start, steps: 0 },
+        { id: 'o', name: 'Giovanni', kind: NodeKind.Trainer, steps: 5, trainer: TrainerId.Giovanni },
       ),
     },
   ],

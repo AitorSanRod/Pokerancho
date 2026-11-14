@@ -5,10 +5,10 @@ import { baseSpeciesOf, SPECIES } from '../../data/species'
 import { combineKind, CombineKind } from '../collection/pieces'
 import { isFavorite, toggleFavorite } from '../collection/dex'
 import { initialState, ownedOfSpecies, type GameState } from '../core/state'
+import { testExpedition } from '../core/test-utils'
 import { tradedMon } from '../trade/tradeGive'
 import { buyFormItem, buyFormItemBlocker, changeForm, changeFormBlocker, formChoices, hasFormItem } from './forms'
 import { createMon } from './mons'
-import { ExpeditionFocus } from './expeditionFocus'
 import { maxHp } from './stats'
 
 const ITEM = FORM_ITEM_IDS[0]
@@ -82,7 +82,7 @@ describe('cambio de forma', () => {
   it('no cambia fuera del rancho ni de la Caja, ni a una forma de otra especie', () => {
     const { s, uid } = withMon()
     s.formItems.push(ITEM)
-    s.expeditions.push({ uid, routeId: RouteId.PuebloPaleta, durationMin: 15, focus: ExpeditionFocus.Exp, elapsedMin: 0 })
+    s.expeditions.push(testExpedition(uid, RouteId.PuebloPaleta, { durationMin: 15, elapsedMin: 0 }))
     expect(changeForm(s, uid, FORM)).toBe(false)
     const other = createMon(SPECIES.find((sp) => formChoices(sp.id).length === 0)!.id, LEVEL)
     s.owned.push(other)

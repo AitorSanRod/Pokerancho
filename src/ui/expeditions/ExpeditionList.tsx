@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { route } from '../../data/maps'
+import { findRoute } from '../../data/maps'
 import { species } from '../../data/species'
 import { findMon, type GameState } from '../../game/core/state'
 import { act } from '../../game/core/store'
@@ -10,7 +10,7 @@ import { formatMinutes } from '../shared/format'
 import { earningsRewards, levelUpReward } from '../shared/rewardItems'
 import { RewardOverlay, type RewardItem } from '../shared/RewardOverlay'
 import { FOCUS_INFO } from './focusText'
-import { RouteRow } from '../route/RouteRow'
+import { BackdropRow } from '../route/RouteRow'
 
 /** Pokémon de expedición: lo que les queda (con opción de cancelar) y, a los que han vuelto, el botón para recoger su premio */
 export function ExpeditionList({ game }: { game: GameState }) {
@@ -39,15 +39,17 @@ export function ExpeditionList({ game }: { game: GameState }) {
         const name = species(mon.speciesId).name
         const done = isExpeditionDone(e)
         const left = (e.durationMin - e.elapsedMin) / game.timeScale
+        // Una ruta quitada del mapa ya no tiene imagen; la expedición sigue igual
+        const backdrop = findRoute(e.routeId)?.backdrop
         return (
-          <RouteRow key={e.uid} route={route(e.routeId)}>
+          <BackdropRow key={e.uid} image={backdrop?.image} focusY={backdrop?.focusY}>
             <Sprite id={mon.speciesId} size={56} animated={false} shiny={mon.shiny} />
             <span className="grow small expedition-info">
               <strong>
                 {name} <span className="muted">Nv. {mon.level}</span>
               </strong>
               <span className="muted">
-                {route(e.routeId).name} · {FOCUS_INFO[e.focus].label} · {done ? '¡Ha vuelto!' : `quedan ${formatMinutes(left)}`}
+                {e.terms.routeName} ·{FOCUS_INFO[e.focus].label} · {done ? '¡Ha vuelto!' : `quedan ${formatMinutes(left)}`}
               </span>
               {!done && <Bar value={e.elapsedMin} max={e.durationMin} kind="steps" />}
             </span>
@@ -60,7 +62,7 @@ export function ExpeditionList({ game }: { game: GameState }) {
                 Cancelar
               </button>
             )}
-          </RouteRow>
+          </BackdropRow>
         )
       })}
       {cancelling && (

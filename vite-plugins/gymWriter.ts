@@ -2,24 +2,14 @@
 // nuevo, lo da de alta en GymId.
 
 import { readFileSync, writeFileSync } from 'node:fs'
-import type { IncomingMessage, ServerResponse } from 'node:http'
 import { join } from 'node:path'
-import type { Plugin } from 'vite'
 import { addGymId, hasGymId, parseGymWrite, upsertGym } from './gymFiles.ts'
+import { toolWriter } from './toolHttp.ts'
 
 /** Lo llama tools/route-editor/gym/gymWrite.ts */
 const GYM_WRITE_URL = '/__tools/gym'
 
 const FILE = 'src/data/gyms.ts'
-
-function readBody(req: IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let body = ''
-    req.on('data', (chunk: Buffer) => (body += chunk.toString('utf8')))
-    req.on('end', () => resolve(body))
-    req.on('error', reject)
-  })
-}
 
 /** Escribe el gimnasio; devuelve qué ha hecho, para el aviso del editor */
 function writeGym(root: string, body: unknown) {
@@ -33,25 +23,4 @@ function writeGym(root: string, body: unknown) {
   return { file: FILE, created: isNew }
 }
 
-function send(res: ServerResponse, status: number, data: unknown) {
-  res.statusCode = status
-  res.setHeader('Content-Type', 'application/json')
-  res.end(JSON.stringify(data))
-}
-
-export function gymWriter(): Plugin {
-  return {
-    name: 'gym-writer',
-    apply: 'serve',
-    configureServer(server) {
-      server.middlewares.use(GYM_WRITE_URL, async (req, res) => {
-        if (req.method !== 'POST') return send(res, 405, { error: 'Solo POST' })
-        try {
-          send(res, 200, writeGym(server.config.root, JSON.parse(await readBody(req))))
-        } catch (e) {
-          send(res, 400, { error: (e as Error).message })
-        }
-      })
-    },
-  }
-}
+export const gymWriter = () => toolWriter('gym-writer', GYM_WRITE_URL, writeGym)

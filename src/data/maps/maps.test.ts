@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GYMS } from '../gyms'
 import { incursionMove, moveClass, MoveClass } from '../incursionMoves'
-import { isGymRoute, isValidPath, KANTO, node, NodeKind, pathFrom, pathSpecies, type Route } from './index'
+import { isValidPath, KANTO, node, NodeKind, onlyTrainerFights, pathFrom, pathSpecies, type Route } from './index'
 
 function reachableIds(r: Route): Set<string> {
   const byId = new Map(r.nodes.map((n) => [n.id, n]))
@@ -37,8 +37,8 @@ describe.each(KANTO.routes)('ruta $id', (r) => {
     expect(isValidPath(r, pathFrom(r))).toBe(true)
   })
 
-  it('cada lista de encuentros suma 100% y no tiene probabilidades a 0 (los gimnasios no tienen salvajes)', () => {
-    if (isGymRoute(r)) return expect(r.encounters).toEqual([])
+  it('cada lista de encuentros suma 100% y no tiene probabilidades a 0 (si solo luchan líderes o entrenadores, no hay lista)', () => {
+    if (onlyTrainerFights(r)) return expect(r.encounters).toEqual([])
     const pools = [r.encounters, ...r.nodes.map((n) => n.encounters ?? r.encounters)]
     for (const pool of pools) {
       expect(pool.reduce((sum, e) => sum + e.chance, 0)).toBe(100)

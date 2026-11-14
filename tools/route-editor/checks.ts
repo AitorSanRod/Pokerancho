@@ -51,9 +51,12 @@ export function draftIssues(d: RouteDraft): string[] {
   return issues
 }
 
+/** Tipos de parada con combate (la de entrenador o gimnasio cuenta como uno, aunque saque varios Pokémon) */
+const FIGHTS = ['Wild', 'Boss', 'Raid', 'Trainer', 'Gym']
+
 /** Resumen de la ruta: pasos en total y combates */
 export function draftSummary(d: RouteDraft): string {
   const steps = d.nodes.reduce((sum, n) => sum + (Number(n.steps) || 0), 0)
-  const fights = d.nodes.filter((n) => n.kind === 'Wild' || n.kind === 'Boss' || n.kind === 'Raid').length
+  const fights = d.nodes.filter((n) => FIGHTS.includes(n.kind)).length
   return `${d.nodes.length} paradas · ${steps} pasos · ${fights} combates`
 }

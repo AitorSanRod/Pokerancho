@@ -1,9 +1,11 @@
 import { route, wildSpecies } from '../../data/maps'
 import { rarityOf, SPECIES, type Rarity } from '../../data/species'
 import { markCaught, markSeen } from '../collection/dex'
+import { EXPEDITION_DURATIONS, expeditionTerms } from '../team/expedition'
+import { ExpeditionFocus } from '../team/expeditionFocus'
 import { createMon, NEW_MON_LEVEL } from '../team/mons'
 import type { Rng } from './random'
-import type { GameState } from './state'
+import type { Expedition, GameState } from './state'
 
 /** Rng determinista que devuelve los valores dados en bucle */
 export function seqRng(...values: number[]): Rng {
@@ -23,6 +25,12 @@ export function chooseStarter(s: GameState, speciesId: number) {
   s.activeUid = mon.uid
   s.tutorial = null
   markCaught(s, speciesId)
+}
+
+/** Una expedición a la ruta con sus condiciones, sin pasar por las reglas de sendExpedition */
+export function testExpedition(uid: string, routeId: string, fields: Partial<Omit<Expedition, 'uid' | 'routeId'>> = {}): Expedition {
+  const { durationMin = EXPEDITION_DURATIONS[0], focus = ExpeditionFocus.Exp, elapsedMin = 0 } = fields
+  return { uid, routeId, durationMin, focus, elapsedMin, terms: expeditionTerms(route(routeId), durationMin, focus), ...fields }
 }
 
 /** Completa la ruta y ve todos sus salvajes, para poder mandar expediciones a ella */

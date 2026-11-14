@@ -4,12 +4,11 @@ import { RouteId } from '../../data/maps'
 import { SPECIES } from '../../data/species'
 import { addStarItems, starItemFor, starItemsOf } from '../collection/starItems'
 import { initialState } from '../core/state'
-import { chooseStarter } from '../core/test-utils'
+import { chooseStarter, testExpedition } from '../core/test-utils'
 import { evolve, evolveBlocker, evolvePrice } from './evolution'
 import { createMon, NEW_MON_LEVEL } from './mons'
 import { RANCH_SLOTS, usedSlots } from './ranches'
 import { maxHp } from './stats'
-import { ExpeditionFocus } from './expeditionFocus'
 import { stonesOf } from './stones'
 
 const firstEvolution = (match: (from: number, e: Evolution) => boolean) => {
@@ -96,7 +95,7 @@ describe('evolve', () => {
   it('no evoluciona a una especie que no le corresponde ni fuera del rancho o la Caja', () => {
     const { s, mon } = stateReady()
     expect(evolveBlocker(s, mon.uid, NOT_INTO)).not.toBeNull()
-    s.expeditions.push({ uid: mon.uid, routeId: RouteId.PuebloPaleta, durationMin: 15, focus: ExpeditionFocus.Exp, elapsedMin: 0 })
+    s.expeditions.push(testExpedition(mon.uid, RouteId.PuebloPaleta, { durationMin: 15, elapsedMin: 0 }))
     expect(evolveBlocker(s, mon.uid, INTO)).toMatch(/rancho/)
   })
 

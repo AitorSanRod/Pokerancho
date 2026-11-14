@@ -1,21 +1,12 @@
 // Avisos del gimnasio: lo que haría que no compilase o que el juego lo rechazase. Con avisos no se guarda en el juego.
 
 import { MAX_LEVEL } from '../../../src/game/team/stats'
-import { SPECIES_KEYS } from '../catalog'
-import { badgeOwner, isDamageMove } from './gymCatalog'
-import { badgeName, BADGES_BY_KEY, type GymDraft, type GymFoeDraft } from './gymDraft'
+import { teamIssues, teamSummary } from '../team/teamCode'
+import { badgeOwner } from './gymCatalog'
+import { badgeName, BADGES_BY_KEY, type GymDraft } from './gymDraft'
 
 const ID_KEY = /^[A-Z][A-Za-z0-9]*$/
 const ID_VALUE = /^[a-z0-9]+(-[a-z0-9]+)*$/
-
-function foeIssues(f: GymFoeDraft, n: number): string[] {
-  const out: string[] = []
-  if (!SPECIES_KEYS.includes(f.species)) out.push(`Pokémon ${n}: «${f.species}» no es un Pokémon`)
-  if (!(f.level >= 1 && f.level <= MAX_LEVEL)) out.push(`Pokémon ${n}: el nivel va de 1 a ${MAX_LEVEL}`)
-  if (f.statMult !== null && !(f.statMult > 0)) out.push(`Pokémon ${n}: el multiplicador de stats tiene que ser mayor que 0`)
-  for (const m of f.moves.filter(Boolean)) if (!isDamageMove(m)) out.push(`Pokémon ${n}: «${m}» no es un ataque de daño`)
-  return out
-}
 
 export function gymIssues(d: GymDraft): string[] {
   const out: string[] = []
@@ -26,13 +17,10 @@ export function gymIssues(d: GymDraft): string[] {
   const owner = badgeOwner(d.badge, d.idKey)
   if (owner) out.push(`La ${badgeName(d.badge)} ya la da el gimnasio ${owner}`)
   if (!(d.maxLevel >= 1 && d.maxLevel <= MAX_LEVEL)) out.push(`El nivel máximo para entrar va de 1 a ${MAX_LEVEL}`)
-  if (d.team.length === 0) out.push('El líder necesita al menos un Pokémon')
-  d.team.forEach((f, i) => out.push(...foeIssues(f, i + 1)))
+  out.push(...teamIssues(d.team, 'El líder'))
   return out
 }
 
 export function gymSummary(d: GymDraft): string {
-  const levels = d.team.map((f) => f.level)
-  const range = levels.length ? ` · Nv. ${Math.min(...levels)}–${Math.max(...levels)}` : ''
-  return `${d.leader || 'Sin líder'} · ${d.team.length} Pokémon${range} · entran hasta Nv. ${d.maxLevel} · ${badgeName(d.badge) || 'sin medalla'}`
+  return `${d.leader || 'Sin líder'} · ${teamSummary(d.team)} · entran hasta Nv. ${d.maxLevel} · ${badgeName(d.badge) || 'sin medalla'}`
 }

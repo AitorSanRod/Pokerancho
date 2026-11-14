@@ -8,7 +8,7 @@ Escenas hechas: **Prado** (bioma `Meadow`: Ruta 1 y Ruta 1 - Final), **Pueblo Pa
 **Bosque Verde** (`Forest`), **Ciudad Plateada** (`PewterCity`, ciudad de piedra de día con el museo y el gimnasio),
 **Cueva** (`Cave`, la incursión Cueva Helada y las raids: penumbra violeta, estalactitas y cristales), **Monte Moon**
 (`MtMoon`, ver abajo), **Mar** (`Sea`, ruta marina: islotes,
-rocas con espuma y agua en la que nada el Pokémon) , **Ciudad Celeste** (`CeruleanCity`, ver abajo), **Ciudad Carmín** (`VermilionCity`, ver abajo) y **Prado al
+rocas con espuma y agua en la que nada el Pokémon) , **Ciudad Celeste** (`CeruleanCity`, ver abajo), **Ciudad Carmín** (`VermilionCity`, ver abajo), **Barco** (`Ship`, ver abajo) y **Prado al
 atardecer** (`MeadowDusk`, Rutas 5 y 6, ver abajo). Todos los biomas
 tienen escena pixel art.
 
@@ -39,6 +39,14 @@ puertas de madera y automáticas de cristal, estanterías, máquinas, pizarra y 
 parqué con filas que se ensanchan hacia delante, mesas de laboratorio con cosas encima y plantas en maceta (alguna
 grande en primer plano). El parqué va a parallax 0,7 (y el cartel con él): a 1, como el camino de fuera, sus juntas hacen
 que el Pokémon parezca deslizarse. Para otro interior basta otra paleta y otro reparto de piezas.
+
+**Barco** (`scenes/ship/`, bioma `Ship`: S. S. Anne) es el pasillo de un barco de pasajeros de día, hecho a partir
+del Laboratorio: pared crema con zócalo de caoba y pasamanos de latón, algún ojo de buey suelto o por parejas con el
+mar (`elements/porthole`), puertas de camarote con su número en una placa, cuadros de un velero, salvavidas y
+apliques encendidos en los huecos (`elements/shipDecor`), techo con vigas y plafones y moqueta roja con cenefa dorada
+entre dos franjas de tarima; pared, techo, moqueta y paradas van al mismo parallax (0,7, como el parqué). Sin plantas ni cartel: las paradas son un banco y unas
+maletas (`StopLandmark.Bench` y `Luggage`, `elements/shipFurniture`), que no salen como muebles del fondo para no
+repetirse.
 
 **Monte Moon** (`scenes/mtMoon/`) parte de la Cueva: casi a oscuras, la luz sale de los cristales y aclara por
 bandas la roca de alrededor (`light.ts › relight`, sin halos); rocas de caras planas (`crag`, no de bolas, que parecían
@@ -262,6 +270,9 @@ Parallax habitual: nubes 0,02–0,03 · colinas 0,05–0,1 · plano lejano 0,1�
 | `bigWindow` | Ventanal de interior con el exterior de día (cielo, nube, árboles), parteluces, travesaño, alféizar y reflejos |
 | `interiorDoors` | `woodDoor` (cuarterones, ventanuco y pomo) y `glassDoor` (automática de dos hojas con sensor), con su jamba |
 | `bookcase`, `labMachine`, `wallDecor` | Estantería con libros; armario de ordenador y `monitor`; `whiteboard` y `wallClock` |
+| `porthole` | Ojo de buey: aro de latón con remaches y el mar de día dentro (cielo, nube, olas y reflejo) |
+| `shipDecor` | Pared de barco: `doorPlate` (placa con el número del camarote), `sconce` (aplique encendido con halo), `seaPicture` (cuadro de un velero), `lifeRing` (salvavidas a franjas colgado) |
+| `shipFurniture` | `bench` (banco con respaldo y cojín) y `luggageStack` (maletas apiladas con correas y asa) |
 | `labBench`, `pottedPlant` | Mesa de laboratorio con cajonera y cosas encima (monitor, matraces, microscopio, libros); planta en maceta |
 | `signpost`, `pixelFont` | Cartel de madera (`signLandmark`): en el juego lleva el **nombre de la ruta** (`Landmark.relabel`, `pixelSceneFor(bioma, nombre)`), en una o dos líneas (parte en « - » y por palabras); fuente de 5 px de alto con A–Z, 0–9 y `- . '` (sin tildes) |
 

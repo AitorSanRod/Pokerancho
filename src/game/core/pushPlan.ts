@@ -22,7 +22,7 @@ function expeditionJobs(s: GameState, now: number): PushJob[] {
       if (!mon) return []
       const dueAt = now + ((e.durationMin - e.elapsedMin) * 60_000) / s.timeScale
       const name = species(mon.speciesId).name
-      return [{ topic: PushTopic.Expedition, key: e.uid, dueAt, title: `¡${name} ha vuelto!`, body: `Ha terminado su expedición por ${route(e.routeId).name}. Toca para recoger el premio.` }]
+      return [{ topic: PushTopic.Expedition, key: e.uid, dueAt, title: `¡${name} ha vuelto!`, body: `Ha terminado su expedición por ${e.terms.routeName}. Toca para recoger el premio.` }]
     })
 }
 

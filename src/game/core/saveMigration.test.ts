@@ -10,7 +10,7 @@ import { TM_IDS } from '../../data/tms'
 import { STARTERS } from '../../data/species'
 import { Stone } from '../../data/stones'
 import { startRun } from '../run/run'
-import { EXPEDITION_DURATIONS } from '../team/expedition'
+import { collectExpedition, EXPEDITION_DURATIONS } from '../team/expedition'
 import { createMon } from '../team/mons'
 import { UPGRADES } from '../team/upgrades'
 import { stateFromSaved } from './cloudSave'
@@ -19,6 +19,7 @@ import { ExpeditionFocus } from '../team/expeditionFocus'
 import { initialState, MonPlace, monPlace, SAVE_VERSION, type GameState } from './state'
 import { BADGE_IDS } from '../../data/badges'
 import { backupTeam } from './teamBackup'
+import { testExpedition } from './test-utils'
 
 vi.mock('../../data/maps/kantoMaps', () => import('./test-map'))
 
@@ -62,8 +63,8 @@ function advancedGame(): GameState {
     completedRoutes: [RouteId.PuebloPaleta],
     // El activo también puede estar de expedición (sin ruta en curso)
     expeditions: [
-      { uid: second.uid, routeId: RouteId.PuebloPaleta, durationMin: EXPEDITION_DURATIONS[0], focus: ExpeditionFocus.Loot, elapsedMin: 2 },
-      { uid: first.uid, routeId: RouteId.PuebloPaleta, durationMin: EXPEDITION_DURATIONS.at(-1)!, focus: ExpeditionFocus.Money, elapsedMin: 7 },
+      testExpedition(second.uid, RouteId.PuebloPaleta, { durationMin: EXPEDITION_DURATIONS[0], focus: ExpeditionFocus.Loot, elapsedMin: 2 }),
+      testExpedition(first.uid, RouteId.PuebloPaleta, { durationMin: EXPEDITION_DURATIONS.at(-1)!, focus: ExpeditionFocus.Money, elapsedMin: 7 }),
     ],
     raidPrizes: [{ bossSpeciesId: C, uid: first.uid, money: 80, tickets: 1, pieces: 1, exp: 5 }],
     routeRaidStreaks: { 'bosque-verde/g': { count: 2, lastAt: 1000 } },
@@ -250,6 +251,16 @@ describe('al actualizar el juego no se pierde nada', () => {
     const migrated = migrateSave(save)!
     expect(migrated.expeditions.map((e) => e.uid)).toEqual(s.expeditions.map((e) => e.uid))
     expect(migrated.expeditions.every((e) => e.focus === ExpeditionFocus.Exp)).toBe(true)
+  })
+
+  it('las expediciones nunca se pierden al cambiar de versión: siguen con sus condiciones aunque su ruta ya no exista', () => {
+    const s = advancedGame()
+    const save = fromOldVersion(s)
+    for (const e of save.expeditions) e.routeId = 'ruta-quitada'
+    const migrated = migrateSave(save)!
+    expect(migrated.expeditions.map((e) => e.terms)).toEqual(s.expeditions.map((e) => e.terms))
+    for (const e of migrated.expeditions) e.elapsedMin = e.durationMin
+    expect(migrated.expeditions.every((e) => collectExpedition(migrated, e.uid) !== null)).toBe(true)
   })
 
   it('si un campo cambia de significado, su paso de SAVE_MIGRATIONS lo convierte antes del rescate', () => {

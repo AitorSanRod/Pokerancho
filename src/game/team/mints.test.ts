@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { Nature } from '../../data/natures'
 import { initialState, type GameState } from '../core/state'
-import { seqRng } from '../core/test-utils'
+import { RouteId } from '../../data/maps'
+import { seqRng, testExpedition } from '../core/test-utils'
 import { applyMint, buyMint, MINT_PRICE, mintBlocker, mintsOf } from './mints'
-import { ExpeditionFocus } from './expeditionFocus'
 import { createMon } from './mons'
 
 function withMon(nature: Nature = Nature.Serious): { s: GameState; uid: string } {
@@ -51,7 +51,7 @@ describe('Menta aleatoria', () => {
     const { s, uid } = withMon()
     s.mints = 1
     expect(mintBlocker(s, 'nadie')).not.toBeNull()
-    s.expeditions.push({ uid, routeId: 'ruta', durationMin: 1, focus: ExpeditionFocus.Exp, elapsedMin: 0 })
+    s.expeditions.push(testExpedition(uid, RouteId.PuebloPaleta, { durationMin: 1, elapsedMin: 0 }))
     expect(applyMint(s, uid)).toBeNull()
     expect(mintsOf(s)).toBe(1)
   })

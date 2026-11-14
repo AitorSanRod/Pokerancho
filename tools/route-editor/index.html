@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Editor de rutas, incursiones y gimnasios</title>
+    <title>Editor de rutas, incursiones, gimnasios y entrenadores</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="./editor.css" />
   </head>
@@ -14,6 +14,7 @@
         <option value="route">Rutas</option>
         <option value="incursion">Incursiones</option>
         <option value="gym">Gimnasios</option>
+        <option value="trainer">Entrenadores</option>
       </select>
       <select id="load"></select>
       <button id="paste" type="button">Pegar código</button>
@@ -23,6 +24,10 @@
     <main class="editor">
       <div id="form" class="form"></div>
       <aside class="output">
+        <section id="preview-card" class="card preview-card">
+          <h2>Vista previa <small>(con las piezas del juego)</small></h2>
+          <iframe id="preview" class="preview-frame" src="./preview/" title="Vista previa"></iframe>
+        </section>
         <section class="card">
           <h2>Avisos</h2>
           <ul id="issues" class="issues"></ul>

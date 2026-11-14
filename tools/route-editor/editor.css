@@ -57,9 +57,15 @@ body {
   flex-direction: column;
   gap: 16px;
 }
+/* Fija al bajar por el formulario; con la vista previa no cabe entera y se desplaza por dentro */
 .output {
   position: sticky;
   top: 70px;
+  max-height: calc(100vh - 86px);
+  overflow-y: auto;
+}
+.output > * {
+  flex-shrink: 0;
 }
 .card {
   background: var(--panel);
@@ -230,6 +236,9 @@ button.wide {
 .kind-Gym {
   border-left-color: #b8a038;
 }
+.kind-Trainer {
+  border-left-color: #f08030;
+}
 .leader-gif {
   height: 80px;
   image-rendering: pixelated;
@@ -368,4 +377,72 @@ button.primary {
 button:disabled {
   opacity: 0.5;
   cursor: progress;
+}
+
+/* Aspectos de entrenador: tarjetas con su dibujo, se elige una tocándola */
+.looks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.look {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 8px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.look.on {
+  border-color: var(--accent);
+  background: var(--panel-2);
+}
+.look input {
+  display: none;
+}
+.look img,
+.foe-strip img.trainer {
+  height: 72px;
+  image-rendering: pixelated;
+}
+.look small {
+  color: var(--muted);
+}
+
+/* En la tarjeta de una parada de entrenador o de gimnasio: quién es y su equipo */
+.foe-strip {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.foe-strip figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 11px;
+  color: var(--muted);
+}
+.foe-strip figure img {
+  width: 48px;
+  height: 48px;
+  image-rendering: pixelated;
+}
+
+/* Vista previa con las piezas del juego (iframe: preview/) */
+.preview-card {
+  padding: 0;
+  overflow: hidden;
+}
+.preview-card h2 {
+  padding: 12px 16px 0;
+}
+.preview-frame {
+  display: block;
+  width: 100%;
+  height: 600px;
+  border: 0;
 }

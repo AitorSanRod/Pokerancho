@@ -105,6 +105,8 @@ export interface BattleSide {
   maxHp: number
   /** El ataque que usa, si no es el suyo de siempre (p. ej. el elegido en la torre) */
   move?: Move
+  /** Con los colores shiny (rivales shiny de ruta); sin él, normal */
+  shiny?: boolean
 }
 
 /** El ataque con el que pega ese lado: el que lleva el registro o el suyo de siempre */

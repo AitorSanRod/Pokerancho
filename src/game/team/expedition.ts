@@ -1,4 +1,4 @@
-import { averageLegSteps, isGymRoute, route, wildSpecies, type Route } from '../../data/maps'
+import { averageLegSteps, onlyTrainerFights, route, wildSpecies, type Route } from '../../data/maps'
 import { species } from '../../data/species'
 import { expReward, moneyReward, pieceReward, ticketReward } from '../battle/rewards'
 import { isSeen } from '../collection/dex'
@@ -6,7 +6,7 @@ import { MissionKind } from '../../data/dailyMissions'
 import { advanceMission } from '../collection/missions'
 import { addPieces } from '../collection/pieces'
 import { pickEncounter, randInt, type Rng } from '../core/random'
-import { findMon, MonPlace, monPlace, type Expedition, type GameState, type OwnedMon } from '../core/state'
+import { findMon, MonPlace, monPlace, type Expedition, type ExpeditionTerms, type GameState, type OwnedMon } from '../core/state'
 import { gainExp, type LevelUpResult } from './stats'
 import { upgradeLevel } from './upgrades'
 import { ExpeditionFocus, focusMult, isExpeditionFocus } from './expeditionFocus'
@@ -59,23 +59,33 @@ export function expeditionBlocker(s: GameState, uid: string): string | null {
 
 /** Por qué no se puede mandar a nadie a esa ruta (solo a las completadas y con sus salvajes vistos), o null si se puede */
 export function expeditionRouteBlocker(s: GameState, routeId: string): string | null {
-  if (isGymRoute(route(routeId))) return 'A los gimnasios no se va de expedición.'
+  if (onlyTrainerFights(route(routeId))) return 'Aquí solo hay entrenadores: no se va de expedición.'
   if (!s.completedRoutes.includes(routeId)) return 'Complétala primero para mandar expediciones a ella.'
   const missing = wildSpecies(route(routeId)).filter((id) => !isSeen(s, id)).length
   if (missing === 0) return null
   return missing === 1 ? 'Falta 1 Pokémon por descubrir en ella.' : `Faltan ${missing} Pokémon por descubrir en ella.`
 }
 
-/** Al cargar la partida: quita, sin premio, las expediciones a rutas a las que ya no se puede mandar (de antes de la regla) */
-export function cancelBlockedExpeditions(s: GameState) {
-  s.expeditions = s.expeditions.filter((e) => !expeditionRouteBlocker(s, e.routeId))
-}
-
 /** Manda al Pokémon de expedición, con lo que se quiere sacar de ella (`focus`) */
 export function sendExpedition(s: GameState, uid: string, routeId: string, durationMin: number, focus: ExpeditionFocus) {
   if (expeditionBlocker(s, uid) || expeditionRouteBlocker(s, routeId)) return
   if (!EXPEDITION_DURATIONS.includes(durationMin) || !isExpeditionFocus(focus)) return
-  s.expeditions.push({ uid, routeId, durationMin, focus, elapsedMin: 0 })
+  s.expeditions.push({ uid, routeId, durationMin, focus, elapsedMin: 0, terms: expeditionTerms(route(routeId), durationMin, focus) })
+}
+
+/** Las condiciones con las que sale una expedición a la ruta `r`: las de ahora, que ya no cambian hasta que vuelva */
+export function expeditionTerms(r: Route, durationMin: number, focus: ExpeditionFocus): ExpeditionTerms {
+  const mult = expeditionRewardMult(durationMin)
+  return {
+    routeName: r.name,
+    levels: [...r.levels],
+    encounters: r.encounters.map((x) => ({ ...x })),
+    legSteps: averageLegSteps(r),
+    battles: expeditionBattles(durationMin),
+    expMult: mult * focusMult(focus, ExpeditionFocus.Exp),
+    moneyMult: mult * focusMult(focus, ExpeditionFocus.Money),
+    lootMult: focusMult(focus, ExpeditionFocus.Loot),
+  }
 }
 
 export function advanceExpeditions(s: GameState, minutes: number) {
@@ -95,7 +105,11 @@ export function cancelExpedition(s: GameState, uid: string): boolean {
 export const expeditionBattles = (durationMin: number): number =>
   Math.max(1, Math.round((durationMin / 60) * BATTLES_PER_HOUR))
 
-export const expeditionRewardMult = (durationMin: number): number => DURATION_REWARD_MULT[durationMin]
+/** El de la duración; una que ya no se puede elegir (de una partida antigua), el de la más parecida de ahora */
+export function expeditionRewardMult(durationMin: number): number {
+  const closest = EXPEDITION_DURATIONS.reduce((a, b) => (Math.abs(b - durationMin) < Math.abs(a - durationMin) ? b : a))
+  return DURATION_REWARD_MULT[durationMin] ?? DURATION_REWARD_MULT[closest]
+}
 
 /**
  * `amount × mult` en unidades enteras: la parte decimal se convierte en una unidad más con esa probabilidad (×1,5: 1 o
@@ -108,27 +122,23 @@ export function scaleCount(amount: number, mult: number, rng: Rng): number {
 }
 
 /** Probabilidad de ganar cada combate: crece con el nivel del Pokémon frente al nivel medio de la ruta */
-export function expeditionWinRate(mon: OwnedMon, r: Route): number {
-  const routeLevel = (r.levels[0] + r.levels[1]) / 2
+export function expeditionWinRate(mon: OwnedMon, { levels }: Pick<Route, 'levels'>): number {
+  const routeLevel = (levels[0] + levels[1]) / 2
   return Math.min(1, Math.max(MIN_WIN_RATE, mon.level / routeLevel))
 }
 
 /**
- * Recoge una expedición terminada: simula sus combates de forma resumida y entrega el premio según su enfoque (EXP y ₽,
- * también según la duración). La EXP sale de las victorias, como en las rutas (sin EXP de rivales muy inferiores al Pokémon).
+ * Recoge una expedición terminada: simula sus combates de forma resumida y entrega el premio según sus condiciones (las
+ * de cuando salió: ruta, duración y enfoque). La EXP sale de las victorias, como en las rutas (sin EXP de rivales muy inferiores al Pokémon).
  */
 export function collectExpedition(s: GameState, uid: string, rng: Rng = Math.random): ExpeditionResult | null {
   const e = s.expeditions.find((x) => x.uid === uid)
   const mon = findMon(s, uid)
   if (!e || !mon || !isExpeditionDone(e)) return null
-  const r = route(e.routeId)
-  const winRate = expeditionWinRate(mon, r)
-  const mult = expeditionRewardMult(e.durationMin)
-  const expMult = mult * focusMult(e.focus, ExpeditionFocus.Exp)
-  const moneyMult = mult * focusMult(e.focus, ExpeditionFocus.Money)
-  const lootMult = focusMult(e.focus, ExpeditionFocus.Loot)
+  const t = e.terms
+  const winRate = expeditionWinRate(mon, t)
   const result = {
-    battles: expeditionBattles(e.durationMin),
+    battles: t.battles,
     wins: 0,
     exp: 0,
     money: 0,
@@ -137,14 +147,14 @@ export function collectExpedition(s: GameState, uid: string, rng: Rng = Math.ran
   }
 
   for (let i = 0; i < result.battles; i++) {
-    const enemyId = pickEncounter(r.encounters, rng)
-    const level = randInt(r.levels[0], r.levels[1], rng)
+    const enemyId = pickEncounter(t.encounters, rng)
+    const level = randInt(t.levels[0], t.levels[1], rng)
     if (rng() >= winRate) continue
     result.wins++
-    result.exp += Math.round(expReward(level, mon.level) * expMult)
-    result.money += Math.round(moneyReward(level, averageLegSteps(r), rng) * moneyMult)
-    result.tickets += scaleCount(ticketReward(enemyId, rng), lootMult, rng)
-    if (pieceReward(enemyId, rng)) result.pieces.push(...Array<number>(scaleCount(1, lootMult, rng)).fill(enemyId))
+    result.exp += Math.round(expReward(level, mon.level) * t.expMult)
+    result.money += Math.round(moneyReward(level, t.legSteps, rng) * t.moneyMult)
+    result.tickets += scaleCount(ticketReward(enemyId, rng), t.lootMult, rng)
+    if (pieceReward(enemyId, rng)) result.pieces.push(...Array<number>(scaleCount(1, t.lootMult, rng)).fill(enemyId))
   }
 
   s.expeditions = s.expeditions.filter((x) => x !== e)

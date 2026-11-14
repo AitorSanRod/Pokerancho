@@ -40,6 +40,7 @@ function nodeFields(n: NodeDraft): string[] {
   if (n.kind === 'Boss' || n.kind === 'Raid') fields.push(bossCode(n))
   if (n.kind === 'Heal') fields.push(`potion: Potion.${n.potion}`)
   if (n.kind === 'Gym') fields.push(`gym: GymId.${n.gym}`)
+  if (n.kind === 'Trainer') fields.push(`trainer: TrainerId.${n.trainer}`)
   return fields
 }
 

@@ -11,6 +11,8 @@ import { landmarkInView } from '../../game/run/runLandmark'
 import { tapBattle } from '../../game/run/tapCrit'
 import { stepsPerMinute } from '../../game/team/stats'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
+import { LevelUpBurst } from '../shared/sheet/LevelUpBurst'
+import { useLeveledTo } from '../shared/useLeveledTo'
 import { formatMinutes } from '../shared/format'
 import { discoveryReward, earningsRewards, levelUpReward, raidBossReward, repeatNote } from '../shared/rewardItems'
 import { RewardOverlay } from '../shared/RewardOverlay'
@@ -27,7 +29,7 @@ import { ExpBoostBadge, ExpBoostSpawn } from './ExpBoost'
 import { WalkScene } from './WalkScene'
 import { defaultGymMove, pickGymMove, routeGym } from '../../game/run/runGym'
 import { towerMoveBarRoom } from '../tower/TowerMoveBar'
-import { gymScene } from './gym/gymScene'
+import { trainerScene } from './gym/trainerScene'
 import { GymMoveBar } from './gym/GymMoveBar'
 import { badgeReward } from '../profile/badgeReward'
 import './run.css'
@@ -61,7 +63,8 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
   const landmark = inView && { key: `${run.routeId}:${inView.stop}`, id: inView.landmark }
   // En los gimnasios, la barra de ataques va abajo toda la ruta (se cambia también en pleno combate)
   const gymRoute = routeGym(r) !== null
-  const gym = battle ? gymScene(run) : null
+  const trainer = battle ? trainerScene(run) : null
+  const leveledTo = useLeveledTo(mon.level)
 
   return (
     <div
@@ -80,12 +83,13 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
         floaterText={boosted ? `+${BOOST_TAP_EXP} EXP` : undefined}
         landmark={landmark}
         signText={r.name}
+        walkerOverlay={leveledTo !== null && <LevelUpBurst key={leveledTo} level={leveledTo} />}
       >
         {battle && frame && (
           <RouteBattle
             record={battle}
             frame={frame}
-            gym={gym}
+            trainer={trainer}
             enemyOverlay={run.battleSetup && <CritRing record={battle} setup={run.battleSetup} msLeft={run.battleMsLeft} lastTick={game.lastTick} />}
           />
         )}

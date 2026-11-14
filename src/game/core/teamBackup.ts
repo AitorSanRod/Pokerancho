@@ -1,17 +1,16 @@
 // Copia del equipo (los Pokémon y sus expediciones en curso), aparte de la partida: es la red de seguridad si la
 // partida guardada no se puede leer. Normalmente una partida de otra versión se migra entera (saveMigration.ts).
-import { route } from '../../data/maps'
 import type { Nature } from '../../data/natures'
 import { isKnownSpecies } from '../../data/species'
 import { markCaught } from '../collection/dex'
-import { EXPEDITION_DURATIONS } from '../team/expedition'
 import { createMon } from '../team/mons'
 import { isNature } from '../team/natures'
 import { RANCH_EXPANSION_MAX, RANCH_EXPANSION_SLOTS } from '../team/ranchExpansion'
 import { expToNext, MAX_LEVEL, MAX_STARS } from '../team/stats'
 import { UPGRADES } from '../team/upgrades'
 import { ExpeditionFocus, isExpeditionFocus } from '../team/expeditionFocus'
-import type { GameState } from './state'
+import { savedTerms } from '../team/expeditionSalvage'
+import type { ExpeditionTerms, GameState } from './state'
 
 /**
  * Versión del formato de la copia. Es independiente de SAVE_VERSION y solo debe subir si cambia la forma de
@@ -43,6 +42,8 @@ interface BackedUpExpedition {
   /** Las copias de antes del enfoque no lo tienen: EXP */
   focus?: ExpeditionFocus
   elapsedMin: number
+  /** Las copias de antes no las tienen: las de su ruta al rehacerla (expeditionSalvage.ts) */
+  terms?: ExpeditionTerms
 }
 
 export interface TeamBackup {
@@ -67,7 +68,7 @@ export function backupTeam(s: GameState): TeamBackup {
     activeIndex: active >= 0 ? active : null,
     mons: s.owned.map(({ speciesId, level, exp, stars, nature, ranch, shiny }) => ({ speciesId, level, exp, stars, nature, ranch, shiny })),
     expeditions: s.expeditions
-      .map(({ uid, routeId, durationMin, focus, elapsedMin }) => ({ monIndex: indexOf(uid), routeId, durationMin, focus, elapsedMin }))
+      .map(({ uid, ...e }) => ({ monIndex: indexOf(uid), ...e }))
       .filter((e) => e.monIndex >= 0),
     savedAt: s.lastTick,
     ranchExtraSlots: { ...s.ranchExtraSlots },
@@ -76,15 +77,10 @@ export function backupTeam(s: GameState): TeamBackup {
 
 const isInt = (v: unknown, min: number, max: number): v is number => Number.isInteger(v) && (v as number) >= min && (v as number) <= max
 
-const knownRoute = (id: unknown) => {
-  try {
-    return typeof id === 'string' && !!route(id)
-  } catch {
-    return false
-  }
-}
-
-/** Expediciones de la copia que encajan (una por Pokémon, ruta que existe, duración de las que hay) */
+/**
+ * Expediciones de la copia que se pueden leer (una por Pokémon, con ruta, duración y minutos). Ninguna se descarta por
+ * reglas que hayan cambiado (ruta quitada, duración o enfoque que ya no hay): al rehacerlas se dejan terminables
+ */
 function parseExpeditions(raw: unknown, mons: number): BackedUpExpedition[] {
   if (!Array.isArray(raw)) return []
   const seen = new Set<number>()
@@ -94,12 +90,11 @@ function parseExpeditions(raw: unknown, mons: number): BackedUpExpedition[] {
       e !== null &&
       isInt(e.monIndex, 0, mons - 1) &&
       !seen.has(e.monIndex) &&
-      knownRoute(e.routeId) &&
-      EXPEDITION_DURATIONS.includes(e.durationMin) &&
-      (e.focus === undefined || isExpeditionFocus(e.focus)) &&
+      typeof e.routeId === 'string' &&
+      typeof e.durationMin === 'number' &&
+      e.durationMin > 0 &&
       typeof e.elapsedMin === 'number' &&
-      e.elapsedMin >= 0 &&
-      e.elapsedMin <= e.durationMin
+      e.elapsedMin >= 0
     if (ok) seen.add(e.monIndex)
     return ok
   })
@@ -167,8 +162,10 @@ export function restoreTeam(s: GameState, backup: TeamBackup) {
   const active = backup.activeIndex !== null ? s.owned[backup.activeIndex] : s.owned.find((m) => m.ranch !== null)
   s.activeUid = (active ?? s.owned[0]).uid
   s.tutorial = null
-  for (const e of backup.expeditions ?? []) {
-    s.expeditions.push({ uid: s.owned[e.monIndex].uid, routeId: e.routeId, durationMin: e.durationMin, focus: e.focus ?? ExpeditionFocus.Exp, elapsedMin: e.elapsedMin })
+  for (const { monIndex, ...e } of backup.expeditions ?? []) {
+    const focus = isExpeditionFocus(e.focus) ? e.focus : ExpeditionFocus.Exp
+    const elapsedMin = Math.min(e.elapsedMin, e.durationMin)
+    s.expeditions.push({ ...e, uid: s.owned[monIndex].uid, focus, elapsedMin, terms: savedTerms(s, { ...e, focus }) })
   }
   if (backup.savedAt !== undefined && backup.savedAt < s.lastTick) s.lastTick = backup.savedAt
 }

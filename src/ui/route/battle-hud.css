@@ -78,6 +78,14 @@
   background: var(--type-color);
   box-shadow: 0 0 0 1px #0005;
 }
+.hud-shiny {
+  flex-shrink: 0;
+  color: var(--yellow);
+  font-size: 12px;
+  line-height: 14px;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
 .hud-boss {
   flex-shrink: 0;
   padding: 0 4px;

@@ -9,6 +9,7 @@ import { rankingWeek } from '../core/ranking'
 import { runBlocker } from '../run/run'
 import { expeditionBlocker } from '../team/expedition'
 import { setActive } from '../team/ranch'
+import { createMon, NEW_MON_LEVEL } from '../team/mons'
 import {
   abandonTower,
   advanceTower,
@@ -233,6 +234,20 @@ describe('torre infinita', () => {
     s.activeUid = null
     setActive(s, uid)
     expect(canContinueTower(s)).toBe(true)
+  })
+
+  it('con el compañero en la torre no se puede elegir otro hasta que la termine', () => {
+    const s = withMon(MAX_LEVEL)
+    const companion = activeMon(s)!
+    const other = createMon(companion.speciesId, NEW_MON_LEVEL, companion.ranch)
+    s.owned.push(other)
+    startTower(s, firstMove(s), seqRng(0.5))
+    finishBattle(s)
+    setActive(s, other.uid)
+    expect(s.activeUid).toBe(companion.uid)
+    abandonTower(s)
+    setActive(s, other.uid)
+    expect(s.activeUid).toBe(other.uid)
   })
 
 

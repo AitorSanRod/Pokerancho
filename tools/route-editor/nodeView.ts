@@ -4,6 +4,7 @@ import { DICTS, KIND_LABELS, landmarksOf, PASSIVE_LEVEL_OPTS, passiveText, typeN
 import type { NodeDraft } from './draft'
 import { button, checkbox, label, numInput, optNumInput, select, speciesInput, textInput } from './fields'
 import { encounterList } from './routeView'
+import { stopTeam } from './stopTeam'
 
 const opts = (dict: Record<string, unknown>): [string, string][] => Object.keys(dict).map((k) => [k, k])
 
@@ -47,7 +48,8 @@ function kindFields(n: NodeDraft, p: string) {
   if (n.kind === 'Wild') return wildFields(n, p)
   if (n.kind === 'Boss' || n.kind === 'Raid') return bossFields(n, p)
   if (n.kind === 'Heal') return label('Poción', select(`${p}.potion`, n.potion, opts(DICTS.Potion)))
-  if (n.kind === 'Gym') return label('Gimnasio', select(`${p}.gym`, n.gym, opts(DICTS.GymId)))
+  if (n.kind === 'Gym') return label('Gimnasio', select(`${p}.gym`, n.gym, opts(DICTS.GymId))) + stopTeam(n)
+  if (n.kind === 'Trainer') return label('Entrenador', select(`${p}.trainer`, n.trainer, opts(DICTS.TrainerId))) + stopTeam(n)
   return ''
 }
 

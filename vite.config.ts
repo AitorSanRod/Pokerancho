@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { gymWriter } from './vite-plugins/gymWriter.ts'
 import { incursionWriter } from './vite-plugins/incursionWriter.ts'
+import { trainerWriter } from './vite-plugins/trainerWriter.ts'
 import { printToolUrls } from './vite-plugins/toolUrls.ts'
 
 // https://vite.dev/config/
@@ -13,6 +14,7 @@ export default defineConfig({
     printToolUrls(),
     incursionWriter(),
     gymWriter(),
+    trainerWriter(),
     VitePWA({
       // La versión nueva espera a que el jugador acepte recargar (net/appUpdate.ts y ui/shared/UpdatePrompt.tsx)
       registerType: 'prompt',

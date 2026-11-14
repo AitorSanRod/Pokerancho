@@ -128,3 +128,9 @@
   overflow-y: auto;
   padding: 2px 0;
 }
+
+/* Subida de nivel en ruta (LevelUpBurst sobre el Pokémon que camina): el «¡Nv. N!» va por encima de su cabeza */
+.scene-walker .level-up-label {
+  top: -26px;
+  font-size: 18px;
+}

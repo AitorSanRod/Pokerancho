@@ -39,6 +39,7 @@ export function BattleHud({ fighter, hp, statuses, boss = false, struck = false 
           ))}
         </span>
         {boss && <span className="hud-boss">JEFE</span>}
+        {fighter.shiny && <span className="hud-shiny" title="Shiny">★</span>}
         <strong className="hud-name">{fighter.name}</strong>
         <span className="hud-level">
           <small>Nv.</small>

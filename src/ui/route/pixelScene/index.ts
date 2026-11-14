@@ -12,6 +12,7 @@ import { palletTownScene } from './scenes/palletTown'
 import { pewterCityScene } from './scenes/pewterCity'
 import { labScene } from './scenes/lab'
 import { seaScene } from './scenes/sea'
+import { shipScene } from './scenes/ship'
 import { vermilionCityScene } from './scenes/vermilionCity'
 
 export { usePixelScene, type SceneLandmark } from './usePixelScene'
@@ -33,6 +34,7 @@ const BUILDERS: Record<Biome, (seed: number) => SceneDef> = {
   [Biome.Lab]: labScene,
   [Biome.VermilionCity]: vermilionCityScene,
   [Biome.MeadowDusk]: meadowDuskScene,
+  [Biome.Ship]: shipScene,
 }
 const cache = new Map<string, SceneDef>()
 

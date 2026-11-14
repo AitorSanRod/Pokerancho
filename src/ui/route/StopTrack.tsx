@@ -1,20 +1,9 @@
 import { Fragment, useEffect, useRef, type CSSProperties } from 'react'
-import type { Item } from '../../data/items'
-import { ITEM } from '../../data/items'
-import { legSteps, node, NodeKind, route } from '../../data/maps'
+import { legSteps, node, route } from '../../data/maps'
 import type { Run } from '../../game/core/state'
 import { ItemIcon } from '../shared/ItemIcon'
+import { STOP_ICON } from './stopIcons'
 import './stop-track.css'
-
-/** Icono de cada tipo de parada en el mapa de la ruta en curso */
-const STOP_ICON: Record<NodeKind, Item> = {
-  [NodeKind.Start]: ITEM.TownMap,
-  [NodeKind.Wild]: ITEM.PokeBall,
-  [NodeKind.Boss]: ITEM.RelicCrown,
-  [NodeKind.Raid]: ITEM.DynamaxBand,
-  [NodeKind.Heal]: ITEM.Potion,
-  [NodeKind.Gym]: ITEM.VsSeeker,
-}
 
 /** Lo andado del tramo hacia la parada siguiente (0–1); fuera de un tramo, nada */
 function legFraction(run: Run): number {

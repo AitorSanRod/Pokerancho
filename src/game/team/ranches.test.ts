@@ -2,10 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { RouteId } from '../../data/maps'
 import { Rarity, rarityOf, SPECIES } from '../../data/species'
 import { initialState, MonPlace, monPlace } from '../core/state'
-import { chooseStarter, seqRng } from '../core/test-utils'
+import { chooseStarter, seqRng, testExpedition } from '../core/test-utils'
 import { startRun } from '../run/run'
 import { createMon, NEW_MON_LEVEL } from './mons'
-import { ExpeditionFocus } from './expeditionFocus'
 import { BOX_SLOTS, boxedMons, fitsInRanch, moveBlocker, moveMon, placeMon, RANCH_SLOTS, ranchCapacity, ranchCount, ranchWithRoom, rehomeOverflow, usedSlots } from './ranches'
 
 const [ONE_SLOT, LEGENDARY] = [SPECIES[0].id, SPECIES.find((sp) => rarityOf(sp) === Rarity.Legendary)!.id]
@@ -33,7 +32,7 @@ describe('espacios del rancho', () => {
     const s = stateWithTeam()
     const before = usedSlots(s, 0)
     startRun(s, RouteId.PuebloPaleta)
-    s.expeditions.push({ uid: s.owned[1].uid, routeId: RouteId.PuebloPaleta, durationMin: 15, focus: ExpeditionFocus.Exp, elapsedMin: 0 })
+    s.expeditions.push(testExpedition(s.owned[1].uid, RouteId.PuebloPaleta, { durationMin: 15, elapsedMin: 0 }))
     expect(usedSlots(s, 0)).toBe(before)
   })
 
@@ -85,7 +84,7 @@ describe('moveMon', () => {
     fillRanch(s, 1)
     expect(moveBlocker(s, mon.uid, 1)).toMatch(/cabe/)
     s.owned = s.owned.filter((m) => m.ranch !== 1)
-    s.expeditions.push({ uid: mon.uid, routeId: RouteId.PuebloPaleta, durationMin: 15, focus: ExpeditionFocus.Exp, elapsedMin: 0 })
+    s.expeditions.push(testExpedition(mon.uid, RouteId.PuebloPaleta, { durationMin: 15, elapsedMin: 0 }))
     expect(moveBlocker(s, mon.uid, 1)).toMatch(/fuera/)
     s.expeditions = []
     expect(moveMon(s, mon.uid, 1)).toBe(true)

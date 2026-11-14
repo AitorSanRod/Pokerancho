@@ -2,7 +2,7 @@ import type { Badge } from '../../data/badges'
 import type { FormItem } from '../../data/forms'
 import type { IncursionId } from '../../data/incursions'
 import type { Nature } from '../../data/natures'
-import { RouteId } from '../../data/maps'
+import { RouteId, type Encounter } from '../../data/maps'
 import type { Potion } from '../../data/potions'
 import type { RanchBackdrop } from '../../data/ranchBackdrops'
 import type { RanchTypeId } from '../../data/ranchTypes'
@@ -19,6 +19,7 @@ import type { ExpeditionFocus } from '../team/expeditionFocus'
 import type { RouteBattleSetup } from '../run/tapCrit'
 import type { TowerRun } from '../tower/tower'
 import type { RunGym } from '../run/runGym'
+import type { RunTrainer } from '../run/runTrainer'
 import { RaidRotation } from '../raid/online/protocol'
 import type { Raid, RaidPrize } from '../raid/raidRoom'
 import type { UpgradeId } from '../team/upgrades'
@@ -99,6 +100,8 @@ export interface Run {
   unlocked: string | null
   /** Combate contra el líder en la parada de gimnasio: qué Pokémon suyo toca y el ataque elegido (ver run/runGym.ts); null fuera */
   gym: RunGym | null
+  /** Combate contra el entrenador de la parada: qué Pokémon suyo toca (ver run/runTrainer.ts); null fuera */
+  trainer: RunTrainer | null
   /**
    * Lo ganado en la ruta; `pieces` son las especies de las piezas soltadas (una entrada por pieza) y `raidBosses`, los
    * jefes comunitarios derrotados en ella (su premio ya va sumado en lo demás)
@@ -122,6 +125,23 @@ export interface Run {
 }
 
 /** Un Pokémon del rancho haciendo una ruta por su cuenta durante un tiempo fijo */
+/**
+ * Condiciones de una expedición, fijadas al mandarla: un cambio posterior en la ruta o en las reglas vale para las
+ * siguientes, y la que ya está fuera termina como empezó (aunque su ruta ya no exista)
+ */
+export interface ExpeditionTerms {
+  routeName: string
+  levels: [number, number]
+  encounters: Encounter[]
+  /** Pasos medios entre paradas de la ruta (para el ₽ de cada victoria) */
+  legSteps: number
+  battles: number
+  /** Multiplicadores de EXP, ₽ y botín (duración y enfoque) */
+  expMult: number
+  moneyMult: number
+  lootMult: number
+}
+
 export interface Expedition {
   uid: string
   routeId: string
@@ -130,6 +150,7 @@ export interface Expedition {
   /** Qué se quiere sacar de ella (ver team/expeditionFocus.ts) */
   focus: ExpeditionFocus
   elapsedMin: number
+  terms: ExpeditionTerms
 }
 
 export interface GameState {
@@ -226,7 +247,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 55
+export const SAVE_VERSION = 58
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 

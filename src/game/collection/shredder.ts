@@ -7,7 +7,7 @@ import { addPieces, piecesOf } from './pieces'
 export const SHARDS_PER_PIECE: Record<Rarity, number> = { common: 1, rare: 1, epic: 2, legendary: 3 }
 
 /** Trozos de MissingNo que cuesta comprar 1 pieza del Pokémon elegido, según su rareza */
-export const PIECE_SHARD_PRICE: Record<Rarity, number> = { common: 10, rare: 15, epic: 20, legendary: 25 }
+export const PIECE_SHARD_PRICE: Record<Rarity, number> = { common: 10, rare: 15, epic: 25, legendary: 100 }
 
 export const pieceShardPrice = (speciesId: number): number => PIECE_SHARD_PRICE[rarityOf(species(speciesId))]
 

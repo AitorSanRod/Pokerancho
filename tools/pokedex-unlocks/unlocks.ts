@@ -1,15 +1,17 @@
 // Cómo se consigue cada especie en el juego, sacado de los datos reales (nada escrito a mano aquí).
 //
 // Reglas (game/collection): crear un Pokémon pide sus tickets (el gacha da de todas las especies) y haberlo visto,
-// y solo se ve en un combate de ruta, en un jefe de ruta o en un jefe comunitario (ni la torre ni las incursiones
+// y solo se ve en un combate de ruta (salvajes, entrenadores y gimnasios), en un jefe de ruta o en un jefe comunitario (ni la torre ni las incursiones
 // cuentan). Además, el inicial del tutorial y evolucionar uno que ya se tiene.
 
 import { evolutionsOf, EVOLVING_SPECIES, type Evolution } from '../../src/data/evolutions'
+import { GYMS, type GymFoe } from '../../src/data/gyms'
 import { INCURSIONS, type FoeSlot } from '../../src/data/incursions'
 import { findRoute, KANTO, NodeKind, type Route } from '../../src/data/maps'
 import { HARD_RAID_BOSSES, RAID_BOSSES } from '../../src/data/raidBosses'
 import { SPECIES, STARTERS, species } from '../../src/data/species'
 import { STONE_IDS, STONES } from '../../src/data/stones'
+import { TRAINERS } from '../../src/data/trainers'
 import { initialState } from '../../src/game/core/state'
 import { MAX_LEVEL } from '../../src/game/team/stats'
 
@@ -52,11 +54,17 @@ function reachableRoutes(): Route[] {
   return found
 }
 
+/** El equipo de un líder o un entrenador: cada uno cuenta como visto al salir a combatir */
+const teamSightings = (team: GymFoe[], r: Route, who: string): [number, Source][] =>
+  team.map((f): [number, Source] => [f.speciesId, { where: r.name, how: who }])
+
 /** Especies que se ven en cada parada de la ruta, con cómo salen */
 function routeSightings(r: Route): [number, Source][] {
   return r.nodes.flatMap((n): [number, Source][] => {
     if (n.kind === NodeKind.Raid && n.boss) return [[n.boss.speciesId, { where: r.name, how: 'jefe comunitario' }]]
     if (n.boss) return [[n.boss.speciesId, { where: r.name, how: 'jefe' }]]
+    if (n.gym) return teamSightings(GYMS[n.gym].team, r, `gimnasio de ${GYMS[n.gym].leader}`)
+    if (n.trainer) return teamSightings(TRAINERS[n.trainer].team, r, TRAINERS[n.trainer].name)
     if (n.kind !== NodeKind.Wild) return []
     return (n.encounters ?? r.encounters).map((e): [number, Source] => [e.speciesId, { where: r.name, how: `salvaje (${e.chance}%)` }])
   })

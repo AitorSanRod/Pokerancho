@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { isGymRoute, KANTO, type Route } from '../../data/maps'
+import { KANTO, onlyTrainerFights, type Route } from '../../data/maps'
 import { MonPlace, monPlace, type GameState } from '../../game/core/state'
 import { expeditionRouteBlocker, expeditionSlots, expeditionsBlocker } from '../../game/team/expedition'
 import { RouteLock, RouteRow, RouteRowTitle } from '../route/RouteRow'
@@ -27,7 +27,7 @@ export function ExpeditionScreen({ game }: { game: GameState }) {
       <h2 className="section-title">Mandar de expedición</h2>
       {blocker && <p className="notice">{blocker}</p>}
       <div className="route-list">
-        {KANTO.routes.filter((r) => !isGymRoute(r)).map((r) => {
+        {KANTO.routes.filter((r) => !onlyTrainerFights(r)).map((r) => {
           const routeBlocker = expeditionRouteBlocker(game, r.id)
           return (
             <RouteRow key={r.id} route={r} locked={!!routeBlocker} disabled={!!blocker} onClick={() => setSending(r)}>

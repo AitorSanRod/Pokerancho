@@ -12,6 +12,7 @@ import { mtMoonScene } from '../../src/ui/route/pixelScene/scenes/mtMoon'
 import { palletTownScene } from '../../src/ui/route/pixelScene/scenes/palletTown'
 import { pewterCityScene } from '../../src/ui/route/pixelScene/scenes/pewterCity'
 import { seaScene } from '../../src/ui/route/pixelScene/scenes/sea'
+import { shipScene } from '../../src/ui/route/pixelScene/scenes/ship'
 import { vermilionCityScene } from '../../src/ui/route/pixelScene/scenes/vermilionCity'
 
 /** Píxeles de pantalla por píxel de arte */
@@ -21,6 +22,7 @@ const AUTO_LANDMARK_SECONDS = 12
 
 /** Escenas en pruebas; el código vive en src/ui/route/pixelScene (el mismo que usa el juego) */
 const SCENES: Record<string, (seed: number) => SceneDef> = {
+  Barco: shipScene,
   'Ciudad Carmín': vermilionCityScene,
   'Prado al atardecer (Rutas 5 y 6)': meadowDuskScene,
   Laboratorio: labScene,

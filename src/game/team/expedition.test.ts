@@ -6,7 +6,6 @@ import { chooseStarter, readyForExpeditions, seqRng } from '../core/test-utils'
 import { runBlocker } from '../run/run'
 import {
   advanceExpeditions,
-  cancelBlockedExpeditions,
   cancelExpedition,
   collectExpedition,
   EXPEDITION_DURATIONS,
@@ -15,6 +14,7 @@ import {
   expeditionsBlocker,
   expeditionRewardMult,
   expeditionRouteBlocker,
+  expeditionTerms,
   expeditionWinRate,
   isExpeditionDone,
   scaleCount,
@@ -156,14 +156,17 @@ describe('expediciones', () => {
     expect(expeditionRouteBlocker(s, ROUTE)).toBeNull()
   })
 
-  it('al cargar se quitan las expediciones a rutas con salvajes sin ver y se quedan las demás', () => {
+  it('sale con las condiciones de su ruta y termina con ellas aunque la ruta ya no exista', () => {
     const { s, mon } = stateOnExpedition()
-    cancelBlockedExpeditions(s)
-    expect(s.expeditions).toHaveLength(1)
-    s.seen = s.seen.filter((id) => id !== wildSpecies(route(ROUTE))[0])
-    cancelBlockedExpeditions(s)
-    expect(s.expeditions).toHaveLength(0)
+    expect(s.expeditions[0].terms).toEqual(expeditionTerms(route(ROUTE), DURATION, ExpeditionFocus.Exp))
+    s.expeditions[0].routeId = 'ruta-quitada'
+    advanceExpeditions(s, DURATION)
+    expect(collectExpedition(s, mon.uid)?.battles).toBe(expeditionBattles(DURATION))
     expect(monPlace(s, mon.uid)).toBe(MonPlace.Ranch)
+  })
+
+  it('una duración que ya no se puede elegir cobra como la más parecida de ahora', () => {
+    expect(expeditionRewardMult(INVALID_DURATION)).toBe(expeditionRewardMult(Math.max(...EXPEDITION_DURATIONS)))
   })
 
   it('los Pokémon de la Caja no pueden ir de expedición', () => {

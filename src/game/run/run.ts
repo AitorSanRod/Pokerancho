@@ -8,6 +8,7 @@ import { advanceExpBoost, boostActive, BOOST_TAP_EXP, newExpBoost, reachEggSpot 
 import { completeRoute, gainRunExp, spendBattleTime, startStopBattle } from './runBattle'
 import { spendHealTime, drinkStopPotion } from './runHeal'
 import { enterGym, gymLevelBlocker } from './runGym'
+import { enterTrainer } from './runTrainer'
 
 export function runBlocker(s: GameState): string | null {
   if (activeMon(s) && s.run) return 'Ya hay una ruta en curso.'
@@ -46,6 +47,7 @@ export function startRun(s: GameState, routeId: string, path = pathFrom(route(ro
     boost: newExpBoost(routeId, path, s.luckyEggArmed, rng),
     unlocked: null,
     gym: null,
+    trainer: null,
     earned: { money: 0, tickets: 0, pieces: [], exp: 0, levelsGained: 0, wins: 0, battles: 0, raidBosses: [], raidMoneyMult: 1, discovered: [], badge: null },
   }
   s.luckyEggArmed = false
@@ -124,6 +126,7 @@ function arrive(s: GameState, r: Route, rng: Rng) {
   else if (n.kind === NodeKind.Raid) enterRouteRaid(s, r, n, rng)
   else if (n.kind === NodeKind.Heal) drinkStopPotion(s, n)
   else if (n.kind === NodeKind.Gym) enterGym(s, r, rng)
+  else if (n.kind === NodeKind.Trainer) enterTrainer(s, r, rng)
   else if (run.stop === run.path.length - 1) completeRoute(s, r)
 }
 

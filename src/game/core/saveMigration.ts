@@ -8,8 +8,8 @@ import { baseSpeciesOf, isKnownSpecies, SPECIES } from '../../data/species'
 import { isStarItem, STAR_ITEMS } from '../../data/starItems'
 import { Stone } from '../../data/stones'
 import { isTm } from '../../data/tms'
-import { EXPEDITION_DURATIONS } from '../team/expedition'
-import { ExpeditionFocus, isExpeditionFocus } from '../team/expeditionFocus'
+import { ExpeditionFocus } from '../team/expeditionFocus'
+import { repairExpeditions } from '../team/expeditionSalvage'
 import { isBadge } from '../../data/badges'
 import { salvageMissions } from '../collection/missions'
 import { SERVER_GIFT_ID } from '../collection/serverGifts'
@@ -24,7 +24,8 @@ import { initialState, SAVE_VERSION, TutorialStep, type GameState, type OwnedMon
 // Una partida guardada con otra versión del juego no se tira: se pasa por los pasos de SAVE_MIGRATIONS (los cambios
 // de significado) y después se rescata campo a campo todo lo que encaje con la forma de ahora. Lo que ya no existe en
 // el juego (una especie o una ruta quitadas) se descarta; los campos nuevos toman su valor inicial. Solo se pierde lo
-// que estaba a medias (IN_PROGRESS), porque depende de reglas que pueden haber cambiado.
+// que estaba a medias (IN_PROGRESS), porque depende de reglas que pueden haber cambiado. Las expediciones no: siguen
+// y terminan con las condiciones con las que salieron (team/expeditionSalvage.ts).
 
 type Save = Record<string, unknown>
 
@@ -156,21 +157,12 @@ function sameShape(initial: unknown, v: unknown): boolean {
   return typeof v === typeof initial && !Array.isArray(v)
 }
 
-/** Lo que depende de otros campos: Pokémon únicos, activo y expediciones de Pokémon que existen, ranchos comprados */
+/** Lo que depende de otros campos: Pokémon únicos, activo, expediciones (terminables) de Pokémon que existen, ranchos comprados */
 function linkUp(s: GameState) {
   const seenUids = new Set<string>()
   s.owned = s.owned.filter((m) => !seenUids.has(m.uid) && seenUids.add(m.uid))
   if (!s.owned.some((m) => m.uid === s.activeUid)) s.activeUid = (s.owned.find((m) => m.ranch !== null) ?? s.owned[0])?.uid ?? null
-  s.expeditions = s.expeditions.filter(
-    (e) =>
-      isRecord(e) &&
-      seenUids.has(e.uid) &&
-      isRoute(e.routeId) &&
-      EXPEDITION_DURATIONS.includes(e.durationMin) &&
-      isExpeditionFocus(e.focus) &&
-      typeof e.elapsedMin === 'number' &&
-      e.elapsedMin >= 0,
-  )
+  repairExpeditions(s)
   s.caught = [...new Set([...s.caught, ...s.owned.map((m) => baseSpeciesOf(m.speciesId))])]
   s.seen = [...new Set([...s.seen, ...s.caught])]
   s.unlockedRoutes = [...new Set([...initialState().unlockedRoutes, ...s.unlockedRoutes, ...s.completedRoutes])]

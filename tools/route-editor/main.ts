@@ -1,4 +1,4 @@
-// Editor de rutas, incursiones y gimnasios: formulario visual que escribe el código para pegarlo en los datos del juego.
+// Editor de rutas, incursiones, gimnasios y entrenadores: formulario visual que escribe el código de los datos del juego.
 // Se abre con `npm run dev` en http://localhost:5173/tools/route-editor/
 
 import { DICTS, spriteOf, SPECIES_KEYS } from './catalog'
@@ -10,6 +10,7 @@ import type { EditorMode } from './mode'
 import { setupPaste } from './pasteDialog'
 import { getAt, listAt, setAt } from './paths'
 import { ROUTE_MODE } from './routeMode'
+import { TRAINER_MODE } from './trainer/trainerMode'
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T
 const form = $<HTMLDivElement>('form')
@@ -22,7 +23,10 @@ const loadSelect = $<HTMLSelectElement>('load')
 const modeSelect = $<HTMLSelectElement>('mode')
 const writeButton = $<HTMLButtonElement>('write')
 
-const MODES: Record<string, EditorMode> = { route: ROUTE_MODE, incursion: INCURSION_MODE, gym: GYM_MODE }
+const MODES: Record<string, EditorMode> = { route: ROUTE_MODE, incursion: INCURSION_MODE, gym: GYM_MODE, trainer: TRAINER_MODE }
+/** Modos que se ven en la vista previa (preview/): su id es el `kind` del mensaje */
+const PREVIEWED = ['route', 'gym', 'trainer']
+const preview = $<HTMLIFrameElement>('preview')
 const MODE_KEY = 'route-editor-mode'
 
 let modeId = readMode()
@@ -63,7 +67,23 @@ function refresh() {
     el.classList.toggle('bad', total !== 100)
   }
   for (const img of form.querySelectorAll<HTMLImageElement>('[data-sprite]')) img.src = spriteOf(String(getAt(m.root(), img.dataset.sprite!)))
+  sendPreview()
 }
+
+/** Manda el borrador a la vista previa (si el modo tiene); ella lo pinta con las piezas del juego */
+function sendPreview() {
+  const shown = PREVIEWED.includes(modeId)
+  $<HTMLElement>('preview-card').hidden = !shown
+  if (shown) preview.contentWindow?.postMessage({ kind: modeId, draft: mode().root() }, location.origin)
+}
+
+// La vista previa avisa al cargar (también al recargarse sola con un cambio del código), para mandarle lo que hay, y
+// cuando cambia de alto, para que el iframe la enseñe entera
+addEventListener('message', (e) => {
+  if (e.origin !== location.origin) return
+  if (e.data?.previewReady) sendPreview()
+  if (e.data?.previewHeight) preview.style.height = `${e.data.previewHeight}px`
+})
 
 function setupLoad() {
   const options = mode()

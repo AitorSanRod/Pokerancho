@@ -94,7 +94,7 @@ describe('walk', () => {
   it('ganar da EXP según el nivel del rival, y se suma al acabar el combate', () => {
     const s = stateOnRoute(route(ROUTE).levels[0])
     const mon = activeMon(s)!
-    walk(s, firstLeg(s))
+    walk(s, firstLeg(s), () => 0.99) // rng alto: el rival no sale shiny
     const { rewards, outcome, enemy, player } = s.run!.lastBattle!
     expect(rewards.exp).toBe(outcome === 'win' ? expReward(enemy.level, player.level) : 0)
     expect(mon.exp).toBe(0)

@@ -16,6 +16,8 @@ import { battleDuration } from './battleTimeline'
 import { boostActive, BOOST_EXP_MULT } from './expBoost'
 import { playSetup, rewardsFor } from './tapCrit'
 import { nextGymFoe, winGym } from './runGym'
+import { nextTrainerFoe } from './runTrainer'
+import { foeExpMult, foeStatMult, rollShinyFoe, shinyIntro } from './shinyFoe'
 
 /**
  * Multiplicador de stats de los salvajes. Por debajo de 1 porque el jugador encadena combates y solo se cura en las
@@ -56,19 +58,25 @@ export interface BattleOpts {
   foeMoves?: Move[]
   /** Texto del principio del combate, si no es el de un salvaje que aparece */
   intro?: string
+  /** Rival shiny: sus stats llevan `statMult` más el bono shiny y da más EXP (shinyFoe.ts) */
+  shiny?: boolean
+  /** Multiplicador de la EXP que da (los Pokémon de un entrenador, runTrainer.ts); sin él, 1 */
+  expMult?: number
 }
 
 /**
  * Resuelve el combate de la parada pero no lo aplica: PS, premio y derrota se aplican en `settleBattle` cuando
  * termina su tiempo, para que el estado no se adelante a lo que ve el jugador. Los jefes luchan con sus stats
- * completas (sin WILD_STAT_MULT), con sus pasivas del mapa, y dan más premio.
+ * completas (sin WILD_STAT_MULT), con sus pasivas del mapa, y dan más premio. Cualquiera de los dos puede salir shiny.
  */
 export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng) {
   const isBoss = n.kind === NodeKind.Boss
   const rival = rivalOf(r, n, rng)
   // Con el Huevo Suerte usado, los rivales de las paradas salen al nivel del Pokémon del jugador
   const foe = boostActive(s.run!) ? { ...rival, level: activeMon(s)!.level } : rival
-  startBattle(s, r, foe,{ boss: isBoss, statMult: n.statMult ?? (isBoss ? 1 : WILD_STAT_MULT) }, rng)
+  const shiny = rollShinyFoe(rng)
+  const statMult = foeStatMult(n.statMult ?? (isBoss ? 1 : WILD_STAT_MULT), shiny)
+  startBattle(s, r, foe, { boss: isBoss, statMult, shiny }, rng)
 }
 
 /**
@@ -91,16 +99,17 @@ export function startBattle(s: GameState, r: Route, foe: Boss, opts: BattleOpts,
   const prize = {
     money: moneyReward(level, legSteps(r, run.path, run.stop), rng) * (opts.boss ? BOSS_MONEY_MULT : 1),
     tickets: opts.boss ? BOSS_TICKETS : ticketReward(enemyId, rng),
-    exp: expReward(level, mon.level) * (opts.boss ? BOSS_EXP_MULT : 1) * (boostActive(run) ? BOOST_EXP_MULT : 1),
+    exp: expReward(level, mon.level) * (opts.boss ? BOSS_EXP_MULT : 1) * (opts.expMult ?? 1) * (boostActive(run) ? BOOST_EXP_MULT : 1) * foeExpMult(opts.shiny === true),
     piece: pieceReward(enemyId, rng),
   }
-  run.battleSetup = { seed: Math.floor(rng() * 2 ** 31), player, enemy, prize, taps: [], intro: opts.intro }
+  const intro = opts.intro ?? (opts.shiny ? shinyIntro(enemy.name, level) : undefined)
+  run.battleSetup = { seed: Math.floor(rng() * 2 ** 31), player, enemy, prize, taps: [], intro }
   const result = playSetup(run.battleSetup, [])
   seeOnRoute(s, enemyId)
   run.earned.battles++
   run.lastBattle = {
     player: { speciesId: mon.speciesId, name: player.name, level: mon.level, maxHp: player.maxHp, ...(opts.move ? { move: opts.move } : {}) },
-    enemy: { speciesId: enemyId, name: enemy.name, level, maxHp: enemy.maxHp },
+    enemy: { speciesId: enemyId, name: enemy.name, level, maxHp: enemy.maxHp, ...(opts.shiny ? { shiny: true } : {}) },
     events: result.events,
     outcome: result.outcome,
     boss: opts.boss,
@@ -140,9 +149,10 @@ function settleBattle(s: GameState, r: Route, rng: Rng) {
     }
     run.earned.wins++
     advanceMission(s, MissionKind.WinBattles)
-    // En el gimnasio, el líder saca el siguiente; al caer el último, la medalla
+    // El líder del gimnasio o el entrenador saca el siguiente; al caer el último del líder, la medalla
     if (run.gym && nextGymFoe(s, r, rng)) return
     if (run.gym) winGym(s)
+    if (run.trainer && nextTrainerFoe(s, r, rng)) return
   }
   if (run.stop === run.path.length - 1) completeRoute(s, r)
 }

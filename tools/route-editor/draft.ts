@@ -39,6 +39,8 @@ export interface NodeDraft {
   potion: string
   /** Clave de GymId (paradas de gimnasio) */
   gym: string
+  /** Clave de TrainerId (paradas de entrenador) */
+  trainer: string
 }
 
 export interface RouteDraft {
@@ -75,6 +77,7 @@ export const emptyNode = (id: string, kind = 'Wild', steps = 20): NodeDraft => (
   boss: emptyBoss(),
   potion: 'Potion',
   gym: 'Plateada',
+  trainer: Object.keys(DICTS.TrainerId)[0],
 })
 
 export const emptyRoute = (): RouteDraft => ({
@@ -112,6 +115,7 @@ function nodeDraft(n: RouteNode, steps: number): NodeDraft {
       : emptyBoss(),
     potion: keyOf(DICTS.Potion, n.potion) || 'Potion',
     gym: keyOf(DICTS.GymId, n.gym) || 'Plateada',
+    trainer: keyOf(DICTS.TrainerId, n.trainer) || Object.keys(DICTS.TrainerId)[0],
   }
 }
 
