@@ -1,0 +1,30 @@
+.announcement {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+}
+.announcement h3,
+.announcement p {
+  margin: 0;
+}
+.announcement-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* Las mismas miniaturas que «Pueden aparecer» al salir a una ruta */
+.announcement-species {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+.board-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

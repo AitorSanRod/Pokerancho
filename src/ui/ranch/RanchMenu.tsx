@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { LATEST_ANNOUNCEMENT } from '../../data/announcements'
 import type { Item } from '../../data/items'
+import { BoardSheet } from '../board/BoardSheet'
 import { claimableMissions } from '../../game/collection/missions'
 import type { GameState } from '../../game/core/state'
 import { giftReady, useDailyGift } from '../../net/dailyGift'
@@ -16,10 +18,10 @@ import { useUnseen } from '../shared/useUnseen'
 import { TutorialsSheet } from '../tutorials/TutorialsSheet'
 import { useMenuPending } from './useMenuPending'
 
-type Panel = 'menu' | 'profile' | 'gift' | 'missions' | 'bag' | 'tutorials' | 'inbox' | 'ranking'
+type Panel = 'menu' | 'profile' | 'board' | 'gift' | 'missions' | 'bag' | 'tutorials' | 'inbox' | 'ranking'
 
 /**
- * Botón de menú del rancho (esquina inferior derecha) y lo que abre: perfil, Notificaciones (obsequio listo, premios de
+ * Botón de menú del rancho (esquina inferior derecha) y lo que abre: perfil, Tablón de anuncios, Notificaciones (obsequio listo, premios de
  * raid e intercambios), obsequio diario, misiones del día, Mochila, ranking y tutoriales
  */
 export function RanchMenu({ game }: { game: GameState }) {
@@ -32,6 +34,7 @@ export function RanchMenu({ game }: { game: GameState }) {
   // el de la entrada del obsequio, hasta abrirlo
   const menuDot = useUnseen('ranch:menu', useMenuPending(game), panel !== null)
   const giftDot = useUnseen('ranch:gift', giftKey, panel === 'gift')
+  const boardDot = useUnseen('ranch:board', LATEST_ANNOUNCEMENT?.id ?? null, panel === 'board')
   const close = () => setPanel(null)
   const back = () => setPanel('menu')
 
@@ -57,6 +60,8 @@ export function RanchMenu({ game }: { game: GameState }) {
               <InboxSheet game={game} onBack={back} />
             ) : panel === 'ranking' ? (
               <RankingSheet onBack={back} />
+            ) : panel === 'board' ? (
+              <BoardSheet onBack={back} />
             ) : panel === 'tutorials' ? (
               <TutorialsSheet onBack={back} />
             ) : (
@@ -66,6 +71,7 @@ export function RanchMenu({ game }: { game: GameState }) {
                 </h2>
                 <div className="ranch-menu-grid">
                   <MenuTile icon={ICON.Profile} title="Perfil" onClick={() => setPanel('profile')} />
+                  <MenuTile icon={ICON.Board} title="Tablón" dot={boardDot} onClick={() => setPanel('board')} />
                   <MenuTile icon={ICON.Inbox} title="Notificaciones" count={inboxCount} onClick={() => setPanel('inbox')} />
                   <MenuTile icon={ICON.Gift} title="Obsequio diario" dot={giftDot} onClick={() => setPanel('gift')} />
                   <MenuTile

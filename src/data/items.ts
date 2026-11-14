@@ -52,6 +52,7 @@ export const ITEM = {
   LinkingCord: 'linking-cord',
   Nugget: 'nugget',
   OrangeMail: 'orange-mail',
+  WoodMail: 'wood-mail',
   RelicCrown: 'relic-crown',
   SecretKey: 'secret-key',
   EscapeRope: 'escape-rope',

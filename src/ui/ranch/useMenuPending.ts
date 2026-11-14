@@ -1,3 +1,4 @@
+import { LATEST_ANNOUNCEMENT } from '../../data/announcements'
 import { claimableMissions } from '../../game/collection/missions'
 import { pendingServerGifts } from '../../game/collection/serverGifts'
 import type { GameState } from '../../game/core/state'
@@ -8,7 +9,7 @@ import { pendingKey } from '../shared/useUnseen'
 
 /**
  * Resumen de lo que espera en el Menú del rancho (Notificaciones: obsequio, regalos del servidor, premios de raid e
- * intercambios; y misiones por cobrar) para `useUnseen`: el punto de la pestaña Rancho y el del botón Menú
+ * intercambios; misiones por cobrar; y el anuncio más nuevo del Tablón) para `useUnseen`: el punto de la pestaña Rancho y el del botón Menú
  */
 export function useMenuPending(game: GameState): string | null {
   const gift = useDailyGift()
@@ -21,5 +22,6 @@ export function useMenuPending(game: GameState): string | null {
     ...game.raidPrizes.map((p) => `prize:${p.bossSpeciesId}:${p.uid}`),
     ...trades.map((e) => `trade:${e.id}`),
     ...(missions > 0 ? [`missions:${game.missions?.day}:${missions}`] : []),
+    ...(LATEST_ANNOUNCEMENT ? [`board:${LATEST_ANNOUNCEMENT.id}`] : []),
   ])
 }

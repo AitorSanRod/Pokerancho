@@ -35,6 +35,8 @@ export const ICON = {
   Sell: ITEM.Nugget,
   /** Notificaciones: lo pendiente de recoger */
   Inbox: ITEM.OrangeMail,
+  /** Tablón de anuncios del menú del rancho */
+  Board: ITEM.WoodMail,
   /** Rankings entre jugadores (dinero y daño a jefes) */
   Ranking: ITEM.RelicCrown,
   Heal: ITEM.Potion,

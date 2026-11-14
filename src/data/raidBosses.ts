@@ -5,7 +5,7 @@ import { POKEMON } from './pokemon'
 // Este fichero es para editarlo a mano: jefes, tablas de premios y nombres de los entrenadores bot.
 
 /** Categoría de premios de un jefe comunitario: elige su tabla en RAID_PRIZE_TABLES */
-export const RaidTier = { Low: 'low', Mid: 'mid', High: 'high', LowHard: 'lowHard' } as const
+export const RaidTier = { Low: 'low', Mid: 'mid', High: 'high', LowHard: 'lowHard', MidHard: 'midHard' } as const
 export type RaidTier = (typeof RaidTier)[keyof typeof RaidTier]
 
 export interface RaidBoss {
@@ -26,17 +26,17 @@ export interface RaidBoss {
 /** Multiplicador de todas las stats de los jefes de la rotación «Difíciles» (HARD_RAID_BOSSES) */
 export const HARD_RAID_STAT_MULT = 1.5
 
-/** Jefes de la rotación «En orden» de la pestaña Raids (y de la pestaña sin servidor), en este orden */
+/** Jefes de la rotación «Normal» de la pestaña Raids (y de la pestaña sin servidor), en este orden */
 export const RAID_BOSSES: RaidBoss[] = [
-  { speciesId: POKEMON.Eevee, level: 15, minLevel: 10, tier: RaidTier.Low },
-  { speciesId: POKEMON.Vaporeon, level: 20, minLevel: 10, tier: RaidTier.Low },
-  { speciesId: POKEMON.Sylveon, level: 40, minLevel: 30, tier: RaidTier.High },
-  { speciesId: POKEMON.Jolteon, level: 30, minLevel: 20, tier: RaidTier.Mid },
-  { speciesId: POKEMON.Umbreon, level: 15, minLevel: 10, tier: RaidTier.Low },
-  { speciesId: POKEMON.Glaceon, level: 30, minLevel: 20, tier: RaidTier.Mid },
-  { speciesId: POKEMON.Leafeon, level: 20, minLevel: 12, tier: RaidTier.Low },
-  { speciesId: POKEMON.Espeon, level: 25, minLevel: 18, tier: RaidTier.Mid },
-  { speciesId: POKEMON.Flareon, level: 15, minLevel: 12, tier: RaidTier.Low },
+  { speciesId: POKEMON.Charmander, level: 20, minLevel: 10, tier: RaidTier.Low },
+  { speciesId: POKEMON.Bulbasaur, level: 30, minLevel: 20, tier: RaidTier.Low },
+  { speciesId: POKEMON.Squirtle, level: 40, minLevel: 30, tier: RaidTier.Mid },
+  { speciesId: POKEMON.Totodile, level: 20, minLevel: 10, tier: RaidTier.Low },
+  { speciesId: POKEMON.Cyndaquil, level: 30, minLevel: 20, tier: RaidTier.Low },
+  { speciesId: POKEMON.Chikorita, level: 40, minLevel: 30, tier: RaidTier.Mid },
+  { speciesId: POKEMON.Chespin, level: 20, minLevel: 10, tier: RaidTier.Low },
+  { speciesId: POKEMON.Fennekin, level: 30, minLevel: 20, tier: RaidTier.Low },
+  { speciesId: POKEMON.Froakie, level: 40, minLevel: 30, tier: RaidTier.Mid },
 ]
 
 /**
@@ -44,9 +44,9 @@ export const RAID_BOSSES: RaidBoss[] = [
  * por tanto más vida) que los de RAID_BOSSES y mejores premios (`prizeMult` multiplica las cantidades de su tabla)
  */
 export const HARD_RAID_BOSSES: RaidBoss[] = [
-  { speciesId: POKEMON.Charizard, level: 60, minLevel: 50, tier: RaidTier.LowHard, prizeMult: 2 },
-  { speciesId: POKEMON.Venusaur, level: 60, minLevel: 50, tier: RaidTier.LowHard, prizeMult: 2 },
-  { speciesId: POKEMON.Blastoise, level: 60, minLevel: 50, tier: RaidTier.LowHard, prizeMult: 2 }
+  { speciesId: POKEMON.Houndoom, level: 60, minLevel: 45, tier: RaidTier.MidHard, prizeMult: 3 },
+  { speciesId: POKEMON.Flygon, level: 60, minLevel: 45, tier: RaidTier.MidHard, prizeMult: 3 },
+  { speciesId: POKEMON.Articuno, level: 60, minLevel: 45, tier: RaidTier.MidHard, prizeMult: 3 }
 ]
 
 /** Qué da una línea de premio: `Exp` es EXP para el Pokémon que luchó contra el jefe (además de la que gana por minuto) */
@@ -67,42 +67,72 @@ interface RaidPrizeRoll {
  */
 export const RAID_PRIZE_TABLES: Record<RaidTier, RaidPrizeRoll[]> = {
   [RaidTier.Low]: [
-    { kind: RaidPrizeKind.Money, amount: 80, chance: 1 },
+    { kind: RaidPrizeKind.Money, amount: 100, chance: 1 },
+    { kind: RaidPrizeKind.Money, amount: 150, chance: 0.75 },
+    { kind: RaidPrizeKind.Money, amount: 500, chance: 0.5 },
+    { kind: RaidPrizeKind.Money, amount: 1000, chance: 0.1 },
     { kind: RaidPrizeKind.Exp, amount: 100, chance: 1 },
     { kind: RaidPrizeKind.Exp, amount: 200, chance: 0.3 },
-    { kind: RaidPrizeKind.Money, amount: 300, chance: 0.3 },
-    { kind: RaidPrizeKind.Money, amount: 100, chance: 0.4 },
+    { kind: RaidPrizeKind.Exp, amount: 300, chance: 0.3 },
+    { kind: RaidPrizeKind.Exp, amount: 400, chance: 0.25 },
+    { kind: RaidPrizeKind.Exp, amount: 500, chance: 0.1 },
     { kind: RaidPrizeKind.Tickets, amount: 1, chance: 1 },
+    { kind: RaidPrizeKind.Tickets, amount: 1, chance: 0.5 },
     { kind: RaidPrizeKind.BossPieces, amount: 1, chance: 0.1 },
-    { kind: RaidPrizeKind.BossPieces, amount: 1, chance: 0.1 },
-    { kind: RaidPrizeKind.BossPieces, amount: 1, chance: 0.1 },
+    { kind: RaidPrizeKind.BossPieces, amount: 1, chance: 0.2 },
+    { kind: RaidPrizeKind.BossPieces, amount: 1, chance: 0.3 },
   ],
   [RaidTier.Mid]: [
     { kind: RaidPrizeKind.Money, amount: 250, chance: 1 },
     { kind: RaidPrizeKind.Money, amount: 500, chance: 0.1 },
+    { kind: RaidPrizeKind.Money, amount: 250, chance: 0.15 },
+    { kind: RaidPrizeKind.Money, amount: 1000, chance: 0.2 },
+    { kind: RaidPrizeKind.Money, amount: 2000, chance: 0.1 },
     { kind: RaidPrizeKind.Exp, amount: 250, chance: 1 },
     { kind: RaidPrizeKind.Exp, amount: 400, chance: 0.25 },
-    { kind: RaidPrizeKind.Money, amount: 250, chance: 0.15 },
-    { kind: RaidPrizeKind.Money, amount: 200, chance: 0.2 },
-    { kind: RaidPrizeKind.Money, amount: 100, chance: 0.25 },
+    { kind: RaidPrizeKind.Exp, amount: 500, chance: 0.2 },
     { kind: RaidPrizeKind.Tickets, amount: 1, chance: 1 },
-    { kind: RaidPrizeKind.BossPieces, amount: 1, chance: 0.15 },
     { kind: RaidPrizeKind.Tickets, amount: 1, chance: 0.25 },
+    { kind: RaidPrizeKind.BossPieces, amount: 1, chance: 0.15 },
     { kind: RaidPrizeKind.BossPieces, amount: 1, chance: 0.1 },
   ],
   [RaidTier.High]: [
-    { kind: RaidPrizeKind.Money, amount: 1000, chance: 0.5 },
-    { kind: RaidPrizeKind.Exp, amount: 800, chance: 1 },
-    { kind: RaidPrizeKind.Exp, amount: 1500, chance: 0.3 },
+    { kind: RaidPrizeKind.Money, amount: 1000, chance: 1 },
+    { kind: RaidPrizeKind.Money, amount: 2000, chance: 0.75 },
+    { kind: RaidPrizeKind.Money, amount: 3000, chance: 0.5 },
+    { kind: RaidPrizeKind.Money, amount: 5000, chance: 0.25 },
+    { kind: RaidPrizeKind.Exp, amount: 1800, chance: 1 },
+    { kind: RaidPrizeKind.Exp, amount: 2500, chance: 0.25 },
     { kind: RaidPrizeKind.Tickets, amount: 2, chance: 1 },
     { kind: RaidPrizeKind.BossPieces, amount: 1, chance: 0.5 },
     { kind: RaidPrizeKind.BossPieces, amount: 2, chance: 0.1 },
   ],
   [RaidTier.LowHard]: [
-    { kind: RaidPrizeKind.Money, amount: 1000, chance: 0.5 },
-    { kind: RaidPrizeKind.Exp, amount: 800, chance: 1 },
-    { kind: RaidPrizeKind.Exp, amount: 1500, chance: 0.3 },
+    { kind: RaidPrizeKind.Money, amount: 1000, chance: 1 },
+    { kind: RaidPrizeKind.Money, amount: 2000, chance: 0.5 },
+    { kind: RaidPrizeKind.Money, amount: 3000, chance: 0.25 },
+    { kind: RaidPrizeKind.Money, amount: 3000, chance: 0.1 },
+    { kind: RaidPrizeKind.Exp, amount: 1000, chance: 1 },
+    { kind: RaidPrizeKind.Exp, amount: 1200, chance: 0.3 },
+    { kind: RaidPrizeKind.Exp, amount: 1500, chance: 0.1 },
     { kind: RaidPrizeKind.Tickets, amount: 2, chance: 1 },
+    { kind: RaidPrizeKind.Tickets, amount: 1, chance: 0.75 },
+    { kind: RaidPrizeKind.Tickets, amount: 1, chance: 0.5 },
+  ],
+  [RaidTier.MidHard]: [
+    { kind: RaidPrizeKind.Money, amount: 5000, chance: 1 },
+    { kind: RaidPrizeKind.Money, amount: 5000, chance: 0.5 },
+    { kind: RaidPrizeKind.Money, amount: 5000, chance: 0.25 },
+    { kind: RaidPrizeKind.Money, amount: 5000, chance: 0.1 },
+    { kind: RaidPrizeKind.Exp, amount: 1500, chance: 1 },
+    { kind: RaidPrizeKind.Exp, amount: 2000, chance: 0.5 },
+    { kind: RaidPrizeKind.Exp, amount: 5000, chance: 0.2 },
+    { kind: RaidPrizeKind.Tickets, amount: 5, chance: 1 },
+    { kind: RaidPrizeKind.Tickets, amount: 2, chance: 0.1 },
+    { kind: RaidPrizeKind.Tickets, amount: 1, chance: 0.1 },
+    { kind: RaidPrizeKind.BossPieces, amount: 1, chance: 0.1 },
+    { kind: RaidPrizeKind.BossPieces, amount: 1, chance: 0.1 },
+    { kind: RaidPrizeKind.BossPieces, amount: 2, chance: 0.1 },
   ],
 }
 
