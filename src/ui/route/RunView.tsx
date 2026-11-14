@@ -161,7 +161,11 @@ function AbandonButton({ game }: { game: GameState }) {
           onConfirm={() => act(endRun)}
           onCancel={() => setConfirming(false)}
           extraAction={
-            <button className="btn grow" disabled={!!restartBlocked} title={restartBlocked ?? undefined} onClick={() => act(restartRun)}>
+            <button className="btn grow" disabled={!!restartBlocked} title={restartBlocked ?? undefined} onClick={() => {
+                act(restartRun)
+                setConfirming(false)
+              }}
+            >
               Reiniciar ruta
             </button>
           }
