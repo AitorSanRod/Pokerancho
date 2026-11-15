@@ -1,7 +1,7 @@
 import type { StatusId } from '../../data/passives'
 import type { GroupPlan, IncursionProgress } from '../../game/incursion/activeIncursion'
 import { EventKind, type IncursionEvent } from '../../game/incursion/events'
-import { Team } from '../../game/incursion/fighter'
+import { Team, type MemberState } from '../../game/incursion/fighter'
 import type { GroupPassive } from '../../game/incursion/groupPassives'
 import { eventsStarted } from '../../game/incursion/incursionTimeline'
 import { INCURSION_REVIVES } from '../../game/incursion/revives'
@@ -26,6 +26,8 @@ export interface SceneMon {
   shiny?: boolean
   /** Del grupo: el ataque que lleva (cambia si el jugador lo cambia en plena pelea) */
   moveId?: string
+  /** Del grupo, con revivires de cada uno (la raid): los que le quedan tras gastar el último; sin él, no ha gastado ninguno */
+  revives?: number
 }
 
 export interface SceneState {
@@ -47,15 +49,29 @@ export interface SceneState {
   roomSeq: number
 }
 
+const memberMon = (m: MemberState): SceneMon => ({
+  id: m.id, team: Team.Party, speciesId: m.speciesId, name: species(m.speciesId).name, level: m.level,
+  hp: Math.round(m.hpFraction * 100), maxHp: 100, out: m.out, statuses: m.status ? [m.status] : [], boss: false, moveId: m.moveId, shiny: m.shiny,
+})
+
 function partyAtStart(a: GroupPlan, p: IncursionProgress): SceneMon[] {
-  const members = p.leg === 0 ? a.members : p.record.legs[p.leg - 1].next.members
-  return members.map((m) => ({
-    id: m.id, team: Team.Party, speciesId: m.speciesId, name: species(m.speciesId).name, level: m.level,
-    hp: Math.round(m.hpFraction * 100), maxHp: 100, out: m.out, statuses: m.status ? [m.status] : [], boss: false, moveId: m.moveId, shiny: m.shiny,
-  }))
+  return (p.leg === 0 ? a.members : p.record.legs[p.leg - 1].next.members).map(memberMon)
 }
 
-function apply(scene: SceneState, e: IncursionEvent, seq: number) {
+/** Los que entraron en plena pelea (raid), por su id: de ellos sale si son shiny */
+const joinersOf = (a: GroupPlan): Map<string, MemberState> =>
+  new Map(a.orders.flatMap((o) => o.turns ?? []).flatMap((t) => t.joins ?? []).map((m) => [m.id, m]))
+
+/** Entra uno en plena pelea en el sitio de un bot (`actor`) */
+function join(scene: SceneState, e: IncursionEvent, joiners: Map<string, MemberState>) {
+  const m = joiners.get(e.target ?? '')
+  if (!m) return
+  const mon: SceneMon = { ...memberMon(m), hp: e.hp ?? 0, maxHp: e.maxHp ?? 1 }
+  scene.party = scene.party.map((p) => (p.id === e.actor ? mon : p))
+}
+
+function apply(scene: SceneState, e: IncursionEvent, seq: number, joiners: Map<string, MemberState>) {
+  if (e.kind === EventKind.Join) join(scene, e, joiners)
   if (e.kind === EventKind.Move && e.actor && e.moveId) {
     scene.move = { actor: e.actor, moveId: e.moveId, seq }
     const user = scene.party.find((p) => p.id === e.actor)
@@ -81,7 +97,7 @@ function apply(scene: SceneState, e: IncursionEvent, seq: number) {
   if (e.kind === EventKind.Status && e.status) target.statuses = [...others, e.status]
   if (e.kind === EventKind.Recover) target.statuses = others
   if (e.kind === EventKind.Revive) target.statuses = []
-  if (e.kind === EventKind.Revive) target.out = false
+  if (e.kind === EventKind.Revive) Object.assign(target, { out: false, revives: e.revives })
   if (e.kind === EventKind.Out) target.out = true
 }
 
@@ -95,7 +111,8 @@ export function sceneAt(a: GroupPlan, p: IncursionProgress, revives = INCURSION_
     focusFoe: null, roomSeq: 0,
   }
   const seen = eventsStarted(leg, p.legMs)
-  leg.events.slice(0, seen).forEach((e, i) => apply(scene, e, i + 1))
+  const joiners = joinersOf(a)
+  leg.events.slice(0, seen).forEach((e, i) => apply(scene, e, i + 1, joiners))
   scene.current = seen > 0 ? leg.events[seen - 1] : null
   scene.seq = seen
   return scene

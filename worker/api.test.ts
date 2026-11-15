@@ -91,11 +91,13 @@ describe('salas de la pestaña Raids', () => {
     expect(b.room.id).not.toBe(a.room.id)
   })
 
-  it('con la pelea empezada ya no se entra; quien estaba, la ve empezar', async () => {
+  it('con la pelea empezada se entra en el sitio de un bot; quien estaba, la ve empezar', async () => {
     const api = testWorker()
     const a = (await api.call('/api/raid', { body: join('player-aaaa', 'a1') })).data.room
     vi.setSystemTime(fightStart(CYCLE))
-    expect((await api.call('/api/raid', { body: join('player-bbbb', 'b1') })).data).toEqual({ gone: true })
+    const late = (await api.call('/api/raid', { body: join('player-bbbb', 'b1') })).data.room
+    expect(late).toMatchObject({ you: 'b1', yourJoin: true })
+    expect(late.room.id).toBe(a.room.id)
     const seen = (await api.call('/api/raid', { body: inRoom(RaidAction.Sync, 'player-aaaa', a.room.id) })).data.room
     expect(seen.room.fight.members[0].id).toBe('a1')
   })

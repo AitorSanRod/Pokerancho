@@ -23,6 +23,12 @@ import { backupTeam } from './teamBackup'
 import { testExpedition } from './test-utils'
 import { advanceTower, startTower } from '../tower/tower'
 import { towerMoveChoices } from '../tower/towerMoves'
+import { joinRaid } from '../raid/raid'
+import { raidReady, ROTATION } from '../raid/raid-test-utils'
+import { lobbyStart } from '../raid/raidSchedule'
+
+/** Un ciclo cualquiera de la pestaña Raids */
+const RAID_CYCLE = 3
 
 vi.mock('../../data/maps/kantoMaps', () => import('./test-map'))
 
@@ -35,6 +41,8 @@ const TOWER_ALONE_VERSION = 58
 const ATTACK_PER_GYM_VERSION = 59
 /** Última versión con el Huevo Suerte de la torre directo a la Mochila (sin huevo en la escena) */
 const TOWER_EGG_AUTO_VERSION = 60
+/** Última versión sin entrar en la pelea de la raid ya empezada */
+const RAID_NO_LATE_JOIN_VERSION = 62
 const [A, B, C] = STARTERS
 const UNKNOWN_SPECIES = -7
 const OTHER_BACKDROP = Object.values(RanchBackdrop).find((b) => b !== DEFAULT_RANCH_BACKDROP)!
@@ -278,6 +286,16 @@ describe('al actualizar el juego no se pierde nada', () => {
       advanceTower(migrated, 1)
       expect(migrated.tower!.battleMsLeft).toBeGreaterThan(0)
     }
+  })
+
+  it('la sala de raid de antes de poder entrar en la pelea empezada sigue, sin entrada pendiente', () => {
+    const { s, mon, move } = raidReady(RAID_CYCLE)
+    joinRaid(s, ROTATION, mon.uid, move, lobbyStart(RAID_CYCLE))
+    const save = fromOldVersion(s, RAID_NO_LATE_JOIN_VERSION)
+    delete save.raids[ROTATION].pendingJoin
+    const migrated = migrateSave(save)!
+    expect(migrated.raids[ROTATION]).toMatchObject({ uid: mon.uid, pendingJoin: false })
+    expect(monPlace(migrated, mon.uid)).toBe(MonPlace.Raid)
   })
 
   it('la subida a la torre de antes del huevo en la escena sigue, sin huevo esperando', () => {

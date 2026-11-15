@@ -100,15 +100,15 @@ export async function buildDemoSave(scenario) {
     const { newRoom, seatEntrant } = await import('/src/game/raid/raidRoom.ts')
     const { cycleAt } = await import('/src/game/raid/raidSchedule.ts')
     const { RaidRotation } = await import('/src/game/raid/online/protocol.ts')
-    const { monRepertoire } = await import('/src/game/incursion/repertoire.ts')
+    const { raidMoveChoices } = await import('/src/game/raid/raidMoves.ts')
     const mon = s.owned.find((m) => m.uid === uid)
     const room = newRoom('demo', RaidRotation.Ordered, cycleAt(Date.now()), 7)
-    seatEntrant(room, raidEntrant(s, uid, monRepertoire(mon)[0].id))
+    seatEntrant(room, raidEntrant(s, uid, raidMoveChoices(mon)[0].id))
     if (stage === 'fight') {
       startFight(room)
       room.fight.legStarts = [Date.now() - 20_000]
     }
-    s.raids[RaidRotation.Ordered] = { room, uid, link: RaidLink.Local, pendingPick: null, pendingCrit: false }
+    s.raids[RaidRotation.Ordered] = { room, uid, link: RaidLink.Local, pendingPick: null, pendingCrit: false, pendingJoin: false }
   }
 
   /**

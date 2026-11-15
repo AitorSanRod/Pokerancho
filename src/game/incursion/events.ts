@@ -32,6 +32,8 @@ export const EventKind = {
   Cleared: 'cleared',
   /** Ventana de toques antes del turno del grupo (ver tapWindow.ts): `turn` es su número en el tramo */
   TapWindow: 'tap',
+  /** Entra un Pokémon de un jugador en plena pelea: `actor` es el bot cuyo sitio ocupa, `target` el que entra */
+  Join: 'join',
 } as const
 export type EventKind = (typeof EventKind)[keyof typeof EventKind]
 

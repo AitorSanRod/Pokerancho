@@ -76,6 +76,11 @@ export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {
   60: (save) => {
     if (isRecord(save.tower)) save.tower.egg ??= null
   },
+  // Se puede entrar en la pelea de la raid ya empezada: las salas de antes no tienen ninguna entrada pendiente. Siguen
+  // (la pelea en marcha se recalcula con las reglas nuevas: revivires de cada Pokémon y ventanas aunque no quede nadie)
+  62: (save) => {
+    if (isRecord(save.raids)) for (const tr of Object.values(save.raids)) if (isRecord(tr)) tr.pendingJoin ??= false
+  },
 }
 
 /**

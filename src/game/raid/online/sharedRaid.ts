@@ -7,6 +7,8 @@ import type { MovePick } from '../../incursion/tapWindow'
 import { mayKnow } from '../../incursion/tms'
 import { fightProgress, raidSource } from '../raidFight'
 import { fightDue, startFight } from '../raidLobby'
+import { lateJoinBlocker, seatLate } from '../raidLateJoin'
+import { raidMoveAllowed } from '../raidMoves'
 import { newRoom, roomBoss, roomFull, seatEntrant, unseat, type RaidRoom } from '../raidRoom'
 import { RaidStage, stageAt } from '../raidSchedule'
 import type { RaidRotation, RoomView } from './protocol'
@@ -29,6 +31,8 @@ export interface SharedRaid extends RaidRoom {
   pickPending: Record<string, MovePick>
   /** Pokémon de los jugadores que han acertado el toque crítico y aún no ha llegado su ventana */
   critPending: string[]
+  /** Pokémon de los jugadores que han entrado en la pelea ya empezada y aún no ha llegado su ventana (sin él, ninguno) */
+  joinPending?: string[]
   /** Falta apuntar en el ranking el daño al jefe (ver damageTally.ts) */
   damagePending: boolean
   updatedAt: number
@@ -40,17 +44,23 @@ export const createShared = (id: string, rotation: RaidRotation, cycle: number, 
   tapPending: [],
   pickPending: {},
   critPending: [],
+  joinPending: [],
   damagePending: true,
   updatedAt: now,
 })
 
 const seatOf = (room: SharedRaid, playerId: string) => room.seats.find((s) => s.playerId === playerId)
 
-/** La sala abierta a la que va el jugador: la suya si ya está en una; si no, la que tenga más jugadores y sitio; null si hay que abrir otra */
-export function roomFor(rooms: SharedRaid[], playerId: string): SharedRaid | null {
+/**
+ * La sala a la que va el jugador: la suya si ya está en una; si no, la que tenga más jugadores y sitio (con la pelea
+ * empezada, una en la que aún se pueda entrar, ver raidLateJoin.ts); null si hay que abrir otra
+ */
+export function roomFor(rooms: SharedRaid[], playerId: string, now: number): SharedRaid | null {
   const own = rooms.find((r) => seatOf(r, playerId))
   if (own) return own
-  return rooms.filter((r) => !r.fight && !roomFull(r)).sort((a, b) => b.entrants.length - a.entrants.length)[0] ?? null
+  const lobby = (r: SharedRaid) => stageAt(r.cycle, now) === RaidStage.Lobby
+  const fits = (r: SharedRaid) => (lobby(r) ? !r.fight && !roomFull(r) : lateJoinBlocker(r, now) === null)
+  return [...rooms].sort((a, b) => b.entrants.length - a.entrants.length).find(fits) ?? null
 }
 
 /**
@@ -59,12 +69,25 @@ export function roomFor(rooms: SharedRaid[], playerId: string): SharedRaid | nul
  * o si ese Pokémon es de otro jugador
  */
 export function joinShared(room: SharedRaid, playerId: string, nickname: string, member: MemberState, now: number): boolean {
-  if (room.fight || stageAt(room.cycle, now) !== RaidStage.Lobby) return false
+  if (!raidMoveAllowed(member.moveId)) return false
+  if (stageAt(room.cycle, now) !== RaidStage.Lobby) return joinFightShared(room, playerId, nickname, member, now)
+  if (room.fight) return false
   const seat = seatOf(room, playerId)
   if (room.seats.some((s) => s.memberId === member.id && s.playerId !== playerId)) return false
   if (!seatEntrant(room, { member, trainer: nickname }, seat?.memberId ?? null)) return false
   if (seat) seat.memberId = member.id
   else room.seats.push({ playerId, memberId: member.id })
+  return true
+}
+
+/**
+ * Entra en la pelea ya empezada (sin Pokémon suyo en la sala): en la próxima ventana ocupa el sitio de un bot. false si
+ * ya no se puede (ver raidLateJoin.ts). La sala ya debe estar al día (advanceShared)
+ */
+function joinFightShared(room: SharedRaid, playerId: string, nickname: string, member: MemberState, now: number): boolean {
+  if (seatOf(room, playerId) || !seatLate(room, { member, trainer: nickname }, now)) return false
+  room.seats.push({ playerId, memberId: member.id })
+  room.joinPending = [...(room.joinPending ?? []), member.id]
   return true
 }
 
@@ -81,16 +104,17 @@ export function advanceShared(room: SharedRaid, now: number) {
   room.updatedAt = now
   if (fightDue(room, now)) startFight(room)
   if (!room.fight) return
-  const pending = { boosted: room.tapPending, picks: room.pickPending, crits: room.critPending }
+  const joins = room.entrants.filter((e) => room.joinPending?.includes(e.member.id)).map((e) => e.member)
+  const pending = { boosted: room.tapPending, picks: room.pickPending, crits: room.critPending, ...(joins.length ? { joins } : {}) }
   if (!settleGroupTaps(room.fight, raidSource(roomBoss(room)), now, TAP_CLOSE_DELAY_MS, pending)) return
-  Object.assign(room, { tapPending: [], pickPending: {}, critPending: [] })
+  Object.assign(room, { tapPending: [], pickPending: {}, critPending: [], joinPending: [] })
 }
 
-/** El Pokémon del jugador en la pelea en marcha (no terminada); null si no está */
+/** El Pokémon del jugador en la pelea en marcha (no terminada; también si acaba de entrar); null si no está */
 function fighting(room: SharedRaid, playerId: string, now: number): MemberState | null {
   const id = seatOf(room, playerId)?.memberId
   if (!room.fight || !id || fightProgress(room.fight, roomBoss(room), now).phase === IncursionPhase.Finished) return null
-  return room.fight.members.find((m) => m.id === id) ?? null
+  return room.entrants.find((e) => e.member.id === id)?.member ?? null
 }
 
 /** El jugador ha llegado a los toques en la ventana `turn`: vale si es la abierta */
@@ -102,7 +126,7 @@ export function tapShared(room: SharedRaid, playerId: string, turn: number, now:
 /** El jugador cambia el ataque de su Pokémon y a quién lo dirige: entra en la próxima ventana (si conoce el ataque) */
 export function pickShared(room: SharedRaid, playerId: string, pick: MovePick, now: number) {
   const member = fighting(room, playerId, now)
-  if (member && mayKnow(member.speciesId, member.level, pick.moveId)) room.pickPending = { ...room.pickPending, [member.id]: pick }
+  if (member && mayKnow(member.speciesId, member.level, pick.moveId) && raidMoveAllowed(pick.moveId)) room.pickPending = { ...room.pickPending, [member.id]: pick }
 }
 
 /** El jugador ha acertado el toque crítico: su primer golpe del turno siguiente será crítico */
@@ -121,6 +145,7 @@ export function roomView(room: SharedRaid, playerId: string, now: number): RoomV
     you: seat.memberId,
     yourPick: room.pickPending[seat.memberId] ?? null,
     yourCrit: room.critPending.includes(seat.memberId),
+    yourJoin: room.joinPending?.includes(seat.memberId) ?? false,
     serverNow: now,
   }
 }

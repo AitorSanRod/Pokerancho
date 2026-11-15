@@ -20,7 +20,7 @@ export function takeDamageTally(room: SharedRaid, now: number): MonDamage[] {
   const damage = bossDamage(p, room.seats)
   return room.seats.flatMap((seat) => {
     const dealt = Math.round(damage.get(seat.memberId) ?? 0)
-    const speciesId = room.fight!.members.find((m) => m.id === seat.memberId)?.speciesId
+    const speciesId = room.entrants.find((e) => e.member.id === seat.memberId)?.member.speciesId
     return speciesId !== undefined && dealt > 0 ? [{ playerId: seat.playerId, uid: seat.memberId, speciesId, damage: dealt }] : []
   })
 }

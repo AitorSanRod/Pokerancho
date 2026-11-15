@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { seqRng } from '../../core/test-utils'
-import { repertoire } from '../../incursion/repertoire'
 import { joinRaid, RaidLink } from '../raid'
 import { raidReady, ROTATION } from '../raid-test-utils'
 import { fightStart, lobbyStart } from '../raidSchedule'
@@ -40,12 +39,13 @@ describe('sala enlazada con el servidor', () => {
   })
 
   it('si mientras tanto cambió de ataque, se le deja el suyo y se sigue pidiendo', () => {
-    const { s, mon, server } = joining()
-    const other = repertoire(mon.speciesId, mon.level).at(-1)!.id
-    joinRaid(s, ROTATION, mon.uid, other, OPEN)
-    applyRoomView(s, ROTATION, roomView(server, 'yo', OPEN)!, OPEN)
+    const { s, move, server } = joining()
+    // El servidor aún tiene el ataque de antes del cambio
+    const view = structuredClone(roomView(server, 'yo', OPEN)!)
+    view.room.entrants[0].member.moveId = `${move}-antes`
+    applyRoomView(s, ROTATION, view, OPEN)
     expect(s.raids[ROTATION]!.link).toBe(RaidLink.Joining)
-    expect(joinRequest(s, ROTATION)!.member.moveId).toBe(other)
+    expect(joinRequest(s, ROTATION)!.member.moveId).toBe(move)
   })
 
   it('si el servidor la pierde, sigue en local', () => {

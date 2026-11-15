@@ -2,17 +2,18 @@ import { foe, RoomKind, type IncursionFoe } from '../../data/incursions'
 import type { RaidBoss } from '../../data/raidBosses'
 import { species } from '../../data/species'
 import { groupProgress, IncursionPhase, type GroupPlan, type IncursionProgress } from '../incursion/activeIncursion'
+import { EventKind } from '../incursion/events'
 import type { FightSource } from '../incursion/incursionLeg'
 import { repertoire } from '../incursion/repertoire'
 import { RAID_FIGHT_MS } from './raidSchedule'
 
 // La pelea contra el jefe de la pestaña Raids: un combate de jefe de incursión (game/incursion/) de una sola sala, con
 // toda la sala contra él. Turnos por Velocidad, ataques de incursión que cada jugador cambia en plena pelea, ventana
-// de toques antes de cada turno, toque crítico y revivires del grupo. Termina al caer el jefe, al caer todos sin
+// de toques antes de cada turno, toque crítico y revivires de cada Pokémon. Termina al caer el jefe, al caer todos sin
 // revivires o al acabarse el tiempo (el jefe se escapa).
 
-/** Revivires que comparte toda la sala para la pelea entera */
-export const RAID_REVIVES = 10
+/** Revivires de cada Pokémon de la sala (jugadores y bots) para la pelea entera; quien entra tarde trae los suyos */
+export const RAID_REVIVES_EACH = 5
 /**
  * Multiplicador de los PS del jefe (además del de todos los rivales de incursión, FOE_HP_MULT): lucha contra diez y,
  * con una sala de su nivel, debe aguantar buena parte de la media hora
@@ -46,8 +47,10 @@ export function raidSource(boss: RaidBoss): FightSource {
     id: `raid-${boss.speciesId}-${boss.level}-${boss.statMult ?? 1}`,
     rooms: [{ kind: RoomKind.Battle, name: species(boss.speciesId).name, foes: [bossFoe(boss)], reward: { money: 0, exp: 0 } }],
     prizes: [],
-    revives: RAID_REVIVES,
+    revives: 0,
+    revivesEach: RAID_REVIVES_EACH,
     timeLimitMs: RAID_FIGHT_MS - RAID_LAST_TURN_MS,
+    tapsWithoutPlayers: true,
   }
 }
 
@@ -56,11 +59,30 @@ export const fightProgress = (fight: GroupPlan, boss: RaidBoss, now: number): In
 
 export const fightFinished = (fight: GroupPlan, boss: RaidBoss, now: number): boolean => fightProgress(fight, boss, now).phase === IncursionPhase.Finished
 
-/** Fracción de la vida del jefe que le queda al final de lo simulado (1 si nadie le ha dado) */
-export function finalBossHp(p: IncursionProgress): number {
-  const last = p.record.legs[0].events.findLast((e) => e.target === RAID_BOSS_ID && e.maxHp)
+/** Fracción de la vida del jefe tras los primeros `count` eventos de la pelea (1 si nadie le ha dado) */
+function bossHpAfter(p: IncursionProgress, count: number): number {
+  const last = p.record.legs[0].events.slice(0, count).findLast((e) => e.target === RAID_BOSS_ID && e.maxHp)
   return last ? last.hp! / last.maxHp! : 1
 }
 
-/** Terminada la pelea, fracción de la vida del jefe que le ha quitado la sala: el premio de cada uno va por ella (1 si cae) */
-export const bossShareTaken = (p: IncursionProgress): number => 1 - finalBossHp(p)
+/** Fracción de la vida del jefe que le queda al final de lo simulado (1 si nadie le ha dado) */
+export const finalBossHp = (p: IncursionProgress): number => bossHpAfter(p, p.record.legs[0].events.length)
+
+/**
+ * Fracción de la vida del jefe cuando entró ese Pokémon en la pelea: 1 si estaba desde el principio; null si no ha
+ * llegado a entrar
+ */
+export function bossHpAtJoin(fight: GroupPlan, p: IncursionProgress, uid: string): number | null {
+  if (fight.members.some((m) => m.id === uid)) return 1
+  const at = p.record.legs[0].events.findIndex((e) => e.kind === EventKind.Join && e.target === uid)
+  return at < 0 ? null : bossHpAfter(p, at)
+}
+
+/**
+ * Terminada la pelea, fracción de la vida del jefe que le ha quitado la sala desde que entró ese Pokémon: su premio va
+ * por ella (con el jefe entero al empezar y caído, 1; sin llegar a entrar, 0)
+ */
+export function bossShareTaken(fight: GroupPlan, p: IncursionProgress, uid: string): number {
+  const atJoin = bossHpAtJoin(fight, p, uid)
+  return atJoin === null ? 0 : atJoin - finalBossHp(p)
+}

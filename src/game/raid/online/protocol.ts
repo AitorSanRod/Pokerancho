@@ -19,7 +19,7 @@ export const RAID_ROTATIONS: RaidRotation[] = [RaidRotation.Ordered, RaidRotatio
 export const RaidAction = {
   /** Lo que hay en la pestaña: cuántos jugadores esperan a cada jefe */
   Board: 'board',
-  /** Entrar en la sala abierta de una rotación (o cambiar el Pokémon o el ataque del que ya está) */
+  /** Entrar en la sala abierta de una rotación (o cambiar el Pokémon o el ataque del que ya está) o en su pelea ya empezada */
   Join: 'join',
   /** Salir de la sala abierta */
   Leave: 'leave',
@@ -99,6 +99,8 @@ export interface RoomView {
   yourPick: MovePick | null
   /** Su toque crítico acertado que aún no ha llegado a una ventana */
   yourCrit: boolean
+  /** Ha entrado en la pelea ya empezada y su Pokémon aún no ha llegado a una ventana (no está luchando todavía) */
+  yourJoin: boolean
   serverNow: number
 }
 

@@ -23,8 +23,8 @@ const firstTab = (game: GameState): RaidRotation => RAID_ROTATIONS.find((r) => g
 
 /**
  * Pestaña Ruta › Raids: una pestaña por rotación de jefes, todas con el mismo calendario (raidSchedule.ts). Con la sala
- * abierta se entra con un Pokémon y su ataque; al empezar, la pelea a pantalla completa, como la de una incursión. Con
- * servidor, la sala es la suya, con otros jugadores; sin él, en local con bots
+ * abierta se entra con un Pokémon y su ataque; al empezar, la pelea bajo las pestañas, y aún se puede entrar en ella
+ * en el sitio de un bot (raidLateJoin.ts). Con servidor, la sala es la suya, con otros jugadores; sin él, en local con bots
  */
 export function RaidScreen({ game }: { game: GameState }) {
   const board = useRaidBoard()
@@ -40,21 +40,17 @@ export function RaidScreen({ game }: { game: GameState }) {
 
   const now = serverNow(board)
   const tr = game.raids[tab]
-  const other = RAID_ROTATIONS.find((r) => r !== tab)!
   const overlay = collected && <RewardOverlay title="¡Premio del jefe!" items={raidPrizeRewards([collected])} onClose={() => setCollected(null)} />
   const tabs = <RotationTabs game={game} tab={tab} now={now} onTab={setTab} />
 
+  // En la pelea siguen arriba las pestañas de las rotaciones: se puede ir a ver (o a entrar en) la otra
   if (tr?.room.fight) {
-    const switcher = game.raids[other] && (
-      <button className="btn ghost small" onClick={() => setTab(other)}>
-        {ROTATION_LABEL[other]}
-      </button>
-    )
     return (
-      <>
+      <div className="screen raid-screen raid-fighting">
         {overlay}
-        <RaidFightView game={game} tr={tr} rotation={tab} switcher={switcher} onCollected={setCollected} />
-      </>
+        {tabs}
+        <RaidFightView game={game} tr={tr} rotation={tab} onCollected={setCollected} />
+      </div>
     )
   }
 
@@ -64,7 +60,7 @@ export function RaidScreen({ game }: { game: GameState }) {
       {overlay}
       {tabs}
       <RaidPrizeBanner game={game} />
-      {fightRunning ? <RaidWaiting rotation={tab} now={now} /> : <RaidLobby game={game} rotation={tab} board={board} now={now} />}
+      {fightRunning ? <RaidWaiting game={game} rotation={tab} now={now} /> : <RaidLobby game={game} rotation={tab} board={board} now={now} />}
     </div>
   )
 }

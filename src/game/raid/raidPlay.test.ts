@@ -35,9 +35,20 @@ describe('entrar en la sala', () => {
     expect(s.raids[ROTATION]!.room.entrants.map((e) => e.member.id)).toEqual([mon.uid])
   })
 
-  it('con la pelea empezada ya no se entra', () => {
+  it('con la pelea empezada entra en el sitio de un bot en la próxima ventana', () => {
     const { s, mon, move } = raidReady(CYCLE)
-    expect(raidBlocker(s, ROTATION, mon.uid, move, fightStart(CYCLE))).not.toBeNull()
+    const at = fightStart(CYCLE) + 1
+    expect(raidBlocker(s, ROTATION, mon.uid, move, at)).toBeNull()
+    joinRaid(s, ROTATION, mon.uid, move, at)
+    const tr = s.raids[ROTATION]!
+    expect(tr.pendingJoin).toBe(true)
+    expect(raidBlocker(s, ROTATION, mon.uid, move, at)).not.toBeNull()
+    tr.link = RaidLink.Local
+    const end = cycleEnd(CYCLE) - 1
+    advanceRaids(s, end)
+    expect(tr.pendingJoin).toBe(false)
+    const join = raidProgress(tr, end)!.record.legs[0].events.find((e) => e.kind === EventKind.Join)
+    expect(join?.target).toBe(mon.uid)
   })
 
   it('al salir de la sala abierta vuelve al rancho', () => {

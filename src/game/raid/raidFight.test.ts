@@ -6,7 +6,7 @@ import { settleGroupTaps } from '../incursion/tapSettle'
 import { noTurnOrders } from '../incursion/tapWindow'
 import { RaidRotation } from './online/protocol'
 import { entrant } from './raid-test-utils'
-import { bossShareTaken, fightProgress, RAID_REVIVES, raidSource } from './raidFight'
+import { bossShareTaken, fightProgress, RAID_REVIVES_EACH, raidSource } from './raidFight'
 import { startFight } from './raidLobby'
 import { newRoom, roomBoss, seatEntrant } from './raidRoom'
 import { cycleEnd, RAID_FIGHT_MS } from './raidSchedule'
@@ -29,7 +29,7 @@ describe('pelea contra el jefe', () => {
     const room = src.rooms[0]
     expect(room.kind).toBe(RoomKind.Battle)
     expect(room.kind === RoomKind.Battle && room.foes).toHaveLength(1)
-    expect(src.revives).toBe(RAID_REVIVES)
+    expect(src.revivesEach).toBe(RAID_REVIVES_EACH)
     expect(src.timeLimitMs).toBeLessThan(RAID_FIGHT_MS)
   })
 
@@ -39,7 +39,7 @@ describe('pelea contra el jefe', () => {
     const p = fightProgress(fight, roomBoss(room), cycleEnd(CYCLE))
     expect(p.phase).toBe(IncursionPhase.Finished)
     expect(fight.legStarts[0] + legDuration(p.record.legs[0])).toBeLessThanOrEqual(cycleEnd(CYCLE))
-    const share = bossShareTaken(p)
+    const share = bossShareTaken(fight, p, 'a')
     expect(share).toBeGreaterThan(0)
     expect(share).toBeLessThanOrEqual(1)
   })

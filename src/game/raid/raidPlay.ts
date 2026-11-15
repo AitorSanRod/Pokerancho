@@ -7,8 +7,9 @@ import type { MovePick, TurnOrders } from '../incursion/tapWindow'
 import { maxHp } from '../team/stats'
 import { RAID_ROTATIONS, type RaidRotation } from './online/protocol'
 import { RaidLink, type TabRaid } from './raid'
-import { bossShareTaken, fightProgress, raidSource } from './raidFight'
+import { bossHpAtJoin, bossShareTaken, fightProgress, raidSource } from './raidFight'
 import { fightDue, startFight } from './raidLobby'
+import { raidMoveAllowed } from './raidMoves'
 import { applyPrize, fightPrize } from './raidPrizes'
 import { roomBoss, type RaidPrize } from './raidRoom'
 import { cycleEnd } from './raidSchedule'
@@ -24,14 +25,18 @@ export function raidProgress(tr: TabRaid, now: number): IncursionProgress | null
 
 export const raidFinished = (tr: TabRaid, now: number): boolean => raidProgress(tr, now)?.phase === IncursionPhase.Finished
 
+/** Su Pokémon tal y como entra en la pelea ya empezada, si lo ha pedido (sin él, las órdenes no llevan `joins`) */
+const joining = (tr: TabRaid) => (tr.pendingJoin ? { joins: tr.room.entrants.filter((e) => e.member.id === tr.uid).map((e) => e.member) } : {})
+
 /** Lo que el jugador lleva decidido para la próxima ventana, como órdenes del turno */
 export const raidOrders = (tr: TabRaid, boosted: boolean): TurnOrders => ({
   boosted: boosted ? [tr.uid] : [],
   picks: tr.pendingPick ? { [tr.uid]: tr.pendingPick } : {},
   crits: tr.pendingCrit ? [tr.uid] : [],
+  ...joining(tr),
 })
 
-const clearPending = (tr: TabRaid) => Object.assign(tr, { pendingPick: null, pendingCrit: false })
+const clearPending = (tr: TabRaid) => Object.assign(tr, { pendingPick: null, pendingCrit: false, pendingJoin: false })
 
 /** Sin servidor: la pelea empieza a su hora y se cierran las ventanas de toques ya pasadas */
 function playLocally(tr: TabRaid, now: number) {
@@ -42,9 +47,11 @@ function playLocally(tr: TabRaid, now: number) {
 
 /** Lo que se lleva al terminar: el premio por la parte del jefe quitada y su Pokémon, con los PS que le queden */
 function settle(s: GameState, tr: TabRaid, p: IncursionProgress, rng: Rng): RaidPrize {
+  const fight = tr.room.fight!
   const mon = findMon(s, tr.uid)
-  if (mon) mon.hp = Math.round(maxHp(mon) * finalHpFraction(tr.room.fight!, p, tr.uid))
-  return fightPrize(roomBoss(tr.room), tr.uid, bossShareTaken(p), rng)
+  // Si no llegó a entrar en la pelea, vuelve como se fue
+  if (mon && bossHpAtJoin(fight, p, tr.uid) !== null) mon.hp = Math.round(maxHp(mon) * finalHpFraction(fight, p, tr.uid))
+  return fightPrize(roomBoss(tr.room), tr.uid, bossShareTaken(fight, p, tr.uid), rng)
 }
 
 /**
@@ -85,7 +92,7 @@ function liveFight(s: GameState, rotation: RaidRotation, now: number): TabRaid |
 export function setRaidPick(s: GameState, rotation: RaidRotation, pick: MovePick, now: number): boolean {
   const tr = liveFight(s, rotation, now)
   const mon = tr && findMon(s, tr.uid)
-  if (!tr || !mon || !monKnows(mon, pick.moveId)) return false
+  if (!tr || !mon || !monKnows(mon, pick.moveId) || !raidMoveAllowed(pick.moveId)) return false
   tr.pendingPick = { moveId: pick.moveId, target: pick.target }
   return true
 }

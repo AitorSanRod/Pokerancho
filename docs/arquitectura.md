@@ -41,7 +41,8 @@ src/
     raid/             Jefes de la pestaña Raids: raidSchedule (calendario: sala abierta y pelea), rotationBosses (jefe de
                       cada ciclo), raidRoom (la sala), raidBots, raidLobby (de la sala a la pelea), raidFight (la pelea
                       con el motor de incursiones), raidCrit (anillo crítico), raid + raidPlay (en la partida: entrar,
-                      salir, pelea local, cobrar), raidPrizes; routeRaid + routeRaidStreak (premio de las paradas de ruta)
+                      salir, pelea local, cobrar), raidLateJoin (entrar en la pelea empezada),
+                      raidMoves (solo ataques de daño), raidPrizes; routeRaid + routeRaidStreak (premio de las paradas de ruta)
     incursion/        Incursiones (mazmorras de 5; ver docs/incursiones.md): incursionRun (tramos encadenados, retirada),
                       incursionLeg (un tramo: salas hasta reorganizar o el final), groupBattle (combate N contra M),
                       moveEffects + targeting (qué hace cada movimiento y a quién), groupStatus, bossMechanics, revives,
@@ -74,7 +75,8 @@ src/
                       (pixelScene/: pixel art generado y animado en canvas, ver fondos.md)
     expeditions/      Enviar, seguir y recoger expediciones
     raid/             Pestaña Ruta › Raids: una pestaña por rotación, la sala abierta (RaidLobby: lista, entrar, cambiar o
-                      salir), la pelea (RaidFightView, con las piezas de la incursión en curso), el anillo crítico, el
+                      salir), la pelea (RaidFightView bajo las pestañas, con la escena de la incursión, cabecera
+                      como la de ruta en RaidFightHud y la barra de ataques de las rutas), el anillo crítico, el
                       final y el apodo (NicknameDialog)
     incursion/        Pestaña Ruta › Incursiones: lista con información, preparación (Pokémon y movimiento), la
                       incursión en curso (IncursionStage sobre la escena de ruta; sceneState rehace cada momento desde
@@ -147,7 +149,9 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `game/raid/raidLobby.ts` | El paso a la pelea: a su hora (`fightDue`), con los jugadores y bots hasta llenarla (`startFight`) |
 | `game/raid/raidFight.ts` | La pelea para el motor de incursiones (`raidSource`: el jefe como rival con sus mecánicas, revivires y límite de tiempo) y la parte del jefe quitada |
 | `game/raid/raidCrit.ts` | Cuándo sale el anillo crítico en la pelea (`fightRingAt`) |
-| `game/raid/raid.ts` | En la partida: `TabRaid` (sala, Pokémon, enlace con el servidor), entrar o cambiar (`joinRaid`), salir, por qué no se puede |
+| `game/raid/raid.ts` | En la partida: `TabRaid` (sala, Pokémon, enlace con el servidor), entrar o cambiar (`joinRaid`, también en la pelea empezada), salir, por qué no se puede |
+| `game/raid/raidLateJoin.ts` | Entrar en la pelea empezada: si se puede (`lateJoinBlocker`: vida del jefe y bots), la sala local con solo bots puesta al día, sentarse (`seatLate`) |
+| `game/raid/raidMoves.ts` | Los ataques de la pelea: solo de daño mientras `RAID_DAMAGE_ONLY` (jugadores y bots) |
 | `game/raid/raidPlay.ts` | En la partida: la pelea local (empieza a su hora, cierra ventanas), ataque, toques y crítico, cobrar y, al acabar el ciclo, el premio a Notificaciones |
 | `game/raid/raidPrizes.ts` | Tirada de la tabla, premio por la parte del jefe quitada (`fightPrize`) y recogida |
 | `game/raid/routeRaid.ts` | Jefes de las paradas de ruta: al vencerlos (un combate de jefe de la ruta), su premio de raid |

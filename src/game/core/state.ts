@@ -115,7 +115,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 62
+export const SAVE_VERSION = 63
 
 export function initialState(): GameState {
   return {

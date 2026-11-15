@@ -27,9 +27,9 @@ describe('sala del servidor', () => {
     const a = shared('tab/ordered/12/a')
     const b = shared('tab/ordered/12/b')
     join(b, 'p1')
-    expect(roomFor([a, b], 'p2')).toBe(b)
+    expect(roomFor([a, b], 'p2', OPEN)).toBe(b)
     join(a, 'p3')
-    expect(roomFor([a, b], 'p3')).toBe(a)
+    expect(roomFor([a, b], 'p3', OPEN)).toBe(a)
   })
 
   it('cada jugador lleva un Pokémon: al volver con otro, se cambia', () => {

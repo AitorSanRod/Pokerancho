@@ -1,7 +1,8 @@
-import { RAID_REVIVES } from '../../../game/raid/raidFight'
+import { RAID_REVIVES_EACH } from '../../../game/raid/raidFight'
+import { RAID_LATE_JOIN_MIN_HP } from '../../../game/raid/raidLateJoin'
 import { RAID_ROOM_SIZE } from '../../../game/raid/raidRoom'
 import { RAID_FIGHT_MS, RAID_LOBBY_MS } from '../../../game/raid/raidSchedule'
-import { formatMinutes } from '../../shared/format'
+import { formatMinutes, formatPercent } from '../../shared/format'
 import { ICON } from '../../shared/icons'
 import { shot, type Guide } from './guide'
 
@@ -24,7 +25,7 @@ export const RAID_GUIDE: Guide = {
     {
       image: shot('raid-send'),
       title: 'Hasta que empiece',
-      text: 'Mientras la sala está abierta puedes cambiar de Pokémon o de ataque, o salir. Al empezar la pelea, la sala se cierra.',
+      text: `Mientras la sala está abierta puedes cambiar de Pokémon o de ataque, o salir. Con la pelea ya empezada aún puedes entrar, en el sitio de un bot, mientras al jefe le quede más del ${formatPercent(RAID_LATE_JOIN_MIN_HP)} de su vida.`,
     },
     {
       image: shot('raid-nickname'),
@@ -34,12 +35,12 @@ export const RAID_GUIDE: Guide = {
     {
       image: shot('raid-battle'),
       title: 'La pelea',
-      text: `Dura como mucho ${formatMinutes(RAID_FIGHT_MS / 60_000)} y va como el jefe de una incursión: por turnos, con los ataques que elegís y ${RAID_REVIVES} revivires para toda la sala. Abajo cambias tu ataque cuando quieras; antes de cada turno, toca rápido para potenciarlo; y si sale un anillo sobre el jefe, toca cuando se cierre: tu siguiente golpe será crítico.`,
+      text: `Dura como mucho ${formatMinutes(RAID_FIGHT_MS / 60_000)} y va como el jefe de una incursión: por turnos, con ataques de daño y ${RAID_REVIVES_EACH} revivires para cada Pokémon. Arriba ves la vida del jefe y el tiempo; abajo cambias tu ataque cuando quieras; antes de cada turno, toca rápido para potenciarlo; y si sale un anillo sobre el jefe, toca cuando se cierre: tu siguiente golpe será crítico.`,
     },
     {
       image: shot('raid-prize'),
       title: 'Recoge el premio',
-      text: 'Al acabar, el premio va por la parte de la vida del jefe que le hayáis quitado: entero si cae. Recógelo en la pelea; si no, al acabar la hora llega a Notificaciones. Las paradas de jefe de algunas rutas son un combate más de la ruta, con su premio de raid.',
+      text: 'Al acabar, el premio va por la parte de la vida del jefe que le hayáis quitado desde que entraste: entero si cae. Recógelo en la pelea; si no, al acabar la hora llega a Notificaciones. Las paradas de jefe de algunas rutas son un combate más de la ruta, con su premio de raid.',
     },
   ],
 }

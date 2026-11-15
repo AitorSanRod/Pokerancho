@@ -1,6 +1,6 @@
 import { MoveClass, moveClass } from '../../data/incursionMoves'
 import type { Battlefield } from './battlefield'
-import { isUp, Team, type GroupFighter } from './fighter'
+import { isUp, Team, type GroupFighter, type MemberState } from './fighter'
 import { isBot } from './party'
 
 // Toques antes de cada turno del grupo: durante TAP_WINDOW_MS los jugadores pueden tocar la pantalla y, si llegan a los
@@ -26,12 +26,14 @@ export interface MovePick {
  * Lo que se decide en una ventana, por el id de cada Pokémon: quiénes potenciaron su ataque con los toques, quiénes
  * cambiaron de ataque u objetivo (sigue así hasta que lo vuelvan a cambiar) y quiénes acertaron el toque crítico en un
  * golpe del turno anterior: su primer golpe a un rival de este turno es crítico (×TAP_CRIT_MULT, battle/attack.ts).
- * Sin `crits` (las incursiones, que no tienen toque crítico), ninguno
+ * Sin `crits` (las incursiones, que no tienen toque crítico), ninguno. `joins`: Pokémon de jugadores que entran en
+ * plena pelea, cada uno en el sitio del último bot que quede (ver joins.ts; solo en la raid)
  */
 export interface TurnOrders {
   boosted: string[]
   picks: Record<string, MovePick>
   crits?: string[]
+  joins?: MemberState[]
 }
 
 export const noTurnOrders = (): TurnOrders => ({ boosted: [], picks: {} })

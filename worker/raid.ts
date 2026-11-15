@@ -4,7 +4,7 @@ import { startPush } from '../src/game/raid/online/raidPushes'
 import { parseRequest } from '../src/game/raid/online/requests'
 import { advanceShared, createShared, critShared, joinShared, leaveShared, pickShared, roomFor, roomView, tapShared } from '../src/game/raid/online/sharedRaid'
 import { roomBoss } from '../src/game/raid/raidRoom'
-import { cycleAt } from '../src/game/raid/raidSchedule'
+import { cycleAt, RaidStage, stageAt } from '../src/game/raid/raidSchedule'
 import { countChannel, loadChannel, loadRoom, saveRoom } from './db/rooms'
 import type { Env } from './env'
 import { json, readJson } from './http'
@@ -38,8 +38,8 @@ async function board(db: D1Database, now: number): Promise<RaidBoard> {
 }
 
 /**
- * Entrar en la sala abierta de la rotación (o cambiar el Pokémon o el ataque): la suya si ya está en una, la que tenga
- * más jugadores con sitio o una nueva. Al sentarse por primera vez se le programa el aviso de cuando empiece la pelea
+ * Entrar en la sala abierta de la rotación (o cambiar el Pokémon o el ataque) o en su pelea ya empezada: la suya si ya
+ * está en una, la que tenga más jugadores con sitio o una nueva. Al sentarse por primera vez se le programa el aviso de cuando empiece la pelea
  */
 async function join(db: D1Database, req: JoinRequest): Promise<Outcome> {
   const now = Date.now()
@@ -48,6 +48,7 @@ async function join(db: D1Database, req: JoinRequest): Promise<Outcome> {
   const found = roomFor(
     stored.map((s) => s.room),
     req.playerId,
+    now,
   )
   const room = found ?? createShared(`tab/${req.rotation}/${cycle}/${randomId()}`, req.rotation, cycle, now, Math.random)
   const version = stored.find((s) => s.room === found)?.version ?? null
@@ -56,7 +57,8 @@ async function join(db: D1Database, req: JoinRequest): Promise<Outcome> {
   if (req.member.level < (roomBoss(room).minLevel ?? 0)) return GONE
   if (!joinShared(room, req.playerId, req.nickname, req.member, now)) return GONE
   if (!(await saveRoom(db, { room, version }, now))) return CONFLICT
-  if (isNew) await notifyRaid(db, [startPush(room, req.playerId)])
+  // Con la pelea ya empezada no hay aviso de que empieza
+  if (isNew && stageAt(cycle, now) === RaidStage.Lobby) await notifyRaid(db, [startPush(room, req.playerId)])
   return { room: roomView(room, req.playerId, now)! }
 }
 

@@ -5,6 +5,7 @@ import { EventKind, view, type IncursionEvent } from './events'
 import { pickFoe } from './foePool'
 import { foeFighter, memberState, partyFighter, type MemberState } from './fighter'
 import { fightRoom, refreshPassives } from './groupBattle'
+import { applyJoins } from './joins'
 import { addEarnings, noEarnings, rollPrizes, type Earned } from './incursionRewards'
 import { eventMs } from './incursionTimeline'
 import { leaveRoom, restRoom } from './restRooms'
@@ -26,8 +27,12 @@ export interface FightSource {
   prizes: IncursionPrize[]
   /** Revivires del grupo para toda la pelea; sin él, INCURSION_REVIVES */
   revives?: number
+  /** Revivires de cada Pokémon, en lugar de los del grupo (solo para una pelea de un tramo, como la raid) */
+  revivesEach?: number
   /** Milisegundos de cada tramo tras los que ya no empieza otro turno (y se pierde la sala); sin él, sin límite */
   timeLimitMs?: number
+  /** Hay ventana de toques cada turno aunque no quede en pie ningún jugador: así puede entrar uno en plena pelea */
+  tapsWithoutPlayers?: boolean
 }
 
 export interface LegStart {
@@ -57,9 +62,9 @@ export interface LegResult {
   turns: TurnOrders[]
 }
 
-function battlefield(start: LegStart, log: (e: IncursionEvent) => void): Battlefield {
+function battlefield(start: LegStart, revivesEach: number | undefined, log: (e: IncursionEvent) => void): Battlefield {
   const party = start.members.map(partyFighter)
-  const bf: Battlefield = { party, foes: [], revives: start.revives, turn: 0, falls: 0, passives: [], boosted: [], critReady: [], log }
+  const bf: Battlefield = { party, foes: [], revives: start.revives, revivesEach, turn: 0, falls: 0, passives: [], boosted: [], critReady: [], log }
   refreshPassives(bf)
   return bf
 }
@@ -73,14 +78,18 @@ export function simulateLeg(inc: FightSource, start: LegStart, seed: number, res
     events.push(e)
     elapsedMs += eventMs(e)
   }
-  const bf = battlefield(start, log)
+  const bf = battlefield(start, inc.revivesEach, log)
+  /** Cómo entró cada uno, en el orden del grupo (cambia si entra un jugador en el sitio de un bot) */
+  const roster = [...start.members]
   const outOfTime = () => inc.timeLimitMs !== undefined && elapsedMs >= inc.timeLimitMs
   /** Abre la ventana de toques del turno y da sus órdenes (undefined: aún no se saben) */
   const tapWindow = () => {
     const turn = turns.length
     const orders = resolveTaps(turn, elapsedMs + TAP_WINDOW_MS)
     log({ kind: EventKind.TapWindow, turn, text: '¡Toca para potenciar tu ataque!' })
-    if (orders) turns.push(orders)
+    if (!orders) return undefined
+    turns.push(orders)
+    applyJoins(bf, roster, orders.joins ?? [])
     return orders
   }
   let earned = noEarnings()
@@ -90,7 +99,7 @@ export function simulateLeg(inc: FightSource, start: LegStart, seed: number, res
     earned,
     prize,
     turns,
-    next: { room, revives: bf.revives, members: start.members.map((m, i) => memberState(bf.party[i], m)) },
+    next: { room, revives: bf.revives, members: roster.map((m, i) => memberState(bf.party[i], m)) },
   })
 
   for (let r = start.room; r < inc.rooms.length; r++) {
@@ -106,7 +115,7 @@ export function simulateLeg(inc: FightSource, start: LegStart, seed: number, res
     }
     bf.foes = room.foes.map((slot, i) => foeFighter(pickFoe(slot, rng), `foe-${r}-${i}`))
     log({ kind: EventKind.Room, room: r, text: room.name, fighters: [...bf.party, ...bf.foes].map(view) })
-    const outcome = fightRoom(bf, rng, tapWindow, outOfTime)
+    const outcome = fightRoom(bf, rng, tapWindow, outOfTime, inc.tapsWithoutPlayers)
     if (outcome === 'waiting') return result(LegOutcome.Waiting, r)
     if (outcome === 'lose') return result(LegOutcome.Lose, r)
     log({ kind: EventKind.Cleared, room: r, reward: room.reward, text: `¡${room.name} superada!` })

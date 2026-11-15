@@ -3,7 +3,8 @@ import { Rarity, rarityOf, SPECIES } from '../../data/species'
 import { hitsAllies, incursionMove } from '../../data/incursionMoves'
 import { randInt, seededRng } from '../core/random'
 import type { MemberState } from '../incursion/fighter'
-import { botId, botMove, freshMember } from '../incursion/party'
+import { botId, freshMember } from '../incursion/party'
+import { raidBotMove } from './raidMoves'
 import { RAID_LOBBY_MS, lobbyStart } from './raidSchedule'
 import { RAID_ROOM_SIZE, roomBoss, type RaidRoom } from './raidRoom'
 
@@ -34,15 +35,15 @@ function rollBot(i: number, boss: RaidBoss, taken: MemberState[], rng: () => num
   let bot = freshMember({ id: botId(i), speciesId: pool[0].id, level, stars: 0, moveId: '' })
   for (let roll = 0; roll < BOT_REROLLS; roll++) {
     const speciesId = pool[randInt(0, pool.length - 1, rng)].id
-    bot = { ...bot, speciesId, moveId: botMove(speciesId, level, moves) }
+    bot = { ...bot, speciesId, moveId: raidBotMove(speciesId, level, moves) }
     if (!hitsAllies(incursionMove(bot.moveId))) break
   }
   return bot
 }
 
 /**
- * Los bots que puede llegar a tener la sala, en orden de llegada: cada uno con su ataque según lo que lleven los de
- * antes (curar o provocar si nadie lo hace, ver incursion/party.ts)
+ * Los bots que puede llegar a tener la sala, en orden de llegada: cada uno con su ataque de raid (raidMoves.ts ›
+ * raidBotMove, según lo que lleven los de antes)
  */
 export function roomBots(boss: RaidBoss, seed: number): MemberState[] {
   const key = `${boss.speciesId}:${boss.level}:${seed}`

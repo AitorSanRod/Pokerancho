@@ -38,15 +38,22 @@ export function turnOrder(bf: Battlefield, rng: Rng): GroupFighter[] {
 /**
  * Juega la sala. `tapWindow` abre la ventana de toques del turno y da sus órdenes (quién potenció su ataque, quién
  * acertó el toque crítico y quién cambió de ataque u objetivo); si aún no se sabe (undefined), la sala se para ahí:
- * 'waiting'. Si `outOfTime` dice que se ha acabado el tiempo, no empieza otro turno y se pierde
+ * 'waiting'. Si `outOfTime` dice que se ha acabado el tiempo, no empieza otro turno y se pierde. Con `tapsAlways`, hay
+ * ventana aunque no quede en pie ningún Pokémon de un jugador (en ella puede entrar uno, ver joins.ts)
  */
-export function fightRoom(bf: Battlefield, rng: Rng, tapWindow: () => TurnOrders | undefined, outOfTime: () => boolean = () => false): 'win' | 'lose' | 'waiting' {
+export function fightRoom(
+  bf: Battlefield,
+  rng: Rng,
+  tapWindow: () => TurnOrders | undefined,
+  outOfTime: () => boolean = () => false,
+  tapsAlways = false,
+): 'win' | 'lose' | 'waiting' {
   for (bf.turn = 1; bf.turn <= MAX_ROOM_TURNS; bf.turn++) {
     if (outOfTime()) return 'lose'
     resolveFallen(bf)
     refreshPassives(bf)
     for (const boss of bossesUp(bf)) bossTurnStart(bf, boss)
-    const orders = anyPlayerUp(bf) ? tapWindow() : noTurnOrders()
+    const orders = tapsAlways || anyPlayerUp(bf) ? tapWindow() : noTurnOrders()
     if (!orders) return 'waiting'
     bf.boosted = orders.boosted
     bf.critReady = [...(orders.crits ?? [])]

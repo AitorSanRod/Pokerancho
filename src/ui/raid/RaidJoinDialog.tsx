@@ -3,16 +3,16 @@ import { createPortal } from 'react-dom'
 import { species } from '../../data/species'
 import { MonPlace, monPlace, type GameState, type OwnedMon } from '../../game/core/state'
 import { act } from '../../store/store'
-import { monRepertoire } from '../../game/incursion/repertoire'
 import { joinRaid, raidBlocker } from '../../game/raid/raid'
+import { raidMoveChoices } from '../../game/raid/raidMoves'
 import type { RaidRotation } from '../../game/raid/online/protocol'
 import { cycleBoss } from '../../game/raid/rotationBosses'
-import { cycleAt } from '../../game/raid/raidSchedule'
+import { cycleAt, RaidStage, stageAt } from '../../game/raid/raidSchedule'
 import { Sprite } from '../shared/common'
 import { MonPicker } from '../shared/MonPicker'
 import { HeroLayout } from '../shared/sheet/HeroLayout'
 import { BIOME_SCENERY } from '../shared/sheet/scenery'
-import { MovePicker } from '../incursion/MovePicker'
+import { RouteMoveBar } from '../route/RouteMoveBar'
 import { raidBiome } from './raidBiome'
 import '../shared/overlays.css'
 import '../route/route-start.css'
@@ -36,12 +36,13 @@ export function RaidJoinDialog({ game, rotation, now, onClose }: Props) {
   const own = game.raids[rotation]
   const ownMove = own?.room.entrants.find((e) => e.member.id === own.uid)?.member.moveId ?? null
   const boss = cycleBoss(rotation, cycleAt(now))
+  const late = stageAt(cycleAt(now), now) === RaidStage.Fight
   const mons = candidates(game, rotation)
   const fits = (m: OwnedMon) => m.level >= (boss.minLevel ?? 0) && m.hp >= 1
   const [uid, setUid] = useState(own?.uid ?? mons.find(fits)?.uid)
   const [moveId, setMoveId] = useState<string | null>(ownMove)
   const mon = mons.find((m) => m.uid === uid)
-  const moves = mon ? monRepertoire(mon) : []
+  const moves = mon ? raidMoveChoices(mon) : []
   const move = moves.find((mv) => mv.id === moveId) ?? moves[0]
   const blocker = !mon || !move ? 'Ninguno de tus Pokémon del rancho puede ir contra este jefe.' : raidBlocker(game, rotation, mon.uid, move.id, now)
 
@@ -60,15 +61,12 @@ export function RaidJoinDialog({ game, rotation, now, onClose }: Props) {
         <div className="route-start-body">
           <div className="label">¿Quién va?</div>
           <MonPicker mons={mons} selectedUid={mon?.uid} onSelect={setUid} lockOf={(m) => (fits(m) ? null : 'other')} />
-          {move && (
-            <>
-              <div className="label">Ataque con el que empieza</div>
-              <MovePicker moves={moves} selectedId={move.id} onSelect={setMoveId} />
-            </>
-          )}
+          {mon && move && <RouteMoveBar mon={mon} moveId={move.id} moves={moves} inline onPick={setMoveId} />}
           <p className="tiny muted">
-            {boss.minLevel ? `Hace falta Nv. ${boss.minLevel}. ` : ''}Hasta que empiece la pelea puedes cambiar de Pokémon o de ataque, o salir; en la pelea, el
-            ataque se cambia cuando quieras.
+            {boss.minLevel ? `Hace falta Nv. ${boss.minLevel}. ` : ''}
+            {late
+              ? 'La pelea ya ha empezado: entras en el siguiente turno, en el sitio de un bot, y ya no se sale hasta que acabe. El ataque se cambia cuando quieras.'
+              : 'Hasta que empiece la pelea puedes cambiar de Pokémon o de ataque, o salir; en la pelea, el ataque se cambia cuando quieras.'}
           </p>
           {blocker && <p className="notice small">{blocker}</p>}
           <div className="row gap confirm-actions">

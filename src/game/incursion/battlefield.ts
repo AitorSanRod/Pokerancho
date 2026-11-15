@@ -8,8 +8,12 @@ import type { GroupPassive } from './groupPassives'
 export interface Battlefield {
   party: GroupFighter[]
   foes: GroupFighter[]
-  /** Revivires que le quedan al grupo para toda la incursión */
+  /** Revivires que le quedan al grupo para toda la incursión (sin `revivesEach`) */
   revives: number
+  /** Revivires de cada Pokémon del grupo, en lugar de los del grupo (la raid); sin él, los del grupo */
+  revivesEach?: number
+  /** Con `revivesEach`: los que ha gastado ya cada uno, por su id */
+  revivesSpent?: Record<string, number>
   turn: number
   /** Contador de caídas, para gastar los revivires en el orden en que cayeron */
   falls: number
@@ -50,9 +54,17 @@ export function restore(bf: Battlefield, f: GroupFighter, amount: number) {
   bf.log(on(f, { kind: EventKind.Heal, amount: healed, text: `+${healed} PS` }))
 }
 
-/** Gana la sala el grupo si no queda rival en pie; la pierde si todos han caído y no quedan revivires */
+/** Revivires que le quedan a ese Pokémon: los suyos (con `revivesEach`) o los del grupo */
+export const revivesFor = (bf: Battlefield, f: GroupFighter): number =>
+  bf.revivesEach === undefined ? bf.revives : bf.revivesEach - (bf.revivesSpent?.[f.id] ?? 0)
+
+/** Algún caído del grupo puede volver: le quedan revivires (los suyos o los del grupo) */
+const anyComeback = (bf: Battlefield): boolean =>
+  bf.revivesEach === undefined ? bf.revives > 0 : bf.party.some((f) => !f.out && f.hp === 0 && revivesFor(bf, f) > 0)
+
+/** Gana la sala el grupo si no queda rival en pie; la pierde si todos han caído y ninguno puede volver */
 export function roomOutcome(bf: Battlefield): 'win' | 'lose' | null {
   if (!bf.foes.some(isUp)) return 'win'
-  if (!bf.party.some(isUp) && bf.revives === 0) return 'lose'
+  if (!bf.party.some(isUp) && !anyComeback(bf)) return 'lose'
   return null
 }

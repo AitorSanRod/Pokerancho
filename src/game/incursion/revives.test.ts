@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hurt } from './battlefield'
+import { hurt, roomOutcome } from './battlefield'
 import { EventKind } from './events'
 import { ally, enemy, field } from './incursion-test-utils'
 import { resolveFallen, REVIVE_HP } from './revives'
@@ -26,5 +26,36 @@ describe('revivires del grupo', () => {
     resolveFallen(bf)
     expect(a.out).toBe(true)
     expect(events.some((e) => e.kind === EventKind.Out)).toBe(true)
+  })
+})
+
+describe('revivires de cada Pokémon (la raid)', () => {
+  it('cada uno gasta los suyos: al acabárselos se queda fuera, aunque a otro le queden', () => {
+    const [a, b] = [ally('a'), ally('b')]
+    const { bf, events } = field([a, b], [enemy('e')])
+    bf.revivesEach = 1
+    knock(bf, a)
+    resolveFallen(bf)
+    expect(a.hp).toBeGreaterThan(0)
+    expect(events.findLast((e) => e.kind === EventKind.Revive)).toMatchObject({ target: 'a', revives: 0 })
+    knock(bf, a)
+    resolveFallen(bf)
+    expect(a.out).toBe(true)
+    knock(bf, b)
+    resolveFallen(bf)
+    expect(b.out).toBe(false)
+    expect(b.hp).toBeGreaterThan(0)
+  })
+
+  it('con todos caídos, la sala sigue mientras alguno pueda volver', () => {
+    const [a, b] = [ally('a'), ally('b')]
+    const { bf } = field([a, b], [enemy('e')])
+    bf.revivesEach = 1
+    bf.revivesSpent = { a: 1 }
+    knock(bf, a)
+    knock(bf, b)
+    expect(roomOutcome(bf)).toBeNull()
+    bf.revivesSpent = { a: 1, b: 1 }
+    expect(roomOutcome(bf)).toBe('lose')
   })
 })

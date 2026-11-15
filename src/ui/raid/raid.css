@@ -56,12 +56,24 @@
   background: var(--accent);
 }
 
-/* La pelea (RaidFightView): la franja de PS de una sala de diez, más compacta y en dos filas si no cabe */
-.raid-fight .incursion-strip-side:not(.foes) {
-  flex-wrap: wrap;
+/* La pelea (RaidFightView) bajo las pestañas de las rotaciones: ocupa lo que queda de pantalla */
+.raid-fighting {
+  overflow: hidden;
 }
-.raid-fight .incursion-strip-mon:not(.boss) {
-  width: 28px;
+.raid-fighting > .raid-fight {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  margin-top: 8px;
+}
+/* Cabecera de la pelea, como la de una ruta: el jefe, el tiempo, su vida y el menú */
+.raid-fight-hud .bar {
+  height: 8px;
+}
+.raid-fight-clock {
+  margin-left: auto;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 .raid-crit-note {
   color: var(--accent);

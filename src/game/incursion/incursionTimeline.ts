@@ -24,6 +24,7 @@ export const INCURSION_EVENT_MS: Record<EventKind, number> = {
   [EventKind.Passives]: 1000,
   [EventKind.Cleared]: 2000,
   [EventKind.TapWindow]: TAP_WINDOW_MS + TAP_SETTLE_MS,
+  [EventKind.Join]: 1200,
 }
 
 export const eventMs = (e: IncursionEvent) => INCURSION_EVENT_MS[e.kind]

@@ -124,8 +124,12 @@ El mismo motor juega la pelea contra el jefe de la pestaña Raids (`game/raid/ra
 recibe un `FightSource` (salas, premios, revivires y límite de tiempo), que una incursión ya es tal cual y un jefe de
 raid arma con una sola sala. Lo que añade la raid: grupo de 10 (en la escena, filas de tres), límite de tiempo
 (`fightRoom › outOfTime`), rivales con `statMult`, `atkMult` y `statusHpMult` (sus estados pesan sobre la vida sin el
-multiplicador de sala) y el toque crítico en las órdenes de cada turno (`TurnOrders.crits`). Las piezas de la pantalla
-(`MoveBar`, `TapPad`, `PickDialog`, apuntar en la escena) van por un `FightPilot` (`ui/incursion/pickAction.ts`).
+multiplicador de sala), el toque crítico en las órdenes de cada turno (`TurnOrders.crits`) y entrar en plena pelea:
+`TurnOrders.joins` sienta a un jugador en el sitio del último bot al empezar el turno (`incursion/joins.ts`, evento
+`Join`), con `FightSource.tapsWithoutPlayers` hay ventana cada turno aunque no quede en pie ningún jugador y con
+`FightSource.revivesEach` cada Pokémon tiene sus revivires en lugar de los del grupo (`revives.ts`). Las piezas
+de la pantalla (`TapPad`, la escena) van por un `FightPilot` (`ui/incursion/pickAction.ts`); la barra de ataques de la
+raid es la de las rutas, solo con ataques de daño (`raid/raidMoves.ts`).
 
 ## Combate de grupo
 
@@ -201,7 +205,7 @@ de cueva helada (variante de `cave` o bioma nuevo, con la skill `fondos-pixel-ar
 
 ## Movimientos y repertorio
 
-Los raids siguen con su ataque único (`signatureMove`); en las rutas y la torre, el Pokémon del jugador lucha con uno de daño de su repertorio de incursión, elegido (`run/runMove.ts`). Las incursiones tienen su propia lista de ataques
+Las paradas de jefe de ruta siguen con su ataque único (`signatureMove`); en la pelea de la pestaña Raids, uno de daño de su repertorio (`raid/raidMoves.ts`); en las rutas y la torre, el Pokémon del jugador lucha con uno de daño de su repertorio de incursión, elegido (`run/runMove.ts`). Las incursiones tienen su propia lista de ataques
 (`data/incursionMoves/`, editable a mano; los de daño empezaron como copia de los de ruta). Además de los que tocan a
 cada tipo y rareza hay un **catálogo** (`incursionMoves/catalog/`, un fichero por tipo, unos 300) con los de los juegos
 que encajan aquí, para los repertorios a mano: sin OHKO, golpes múltiples, daño fijo, potencia variable ni efectos que
