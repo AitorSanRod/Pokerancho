@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import type { GameState } from '../../game/core/state'
 import { act } from '../../store/store'
-import { abandonTower, isHealFloor, setTowerMove, towerBetweenFloors, towerMon } from '../../game/tower/tower'
+import { abandonTower, isHealFloor, towerBetweenFloors, towerMon } from '../../game/tower/tower'
+import { setTowerMove } from '../../game/tower/towerMoveSwitch'
+import { TowerEnd } from '../../game/tower/towerRun'
 import { pastLevelCap, towerLevel } from '../../game/tower/towerFoes'
 import { isPrizeFloor, nextPrizeFloor, towerPrize } from '../../game/tower/towerRewards'
 import { towerBiome } from '../../game/tower/towerScenery'
+import { towerWeekBest } from '../../game/tower/towerWeek'
 import { giftText } from '../gift/giftText'
 import { battleFrame, fighterClass, statusClass } from '../route/battleFrame'
 import { ExpBoostBadge } from '../route/ExpBoost'
@@ -12,25 +15,29 @@ import { RouteBattle } from '../route/RouteBattle'
 import { WalkScene } from '../route/WalkScene'
 import '../route/run.css'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
-import { TowerMoveBar } from './TowerMoveBar'
+import { RouteMoveBar } from '../route/RouteMoveBar'
 import { towerMoveBarRoom } from './towerMoveBarRoom'
+import { TowerSummary } from './TowerSummary'
 
 /**
  * La subida en curso, a pantalla completa como una ruta: escena, cabecera encima y, abajo, la barra de ataques de las
- * incursiones (el cambio vale desde el siguiente piso). Sube sola, se mire o no: aquí solo se ve por dónde va
+ * incursiones (el cambio vale desde su siguiente ataque). Sube sola, se mire o no: aquí solo se ve por dónde va. Al acabar,
+ * como al final de una ruta: la escena se queda de fondo (en gris si cayó) y los premios pasan por encima
  */
 export function TowerClimb({ game }: { game: GameState }) {
   const t = game.tower!
   const mon = towerMon(game)
   const walking = towerBetweenFloors(game)
   const [abandoning, setAbandoning] = useState(false)
-  const battle = !walking && t.lastBattle ? t.lastBattle : null
+  const ended = t.end !== null
+  const battle = t.battleMsLeft > 0 && t.lastBattle ? t.lastBattle : null
   const frame = battle && battleFrame(battle, t.battleMsLeft)
-  const prizeFloor = nextPrizeFloor(game.towerBest)
+  const weekBest = towerWeekBest(game, game.lastTick)
+  const prizeFloor = nextPrizeFloor(weekBest)
   const biome = towerBiome(t.floor)
 
   return (
-    <div className="screen run tower-climb" style={mon ? { ['--move-bar-room' as string]: `${towerMoveBarRoom(mon)}px` } : undefined}>
+    <div className={`screen run tower-climb ${t.end === TowerEnd.Fainted ? 'defeated' : ''}`} style={mon ? { ['--move-bar-room' as string]: `${ended ? 0 : towerMoveBarRoom(mon)}px` } : undefined}>
       {mon && (
         <WalkScene
           key={biome}
@@ -53,35 +60,33 @@ export function TowerClimb({ game }: { game: GameState }) {
           <span className="small">
             Piso {t.floor} · rival Nv. {towerLevel(t.floor)}
           </span>
-          <button className="btn ghost small hud-abandon" onClick={() => setAbandoning(true)}>
-            Abandonar
-          </button>
+          {!ended && (
+            <button className="btn ghost small hud-abandon" onClick={() => setAbandoning(true)}>
+              Abandonar
+            </button>
+          )}
         </div>
         <span className="tiny muted">
-          Récord: piso {game.towerBest} · Próximo premio: piso {prizeFloor} ({giftText(towerPrize(prizeFloor)!)})
+          Esta semana: piso {weekBest} · Próximo premio: piso {prizeFloor} ({giftText(towerPrize(prizeFloor)!)})
         </span>
         {walking && <FloorNote game={game} />}
         {t.earned.eggs > 0 && <ExpBoostBadge active={false} />}
       </div>
 
-      <div className="tap-hint">{walking ? `Subiendo al piso ${t.floor}…` : 'Sigue subiendo sola aunque salgas, hasta que caiga'}</div>
+      {!ended && <div className="tap-hint">{walking ? `Subiendo al piso ${t.floor}…` : 'Sigue subiendo sola aunque salgas, hasta que caiga'}</div>}
 
-      {mon && (
-        <TowerMoveBar
-          mon={mon}
-          selectedId={t.moveId}
-          inUseId={battle?.player.move?.id ?? null}
-          hint="Toca otro para cambiarlo"
-          onPick={(id) => act((s) => setTowerMove(s, id))}
-        />
+      {mon && !ended && (
+        <RouteMoveBar mon={mon} moveId={t.moveId} onPick={(id) => act((s) => setTowerMove(s, id, Date.now()))} />
       )}
 
-      {abandoning && (
+      {abandoning && !ended && (
         <ConfirmDialog title="¿Abandonar la torre?" confirmLabel="Abandonar" onConfirm={() => act(abandonTower)} onCancel={() => setAbandoning(false)}>
           La subida se acaba aquí: te quedas con lo ganado, sin el piso en el que está luchando. La próxima empezará desde
           el piso 1.
         </ConfirmDialog>
       )}
+
+      {ended && <TowerSummary tower={t} mon={mon} />}
     </div>
   )
 }
@@ -90,7 +95,7 @@ export function TowerClimb({ game }: { game: GameState }) {
 function FloorNote({ game }: { game: GameState }) {
   const t = game.tower!
   const notes = [
-    isPrizeFloor(t.floor) && t.floor > t.startBest && 'premio',
+    isPrizeFloor(t.floor) && t.floor > towerWeekBest(game, game.lastTick) && 'premio',
     isHealFloor(t.floor) && 'cura al ganar',
     pastLevelCap(t.floor) && 'el rival da un ticket suyo',
   ].filter(Boolean)

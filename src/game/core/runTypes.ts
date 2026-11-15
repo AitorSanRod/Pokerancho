@@ -55,7 +55,9 @@ export interface Run {
   boost: ExpBoost
   /** Ruta que se ha desbloqueado al completar esta por primera vez (null si no ha desbloqueado ninguna) */
   unlocked: string | null
-  /** Combate contra el líder en la parada de gimnasio: qué Pokémon suyo toca y el ataque elegido (ver run/runGym.ts); null fuera */
+  /** Ataque elegido para sus combates (de su repertorio de incursión; ver run/runMove.ts) */
+  moveId: string
+  /** Combate contra el líder en la parada de gimnasio: qué Pokémon suyo toca (ver run/runGym.ts); null fuera */
   gym: RunGym | null
   /** Combate contra el entrenador de la parada: qué Pokémon suyo toca (ver run/runTrainer.ts); null fuera */
   trainer: RunTrainer | null

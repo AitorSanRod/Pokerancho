@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { pathFrom, pathSpecies, type Route } from '../../data/maps'
-import { signatureMove } from '../../data/moves'
 import { species } from '../../data/species'
 import { TutorialStep, type GameState, type OwnedMon } from '../../game/core/state'
 import { act } from '../../store/store'
 import { pathRaidMoneyMult } from '../../game/raid/routeRaidStreak'
 import { startRun } from '../../game/run/run'
-import { defaultGymMove, gymLevelBlocker, pickGymMove, routeGym } from '../../game/run/runGym'
-import { GymMoveBar } from './gym/GymMoveBar'
+import { gymLevelBlocker, routeGym } from '../../game/run/runGym'
+import { defaultRouteMove, pickRouteMove } from '../../game/run/runMove'
+import { RouteMoveBar } from './RouteMoveBar'
 import { maxHp } from '../../game/team/stats'
 import { Bar, Sprite } from '../shared/common'
 import { PixelQuestion } from '../shared/PixelQuestion'
@@ -34,11 +34,11 @@ export function RouteStartDialog({ game, route: r, mon, onClose }: { game: GameS
   const raidMoney = pathRaidMoneyMult(game, r, path, game.lastTick)
   const gym = routeGym(r)
   const tooStrong = gymLevelBlocker(game, r)
-  const [gymMove, setGymMove] = useState(() => defaultGymMove(mon))
+  const [moveId, setMoveId] = useState(() => defaultRouteMove(mon))
   const start = () =>
     act((s) => {
       startRun(s, r.id, path)
-      if (gym) pickGymMove(s, gymMove, Date.now())
+      pickRouteMove(s, moveId, Date.now())
     })
 
   return createPortal(
@@ -74,12 +74,12 @@ export function RouteStartDialog({ game, route: r, mon, onClose }: { game: GameS
               </>
             ) : (
               <>
-                Sale <strong>{sp.name}</strong> (Nv. {mon.level}), que ataca con <strong>{signatureMove(mon.speciesId).name}</strong>.
+                Sale <strong>{sp.name}</strong> (Nv. {mon.level}) con el ataque que elijas.
               </>
             )}
           </p>
           {tooStrong && <p className="notice small">{tooStrong}</p>}
-          {gym && !tooStrong && <GymMoveBar mon={mon} moveId={gymMove} inline onPick={setGymMove} />}
+          {!tooStrong && <RouteMoveBar mon={mon} moveId={moveId} inline onPick={setMoveId} />}
           <div className="label">Pueden aparecer</div>
           <div className="route-start-species">
             {pathSpecies(r, path).map((id) =>

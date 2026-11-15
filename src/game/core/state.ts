@@ -11,7 +11,7 @@ import type { Stone } from '../../data/stones'
 import type { DailyMissions } from '../collection/missions'
 import type { ActiveIncursion } from '../incursion/activeIncursion'
 import type { IncursionQueue } from '../incursion/online/linkedIncursion'
-import type { TowerRun } from '../tower/tower'
+import type { TowerRun } from '../tower/towerRun'
 import { RaidRotation } from '../raid/online/protocol'
 import type { Raid, RaidPrize } from '../raid/raidRoom'
 import type { UpgradeId } from '../team/upgrades'
@@ -120,7 +120,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 59
+export const SAVE_VERSION = 60
 
 export type TabRaids = Record<RaidRotation, Raid | null>
 

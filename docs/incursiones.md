@@ -192,7 +192,7 @@ de cueva helada (variante de `cave` o bioma nuevo, con la skill `fondos-pixel-ar
 
 ## Movimientos y repertorio
 
-Las rutas y raids siguen con su ataque único (`signatureMove`). Las incursiones tienen su propia lista de ataques
+Los raids siguen con su ataque único (`signatureMove`); en las rutas y la torre, el Pokémon del jugador lucha con uno de daño de su repertorio de incursión, elegido (`run/runMove.ts`). Las incursiones tienen su propia lista de ataques
 (`data/incursionMoves/`, editable a mano; los de daño empezaron como copia de los de ruta). Además de los que tocan a
 cada tipo y rareza hay un **catálogo** (`incursionMoves/catalog/`, un fichero por tipo, unos 300) con los de los juegos
 que encajan aquí, para los repertorios a mano: sin OHKO, golpes múltiples, daño fijo, potencia variable ni efectos que

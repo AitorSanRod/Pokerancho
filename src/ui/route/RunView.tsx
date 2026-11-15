@@ -23,10 +23,10 @@ import { HealStop } from './HealStop'
 import { StopTrack } from './StopTrack'
 import { ExpBoostBadge, ExpBoostSpawn } from './ExpBoost'
 import { WalkScene } from './WalkScene'
-import { defaultGymMove, pickGymMove, routeGym } from '../../game/run/runGym'
+import { pickRouteMove } from '../../game/run/runMove'
 import { towerMoveBarRoom } from '../tower/towerMoveBarRoom'
 import { trainerScene } from './gym/trainerScene'
-import { GymMoveBar } from './gym/GymMoveBar'
+import { RouteMoveBar } from './RouteMoveBar'
 import { AbandonButton } from './AbandonButton'
 import { RunSummary } from './RunSummary'
 import './run.css'
@@ -56,15 +56,15 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
   const ended = run.phase === 'complete' || run.phase === 'fainted'
   const inView = landmarkInView(run)
   const landmark = inView && { key: `${run.routeId}:${inView.stop}`, id: inView.landmark }
-  // En los gimnasios, la barra de ataques va abajo toda la ruta (se cambia también en pleno combate)
-  const gymRoute = routeGym(r) !== null
+  // La barra de ataques va abajo mientras camina y combate (se cambia también en pleno combate)
+  const moveBar = run.phase === 'walking'
   const trainer = battle ? trainerScene(run) : null
   const leveledTo = useLeveledTo(mon.level)
 
   return (
     <div
-      className={`screen run ${defeated ? 'defeated' : ''} ${gymRoute ? 'gym-run' : ''}`}
-      style={gymRoute ? { ['--move-bar-room' as string]: `${towerMoveBarRoom(mon)}px` } : undefined}
+      className={`screen run ${defeated ? 'defeated' : ''} ${moveBar ? 'move-run' : ''}`}
+      style={moveBar ? { ['--move-bar-room' as string]: `${towerMoveBarRoom(mon)}px` } : undefined}
     >
       <WalkScene
         biome={r.biome}
@@ -114,9 +114,7 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
       {run.heal && <div className="tap-hint">Parada de curación</div>}
       {battle && !frame?.ended && <div className="tap-hint">Atento: si sale un anillo sobre el rival, toca cuando se cierre</div>}
 
-      {gymRoute && run.phase === 'walking' && (
-        <GymMoveBar mon={mon} moveId={run.gym?.moveId ?? defaultGymMove(mon)} onPick={(id) => act((s) => pickGymMove(s, id, Date.now()))} />
-      )}
+      {moveBar && <RouteMoveBar mon={mon} moveId={run.moveId} onPick={(id) => act((s) => pickRouteMove(s, id, Date.now()))} />}
 
       {ended && !battle && <RunSummary run={run} mon={mon} />}
     </div>

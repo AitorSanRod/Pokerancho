@@ -4,7 +4,8 @@ import { makeFighter, type BattleRecord } from '../battle/battle'
 import { CRIT_EARLY_MS, CRIT_LATE_MS, CRIT_RING_MS } from '../battle/critTiming'
 import { initialState } from '../core/state'
 import { BATTLE_EVENT_MS, battleDuration } from './battleTimeline'
-import { battleElapsed, playSetup, ringAt, ringResult, ringTimes, tapBattle, type RouteBattleSetup } from './tapCrit'
+import { playSetup } from './battleReplay'
+import { battleElapsed, ringAt, ringResult, ringTimes, tapBattle, type RouteBattleSetup } from './tapCrit'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
 

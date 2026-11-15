@@ -1,9 +1,9 @@
-import type { IncursionMove } from '../../../data/incursionMoves'
-import type { OwnedMon } from '../../../game/core/state'
-import { towerMoveChoices } from '../../../game/tower/towerMoves'
-import { MoveBarMoves } from '../../incursion/MoveBarMoves'
+import type { IncursionMove } from '../../data/incursionMoves'
+import type { OwnedMon } from '../../game/core/state'
+import { towerMoveChoices } from '../../game/tower/towerMoves'
+import { MoveBarMoves } from '../incursion/MoveBarMoves'
 
-/** En el gimnasio, como en la torre, solo cuenta el golpe: tipo (en la etiqueta), potencia y precisión */
+/** En las rutas y la torre solo cuenta el golpe: tipo (en la etiqueta), potencia y precisión */
 const strikeText = (mv: IncursionMove) => `Pot. ${mv.power} · Prec. ${mv.accuracy} %`
 
 interface Props {
@@ -14,8 +14,11 @@ interface Props {
   onPick: (moveId: string) => void
 }
 
-/** Barra de ataques del gimnasio, la de la torre y las incursiones: un toque lo cambia desde el siguiente ataque */
-export function GymMoveBar({ mon, moveId, inline = false, onPick }: Props) {
+/**
+ * Barra de ataques de las rutas y la torre, la misma de las incursiones: un toque cambia el ataque, en pleno combate
+ * desde su siguiente ataque
+ */
+export function RouteMoveBar({ mon, moveId, inline = false, onPick }: Props) {
   return (
     <div className={`move-bar ${inline ? 'inline' : ''}`}>
       <div className="move-bar-head">

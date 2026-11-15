@@ -14,8 +14,10 @@ import { ranchPassives } from '../team/ranchPassives'
 import { gainExp, maxHp } from '../team/stats'
 import { battleDuration } from './battleTimeline'
 import { boostActive, BOOST_EXP_MULT } from './expBoost'
-import { playSetup, rewardsFor } from './tapCrit'
+import { playSetup } from './battleReplay'
+import { rewardsFor } from './tapCrit'
 import { nextGymFoe, winGym } from './runGym'
+import { routeMove } from './runMove'
 import { nextTrainerFoe } from './runTrainer'
 import { foeExpMult, foeStatMult, rollShinyFoe, shinyIntro } from './shinyFoe'
 
@@ -46,12 +48,10 @@ export function seeOnRoute(s: GameState, speciesId: number) {
   if (markSeen(s, speciesId)) s.run!.earned.discovered.push(speciesId)
 }
 
-/** Cómo es el combate que empieza: contra un jefe (stats completas y más premio) y, en los gimnasios, de quién es el rival */
+/** Cómo es el combate que empieza: contra un jefe (stats completas y más premio) y, con entrenador o líder, de quién es el rival */
 export interface BattleOpts {
   boss: boolean
   statMult: number
-  /** El ataque elegido (gimnasios); sin él, el suyo de siempre */
-  move?: Move
   /** Entrenador del rival (el líder del gimnasio) */
   trainer?: string
   /** Ataques del rival, si no es el suyo de siempre: elige en cada turno (ver attack.ts › bestMove) */
@@ -88,7 +88,7 @@ function boostedExpLevel(s: GameState, foeLevel: number): number | undefined {
 }
 
 /**
- * Empieza un combate de la ruta contra `foe`. El Pokémon del jugador lleva las pasivas de su rancho. Se juega con una
+ * Empieza un combate de la ruta contra `foe`. El Pokémon del jugador lleva las pasivas de su rancho y el ataque elegido (runMove.ts). Se juega con una
  * semilla y se guarda cómo empezó, para repetirlo con los toques críticos y los cambios de ataque (tapCrit.ts)
  */
 export function startBattle(s: GameState, r: Route, foe: Boss, opts: BattleOpts, rng: Rng) {
@@ -102,7 +102,7 @@ export function startBattle(s: GameState, r: Route, foe: Boss, opts: BattleOpts,
     nature: mon.nature,
     passives: ranchPassives(s, mon.ranch!),
     perks: monPerks(s, mon),
-    move: opts.move,
+    move: routeMove(s),
   })
   const prize = {
     money: moneyReward(level, legSteps(r, run.path, run.stop), rng) * (opts.boss ? BOSS_MONEY_MULT : 1),
@@ -116,7 +116,7 @@ export function startBattle(s: GameState, r: Route, foe: Boss, opts: BattleOpts,
   seeOnRoute(s, enemyId)
   run.earned.battles++
   run.lastBattle = {
-    player: { speciesId: mon.speciesId, name: player.name, level: mon.level, maxHp: player.maxHp, ...(opts.move ? { move: opts.move } : {}) },
+    player: { speciesId: mon.speciesId, name: player.name, level: mon.level, maxHp: player.maxHp, move: player.move },
     enemy: { speciesId: enemyId, name: enemy.name, level, maxHp: enemy.maxHp, ...(opts.shiny ? { shiny: true } : {}) },
     events: result.events,
     outcome: result.outcome,

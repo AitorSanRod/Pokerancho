@@ -9,7 +9,8 @@ import { expeditionRouteBlocker } from '../team/expedition'
 import { towerMove, towerMoveChoices } from '../tower/towerMoves'
 import { BATTLE_EVENT_MS } from './battleTimeline'
 import { advanceRun, startRun, walk } from './run'
-import { defaultGymMove, gymLevelBlocker, pickGymMove, routeGym } from './runGym'
+import { gymLevelBlocker, routeGym } from './runGym'
+import { defaultRouteMove, pickRouteMove } from './runMove'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
 /** Nivel del primer Pokémon del líder de prueba */
@@ -81,21 +82,21 @@ describe('gimnasio', () => {
     expect(s.badges).toEqual([])
   })
 
-  it('lucha con el ataque elegido antes de llegar; sin elegir, con el de salida', () => {
+  it('lucha con el ataque elegido de la ruta; sin elegir, con el de salida', () => {
     const s = atTheGym(MAX_LEVEL)
     const mon = activeMon(s)!
-    expect(s.run!.gym!.moveId).toBe(defaultGymMove(mon))
+    expect(s.run!.lastBattle!.player.move).toEqual(towerMove(mon, defaultRouteMove(mon)))
     const chosen = towerMoveChoices(mon).at(-1)!.id
     const other = initialState()
     chooseStarter(other, POKEMON.Squirtle)
     other.unlockedRoutes.push(ROUTE)
     startRun(other, ROUTE)
-    pickGymMove(other, chosen, other.lastTick)
+    pickRouteMove(other, chosen, other.lastTick)
     walk(other, FAR, seqRng(0.5))
     expect(other.run!.lastBattle!.player.move).toEqual(towerMove(activeMon(other)!, chosen))
   })
 
-  it('cambiar de ataque en pleno combate vale desde su siguiente ataque; lo ya visto no cambia', () => {
+  it('cambiar de ataque contra el líder vale desde su siguiente ataque; lo ya visto no cambia', () => {
     // Bulbasaur tiene más de un ataque de daño
     const s = atTheGym(MAX_LEVEL, POKEMON.Bulbasaur)
     const mon = activeMon(s)!
@@ -104,24 +105,11 @@ describe('gimnasio', () => {
     const before = s.run!.lastBattle!.events.indexOf(first)
     const firstAt = s.run!.lastBattle!.events.slice(0, before + 1).reduce((ms, e) => ms + BATTLE_EVENT_MS[e.kind], 0)
     s.run!.battleMsLeft -= firstAt
-    const other = towerMoveChoices(mon).find((m) => m.id !== s.run!.gym!.moveId)!.id
-    pickGymMove(s, other, s.lastTick)
+    const other = towerMoveChoices(mon).find((m) => m.id !== s.run!.moveId)!.id
+    pickRouteMove(s, other, s.lastTick)
     const [againFirst, againSecond] = playerAttacks(s)
     expect(againFirst.text).toBe(first.text)
     expect(againSecond.move).toEqual(towerMove(mon, other))
-    expect(s.run!.gym!.moveId).toBe(other)
-  })
-
-  it('no admite un ataque que no sabe ni elegir fuera de una ruta de gimnasio', () => {
-    const s = atTheGym(MAX_LEVEL)
-    const moveId = s.run!.gym!.moveId
-    pickGymMove(s, 'no-existe', s.lastTick)
-    expect(s.run!.gym!.moveId).toBe(moveId)
-    const outside = initialState()
-    chooseStarter(outside, POKEMON.Squirtle)
-    startRun(outside, RouteId.PuebloPaleta)
-    pickGymMove(outside, towerMoveChoices(activeMon(outside)!)[0].id, outside.lastTick)
-    expect(outside.run!.gym).toBeNull()
   })
 
   it('un Pokémon por encima de su nivel máximo no puede entrar', () => {

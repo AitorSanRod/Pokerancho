@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { activeMon, type GameState, type OwnedMon } from '../../game/core/state'
 import { act } from '../../store/store'
-import { startTower, towerBlocker, towerMon, TOWER_HEAL_EVERY, TOWER_LAST_HEAL_FLOOR, towerActive } from '../../game/tower/tower'
+import { startTower, towerBlocker, TOWER_HEAL_EVERY, TOWER_LAST_HEAL_FLOOR } from '../../game/tower/tower'
 import { towerWeekBest } from '../../game/tower/towerWeek'
 import { TOWER_LEVEL_CAP_FLOOR } from '../../game/tower/towerFoes'
 import { towerMoveChoices } from '../../game/tower/towerMoves'
@@ -10,29 +10,26 @@ import { giftText } from '../gift/giftText'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { TowerClimb } from './TowerClimb'
-import { TowerMoveBar } from './TowerMoveBar'
-import { TowerSummary } from './TowerSummary'
+import { RouteMoveBar } from '../route/RouteMoveBar'
 import './tower.css'
 
 /**
  * Torre infinita: el compañero sube piso a piso contra rivales cada vez más fuertes hasta que cae.
- * Sin subida en curso, los premios de la que acaba de terminar (hasta cerrarlos) y empezar otra; con ella, la subida a pantalla completa
- * (TowerClimb)
+ * Con una subida en curso o recién acabada (hasta cerrar sus premios), la subida a pantalla completa (TowerClimb); sin ella,
+ * empezar otra
  */
 export function TowerScreen({ game }: { game: GameState }) {
-  const t = game.tower
-  if (towerActive(game)) return <TowerClimb game={game} />
+  if (game.tower) return <TowerClimb game={game} />
   return (
     <div className="screen scroll tower">
       <TowerHead game={game} />
-      {t && <TowerSummary tower={t} mon={towerMon(game)} />}
       <TowerStart game={game} />
     </div>
   )
 }
 
 function TowerHead({ game }: { game: GameState }) {
-  const prizeFloor = nextPrizeFloor(game.towerBest)
+  const prizeFloor = nextPrizeFloor(towerWeekBest(game, game.lastTick))
   return (
     <div className="card tower-head">
       <strong className="with-icon">
@@ -59,12 +56,12 @@ function TowerStart({ game }: { game: GameState }) {
         <strong className="small">Cómo funciona</strong>
         <ul className="small">
           <li>El rival sube un nivel en cada piso.</li>
-          <li>Cada piso da EXP y ₽; algunos, un premio la primera vez.</li>
+          <li>Cada piso da EXP y ₽; algunos, un premio la primera vez de cada semana (empieza de cero los lunes).</li>
           <li>
             Te curas cada {TOWER_HEAL_EVERY} pisos, hasta el {TOWER_LAST_HEAL_FLOOR}.
           </li>
           <li>Pasado el {TOWER_LEVEL_CAP_FLOOR}, rivales de todas partes, más fuertes en cada piso, y cada uno da un ticket suyo.</li>
-          <li>Elige el ataque y cámbialo cuando quieras durante la subida: vale desde el siguiente piso.</li>
+          <li>Elige el ataque y cámbialo cuando quieras durante la subida, también en pleno combate: vale desde su siguiente ataque.</li>
           <li>Algunos rivales salen shiny: más fuertes, pero con mucha más EXP.</li>
           <li>A veces un piso da un Huevo Suerte, que va a la Mochila.</li>
           <li>Sube sola aunque salgas o cierres la app, hasta que caiga o la abandones.</li>
@@ -80,7 +77,7 @@ function TowerBegin({ mon }: { mon: OwnedMon }) {
   const [moveId, setMoveId] = useState(() => towerMoveChoices(mon)[0]?.id ?? '')
   return (
     <div className="tower-begin">
-      <TowerMoveBar mon={mon} selectedId={moveId} inUseId={null} hint="Toca uno para elegirlo" inline onPick={setMoveId} />
+      <RouteMoveBar mon={mon} moveId={moveId} inline onPick={setMoveId} />
       <button className="btn primary wide" disabled={!moveId} onClick={() => act((s) => startTower(s, moveId))}>
         Comenzar
       </button>

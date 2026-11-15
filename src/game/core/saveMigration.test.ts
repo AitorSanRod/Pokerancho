@@ -31,6 +31,8 @@ const OLD = SAVE_VERSION - 1
 const ENFOQUE_VERSION = 52
 /** Última versión con la torre parada tras unos pisos sin pantalla (sin paseo entre pisos ni Huevos Suerte) */
 const TOWER_ALONE_VERSION = 58
+/** Última versión con el ataque elegido solo en los gimnasios (y la torre sin repetir sus combates) */
+const ATTACK_PER_GYM_VERSION = 59
 const [A, B, C] = STARTERS
 const UNKNOWN_SPECIES = -7
 const OTHER_BACKDROP = Object.values(RanchBackdrop).find((b) => b !== DEFAULT_RANCH_BACKDROP)!
@@ -274,6 +276,25 @@ describe('al actualizar el juego no se pierde nada', () => {
       advanceTower(migrated, 1)
       expect(migrated.tower!.battleMsLeft).toBeGreaterThan(0)
     }
+  })
+
+  it('la ruta de antes del ataque de ruta sigue, con el ataque elegido en el gimnasio; la torre sigue sin repetir su piso', () => {
+    const s = advancedGame()
+    s.expeditions = []
+    startRun(s, RouteId.PuebloPaleta)
+    const moveId = s.run!.moveId
+    const save = fromOldVersion(s, ATTACK_PER_GYM_VERSION)
+    delete save.run.moveId
+    save.run.gym = { index: 1, moveId }
+    const migrated = migrateSave(save)!
+    expect(migrated.run).toMatchObject({ routeId: RouteId.PuebloPaleta, moveId, gym: { index: 1 } })
+    expect(migrated.run!.gym).not.toHaveProperty('moveId')
+    const tower = advancedGame()
+    tower.expeditions = []
+    startTower(tower, towerMoveChoices(activeMon(tower)!)[0].id)
+    const oldTower = fromOldVersion(tower, ATTACK_PER_GYM_VERSION)
+    delete oldTower.tower.battle
+    expect(migrateSave(oldTower)!.tower).toMatchObject({ uid: tower.tower!.uid, battle: null })
   })
 
   it('las expediciones nunca se pierden al cambiar de versión: siguen con sus condiciones aunque su ruta ya no exista', () => {

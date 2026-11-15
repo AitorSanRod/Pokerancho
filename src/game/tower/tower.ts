@@ -1,20 +1,23 @@
-import { makeFighter, simulateBattle, type BattleRecord } from '../battle/battle'
+import { makeFighter } from '../battle/battle'
 import type { Rng } from '../core/random'
 import { activeMon, MonPlace, monPlace, type GameState, type OwnedMon } from '../core/state'
+import { playSetup } from '../run/battleReplay'
 import { battleDuration } from '../run/battleTimeline'
 import { foeExpMult, foeStatMult, rollShinyFoe, shinyIntro } from '../run/shinyFoe'
 import { monPerks } from '../team/perks'
 import { ranchPassives } from '../team/ranchPassives'
-import { recordWeekFloor } from './towerWeek'
+import { keepTowerHp } from './towerHp'
+import { recordWeekFloor, towerWeekBest } from './towerWeek'
 import { towerFoe, towerLevel, towerStatMult } from './towerFoes'
-import { towerMove, towerMoveChoices } from './towerMoves'
-import { floorPrize, noTowerEarned, rewardFloor, type FloorPrize, type TowerEarned } from './towerRewards'
+import { knowsTowerMove, towerMove } from './towerMoves'
+import { floorPrize, noTowerEarned, rewardFloor } from './towerRewards'
+import { TowerEnd } from './towerRun'
 
 // Torre infinita: el compañero sube piso a piso contra rivales cada vez más fuertes (towerFoes.ts),
-// con el ataque elegido, que se cambia cuando se quiera (towerMoves.ts), y premios en cada piso (towerRewards.ts), hasta que cae.
-// Lucha una copia con sus stats, pasivas e hitos (sus PS de verdad no cambian). Sube sola, se mire o no: tras cada
-// victoria pasea TOWER_FLOOR_GAP_MS y empieza el siguiente piso, con la app delante, en otra pantalla o cerrada, hasta
-// que cae o se abandona. Los rivales pueden salir shiny, como en las rutas (run/shinyFoe.ts).
+// con el ataque elegido, que se cambia cuando se quiera, también en pleno combate (towerMoveSwitch.ts), y premios en cada piso (towerRewards.ts), hasta que cae.
+// Lucha una copia con sus stats, pasivas e hitos, que sale con sus PS y, al acabar, le deja los que queden (towerHp.ts).
+// Sube sola, se mire o no: tras cada victoria pasea TOWER_FLOOR_GAP_MS y empieza el siguiente piso, con la app delante,
+// en otra pantalla o cerrada, hasta que cae o se abandona. Los rivales pueden salir shiny, como en las rutas (run/shinyFoe.ts).
 
 /** Cada cuántos pisos se cura del todo antes de seguir */
 export const TOWER_HEAL_EVERY = 25
@@ -22,33 +25,6 @@ export const TOWER_HEAL_EVERY = 25
 export const TOWER_LAST_HEAL_FLOOR = 100
 /** Milisegundos reales que camina entre un piso ganado y el siguiente */
 export const TOWER_FLOOR_GAP_MS = 700
-
-/** Cómo acabó la subida: cayó o la abandonó */
-export const TowerEnd = { Fainted: 'fainted', Left: 'left' } as const
-export type TowerEnd = (typeof TowerEnd)[keyof typeof TowerEnd]
-
-export interface TowerRun {
-  /** El Pokémon que sube (el compañero al empezar) */
-  uid: string
-  /** Ataque elegido (de su repertorio de incursión) para el siguiente piso */
-  moveId: string
-  /** Piso en el que está luchando o, entre combates, el siguiente (1 = el primero) */
-  floor: number
-  /** PS que le quedan a la copia del Pokémon (en la escala del combate); null, todos */
-  hp: number | null
-  lastBattle: BattleRecord | null
-  /** Lo que da ganar el combate en curso */
-  prize: FloorPrize | null
-  /** Milisegundos reales que quedan del combate del piso; 0 entre pisos */
-  battleMsLeft: number
-  /** Milisegundos reales de paseo que quedan, entre pisos, hasta empezar el siguiente */
-  gapMsLeft: number
-  /** Récord antes de esta subida: los premios de piso solo se dan por encima */
-  startBest: number
-  earned: TowerEarned
-  /** null mientras sube */
-  end: TowerEnd | null
-}
 
 export const towerActive = (s: GameState): boolean => s.tower !== null && s.tower.end === null
 
@@ -72,6 +48,7 @@ export function towerBlocker(s: GameState): string | null {
   const mon = activeMon(s)
   if (!mon) return 'Necesitas un compañero para subir a la torre.'
   if (towerActive(s)) return 'Ya hay una subida a medias.'
+  if (mon.hp < 1) return 'Tu compañero está debilitado: déjalo descansar o cúralo en el rancho para subir a la torre.'
   return AWAY_TEXT[monPlace(s, mon.uid)] ?? null
 }
 
@@ -81,18 +58,17 @@ export const canStartTower = (s: GameState): boolean => towerBlocker(s) === null
 /** Se cura al acabar este piso */
 export const isHealFloor = (floor: number): boolean => floor % TOWER_HEAL_EVERY === 0 && floor <= TOWER_LAST_HEAL_FLOOR
 
-const knowsMove = (mon: OwnedMon, moveId: string) => towerMoveChoices(mon).some((m) => m.id === moveId)
-
-/** Sale a la torre con el compañero y el ataque elegido, desde el primer piso y con todos sus PS */
+/** Sale a la torre con el compañero y el ataque elegido, desde el primer piso y con los PS que tiene, como a una ruta */
 export function startTower(s: GameState, moveId: string, rng: Rng = Math.random) {
   const mon = activeMon(s)
-  if (!canStartTower(s) || !mon || !knowsMove(mon, moveId)) return
+  if (!canStartTower(s) || !mon || !knowsTowerMove(mon, moveId)) return
   s.tower = {
     uid: mon.uid,
     moveId,
     floor: 1,
     hp: null,
     lastBattle: null,
+    battle: null,
     prize: null,
     battleMsLeft: 0,
     gapMsLeft: 0,
@@ -100,17 +76,15 @@ export function startTower(s: GameState, moveId: string, rng: Rng = Math.random)
     earned: noTowerEarned(),
     end: null,
   }
-  fightFloor(s, mon, rng)
+  fightFloor(s, mon, rng, Math.floor(mon.hp))
 }
 
-/** Cambia el ataque en cualquier momento de la subida: vale desde el siguiente piso (el combate en curso sigue con el suyo) */
-export function setTowerMove(s: GameState, moveId: string) {
-  const mon = towerMon(s)
-  if (towerActive(s) && mon && knowsMove(mon, moveId)) s.tower!.moveId = moveId
-}
-
-/** Combate del piso en el que está, contra un rival al azar a su nivel, que puede salir shiny (más fuerte y con más EXP) */
-function fightFloor(s: GameState, mon: OwnedMon, rng: Rng) {
+/**
+ * Combate del piso en el que está, contra un rival al azar a su nivel, que puede salir shiny (más fuerte y con más EXP).
+ * Lucha con los PS de la subida o, en el primero, con `startHp`, los del Pokémon. Se juega con una semilla, para
+ * volver a jugarlo si cambia de ataque
+ */
+function fightFloor(s: GameState, mon: OwnedMon, rng: Rng, startHp?: number) {
   const t = s.tower!
   const enemyId = towerFoe(s, t.floor, rng)
   const level = towerLevel(t.floor)
@@ -121,12 +95,13 @@ function fightFloor(s: GameState, mon: OwnedMon, rng: Rng) {
     passives: mon.ranch !== null ? ranchPassives(s, mon.ranch) : [],
     perks: monPerks(s, mon),
     move: towerMove(mon, t.moveId),
+    hp: startHp,
   })
-  player.hp = Math.min(player.maxHp, t.hp ?? player.maxHp)
+  if (startHp === undefined) player.hp = Math.min(player.maxHp, t.hp ?? player.maxHp)
   const enemy = makeFighter('enemy', enemyId, level, { statMult: foeStatMult(towerStatMult(t.floor), shiny) })
-  const result = simulateBattle(player, enemy, rng)
-  if (shiny) result.events[0] = { ...result.events[0], text: shinyIntro(enemy.name, level) }
-  const base = floorPrize(t.floor, t.startBest, rng)
+  t.battle = { seed: Math.floor(rng() * 2 ** 31), player, enemy, ...(shiny ? { intro: shinyIntro(enemy.name, level) } : {}) }
+  const result = playSetup(t.battle)
+  const base = floorPrize(t.floor, towerWeekBest(s, s.lastTick), rng)
   const prize = { ...base, exp: base.exp * foeExpMult(shiny) }
   t.prize = prize
   t.lastBattle = {
@@ -146,6 +121,7 @@ function finishFloor(s: GameState) {
   const t = s.tower!
   const mon = towerMon(s)
   if (t.lastBattle!.outcome !== 'win' || !mon) {
+    if (mon) keepTowerHp(t, mon)
     t.end = TowerEnd.Fainted
     return
   }
@@ -187,12 +163,13 @@ function startNextFloor(s: GameState, rng: Rng) {
   else s.tower!.end = TowerEnd.Fainted
 }
 
-/** El jugador la deja cuando quiera: se acaba ahí, con lo ganado (el piso en pleno combate no cuenta) */
+/** El jugador la deja cuando quiera: se acaba ahí, con lo ganado (el piso en pleno combate no cuenta) y los PS de ese momento */
 export function abandonTower(s: GameState) {
-  if (!towerActive(s)) return
-  s.tower!.end = TowerEnd.Left
-  s.tower!.battleMsLeft = 0
-  s.tower!.gapMsLeft = 0
+  const t = s.tower
+  if (!t || t.end !== null) return
+  const mon = towerMon(s)
+  if (mon) keepTowerHp(t, mon)
+  Object.assign(t, { end: TowerEnd.Left, battleMsLeft: 0, gapMsLeft: 0 })
 }
 
 /** Tras ver los premios de la subida acabada, se recoge (lo ganado ya estaba sumado) */

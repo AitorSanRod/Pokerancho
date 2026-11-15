@@ -48,6 +48,16 @@ export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {
     if (isRecord(t.earned)) t.earned.eggs ??= 0
     if (isRecord(t.prize)) t.prize.egg ??= false
   },
+  // El ataque elegido pasa del gimnasio a toda la ruta; el piso de la torre en curso no se puede volver a jugar
+  59: (save) => {
+    const run = save.run
+    if (isRecord(run)) {
+      const gym = isRecord(run.gym) ? run.gym : null
+      if (typeof run.moveId !== 'string') run.moveId = typeof gym?.moveId === 'string' ? gym.moveId : ''
+      if (gym) delete gym.moveId
+    }
+    if (isRecord(save.tower)) save.tower.battle ??= null
+  },
 }
 
 /**

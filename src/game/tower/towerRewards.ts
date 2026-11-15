@@ -10,8 +10,8 @@ import { floorsPastCap, pastLevelCap, TOWER_STAT_GROWTH, towerLevel } from './to
 
 // Premios de la torre infinita, piso a piso: EXP para el Pokémon que sube y ₽ que crecen con el nivel del rival (y,
 // pasado el último piso de nivel, con lo que suben sus stats); cada pocos pisos, el premio de data/towerPrizes.ts la
-// primera vez que se gana ese piso; pasado el último piso de nivel, un ticket del Pokémon derrotado, y, en cualquiera, a veces un Huevo
-// Suerte, que va derecho a la Mochila (run/expBoost.ts).
+// primera vez de la semana que se gana ese piso (towerWeek.ts); pasado el último piso de nivel, un ticket del Pokémon
+// derrotado, y, en cualquiera, a veces un Huevo Suerte, que va derecho a la Mochila (run/expBoost.ts).
 
 /** EXP por victoria por cada nivel del rival, antes de crecer con el nivel (en las rutas, battle/rewards.ts › EXP_PER_LEVEL y expForLevel) */
 export const TOWER_EXP_PER_LEVEL = 4
@@ -56,11 +56,11 @@ export interface FloorPrize {
   exp: number
   piece: boolean
   egg: boolean
-  /** Premio del piso, si es la primera vez que se gana */
+  /** Premio del piso, si es la primera vez de la semana que se gana */
   prize: GiftContents | null
 }
 
-/** Lo que da ganar el piso `floor`; `best`, el récord de antes de esta subida (el Huevo Suerte, al azar) */
+/** Lo que da ganar el piso `floor`; `best`, el piso más alto ya superado esta semana (el Huevo Suerte, al azar) */
 export const floorPrize = (floor: number, best: number, rng: Rng = Math.random): FloorPrize => ({
   money: floorMoney(floor),
   exp: floorExp(floor),

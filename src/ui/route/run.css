@@ -61,6 +61,14 @@
   pointer-events: none;
   white-space: nowrap;
 }
+/* La barra de ataques va fija abajo mientras camina y combate; la escena y los avisos acaban encima (--move-bar-room,
+   lo que ocupa según sus ataques, lo pone RunView) */
+.move-run .scene {
+  bottom: var(--move-bar-room);
+}
+.move-run .tap-hint {
+  bottom: calc(var(--move-bar-room) + 8px);
+}
 /* Derrota: la ruta se queda en gris y nuestro Pokémon en negro; solo el resumen de recompensas conserva el color.
    El filtro va en la escena y el panel, no en .run, para no afectar al resumen (que es position: fixed). */
 .run .scene,

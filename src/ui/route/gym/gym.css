@@ -1,12 +1,5 @@
 /* Combate de gimnasio: el líder detrás de su Pokémon, a la derecha, con sus Poké Balls; al sacar a cada Pokémon, un
-   destello de Poké Ball. La barra de ataques va fija abajo y la escena acaba encima (--move-bar-room, lo pone RunView) */
-
-.gym-run .scene {
-  bottom: var(--move-bar-room);
-}
-.gym-run .tap-hint {
-  bottom: calc(var(--move-bar-room) + 8px);
-}
+   destello de Poké Ball */
 
 /* El líder, a la derecha y un poco más al fondo que su Pokémon: más arriba y tapado en parte por él */
 .gym-leader {

@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
 import { POKEMON } from '../../data/pokemon'
-import { SPECIES } from '../../data/species'
 import type { Rng } from '../core/random'
 import { activeMon, initialState, MonPlace, monPlace, type GameState } from '../core/state'
 import { chooseStarter, seqRng } from '../core/test-utils'
-import { MAX_LEVEL } from '../team/stats'
+import { MAX_LEVEL, maxHp } from '../team/stats'
 import { rankingWeek } from '../core/ranking'
 import { runBlocker } from '../run/run'
 import { SHINY_FOE_CHANCE, SHINY_FOE_EXP_MULT, shinyIntro } from '../run/shinyFoe'
@@ -17,18 +16,18 @@ import {
   canStartTower,
   closeTower,
   isHealFloor,
-  setTowerMove,
   startTower,
   TOWER_FLOOR_GAP_MS,
   TOWER_HEAL_EVERY,
   TOWER_LAST_HEAL_FLOOR,
   towerBetweenFloors,
-  TowerEnd,
   towerBlocker,
 } from './tower'
 import { towerWeekBest } from './towerWeek'
+import { TowerEnd } from './towerRun'
 import { towerMove, towerMoveChoices } from './towerMoves'
-import { floorExp } from './towerRewards'
+import { floorExp, towerPrize } from './towerRewards'
+import { TOWER_PRIZE_EVERY } from '../../data/towerPrizes'
 import { sideMove } from '../battle/battle'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
@@ -44,7 +43,9 @@ const NEVER: Rng = () => SHINY_FOE_CHANCE
 function withMon(level: number) {
   const s = initialState()
   chooseStarter(s, POKEMON.Charmander)
-  activeMon(s)!.level = level
+  const mon = activeMon(s)!
+  mon.level = level
+  mon.hp = maxHp(mon)
   return s
 }
 
@@ -101,6 +102,57 @@ describe('torre infinita', () => {
     expect(s.towerBest).toBeGreaterThan(TOWER_HEAL_EVERY)
   })
 
+  it('sale con los PS que tiene el Pokémon y, debilitado, no puede subir', () => {
+    const s = withMon(MAX_LEVEL)
+    const mon = activeMon(s)!
+    mon.hp = Math.floor(maxHp(mon) / 2)
+    startTower(s, firstMove(s), NEVER)
+    const first = s.tower!.lastBattle!
+    expect(first.events[0].playerHp).toBeLessThan(first.player.maxHp)
+    abandonTower(s)
+    closeTower(s)
+    mon.hp = 0
+    expect(towerBlocker(s)).not.toBeNull()
+    startTower(s, firstMove(s))
+    expect(s.tower).toBeNull()
+  })
+
+  it('al caer, su Pokémon se queda sin PS, como en una ruta', () => {
+    const s = withMon(1)
+    startTower(s, firstMove(s), seqRng(0.3, 0.6, 0.9))
+    advanceTower(s, FOREVER, seqRng(0.3, 0.6, 0.9))
+    expect(s.tower!.end).toBe(TowerEnd.Fainted)
+    expect(activeMon(s)!.hp).toBe(0)
+  })
+
+  it('al abandonar se queda con los PS de ese momento: entre pisos, los que le quedan; tras curarse, todos', () => {
+    const s = withMon(MAX_LEVEL)
+    const mon = activeMon(s)!
+    startTower(s, firstMove(s), NEVER)
+    finishBattle(s)
+    const t = s.tower!
+    t.hp = Math.floor(t.lastBattle!.player.maxHp / 2)
+    abandonTower(s)
+    expect(mon.hp).toBe(Math.round((t.hp * maxHp(mon)) / t.lastBattle!.player.maxHp))
+    expect(mon.hp).toBeLessThan(maxHp(mon))
+    closeTower(s)
+    mon.hp = 1
+    startTower(s, firstMove(s), NEVER)
+    finishBattle(s)
+    s.tower!.hp = null
+    abandonTower(s)
+    expect(mon.hp).toBe(maxHp(mon))
+  })
+
+  it('si abandona en pleno combate, se queda con los PS del momento que se ve', () => {
+    const s = withMon(MAX_LEVEL)
+    const mon = activeMon(s)!
+    startTower(s, firstMove(s), NEVER)
+    const b = s.tower!.lastBattle!
+    abandonTower(s)
+    expect(mon.hp).toBe(Math.min(maxHp(mon), Math.round((b.events[0].playerHp * maxHp(mon)) / b.player.maxHp)))
+  })
+
   it('si su Pokémon ya no está, la subida se acaba', () => {
     const s = withMon(MAX_LEVEL)
     startTower(s, firstMove(s), seqRng(0.3))
@@ -122,29 +174,6 @@ describe('torre infinita', () => {
     startTower(s, firstMove(s), NEVER)
     expect(s.tower!.lastBattle!.enemy.shiny).toBeUndefined()
     expect(s.tower!.prize!.exp).toBe(floorExp(1))
-  })
-
-  it('el ataque se cambia en pleno combate y vale desde el siguiente piso', () => {
-    const s = withMon(MAX_LEVEL)
-    const mon = activeMon(s)!
-    mon.speciesId = SPECIES.find((sp) => towerMoveChoices({ ...mon, speciesId: sp.id }).length > 1)!.id
-    const [first, other] = towerMoveChoices(mon)
-    startTower(s, first.id, seqRng(0.3))
-    setTowerMove(s, other.id)
-    expect(s.tower!.moveId).toBe(other.id)
-    expect(s.tower!.lastBattle!.player.move!.id).toBe(first.id)
-    toNextFloor(s, seqRng(0.3))
-    expect(s.tower!.lastBattle!.player.move!.id).toBe(other.id)
-  })
-
-  it('solo acepta ataques que sabe y mientras sube', () => {
-    const s = withMon(MAX_LEVEL)
-    const move = firstMove(s)
-    setTowerMove(s, move)
-    expect(s.tower).toBeNull()
-    startTower(s, move, seqRng(0.3))
-    setTowerMove(s, 'no-existe')
-    expect(s.tower!.moveId).toBe(move)
   })
 
   it('sube mientras gana y, al caer, se acaba con el récord y lo ganado', () => {
@@ -239,6 +268,24 @@ describe('torre infinita', () => {
     abandonTower(s)
     setActive(s, other.uid)
     expect(s.activeUid).toBe(other.uid)
+  })
+
+  it('los premios de piso vuelven cada semana, aunque el récord de siempre sea mayor', () => {
+    const s = withMon(MAX_LEVEL)
+    s.towerBest = TOWER_PRIZE_EVERY * 10
+    const reachPrizeFloor = () => {
+      startTower(s, firstMove(s), NEVER)
+      s.tower!.floor = TOWER_PRIZE_EVERY - 1
+      toNextFloor(s, NEVER)
+      expect(s.tower!.floor).toBe(TOWER_PRIZE_EVERY)
+    }
+    reachPrizeFloor()
+    expect(s.tower!.prize!.prize).toEqual(towerPrize(TOWER_PRIZE_EVERY))
+    abandonTower(s)
+    closeTower(s)
+    s.towerWeek = { week: rankingWeek(s.lastTick), best: TOWER_PRIZE_EVERY }
+    reachPrizeFloor()
+    expect(s.tower!.prize!.prize).toBeNull()
   })
 
   it('apunta el mejor piso de la semana, que empieza de cero la semana siguiente', () => {

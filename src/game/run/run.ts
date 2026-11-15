@@ -8,6 +8,7 @@ import { advanceExpBoost, boostActive, BOOST_TAP_EXP, newExpBoost, reachEggSpot 
 import { completeRoute, gainRunExp, spendBattleTime, startStopBattle } from './runBattle'
 import { spendHealTime, drinkStopPotion } from './runHeal'
 import { enterGym, gymLevelBlocker } from './runGym'
+import { defaultRouteMove } from './runMove'
 import { enterTrainer } from './runTrainer'
 
 export function runBlocker(s: GameState): string | null {
@@ -46,6 +47,7 @@ export function startRun(s: GameState, routeId: string, path = pathFrom(route(ro
     heal: null,
     boost: newExpBoost(routeId, path, s.luckyEggArmed, rng),
     unlocked: null,
+    moveId: defaultRouteMove(activeMon(s)!),
     gym: null,
     trainer: null,
     earned: { money: 0, tickets: 0, pieces: [], exp: 0, levelsGained: 0, wins: 0, battles: 0, raidBosses: [], raidMoneyMult: 1, discovered: [], badge: null },
@@ -142,15 +144,16 @@ export function restartBlocker(s: GameState): string | null {
 
 /**
  * Vuelve a salir a la misma ruta desde el principio, como al empezarla: las paradas y sus rivales se sortean de nuevo.
- * Se conserva lo ganado hasta ahora (como al abandonar), el Huevo Suerte usado y, en un gimnasio, el ataque elegido
+ * Se conserva lo ganado hasta ahora (como al abandonar), el Huevo Suerte usado y el ataque elegido
  */
 export function restartRun(s: GameState, rng: Rng = Math.random) {
   if (restartBlocker(s)) return
-  const { routeId, gym, boost } = s.run!
+  const { routeId, moveId, boost } = s.run!
   endRun(s)
   startRun(s, routeId, pathFrom(route(routeId)), rng)
-  if (s.run && gym) s.run.gym = { index: 0, moveId: gym.moveId }
-  if (s.run) s.run.boost.active ||= boost.active
+  if (!s.run) return
+  s.run.moveId = moveId
+  s.run.boost.active ||= boost.active
 }
 
 /** Volver al rancho: al terminar la ruta o abandonándola (se conserva lo ganado) */
