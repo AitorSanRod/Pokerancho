@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { useCorrectionGuard } from '../trade/correctionGuard'
 import { CountInput } from '../trade/CountInput'

@@ -33,6 +33,9 @@ async function describe(res: Response): Promise<string> {
 }
 
 /** Manda el correo; si Brevo falla, lo apunta en el registro y sigue (un correo perdido no debe romper la petición) */
+/** Milisegundos que se espera a Brevo antes de dar el correo por no mandado */
+const BREVO_TIMEOUT_MS = 10_000
+
 export async function sendMail(env: Env, to: string, kind: MailKind, link: string) {
   if (!env.BREVO_API_KEY || !env.MAIL_FROM) {
     console.log(`[correo sin enviar: faltan BREVO_API_KEY o MAIL_FROM] ${kind} para ${to}: ${link}`)
@@ -44,6 +47,7 @@ export async function sendMail(env: Env, to: string, kind: MailKind, link: strin
       method: 'POST',
       headers: { 'api-key': env.BREVO_API_KEY.trim(), 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ sender: { email: env.MAIL_FROM.trim(), name: SENDER_NAME }, to: [{ email: to }], subject, htmlContent: body(link) }),
+      signal: AbortSignal.timeout(BREVO_TIMEOUT_MS),
     })
     if (!res.ok) console.error(`Brevo no ha mandado el correo ${kind} a ${to}: ${await describe(res)}`)
   } catch (e) {

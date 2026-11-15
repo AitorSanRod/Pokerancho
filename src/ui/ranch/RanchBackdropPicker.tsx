@@ -1,6 +1,6 @@
 import { RANCH_BACKDROPS, type RanchBackdrop } from '../../data/ranchBackdrops'
 import type { GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { ranchBackdrop, setRanchBackdrop } from '../../game/team/ranchBackdrops'
 import { RANCH_BACKDROP_IMAGES } from './ranchLooks'
 

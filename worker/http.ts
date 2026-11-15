@@ -9,8 +9,9 @@ export const json = (body: unknown, status = 200, headers: Record<string, string
  */
 export const sameOrigin = (request: Request): boolean => request.headers.get('Origin') === new URL(request.url).origin
 
-/** El cuerpo JSON si cabe en `maxBytes` y se puede leer; si no, null */
+/** El cuerpo JSON si cabe en `maxBytes` y se puede leer; si no, null (si dice que no cabe, ni se lee) */
 export async function readJson(request: Request, maxBytes: number): Promise<unknown> {
+  if (Number(request.headers.get('Content-Length') ?? 0) > maxBytes) return null
   const text = await request.text()
   if (new TextEncoder().encode(text).length > maxBytes) return null
   try {

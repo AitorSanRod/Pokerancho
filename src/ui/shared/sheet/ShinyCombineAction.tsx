@@ -10,7 +10,7 @@ import {
   type CombineResult,
 } from '../../../game/collection/pieces'
 import type { GameState } from '../../../game/core/state'
-import { act } from '../../../game/core/store'
+import { act } from '../../../store/store'
 import { ConfirmDialog } from '../ConfirmDialog'
 import { ICON } from '../icons'
 import { BigAction } from './MonSheet'

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { species } from '../../data/species'
 import type { GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { isSearching } from '../../game/raid/raidEngine'
 import { raidMinutesLeft } from '../../game/raid/raidEstimate'
 import { presentMembers, RAID_ROOM_SIZE, type Raid } from '../../game/raid/raidRoom'

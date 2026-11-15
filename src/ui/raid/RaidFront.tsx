@@ -1,5 +1,5 @@
 import type { GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { rotationBoss } from '../../game/raid/rotationBosses'
 import { joinServerRaid } from '../../game/raid/raid'
 import { newRaid } from '../../game/raid/raidEngine'

@@ -1,6 +1,6 @@
 import { isFavorite, isSeen, toggleFavorite } from '../../../game/collection/dex'
 import type { GameState } from '../../../game/core/state'
-import { act } from '../../../game/core/store'
+import { act } from '../../../store/store'
 import { HeartIcon } from '../HeartIcon'
 
 /** Corazón de la esquina de la cabecera: marca la especie como favorita (sus tickets no se trituran) */

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { baseSpeciesOf } from '../../data/species'
 import { findMon, ownedOfSpecies, type GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { moveBlocker, moveMon, placeMon, ranchCount } from '../../game/team/ranches'
 import { SettingsMenu } from '../settings/SettingsMenu'
 import { PokemonSheet } from '../shared/sheet/PokemonSheet'

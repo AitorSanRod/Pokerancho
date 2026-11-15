@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from 'react'
-import { act, getState } from '../game/core/store'
+import { act, getState } from '../store/store'
 import { switchToLocalRaids, switchToServerRaids, tabRaidRotations } from '../game/raid/raid'
 import { DEFAULT_NICKNAME, RAID_ROTATIONS, RaidAction, type RaidFeed, type RotationFeed } from '../game/raid/online/protocol'
 import type { Raid } from '../game/raid/raidRoom'

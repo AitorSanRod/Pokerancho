@@ -1,0 +1,9 @@
+# Saltos de línea LF en todos los sistemas (en Windows, core.autocrlf los cambiaría a CRLF al sacar los ficheros)
+* text=auto eol=lf
+
+# Imágenes y binarios, tal cual
+*.png binary
+*.jpg binary
+*.webp binary
+*.gif binary
+*.ico binary

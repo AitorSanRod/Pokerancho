@@ -16,7 +16,7 @@ import {
 } from '../../../game/collection/pieces'
 import { buyPiece, maxPiecesToBuy, pieceShardPrice } from '../../../game/collection/shredder'
 import { TutorialStep, type GameState } from '../../../game/core/state'
-import { act } from '../../../game/core/store'
+import { act } from '../../../store/store'
 import { Bar } from '../common'
 import { ICON } from '../icons'
 import { TutorialHint } from '../TutorialHint'

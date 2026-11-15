@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { species } from '../../../data/species'
 import { MonPlace, monPlace, type GameState, type OwnedMon } from '../../../game/core/state'
-import { act } from '../../../game/core/store'
+import { act } from '../../../store/store'
 import { healCost, healInstant } from '../../../game/team/ranch'
 import { maxHp } from '../../../game/team/stats'
 import { ConfirmDialog } from '../ConfirmDialog'

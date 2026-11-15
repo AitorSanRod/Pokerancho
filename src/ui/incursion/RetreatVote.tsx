@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import type { ActiveIncursion } from '../../game/incursion/activeIncursion'
 import { retreatIncursion } from '../../game/incursion/incursionGame'
 import { votesNeeded } from '../../game/incursion/retreatVote'

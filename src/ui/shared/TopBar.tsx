@@ -1,5 +1,5 @@
 import type { GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { ICON } from './icons'
 import { ItemIcon } from './ItemIcon'
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { species } from '../../data/species'
 import { activeMon, type GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import {
   abandonTower,
   canContinueTower,
@@ -21,7 +21,8 @@ import { RouteBattle } from '../route/RouteBattle'
 import { WalkScene } from '../route/WalkScene'
 import '../route/run.css'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
-import { TowerMoveBar, towerMoveBarRoom } from './TowerMoveBar'
+import { TowerMoveBar } from './TowerMoveBar'
+import { towerMoveBarRoom } from './towerMoveBarRoom'
 
 /** Milisegundos que camina entre un piso y el siguiente */
 const FLOOR_GAP_MS = 700
@@ -40,7 +41,7 @@ export function TowerClimb({ game }: { game: GameState }) {
   const [paused, setPaused] = useState(between)
   const [abandoning, setAbandoning] = useState(false)
   const walking = between && canGo && !paused
-  const pause = useCallback(() => setPaused(true), [])
+  const pause = useCallback(() => setPaused(true), [setPaused])
   useNextFloor(walking, t.floor, pause)
   const battle = !between && t.lastBattle ? t.lastBattle : null
   const frame = battle && battleFrame(battle, t.battleMsLeft)

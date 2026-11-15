@@ -25,6 +25,8 @@ export const AuthCode = {
   BadToken: 'bad_token',
   SignedOut: 'signed_out',
   WrongOrigin: 'wrong_origin',
+  /** Se han mandado demasiados correos (desde esa conexión o en total hoy): hay que esperar */
+  TooManyMails: 'too_many_mails',
 } as const
 export type AuthCode = (typeof AuthCode)[keyof typeof AuthCode]
 

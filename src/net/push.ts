@@ -1,9 +1,10 @@
 import { useSyncExternalStore } from 'react'
 import { PUSH_TOPICS, type PushTopic } from '../game/core/push'
 import { clientPushPlan } from '../game/core/pushPlan'
-import { getState } from '../game/core/store'
+import { getState } from '../store/store'
 import { subscribeAccount } from './account'
 import { playerId } from './identity'
+import { apiFetch, postJson } from './apiFetch'
 
 // Notificaciones push (worker/push): el navegador se suscribe con la clave pública del servidor y este manda los
 // avisos aunque la app esté cerrada. El plan de expediciones y ruta lo manda la app al pasar a segundo plano y lo
@@ -55,7 +56,7 @@ function update(patch: Partial<PushState>) {
 }
 
 const post = (action: string, body: object, keepalive = false) =>
-  fetch(PUSH_API + action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), keepalive })
+  postJson(PUSH_API + action, body, { keepalive })
 
 const bytesOf = (b64url: string) => Uint8Array.from(atob(b64url.replaceAll('-', '+').replaceAll('_', '/')), (c) => c.charCodeAt(0))
 
@@ -69,7 +70,7 @@ async function currentSubscription(): Promise<PushSubscription | null> {
 async function subscribeWith(topics: PushTopic[]): Promise<PushStatus> {
   const registration = await navigator.serviceWorker.getRegistration()
   if (!registration) return PushStatus.Unsupported
-  const keyRes = await fetch(PUSH_API + 'key').catch(() => null)
+  const keyRes = await apiFetch(PUSH_API + 'key').catch(() => null)
   if (!keyRes?.ok) return PushStatus.Unavailable
   const { publicKey } = (await keyRes.json()) as { publicKey: string }
   const subscription =

@@ -1,5 +1,6 @@
 import { AuthCode, isValidPassword } from '../../src/game/core/accountRules'
 import { accountInfo, createAuthToken, deleteUserSessions, TokenKind, updateUser, userByEmail, consumeAuthToken, type UserRow } from '../db/users'
+import { logMail, mailAllowed } from '../db/mailLog'
 import type { Env } from '../env'
 import { json } from '../http'
 import { MailKind, sendMail } from '../mail'
@@ -23,9 +24,16 @@ const LINK: Record<TokenKind, { hours: number; mail: MailKind; fragment: string 
   [TokenKind.Reset]: { hours: RESET_HOURS, mail: MailKind.Reset, fragment: 'reset' },
 }
 
-/** Manda el correo con un enlace nuevo, salvo que se acabe de mandar otro a esa cuenta */
+/** La IP de quien hace la petición (Cloudflare la pone en esta cabecera); vacía en local y en los tests */
+const clientIp = (request: Request): string => request.headers.get('CF-Connecting-IP') ?? ''
+
+/** Si queda cupo para mandar un correo más desde esta conexión (ver db/mailLog.ts) */
+export const canMail = (env: Env, request: Request, now: number): Promise<boolean> => mailAllowed(env.DB, clientIp(request), now)
+
+/** Manda el correo con un enlace nuevo, salvo que se acabe de mandar otro a esa cuenta o no quede cupo */
 export async function mailLink(env: Env, request: Request, user: UserRow, kind: TokenKind, now: number) {
-  if (now - user.last_mail_at < MAIL_COOLDOWN_MS) return
+  if (now - user.last_mail_at < MAIL_COOLDOWN_MS || !(await canMail(env, request, now))) return
+  await logMail(env.DB, clientIp(request), now)
   const token = newToken()
   const { hours, mail, fragment } = LINK[kind]
   await createAuthToken(env.DB, await hashToken(token), user.id, kind, now + hours * HOUR_MS)

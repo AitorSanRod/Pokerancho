@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { act, getState } from '../game/core/store'
+import { act, getState } from '../store/store'
 import { incursionProgress, IncursionPhase } from '../game/incursion/activeIncursion'
 import { IncursionOutcome } from '../game/incursion/incursionRun'
 import { applyGroupView, dropGroup, leaveQueue, playQueueLocally, queueRequest } from '../game/incursion/online/linkedIncursion'

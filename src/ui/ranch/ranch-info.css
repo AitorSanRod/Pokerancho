@@ -47,3 +47,25 @@
   background: center / cover no-repeat;
   image-rendering: pixelated;
 }
+/* Sección «Pokémon» del panel (RanchMonList): una fila por Pokémon, de mayor a menor nivel */
+.ranch-mon-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ranch-mon-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ranch-mon-types {
+  display: flex;
+  gap: 4px;
+}
+.ranch-mon-weight {
+  min-width: 28px;
+  text-align: right;
+}

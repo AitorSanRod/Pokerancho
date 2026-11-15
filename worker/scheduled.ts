@@ -2,6 +2,7 @@ import { catchUp } from '../src/game/raid/online/sharedRoom'
 import { markRoom, roomPushes } from '../src/game/raid/online/raidPushes'
 import { deleteIdleStopRooms, saveRoom, type StoredRoom } from './db/rooms'
 import { deleteIdleIncursions } from './db/incursions'
+import { pruneMailLog } from './db/mailLog'
 import { expireListings } from './db/trades'
 import type { Env } from './env'
 import { notifyRaid } from './push/notify'
@@ -12,7 +13,7 @@ import { tickTab } from './raidTab'
 
 // La tarea programada (cron, cada minuto; ver wrangler.jsonc): pone al día las raids aunque nadie tenga la app abierta
 // (así se sabe cuándo cae un jefe o aparece el siguiente), borra las salas de parada que ya no usa nadie, devuelve a su
-// dueño los anuncios de intercambio caducados, borra los grupos de incursión abandonados, reparte los premios semanales de los rankings el lunes, rehace el ranking cada hora y manda los avisos push que ya tocan.
+// dueño los anuncios de intercambio caducados, borra los grupos de incursión abandonados y los apuntes viejos de correos mandados, reparte los premios semanales de los rankings el lunes, rehace el ranking cada hora y manda los avisos push que ya tocan.
 
 /** La sala de parada con jugadores que lleva más tiempo sin consultas (sus jugadores pueden tener la app cerrada) */
 async function stalestStopRoom(db: D1Database): Promise<StoredRoom | null> {
@@ -40,5 +41,6 @@ export async function scheduled(env: Env) {
   await expireListings(env.DB, now).catch((e: unknown) => console.error('Intercambios: no se han podido caducar los anuncios', e))
   await awardWeeklyPrizes(env.DB, now).catch((e: unknown) => console.error('Ranking: no se han podido repartir los premios', e))
   await refreshRanking(env.DB, now).catch((e: unknown) => console.error('Ranking: no se ha podido rehacer', e))
+  await pruneMailLog(env.DB, now).catch((e: unknown) => console.error('Correos: no se ha podido limpiar el registro', e))
   await sendDuePushes(env, now)
 }

@@ -1,9 +1,10 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import type { DailyGift } from '../data/dailyGifts'
 import { applyGift, canClaimGift, type DailyGiftState } from '../game/collection/dailyGift'
-import { act } from '../game/core/store'
+import { act } from '../store/store'
 import { account, AccountStatus, subscribeAccount } from './account'
 import { saveNow } from './cloudSync'
+import { apiFetch } from './apiFetch'
 
 // El obsequio diario de la cuenta (worker/gift.ts): el servidor decide cuál toca y cuándo; aquí se pregunta al entrar
 // en la cuenta y al abrir el menú, y al recogerlo se suma a la partida y se sube enseguida a la nube.
@@ -41,7 +42,7 @@ interface GiftResponse {
 
 async function call(method: 'GET' | 'POST'): Promise<GiftResponse | null> {
   try {
-    const res = await fetch(GIFT_API, { method, cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: method === 'POST' ? '{}' : undefined })
+    const res = await apiFetch(GIFT_API, { method, cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: method === 'POST' ? '{}' : undefined })
     if (!res.ok && res.status !== 409) throw new Error(`${GIFT_API}: ${res.status}`)
     const body = (await res.json()) as GiftResponse
     update({ state: body.state, serverOffset: body.serverNow - Date.now(), failing: false })

@@ -5,7 +5,7 @@ import { upgradeLevel } from './upgrades'
 /** Espacios con los que empieza cada rancho; cada Pokémon ocupa uno, sea cual sea su rareza */
 export const RANCH_SLOTS = 10
 /** Pokémon que caben en la Caja, uno por sitio sea cual sea su rareza */
-export const BOX_SLOTS = 8
+export const BOX_SLOTS = 16
 
 /** Ranchos que tiene el jugador: el primero más los comprados en la tienda */
 export const ranchCount = (s: GameState): number => 1 + upgradeLevel(s, 'ranches')
@@ -27,6 +27,10 @@ export function ranchWithRoom(s: GameState): number | null {
 }
 
 export const boxedMons = (s: GameState) => s.owned.filter((m) => m.ranch === null)
+
+/** Los Pokémon del rancho (también los que están fuera guardando su hueco), de mayor a menor nivel */
+export const ranchMonsByLevel = (s: GameState, ranch: number) =>
+  s.owned.filter((m) => m.ranch === ranch).sort((a, b) => b.level - a.level)
 
 /** Destino de un traslado: el índice de un rancho o null para la Caja */
 export type MonDestination = number | null

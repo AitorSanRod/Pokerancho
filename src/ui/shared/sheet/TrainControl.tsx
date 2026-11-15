@@ -1,5 +1,5 @@
 import type { GameState, OwnedMon } from '../../../game/core/state'
-import { act } from '../../../game/core/store'
+import { act } from '../../../store/store'
 import { maxTrainSessions, train, trainCost, trainPlan } from '../../../game/team/ranch'
 import { ICON } from '../icons'
 import { StepperAction } from './StepperAction'

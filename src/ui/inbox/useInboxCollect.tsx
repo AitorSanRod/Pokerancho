@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { species } from '../../data/species'
-import { act, getState } from '../../game/core/store'
+import { act, getState } from '../../store/store'
 import { claimServerGift, serverGiftBlocker, type ServerGift } from '../../game/collection/serverGifts'
 import { collectRaidPrize, collectRaidPrizes } from '../../game/raid/raidPrizes'
 import { goodText } from '../../game/trade/goodText'

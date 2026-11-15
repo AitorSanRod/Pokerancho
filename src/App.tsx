@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import type { Item } from './data/items'
 import { combinableIds } from './game/collection/pieces'
 import { TutorialStep } from './game/core/state'
@@ -12,30 +12,24 @@ import { startRaidSync } from './net/raidSync'
 import { startTradeBoard } from './net/tradeBoard'
 import { AccountHost } from './ui/account/AccountHost'
 import { UpdatePrompt } from './ui/shared/UpdatePrompt'
-import { act, useGame } from './game/core/store'
+import { act, useGame } from './store/store'
 import { tick } from './game/core/tick'
 import { isExpeditionDone } from './game/team/expedition'
-import { DexScreen } from './ui/dex/DexScreen'
-import { GachaScreen } from './ui/gacha/GachaScreen'
-import { RanchScreen } from './ui/ranch/RanchScreen'
-import { RouteScreen } from './ui/route/RouteScreen'
 import { TopBar } from './ui/shared/TopBar'
 import { TutorialNavHint } from './ui/shared/TutorialHint'
-import { ShopScreen } from './ui/shop/ShopScreen'
-import { StarterScreen } from './ui/starter/StarterScreen'
 import { ICON } from './ui/shared/icons'
 import { ItemIcon } from './ui/shared/ItemIcon'
 import { listenTabRequests, type AppTab } from './ui/shared/navigation'
 import { pendingKey, useUnseen } from './ui/shared/useUnseen'
 import { useMenuPending } from './ui/ranch/useMenuPending'
-
+import { DexScreen, GachaScreen, preloadScreens, RanchScreen, RouteScreen, ShopScreen, StarterScreen } from './ui/lazyScreens'
 
 const TABS: { id: AppTab; icon: Item; label: string }[] = [
   { id: 'route', icon: ICON.Route, label: 'Ruta' },
   { id: 'gacha', icon: ICON.Gacha, label: 'Gacha' },
   { id: 'ranch', icon: ICON.Ranch, label: 'Rancho' },
   { id: 'shop', icon: ICON.Shop, label: 'Tienda' },
-  { id: 'dex', icon: ICON.Dex, label: 'Pokédex' },
+  { id: 'dex', icon: ICON.Dex, label: 'PokÃ©dex' },
 ]
 const TICK_MS = 250
 
@@ -43,31 +37,32 @@ export default function App() {
   const game = useGame()
   const [tab, setTab] = useState<AppTab>(game.run ? 'route' : 'ranch')
 
-  // Bucle de juego: el primer tick también aplica el progreso hecho con la app cerrada
+  // Bucle de juego: el primer tick tambiÃ©n aplica el progreso hecho con la app cerrada
   useEffect(() => {
     act((s) => tick(s, Date.now()))
     const id = setInterval(() => act((s) => tick(s, Date.now())), TICK_MS)
     return () => clearInterval(id)
   }, [])
-  // Otras pantallas pueden llevar a una pestaña (p. ej. comprar una llave en la Tienda)
+  useEffect(preloadScreens, [])
+  // Otras pantallas pueden llevar a una pestaÃ±a (p. ej. comprar una llave en la Tienda)
   useEffect(() => listenTabRequests(setTab), [])
-  // Salas compartidas de los jefes comunitarios: entrar, ponerse al día y avisar al salir
+  // Salas compartidas de los jefes comunitarios: entrar, ponerse al dÃ­a y avisar al salir
   useEffect(startRaidSync, [])
   useEffect(startIncursionSync, [])
   // Regalos del servidor, para todos o para este jugador (en Notificaciones)
   useEffect(startServerGifts, [])
   useEffect(startRaidFeed, [])
-  // Notificaciones push: el plan de avisos al ocultarse la app y la suscripción al día con la cuenta
+  // Notificaciones push: el plan de avisos al ocultarse la app y la suscripciÃ³n al dÃ­a con la cuenta
   useEffect(startPush, [])
-  // Cuenta opcional: sesión, enlaces de los correos y partida en la nube
+  // Cuenta opcional: sesiÃ³n, enlaces de los correos y partida en la nube
   useEffect(() => {
     void startAccount()
     return startCloudSync()
   }, [])
-  // Intercambios: el tablón y lo pendiente de recoger en Notificaciones (con cuenta)
+  // Intercambios: el tablÃ³n y lo pendiente de recoger en Notificaciones (con cuenta)
   useEffect(startTradeBoard, [])
 
-  // Los puntos rojos se apagan al entrar en la pestaña y vuelven si aparece algo nuevo
+  // Los puntos rojos se apagan al entrar en la pestaÃ±a y vuelven si aparece algo nuevo
   const runNeedsLook = game.run && game.run.phase !== 'walking' ? [`${game.run.routeId}:${game.run.phase}`] : []
   const routePending = pendingKey([...runNeedsLook, ...game.expeditions.filter(isExpeditionDone).map((e) => e.uid)])
   const badges: Record<AppTab, boolean> = {
@@ -81,7 +76,9 @@ export default function App() {
   if (game.tutorial === TutorialStep.Starter) {
     return (
       <div className="app">
-        <StarterScreen />
+        <Suspense fallback={null}>
+          <StarterScreen />
+        </Suspense>
         <AccountHost game={game} />
         <UpdatePrompt />
       </div>
@@ -95,11 +92,13 @@ export default function App() {
       <UpdatePrompt />
 
       <main className="content">
-        {tab === 'route' && <RouteScreen game={game} />}
-        {tab === 'ranch' && <RanchScreen game={game} />}
-        {tab === 'shop' && <ShopScreen game={game} />}
-        {tab === 'gacha' && <GachaScreen game={game} />}
-        {tab === 'dex' && <DexScreen game={game} />}
+        <Suspense fallback={null}>
+          {tab === 'route' && <RouteScreen game={game} />}
+          {tab === 'ranch' && <RanchScreen game={game} />}
+          {tab === 'shop' && <ShopScreen game={game} />}
+          {tab === 'gacha' && <GachaScreen game={game} />}
+          {tab === 'dex' && <DexScreen game={game} />}
+        </Suspense>
         <TutorialNavHint game={game} currentTab={tab} tabIds={TABS.map((t) => t.id)} />
       </main>
 

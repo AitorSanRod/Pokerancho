@@ -19,13 +19,14 @@ import { RANCH_EXPANSION_MAX, RANCH_EXPANSION_SLOTS } from '../team/ranchExpansi
 import { cleanRanchName } from '../team/ranchNames'
 import { expToNext, MAX_LEVEL, MAX_STARS, maxHp } from '../team/stats'
 import { UPGRADES } from '../team/upgrades'
+import { carriedProgress } from './progressCarry'
 import { initialState, SAVE_VERSION, TutorialStep, type GameState, type OwnedMon } from './state'
 
 // Una partida guardada con otra versión del juego no se tira: se pasa por los pasos de SAVE_MIGRATIONS (los cambios
 // de significado) y después se rescata campo a campo todo lo que encaje con la forma de ahora. Lo que ya no existe en
-// el juego (una especie o una ruta quitadas) se descarta; los campos nuevos toman su valor inicial. Solo se pierde lo
-// que estaba a medias (IN_PROGRESS), porque depende de reglas que pueden haber cambiado. Las expediciones no: siguen
-// y terminan con las condiciones con las que salieron (team/expeditionSalvage.ts).
+// el juego (una especie o una ruta quitadas) se descarta; los campos nuevos toman su valor inicial. Lo que estaba a
+// medias (IN_PROGRESS) sigue si su forma no ha cambiado desde entonces (progressCarry.ts); si no, se pierde. Las
+// expediciones siempre siguen y terminan con las condiciones con las que salieron (team/expeditionSalvage.ts).
 
 type Save = Record<string, unknown>
 
@@ -41,8 +42,8 @@ export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {
 }
 
 /**
- * La incursión en curso se descarta en cualquier cambio de versión (IN_PROGRESS): su llave, gastada al entrar, vuelve a
- * la Mochila (sin pasar del máximo; las gratuitas no la piden)
+ * Si la incursión en curso se descarta al cambiar de versión (ver progressCarry.ts), su llave, gastada al entrar, vuelve
+ * a la Mochila (sin pasar del máximo; las gratuitas no la piden)
  */
 function refundIncursionKey(save: Save) {
   const id = isRecord(save.incursion) ? save.incursion.incursionId : null
@@ -53,8 +54,9 @@ function refundIncursionKey(save: Save) {
 }
 
 /**
- * Lo que se descarta al cambiar de versión: la ruta (lo ganado en ella ya se sumó al ganarlo), la sala de raid y la
- * incursión en curso (se devuelve su llave) o en cola; el Pokémon vuelve al rancho
+ * Lo que estaba a medias: sigue solo si su forma no ha cambiado (progressCarry.ts). Si no, la ruta se pierde (lo ganado
+ * en ella ya se sumó al ganarlo), igual que la sala de raid y la incursión en curso (se devuelve su llave) o en cola, y
+ * el Pokémon vuelve al rancho. El multiplicador de tiempo (solo de desarrollo) vuelve siempre a x1
  */
 const IN_PROGRESS: (keyof GameState)[] = ['run', 'raids', 'raidServer', 'incursion', 'incursionQueue', 'tower', 'timeScale']
 /** Ranchos que puede llegar a tener el jugador: el primero más todos los de la tienda */
@@ -176,7 +178,8 @@ export function migrateSave(saved: unknown): GameState | null {
   if (!isRecord(saved) || !isInt(saved.version)) return null
   const save = structuredClone(saved)
   for (let v = save.version as number; v < SAVE_VERSION; v++) SAVE_MIGRATIONS[v]?.(save)
-  refundIncursionKey(save)
+  const carried = carriedProgress(save, saved.version)
+  if (!carried.incursion) refundIncursionKey(save)
   const s = initialState()
   const fields = s as unknown as Save
   for (const key of Object.keys(s) as (keyof GameState)[]) {
@@ -185,6 +188,7 @@ export function migrateSave(saved: unknown): GameState | null {
     const value = rule ? rule(save[key]) : sameShape(s[key], save[key]) ? save[key] : undefined
     if (value !== undefined) fields[key] = value
   }
+  Object.assign(s, carried)
   linkUp(s)
   return s
 }

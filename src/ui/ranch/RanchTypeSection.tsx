@@ -1,6 +1,6 @@
 import { RANCH_TYPE_IDS, RANCH_TYPES } from '../../data/ranchTypes'
 import type { GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { placedRanchType } from '../../game/team/ranchPassives'
 import { placeRanchType, ranchTypeAvailable, removeRanchType } from '../../game/team/ranchTypes'
 import { TypeBadge } from '../shared/common'

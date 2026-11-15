@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { activeMon, type GameState, type OwnedMon } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { startTower, towerBlocker, towerMon, TOWER_HEAL_EVERY, TOWER_LAST_HEAL_FLOOR, towerActive } from '../../game/tower/tower'
 import { towerWeekBest } from '../../game/tower/towerWeek'
 import { TOWER_LEVEL_CAP_FLOOR } from '../../game/tower/towerFoes'
@@ -39,7 +39,7 @@ function TowerHead({ game }: { game: GameState }) {
         <ItemIcon item={ICON.Tower} size={28} /> Torre infinita
       </strong>
       <span className="small">
-        Récord: <strong>piso {game.towerBest}</strong> · Esta semana: <strong>piso {towerWeekBest(game, Date.now())}</strong>
+        Récord: <strong>piso {game.towerBest}</strong> · Esta semana: <strong>piso {towerWeekBest(game, game.lastTick)}</strong>
       </span>
       <span className="tiny">
         Próximo premio: piso {prizeFloor} ({giftText(towerPrize(prizeFloor)!)})

@@ -1,4 +1,4 @@
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { BOOST_EXP_MULT, catchExpBoost } from '../../game/run/expBoost'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'

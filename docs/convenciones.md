@@ -45,7 +45,7 @@
 
 ## Capas
 
-- `src/game` no importa React ni el DOM. Solo `core/store.ts` toca `window`/`localStorage`.
+- `src/game` no importa React ni el DOM. El estado vivo y el guardado en `localStorage` están en `src/store`.
 - Las funciones de `game` reciben `s: GameState`, lo mutan y devuelven, como mucho, un resultado para la UI.
 - Las acciones validan sus precondiciones y salen sin hacer nada (`return`, `null` o `false`) si no se cumplen.
 - La UI no calcula reglas: si un componente necesita un número del juego, va en `game/` como función.

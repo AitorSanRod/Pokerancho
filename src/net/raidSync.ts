@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from 'react'
-import { act, getState } from '../game/core/store'
+import { act, getState } from '../store/store'
 import { applyView, dropLink, forgetRoom, markCritsSent, presenceKey, ROOM_KEYS, roomAt, roomRequest, type RoomKey } from '../game/raid/online/linkedRoom'
 import { DEFAULT_NICKNAME, RaidAction } from '../game/raid/online/protocol'
 import { nickname, playerId } from './identity'

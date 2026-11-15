@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { Rarity, SPECIES, species } from '../../data/species'
 import { initialState } from '../core/state'
 import { chooseStarter, speciesOfRarity } from '../core/test-utils'
+import { createMon } from '../team/mons'
 import { markSeen, toggleFavorite } from './dex'
-import { applyDexQuery, DEFAULT_DEX_QUERY, DexFilter, DexSort, isDexQueryActive, plainText, type DexQuery } from './dexQuery'
+import { applyDexQuery, DEFAULT_DEX_QUERY, DexFilter, DexSort, isDexQueryActive, ownedLevel, plainText, type DexQuery } from './dexQuery'
 import { addPieces, canCombine, PIECES_PER_COMBINE } from './pieces'
 
 const [A, B, C, D] = SPECIES.slice(0, 4)
@@ -65,5 +66,14 @@ describe('consulta de la Pokédex', () => {
     for (const sp of [B, C, D]) markSeen(s, sp.id)
     const named = [B, C, D].sort((x, y) => x.name.localeCompare(y.name, 'es')).map((sp) => sp.id)
     expect(ids({ sort: DexSort.Name }, s)).toEqual([...named, A.id])
+  })
+
+  it('ordena por nivel solo los que tienes, de mayor a menor', () => {
+    const s = initialState()
+    s.owned.push(createMon(B.id, 7, null), createMon(C.id, 12, null), createMon(D.id, 3, null), createMon(B.id, 9, null))
+    expect(ids({ sort: DexSort.Level }, s)).toEqual([C.id, B.id, D.id])
+    expect(ownedLevel(s, B.id)).toBe(9)
+    expect(ownedLevel(s, A.id)).toBe(0)
+    expect(isDexQueryActive({ ...DEFAULT_DEX_QUERY, sort: DexSort.Level })).toBe(true)
   })
 })

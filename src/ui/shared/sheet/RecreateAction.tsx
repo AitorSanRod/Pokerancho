@@ -5,7 +5,7 @@ import { PIECES_PER_COMBINE, type CombineResult } from '../../../game/collection
 import { recreate, recreateBlocker, recreatePrice } from '../../../game/collection/recreate'
 import { starItemFor } from '../../../game/collection/starItems'
 import type { GameState } from '../../../game/core/state'
-import { act } from '../../../game/core/store'
+import { act } from '../../../store/store'
 import { NEW_MON_LEVEL } from '../../../game/team/mons'
 import { ConfirmDialog } from '../ConfirmDialog'
 import { ICON } from '../icons'

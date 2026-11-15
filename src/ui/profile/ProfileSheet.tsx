@@ -14,7 +14,7 @@ const n = (v: number) => v.toLocaleString('es-ES')
 /** Perfil del menú del rancho: el entrenador con su compañero, medallas, Pokédex, lo que tiene, récords y rankings */
 export function ProfileSheet({ game, onBack }: { game: GameState; onBack: () => void }) {
   const { user } = useAccount()
-  const p = profileStats(game, Date.now())
+  const p = profileStats(game, game.lastTick)
   const companion = activeMon(game)
   const dexes = dexSections().filter((d) => d.species.length > 0)
 

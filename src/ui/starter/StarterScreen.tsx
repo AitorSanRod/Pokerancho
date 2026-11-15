@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { STARTERS } from '../../data/species'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { pickStarter, STARTER_PIECES } from '../../game/team/tutorial'
 import { Sprite } from '../shared/common'
 import { AccountStatus, useAccount } from '../../net/account'

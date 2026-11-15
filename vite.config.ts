@@ -36,20 +36,22 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Por defecto solo se precachean js/css/html: se añaden las imágenes propias (fondo del rancho)
-        globPatterns: ['**/*.{js,css,html,svg,png,jpg}'],
+        // Por defecto solo se precachean js/css/html: se añaden las imágenes propias (fondos de rancho y de ruta, mapas,
+        // tutoriales y GIF de los líderes), para que se vean también sin conexión
+        globPatterns: ['**/*.{js,css,html,svg,png,jpg,webp,gif}'],
         // La API (worker/) no es una página de la app: que el service worker no la sirva
         navigateFallbackDenylist: [/^\/api\//],
         // Abre la app al tocar una notificación (expediciones terminadas)
         importScripts: ['sw-notifications.js'],
-        // Los sprites vienen del repo de PokeAPI: se guardan en caché para jugar sin conexión
+        // Los sprites vienen del repo de PokeAPI por jsDelivr (src/data/spriteHost.ts): se guardan en caché para jugar
+        // sin conexión. Caben los de unas 600 especies (fijo, espalda, GIF, icono y sus shiny)
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/raw\.githubusercontent\.com\/PokeAPI\/sprites\//,
+            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/gh\/PokeAPI\/sprites@/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'pokeapi-sprites',
-              expiration: { maxEntries: 1200, maxAgeSeconds: 60 * 60 * 24 * 90 },
+              expiration: { maxEntries: 4000, maxAgeSeconds: 60 * 60 * 24 * 90 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },

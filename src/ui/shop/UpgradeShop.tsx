@@ -1,6 +1,6 @@
 import type { Item } from '../../data/items'
 import type { GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { buyUpgrade, nextUpgradePrice, UPGRADE_IDS, UPGRADES, upgradeLevel, type UpgradeId } from '../../game/team/upgrades'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'

@@ -4,7 +4,7 @@ import type { Route } from '../../data/maps'
 import { species } from '../../data/species'
 import { EXP_LEVEL_GAP } from '../../game/battle/rewards'
 import type { GameState, OwnedMon } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import {
   EXPEDITION_DURATIONS,
   expeditionBattles,

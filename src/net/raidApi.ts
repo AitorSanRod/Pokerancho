@@ -1,9 +1,8 @@
 import type { FeedRequest, JoinRequest, RaidFeed, RaidResponse, RoomView, SyncRequest } from '../game/raid/online/protocol'
+import { postJson } from './apiFetch'
 
 /** Dirección del servidor de salas (worker/raid.ts) */
 const RAID_API = '/api/raid'
-/** Milisegundos reales que se espera al servidor antes de darlo por perdido */
-const REQUEST_TIMEOUT_MS = 8_000
 
 /** Error de red o del servidor: sin él (p. ej. con `npm run dev`), las salas se juegan en local */
 export class RaidApiError extends Error {}
@@ -11,12 +10,7 @@ export class RaidApiError extends Error {}
 async function post(req: JoinRequest | SyncRequest | FeedRequest): Promise<RaidResponse> {
   let res: Response
   try {
-    res = await fetch(RAID_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req),
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    })
+    res = await postJson(RAID_API, req)
   } catch (e) {
     throw new RaidApiError(`Sin conexión con el servidor de salas: ${String(e)}`)
   }

@@ -1,7 +1,8 @@
-import { act } from '../game/core/store'
+import { act } from '../store/store'
 import { applyTradeOp, type TradeOpResult } from '../game/trade/tradeOps'
 import { TradeAction, TradeCode, type TradeBoard, type TradeOpResponse, type TradeRequest } from '../game/trade/tradeProtocol'
 import { withCloudInSync } from './cloudSync'
+import { apiFetch, postJson, SLOW_REQUEST_MS } from './apiFetch'
 
 // Peticiones de intercambio al servidor (worker/trade.ts). Las que cambian la partida van con la partida recién subida
 // (withCloudInSync): el servidor la cambia en la nube y aquí se repite el mismo cambio con la operación que devuelve.
@@ -23,7 +24,7 @@ export type TradeOutcome = { result: TradeOpResult } | { error: string }
 type OpRequest = TradeRequest extends infer R ? (R extends { baseRevision: number } ? Omit<R, 'baseRevision'> : never) : never
 
 async function post(body: object): Promise<{ ok: boolean; data: Record<string, unknown> }> {
-  const res = await fetch(TRADE_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  const res = await postJson(TRADE_API, body, {}, SLOW_REQUEST_MS)
   return { ok: res.ok, data: (await res.json().catch(() => ({}))) as Record<string, unknown> }
 }
 
@@ -40,7 +41,8 @@ export async function tradeOp(request: OpRequest): Promise<TradeOutcome> {
       adoptRevision(response.revision)
       return { result }
     })
-  } catch {
+  } catch (e) {
+    console.warn('Intercambios: la operación no ha terminado', e)
     return { error: NETWORK_ERROR }
   }
 }
@@ -58,7 +60,7 @@ export async function requestWithdraw(listingId: string): Promise<boolean | null
 /** El tablón (con `species`, solo lo que ofrece o pide alguna de esas especies) */
 export async function fetchBoard(species: number[]): Promise<TradeBoard> {
   const query = species.length ? `?species=${species.join(',')}` : ''
-  const res = await fetch(TRADE_API + query, { cache: 'no-store' })
+  const res = await apiFetch(TRADE_API + query, { cache: 'no-store' })
   if (!res.ok) throw new Error(`${TRADE_API}: ${res.status}`)
   return (await res.json()) as TradeBoard
 }

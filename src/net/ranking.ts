@@ -1,4 +1,5 @@
 import { RankingCode, type DamageRankingView, type RankingView, type TowerRankingView } from '../game/core/ranking'
+import { apiFetch } from './apiFetch'
 
 // Los rankings de dinero, de daño a los jefes y de la torre (worker/ranking.ts): se piden al abrirlos desde el menú; el servidor los
 // rehace cada hora.
@@ -13,7 +14,7 @@ export type RankingResult = { view: RankingView; damage: DamageRankingView; towe
 
 export async function fetchRanking(): Promise<RankingResult> {
   try {
-    const res = await fetch(RANKING_API, { cache: 'no-store' })
+    const res = await apiFetch(RANKING_API, { cache: 'no-store' })
     const body = (await res.json()) as { ranking?: RankingView; damage?: DamageRankingView; tower?: TowerRankingView; code?: string }
     if (body.ranking && body.damage) return { view: body.ranking, damage: body.damage, tower: body.tower ?? null }
     if (Object.values<string>(RankingCode).includes(body.code ?? '')) return { code: body.code as RankingCode }

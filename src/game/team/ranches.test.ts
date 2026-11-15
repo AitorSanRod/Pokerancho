@@ -5,7 +5,7 @@ import { initialState, MonPlace, monPlace } from '../core/state'
 import { chooseStarter, seqRng, testExpedition } from '../core/test-utils'
 import { startRun } from '../run/run'
 import { createMon, NEW_MON_LEVEL } from './mons'
-import { BOX_SLOTS, boxedMons, fitsInRanch, moveBlocker, moveMon, placeMon, RANCH_SLOTS, ranchCapacity, ranchCount, ranchWithRoom, rehomeOverflow, usedSlots } from './ranches'
+import { BOX_SLOTS, boxedMons, fitsInRanch, moveBlocker, moveMon, placeMon, RANCH_SLOTS, ranchCapacity, ranchCount, ranchMonsByLevel, ranchWithRoom, rehomeOverflow, usedSlots } from './ranches'
 
 const [ONE_SLOT, LEGENDARY] = [SPECIES[0].id, SPECIES.find((sp) => rarityOf(sp) === Rarity.Legendary)!.id]
 
@@ -20,6 +20,15 @@ function stateWithTeam(extra = 1) {
 const fillRanch = (s: ReturnType<typeof initialState>, ranch = 0) => {
   while (usedSlots(s, ranch) < RANCH_SLOTS) s.owned.push(createMon(ONE_SLOT, NEW_MON_LEVEL, ranch))
 }
+
+describe('Pokémon de un rancho', () => {
+  it('lista solo los de ese rancho, de mayor a menor nivel', () => {
+    const s = initialState()
+    const [low, high, other, boxed] = [createMon(ONE_SLOT, 3, 0), createMon(ONE_SLOT, 9, 0), createMon(ONE_SLOT, 20, 1), createMon(ONE_SLOT, 30, null)]
+    s.owned.push(low, high, other, boxed)
+    expect(ranchMonsByLevel(s, 0).map((m) => m.uid)).toEqual([high.uid, low.uid])
+  })
+})
 
 describe('espacios del rancho', () => {
   it('cada Pokémon ocupa un espacio, sea cual sea su rareza', () => {

@@ -30,7 +30,7 @@ Cómo funciona por dentro: [arquitectura.md › Salas compartidas](arquitectura.
 | Errores de los jugadores: `POST /api/error-report` (botón «Enviar error» de la pantalla «Algo ha fallado»; sin cuenta también, con sesión se apunta de quién es). El mismo error activo suma en su fila en vez de crear otra | `worker/errorReport.ts`, `src/game/core/errorReport.ts`; tabla en `migrations/0014_error_reports.sql` |
 | Notificaciones push: `/api/push/*` y el envío (VAPID, cifrado) | `worker/push/` |
 | Tarea programada cada minuto (raids sin nadie mirando, borrar paradas viejas, anuncios caducados, ranking cada hora, avisos que tocan) | `worker/scheduled.ts`, `triggers` en `wrangler.jsonc` |
-| Correos (Brevo) y su texto | `worker/mail.ts` |
+| Correos (Brevo) y su texto / cupo (250 al día entre todos y 5 por hora desde una IP, para no pasar de los 300 diarios del plan gratuito) | `worker/mail.ts` / `worker/db/mailLog.ts` (tabla `mail_log`, `migrations/0017_mail_log.sql`) |
 | Lógica del juego que usa el servidor (con tests) | `src/game/raid/online/`, `src/game/core/cloudSave.ts`, `accountRules.ts`, `ranking.ts` |
 | Cliente: cuenta, partida en la nube, id y apodo, cada cuánto consulta | `src/net/` |
 
@@ -68,12 +68,15 @@ Haz commit y push del `wrangler.jsonc` con el id.
 2. Conecta GitHub, autoriza el acceso y elige el repositorio.
 3. Configuración del proyecto:
    - *Project name*: `pokerancho` (tiene que coincidir con `name` de `wrangler.jsonc`).
-   - *Build command*: `npm run build`
-   - *Deploy command*: `npx wrangler deploy` (el que viene por defecto).
+   - *Build command*: `npm run ci:build` (pasa `npm run check` antes de compilar: con un test roto no se publica nada).
+   - *Deploy command*: `npm run ci:deploy` (aplica las migraciones que falten y después publica el Worker).
+   - Si el despliegue falla al migrar por permisos, dale al token de *Workers Builds* (*Settings → Builds → API token*)
+     también el permiso *D1 → Edit*.
 4. *Save and Deploy*. En un par de minutos la web queda en `https://pokerancho.<tu-subdominio>.workers.dev`.
 
-Desde entonces, cada push a `main` vuelve a desplegar solo. GitHub Actions (`.github/workflows/check.yml`) pasa
-`npm run check` en cada push para avisar si algo se ha roto.
+Desde entonces, cada push a `main` vuelve a desplegar solo, siempre que pase `npm run check`, y con la base de datos al
+día. GitHub Actions (`.github/workflows/check.yml`) pasa también `npm run check` en cada push y pull request, para
+verlo en GitHub.
 
 ### 4. Activar los correos (Brevo)
 
@@ -119,8 +122,9 @@ cada navegador tendría que volver a activar los avisos. Sin ellas, Ajustes › 
 
 ## Cambiar la base de datos
 
-Un cambio de tablas es un fichero nuevo en `migrations/` (`0003_….sql`, el siguiente número libre); nunca se edita uno ya aplicado. Antes de
-hacer push del código que lo usa, aplícalo con `npm run db:migrate` (y `npm run db:migrate:local` para probar).
+Un cambio de tablas es un fichero nuevo en `migrations/` (`0003_….sql`, el siguiente número libre); nunca se edita uno ya aplicado. El
+despliegue lo aplica solo antes de publicar el código (`npm run ci:deploy`, y también `npm run deploy` a mano); para
+probar en local, `npm run db:migrate:local`.
 
 ## Lo que gasta del plan gratuito
 
@@ -173,8 +177,9 @@ se quedara corto, sube `WATCH_SYNC_MS` y `BACKGROUND_SYNC_MS` en `src/net/raidSy
   (la que había antes de cada subida). Para ver las de alguien:
   `SELECT h.saved_at, h.revision, length(h.data) FROM save_history h JOIN users u ON u.id = h.user_id WHERE u.nickname = 'Apodo' ORDER BY h.saved_at DESC;`.
   Mejor que pisar su partida (el móvil podría subir encima la suya), devuélvele lo perdido con un regalo.
-- **Regalar algo a un jugador** (p. ej. para compensar algo que falló): una migración con una fila en `server_gifts`
-  con su `user_id` (sin él, es para todos). `goods` admite `money` (₽, como mucho un millón), `incursionKeys`
+- **Regalar algo a un jugador** (p. ej. para compensar algo que falló): `npm run gift -- --id … --title … --goods '{…}'
+  --days 14 --nickname Apodo` (sin `--nickname`, para todos; `--dry` enseña el SQL; detalles en `scripts/server-gift.mjs`).
+  También vale una migración con una fila en `server_gifts` con su `user_id` (sin él, es para todos). `goods` admite `money` (₽, como mucho un millón), `incursionKeys`
   y `mons` (`speciesId`, `level`, `stars`); le sale en Notificaciones. Ejemplo: `migrations/0013_save_safety.sql`.
 
 ## Límites que conviene saber

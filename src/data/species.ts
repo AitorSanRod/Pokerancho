@@ -1,6 +1,7 @@
 import { POKEMON } from './pokemon'
 import raw from './pokemon.json'
 import type { PokeType } from './types'
+import { POKEAPI_SPRITES } from './spriteHost'
 
 interface BaseStats {
   hp: number
@@ -90,7 +91,7 @@ export function rarityOf(s: Species): Rarity {
   return Rarity.Common
 }
 
-const SPRITES = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon'
+const SPRITES = `${POKEAPI_SPRITES}/pokemon`
 
 const ANIMATED = `${SPRITES}/versions/generation-v/black-white/animated`
 /** Iconos de la caja: los de GBA (generación III) llegan hasta este número de la Pokédex; los demás, de la VII */

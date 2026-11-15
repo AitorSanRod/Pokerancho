@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { defaultRanchName, RANCH_NAME_MAX_LENGTH, renameRanch } from '../../game/team/ranchNames'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
 

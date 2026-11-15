@@ -1,5 +1,5 @@
 import type { GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { buyMint, MINT_PRICE, mintsOf } from '../../game/team/mints'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'

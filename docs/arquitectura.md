@@ -4,7 +4,8 @@
 
 ```
 src/data/   Datos estáticos y consultas sobre ellos. No conoce el estado de la partida.
-src/game/   Reglas del juego. Funciones puras sobre GameState. Sin React, sin DOM (salvo core/store.ts).
+src/game/   Reglas del juego. Funciones puras sobre GameState. Sin React ni DOM.
+src/store/  Estado vivo en el navegador: act(), useGame(), guardado en localStorage y una sola pestaña jugando.
 src/net/    Conexión con el servidor: salas compartidas, cuenta opcional y partida en la nube.
 src/ui/     Componentes React. Leen GameState y disparan acciones con act().
 worker/     Servidor: Worker de Cloudflare con base de datos D1 (API /api/*). La lógica del juego es la de src/game.
@@ -28,7 +29,7 @@ src/
                       evolutions, stones + pokemon.json
     maps/             kantoMaps (una por región), mapCommon, index (regiones y route)
   game/
-    core/             state (GameState, SAVE_VERSION), store (useGame, act, guardado), saveMigration, teamBackup, random, tick,
+    core/             state (GameState, SAVE_VERSION), saveMigration, teamBackup, random, tick,
                       test-utils, test-map
     battle/           battle (simulación por turnos), attack (un turno de ataque), status (estados alterados),
                       combatBonus (pasivas sumadas), rewards (₽, tickets, EXP y piezas por victoria)
@@ -114,7 +115,9 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `data/stones.ts` | Objetos evolutivos: piedras, armaduras y Escama Bella (`Stone`, `STONES`, con su precio) |
 | `data/forms.ts` | Objetos de forma (`FormItem`, `FORM_ITEMS`: la forma a la que lleva cada uno y su precio). Las formas son especies de `pokemon.json` con `baseId`: fuera de `SPECIES` (gacha, Pokédex, tickets), en `FORM_SPECIES`; `baseSpeciesOf` da su especie |
 | `game/core/state.ts` | Tipos de `GameState`, estado inicial, `SAVE_VERSION`, `restoreState` y dónde está cada Pokémon (`monPlace`) |
-| `game/core/store.ts` | Estado global, guardado en `localStorage` y hook `useGame()` |
+| `store/store.ts` | Estado global, `act()`, `useGame()` y cuándo se guarda (`SAVE_DELAY_MS`; siempre al ocultar la app) |
+| `store/persistence.ts` | Leer y escribir la partida y la copia del equipo en `localStorage` (con almacenamiento inyectable en los tests) |
+| `store/tabLock.ts`, `store/boot.ts` | Una sola pestaña juega (Web Locks): la otra enseña `ui/shared/OtherTabScreen` con «Jugar aquí», que guarda en la primera y se la quita; arranque desde `main.tsx` |
 | `game/core/saveMigration.ts` | Migrar una partida de otra versión sin perder nada: pasos de `SAVE_MIGRATIONS` y rescate campo a campo |
 | `game/core/teamBackup.ts` | Copia del equipo (y de sus expediciones en curso): red de seguridad si la partida guardada no se puede leer |
 | `game/core/random.ts` | Tipo `Rng` y utilidades de azar (`seededRng`: secuencia fija a partir de una semilla) |
@@ -170,9 +173,11 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 
 ## Store y acciones
 
-- `core/store.ts` guarda un único `GameState`. `useGame()` lo expone a React con `useSyncExternalStore`.
+- `store/store.ts` guarda un único `GameState`. `useGame()` lo expone a React con `useSyncExternalStore`.
 - Toda modificación pasa por `act((draft) => ...)`. `act` clona el estado, aplica la receta, notifica a la
   UI y programa un guardado (con debounce y también en `pagehide`/`visibilitychange`).
+- `main.tsx` arranca con `store/boot.ts › bootGame`: si la partida ya está abierta en otra pestaña, no se carga y se
+  enseña el aviso; si se juega aquí, la otra guarda, deja de guardar y se recarga para enseñar el aviso.
 - Las funciones de `game/` **mutan el borrador que reciben** (`s: GameState`) y nunca importan el store.
   Así se pueden testear sin navegador:
 
@@ -198,9 +203,10 @@ En los tests se pasa un rng determinista. Una función nueva con azar **debe** s
   premios pendientes, rachas… Cada campo con regla propia (`RULES`) se valida a fondo (una especie, ruta o piedra que
   ya no existe se descarta); los demás se conservan si tienen la misma forma que el inicial, y los nuevos toman su
   valor inicial. Al final se arreglan las relaciones (`linkUp`: Pokémon sin repetir, activo y expediciones de
-  Pokémon que existen, capturados como vistos, rutas completadas como desbloqueadas, ranchos comprados). Solo se
-  descarta lo que está a medias (`IN_PROGRESS`: la ruta, la sala de raid y la incursión en curso; el Pokémon vuelve al
-  rancho). Lo ganado en la ruta ya está sumado y la llave de la incursión se devuelve, así que jugar sin conexión con
+  Pokémon que existen, capturados como vistos, rutas completadas como desbloqueadas, ranchos comprados). Lo que
+  está a medias (`IN_PROGRESS`: la ruta, las salas de raid, la incursión en curso o en cola y la torre) sigue si su forma
+  no ha cambiado desde la versión guardada (`core/progressCarry.ts › CARRIED_SINCE`, y lo que nombra sigue existiendo);
+  si no, se descarta y el Pokémon vuelve al rancho. Lo ganado en la ruta ya está sumado y la llave de la incursión se devuelve, así que jugar sin conexión con
   la versión anterior y actualizar después no quita nada.
 - Las expediciones en curso **nunca se pierden** al cambiar de versión ni al cargar: cada una guarda al salir sus
   condiciones (`Expedition.terms`: niveles y salvajes de la ruta, combates y multiplicadores) y termina con ellas;

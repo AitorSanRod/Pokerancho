@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { species } from '../../data/species'
 import { findMon, type GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { joinRaid, leaveRaid, monRaidBlocker, raidRoomBlocker } from '../../game/raid/raid'
 import { isEnding } from '../../game/raid/raidEnding'
 import type { RaidRotation } from '../../game/raid/online/protocol'

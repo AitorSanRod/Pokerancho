@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { INCURSIONS, MAX_KEYS, type Incursion } from '../../data/incursions'
 import type { GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { buyKey, buyKeyBlocker, keyPrice, keysOf, needsKey } from '../../game/incursion/keys'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'

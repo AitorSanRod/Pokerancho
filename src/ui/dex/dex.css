@@ -300,3 +300,7 @@ button.dex-filter {
 .dex-perk-value.on {
   color: var(--hp-ok);
 }
+/* Nivel bajo la casilla al ordenar por nivel */
+.dex-level {
+  font-weight: 700;
+}

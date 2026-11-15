@@ -1,6 +1,6 @@
 import { STONE_IDS, STONES, type Stone } from '../../data/stones'
 import type { GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { buyStone, stonePrice, stonesOf } from '../../game/team/stones'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'

@@ -1,5 +1,5 @@
 import type { GameState, OwnedMon } from '../../../game/core/state'
-import { act } from '../../../game/core/store'
+import { act } from '../../../store/store'
 import { ranchName } from '../../../game/team/ranchNames'
 import { BOX_SLOTS, boxedMons, moveBlocker, moveMon, ranchCapacity, ranchCount, usedSlots, type MonDestination } from '../../../game/team/ranches'
 import { ICON } from '../icons'

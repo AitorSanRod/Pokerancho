@@ -1,5 +1,6 @@
 // Banco de pruebas de fondos: genera la escena elegida (código de src/ui/route/pixelScene) y la anima con controles.
 
+import { sprite } from '../../src/data/species'
 import { PARTICLES_ID, SceneRenderer } from '../../src/ui/route/pixelScene/engine/renderer'
 import type { SceneDef } from '../../src/ui/route/pixelScene/engine/types'
 import { caveScene } from '../../src/ui/route/pixelScene/scenes/cave'
@@ -139,7 +140,7 @@ function showSpecies() {
     img.style.height = `${(img.naturalHeight * 128) / 96}px`
   }
   const id = SPECIES[speciesSelect.value]
-  img.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`
+  img.src = sprite.animated(id)
 }
 
 sceneSelect.onchange = build

@@ -1,7 +1,7 @@
 import { incursionMove, moveClass } from '../../data/incursionMoves'
 import { species } from '../../data/species'
 import { findMon, type GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import type { ActiveIncursion } from '../../game/incursion/activeIncursion'
 import { chooseIncursionMove, continueIncursion } from '../../game/incursion/incursionGame'
 import type { MemberState } from '../../game/incursion/fighter'

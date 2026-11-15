@@ -1,4 +1,5 @@
 import type { PokeType } from './types'
+import { POKEAPI_SPRITES } from './spriteHost'
 
 /** Objetos de PokeAPI que se usan como iconos de la interfaz (el valor es su nombre en el repositorio de sprites) */
 export const ITEM = {
@@ -69,7 +70,7 @@ export const ITEM = {
 } as const
 export type Item = (typeof ITEM)[keyof typeof ITEM]
 
-const ITEMS = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items'
+const ITEMS = `${POKEAPI_SPRITES}/items`
 
 export const itemSprite = (item: Item): string => `${ITEMS}/${item}.png`
 

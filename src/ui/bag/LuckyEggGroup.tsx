@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import type { GameState } from '../../game/core/state'
 import { BOOST_EXP_MULT, BOOST_TAP_EXP, luckyEggBlocker, spendLuckyEgg } from '../../game/run/expBoost'
 import { ConfirmDialog } from '../shared/ConfirmDialog'

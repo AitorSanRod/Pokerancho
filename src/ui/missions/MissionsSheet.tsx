@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { claimMission, missionDone, type Mission } from '../../game/collection/missions'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import type { GameState } from '../../game/core/state'
 import { giftText } from '../gift/giftText'
 import { Bar } from '../shared/common'

@@ -1,7 +1,7 @@
 import { FORM_ITEMS, type FormItem } from '../../../data/forms'
 import { species } from '../../../data/species'
 import type { GameState, OwnedMon } from '../../../game/core/state'
-import { act } from '../../../game/core/store'
+import { act } from '../../../store/store'
 import { changeForm, changeFormBlocker, formChoices, hasFormItem } from '../../../game/team/forms'
 import { Sprite } from '../common'
 import { MonSection } from './MonSheet'

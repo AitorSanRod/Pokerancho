@@ -1,8 +1,9 @@
 import { CloudAction, cloudAction, cloudUpload, hasUnsavedProgress, isFromNewerApp, SaveRejection, stateFromSaved, type CloudSave } from '../game/core/cloudSave'
-import { getState, replaceState } from '../game/core/store'
+import { getState, replaceState } from '../store/store'
 import { account, AccountStatus, refreshAccount, subscribeAccount } from './account'
 import { readLink, writeLink } from './cloudLink'
 import { cloudState, updateCloud } from './cloudState'
+import { apiFetch, SLOW_REQUEST_MS } from './apiFetch'
 
 // Mantiene la partida de la cuenta en la nube (worker/save.ts): al entrar o al volver a la app baja la de la nube si
 // otro dispositivo ha jugado después; con la app delante la sube cada poco y al ocultarla. Nunca se pierde lo jugado
@@ -52,7 +53,7 @@ async function checked(res: Response): Promise<Response> {
 }
 
 async function fetchCloud(): Promise<CloudSave | null> {
-  const res = await checked(await fetch(SAVE_API, { cache: 'no-store' }))
+  const res = await checked(await apiFetch(SAVE_API, { cache: 'no-store' }, SLOW_REQUEST_MS))
   return ((await res.json()) as { cloud: CloudSave | null }).cloud
 }
 
@@ -66,7 +67,11 @@ async function upload(base: number | null, keepalive = false) {
   const body = JSON.stringify({ baseRevision: base, ...cloudUpload(getState()) })
   lastUploadAt = Date.now()
   const res = await checked(
-    await fetch(SAVE_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: keepalive && body.length <= KEEPALIVE_MAX_BYTES }),
+    await apiFetch(
+      SAVE_API,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: keepalive && body.length <= KEEPALIVE_MAX_BYTES },
+      SLOW_REQUEST_MS,
+    ),
   )
   if (res.status === 409) {
     const rejected = (await res.json()) as Rejected
@@ -91,7 +96,9 @@ async function exclusive(run: () => Promise<void>) {
   try {
     await run()
     updateCloud({ failing: false })
-  } catch {
+  } catch (e) {
+    // Casi siempre la red; si es otra cosa, que se vea en la consola
+    console.warn('Partida en la nube: no se ha podido sincronizar', e)
     updateCloud({ failing: true })
   } finally {
     busy = false

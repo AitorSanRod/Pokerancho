@@ -1,7 +1,7 @@
 import { FORM_ITEM_IDS, FORM_ITEMS, type FormItem } from '../../data/forms'
 import { species } from '../../data/species'
 import type { GameState } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { buyFormItem, buyFormItemBlocker, hasFormItem } from '../../game/team/forms'
 import { Sprite } from '../shared/common'
 import { ICON } from '../shared/icons'

@@ -1,5 +1,5 @@
 import type { OwnedMon } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { closeTower, TowerEnd, type TowerRun } from '../../game/tower/tower'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'

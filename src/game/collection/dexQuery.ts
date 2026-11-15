@@ -1,12 +1,12 @@
-import { Rarity, rarityOf, type SPECIES } from '../../data/species'
+import { baseSpeciesOf, Rarity, rarityOf, type SPECIES } from '../../data/species'
 import { ownedOfSpecies, type GameState } from '../core/state'
 import { isFavorite, isSeen } from './dex'
 import { canCombine, piecesOf } from './pieces'
 
 type DexSpecies = (typeof SPECIES)[number]
 
-/** Orden de las casillas dentro de cada Pokédex */
-export const DexSort = { Number: 'number', Owned: 'owned', Tickets: 'tickets', Rarity: 'rarity', Name: 'name' } as const
+/** Orden de las casillas dentro de cada Pokédex; el de nivel deja solo las que tienes */
+export const DexSort = { Number: 'number', Owned: 'owned', Level: 'level', Tickets: 'tickets', Rarity: 'rarity', Name: 'name' } as const
 export type DexSort = (typeof DexSort)[keyof typeof DexSort]
 
 /** Qué casillas se enseñan */
@@ -37,10 +37,17 @@ export const plainText = (text: string): string =>
     .toLowerCase()
     .trim()
 
-/** Si la consulta deja fuera alguna casilla o cambia el orden (la Pokédex entonces abre todo lo que encuentra) */
-export const isDexQueryActive = (q: DexQuery): boolean => plainText(q.text) !== '' || q.filter !== DexFilter.All
+/** Si la consulta deja fuera alguna casilla (la Pokédex entonces abre todo lo que encuentra) */
+export const isDexQueryActive = (q: DexQuery): boolean =>
+  plainText(q.text) !== '' || q.filter !== DexFilter.All || q.sort === DexSort.Level
 
 const isOwned = (s: GameState, id: number): boolean => ownedOfSpecies(s, id) !== undefined
+
+/** Nivel más alto entre los que tienes de la especie (o de sus formas); 0 si no tienes ninguno */
+export function ownedLevel(s: GameState, id: number): number {
+  const base = baseSpeciesOf(id)
+  return s.owned.reduce((best, m) => (baseSpeciesOf(m.speciesId) === base ? Math.max(best, m.level) : best), 0)
+}
 
 const FILTER_TEST: Record<DexFilter, (s: GameState, id: number) => boolean> = {
   [DexFilter.All]: () => true,
@@ -63,6 +70,7 @@ const RARITY_RANK: Record<Rarity, number> = Object.fromEntries(Object.values(Rar
 /** Cuánto «pesa» cada especie en cada orden: de mayor a menor; a igualdad, por número */
 const SORT_KEY: Record<Exclude<DexSort, typeof DexSort.Number | typeof DexSort.Name>, (s: GameState, sp: DexSpecies) => number> = {
   [DexSort.Owned]: (s, sp) => (isOwned(s, sp.id) ? 1 : 0),
+  [DexSort.Level]: (s, sp) => ownedLevel(s, sp.id),
   [DexSort.Tickets]: (s, sp) => piecesOf(s, sp.id),
   [DexSort.Rarity]: (_, sp) => RARITY_RANK[rarityOf(sp)],
 }
@@ -86,9 +94,10 @@ function sortDex(s: GameState, list: DexSpecies[], sort: DexSort): DexSpecies[] 
 /** Las casillas de una Pokédex que cumplen la consulta, ya ordenadas */
 export function applyDexQuery(s: GameState, list: DexSpecies[], q: DexQuery): DexSpecies[] {
   const test = FILTER_TEST[q.filter]
+  const ownedOnly = q.sort === DexSort.Level
   return sortDex(
     s,
-    list.filter((sp) => test(s, sp.id) && matchesText(s, sp, q.text)),
+    list.filter((sp) => test(s, sp.id) && (!ownedOnly || isOwned(s, sp.id)) && matchesText(s, sp, q.text)),
     q.sort,
   )
 }

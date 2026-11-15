@@ -1,21 +1,17 @@
-import { useState } from 'react'
 import { legSteps, node, route } from '../../data/maps'
 import type { GameState, OwnedMon, Run } from '../../game/core/state'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { isSearching } from '../../game/raid/raidEngine'
 import { isEnding } from '../../game/raid/raidEnding'
 import { currentRouteRaid } from '../../game/raid/routeRaid'
-import { endRun, restartBlocker, restartRun, tapRun } from '../../game/run/run'
+import { tapRun } from '../../game/run/run'
 import { boostActive, BOOST_TAP_EXP } from '../../game/run/expBoost'
 import { landmarkInView } from '../../game/run/runLandmark'
 import { tapBattle } from '../../game/run/tapCrit'
 import { stepsPerMinute } from '../../game/team/stats'
-import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { LevelUpBurst } from '../shared/sheet/LevelUpBurst'
 import { useLeveledTo } from '../shared/useLeveledTo'
 import { formatMinutes } from '../shared/format'
-import { discoveryReward, earningsRewards, levelUpReward, raidBossReward, repeatNote } from '../shared/rewardItems'
-import { RewardOverlay } from '../shared/RewardOverlay'
 import { battleFrame, fighterClass, statusClass } from './battleFrame'
 import { CritRing } from './CritRing'
 import { RouteBattle } from './RouteBattle'
@@ -28,24 +24,23 @@ import { StopTrack } from './StopTrack'
 import { ExpBoostBadge, ExpBoostSpawn } from './ExpBoost'
 import { WalkScene } from './WalkScene'
 import { defaultGymMove, pickGymMove, routeGym } from '../../game/run/runGym'
-import { towerMoveBarRoom } from '../tower/TowerMoveBar'
+import { towerMoveBarRoom } from '../tower/towerMoveBarRoom'
 import { trainerScene } from './gym/trainerScene'
 import { GymMoveBar } from './gym/GymMoveBar'
-import { badgeReward } from '../profile/badgeReward'
+import { AbandonButton } from './AbandonButton'
+import { RunSummary } from './RunSummary'
 import './run.css'
-import { ICON } from '../shared/icons'
-import { ItemIcon } from '../shared/ItemIcon'
 
-/**
- * La ruta avanza sola: el Pokémon camina, se para a combatir (o a curarse) en cada parada y sigue hasta el final. En una
- * parada de jefe comunitario, la pelea se ve en la misma escena (con él dentro del grupo) hasta que cae el jefe
- */
 /** En combate, tocar es para el crítico: no sale la flecha de los pasos */
 function tapInBattle(): boolean {
   act((s) => tapBattle(s, Date.now()))
   return false
 }
 
+/**
+ * La ruta avanza sola: el Pokémon camina, se para a combatir (o a curarse) en cada parada y sigue hasta el final. En una
+ * parada de jefe comunitario, la pelea se ve en la misma escena (con él dentro del grupo) hasta que cae el jefe
+ */
 export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: OwnedMon }) {
   const r = route(run.routeId)
   const spm = stepsPerMinute(mon)
@@ -139,67 +134,5 @@ function LegProgress({ game, run, spm }: { game: GameState; run: Run; spm: numbe
       </span>
       <span>~{formatMinutes(remainingMin)}</span>
     </div>
-  )
-}
-
-/**
- * Salir de la ruta a medias pide confirmación: se conserva lo ganado, pero no el premio final. Desde ahí también se
- * puede reiniciar: sale otra vez a la misma ruta con paradas y rivales nuevos
- */
-function AbandonButton({ game }: { game: GameState }) {
-  const [confirming, setConfirming] = useState(false)
-  const restartBlocked = restartBlocker(game)
-  return (
-    <>
-      <button className="btn ghost small hud-abandon" onClick={() => setConfirming(true)}>
-        Abandonar
-      </button>
-      {confirming && (
-        <ConfirmDialog
-          title="¿Abandonar la ruta?"
-          confirmLabel="Abandonar"
-          onConfirm={() => act(endRun)}
-          onCancel={() => setConfirming(false)}
-          extraAction={
-            <button className="btn grow" disabled={!!restartBlocked} title={restartBlocked ?? undefined} onClick={() => {
-                act(restartRun)
-                setConfirming(false)
-              }}
-            >
-              Reiniciar ruta
-            </button>
-          }
-        >
-          <p className="small confirm-text">
-            Tu Pokémon volverá al rancho. Conservas lo ganado hasta ahora, pero no recibirás el premio de completarla. Si la
-            reinicias, vuelve a salir desde el principio con otros Pokémon por el camino.
-          </p>
-        </ConfirmDialog>
-      )}
-    </>
-  )
-}
-
-/** Al terminar la ruta, sus premios pasan de uno en uno; ya estaban sumados en el estado */
-function RunSummary({ run, mon }: { run: Run; mon: OwnedMon }) {
-  const complete = run.phase === 'complete'
-  const items = [...run.earned.discovered.map(discoveryReward), ...run.earned.raidBosses.map(raidBossReward), ...earningsRewards(run.earned)]
-  if (run.earned.raidMoneyMult < 1) {
-    items.push({ key: 'repeat', icon: <ItemIcon item={ICON.Money} size={96} off />, title: 'Menos dinero del jefe', detail: repeatNote(run.earned.raidMoneyMult), color: '#6a6a80' })
-  }
-  if (run.earned.badge) items.push(badgeReward(run.earned.badge))
-  if (run.earned.levelsGained > 0) items.push(levelUpReward(mon.speciesId, mon.level))
-  if (run.unlocked) {
-    items.push({ key: 'unlock', icon: <ItemIcon item={ICON.Route} size={96} />, title: 'Nueva ruta', detail: route(run.unlocked).name, color: '#2f9e8f' })
-  }
-  if (!complete) {
-    items.push({ key: 'rest', icon: <ItemIcon item={ICON.Rest} size={96} />, title: 'A descansar', detail: 'Se recuperará en el rancho', color: '#6a6a80' })
-  }
-  return (
-    <RewardOverlay
-      title={complete ? '¡Ruta completada!' : 'Tu Pokémon se debilitó…'}
-      items={items}
-      onClose={() => act(endRun)}
-    />
   )
 }

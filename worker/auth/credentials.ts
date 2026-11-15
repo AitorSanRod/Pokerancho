@@ -3,7 +3,7 @@ import { createUser, TokenKind, updateUser, userByEmail } from '../db/users'
 import type { Env } from '../env'
 import { json } from '../http'
 import { hashPassword, verifyPassword } from './crypto'
-import { mailLink, signedIn } from './links'
+import { canMail, mailLink, signedIn } from './links'
 
 // Crear la cuenta y entrar con email y contraseña
 
@@ -24,6 +24,7 @@ function credentials(body: Record<string, unknown>): { email: string; password: 
 export async function signup(env: Env, request: Request, body: Record<string, unknown>, now: number): Promise<Response> {
   const given = credentials(body)
   if (!given) return json({ code: AuthCode.Invalid }, 400)
+  if (!(await canMail(env, request, now))) return json({ code: AuthCode.TooManyMails }, 429)
   const existing = await userByEmail(env.DB, given.email)
   if (existing?.confirmed) return json({ code: AuthCode.Taken }, 409)
   const hash = await hashPassword(given.password)

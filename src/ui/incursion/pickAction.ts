@@ -1,5 +1,5 @@
 import { incursionMove } from '../../data/incursionMoves'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import type { ActiveIncursion } from '../../game/incursion/activeIncursion'
 import { setIncursionPick } from '../../game/incursion/incursionPicks'
 import { PickSide, pickSide } from '../../game/incursion/movePicks'

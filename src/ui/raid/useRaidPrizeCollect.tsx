@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import type { GameState } from '../../game/core/state'
 import type { RaidPrize } from '../../game/raid/raidRoom'
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { collectRaidPrizes } from '../../game/raid/raidPrizes'
 import { raidPrizeRewards } from '../shared/rewardItems'
 import { RewardOverlay, type RewardItem } from '../shared/RewardOverlay'

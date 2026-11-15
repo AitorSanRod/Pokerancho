@@ -1,4 +1,4 @@
-import { act } from '../../game/core/store'
+import { act } from '../../store/store'
 import { roomAt, type RoomKey } from '../../game/raid/online/linkedRoom'
 import { tapRaid } from '../../game/raid/raidCrit'
 

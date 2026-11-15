@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { resetGame } from '../../game/core/store'
+import { resetGame } from '../../store/store'
 import { DEFAULT_NICKNAME } from '../../game/raid/online/protocol'
 import { AccountStatus, setRanked, useAccount } from '../../net/account'
 import { useNickname } from '../../net/identity'

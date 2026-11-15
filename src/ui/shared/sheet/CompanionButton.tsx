@@ -1,5 +1,5 @@
 import type { GameState, OwnedMon } from '../../../game/core/state'
-import { act } from '../../../game/core/store'
+import { act } from '../../../store/store'
 import { canBeCompanion, companionBusy, setActive } from '../../../game/team/ranch'
 
 /** Poké Ball de la esquina izquierda de la cabecera: vacía si no es el compañero de viaje y llena si lo es; tocarla lo elige */

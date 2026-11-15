@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { AuthCode, MIN_PASSWORD, type AccountInfo } from '../game/core/accountRules'
 import { setAccountId, setNickname } from './identity'
+import { apiFetch, postJson } from './apiFetch'
 
 // Cuenta opcional con email y contraseña (worker/auth): guarda la partida en la nube (net/cloudSync.ts) y da el mismo
 // id en las raids desde cualquier dispositivo. La sesión va en una cookie que la web no ve: solo se pregunta al
@@ -49,6 +50,7 @@ const ERROR_TEXT: Record<string, string> = {
   [AuthCode.NotConfirmed]: 'Aún no has confirmado el email: mira tu correo (también en spam). Si no está, vuelve a probar en un minuto y te lo mandamos otra vez.',
   [AuthCode.Locked]: 'Demasiados intentos fallidos. Espera un cuarto de hora y vuelve a probar.',
   [AuthCode.BadToken]: 'El enlace ha caducado o ya se usó. Pide otro.',
+  [AuthCode.TooManyMails]: 'Ahora mismo no podemos mandar más correos. Vuelve a probar dentro de un rato.',
 }
 const NETWORK_ERROR = 'No se ha podido conectar con el servidor de cuentas. Prueba otra vez.'
 
@@ -58,7 +60,7 @@ class AccountError extends Error {}
 async function post(action: string, body: object = {}): Promise<{ user?: AccountUser | null }> {
   let res: Response
   try {
-    res = await fetch(AUTH_API + action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    res = await postJson(AUTH_API + action, body)
   } catch {
     throw new AccountError(NETWORK_ERROR)
   }
@@ -70,7 +72,7 @@ async function post(action: string, body: object = {}): Promise<{ user?: Account
 /** Vuelve a preguntar al servidor quién es (al abrir la app o si la sesión ha caducado) */
 export async function refreshAccount() {
   try {
-    const res = await fetch(AUTH_API + 'me', { cache: 'no-store' })
+    const res = await apiFetch(AUTH_API + 'me', { cache: 'no-store' })
     setUser(res.ok ? (((await res.json()) as { user: AccountUser | null }).user ?? null) : null)
   } catch {
     // Sin conexión: si aún no se sabía, se sigue sin cuenta; si había sesión, se mantiene

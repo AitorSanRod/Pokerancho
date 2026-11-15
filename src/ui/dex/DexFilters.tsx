@@ -3,6 +3,7 @@ import { DexFilter, DexSort, type DexQuery } from '../../game/collection/dexQuer
 const SORT_LABEL: Record<DexSort, string> = {
   [DexSort.Number]: 'Número',
   [DexSort.Owned]: 'Los que tienes',
+  [DexSort.Level]: 'Nivel (solo los tuyos)',
   [DexSort.Tickets]: 'Más tickets',
   [DexSort.Rarity]: 'Rareza',
   [DexSort.Name]: 'Nombre',

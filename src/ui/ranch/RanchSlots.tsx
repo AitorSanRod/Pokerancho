@@ -13,6 +13,7 @@ import { FoldSection } from '../shared/FoldSection'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { PassiveList } from './PassiveList'
+import { RanchMonList } from './RanchMonList'
 import { RanchBackdropPicker } from './RanchBackdropPicker'
 import { RanchRenameDialog } from './RanchRenameDialog'
 import { RanchTypeSection } from './RanchTypeSection'
@@ -28,7 +29,7 @@ const OUT_LABEL: Partial<Record<MonPlace, { icon: Item; text: string }>> = {
 
 /**
  * Botón del rancho (arriba a la izquierda) con su nombre, sus espacios y cuántas pasivas da; al tocarlo sube el panel
- * con el nombre (y cambiarlo), el fondo, el tipo de rancho, las pasivas y quién está fuera guardando su hueco.
+ * con el nombre (y cambiarlo), sus Pokémon por nivel, el fondo, el tipo de rancho, las pasivas y quién está fuera guardando su hueco.
  */
 export function RanchSlots({ game, ranch }: { game: GameState; ranch: number }) {
   const [open, setOpen] = useState(false)
@@ -63,6 +64,9 @@ export function RanchSlots({ game, ranch }: { game: GameState; ranch: number }) 
                 Cambiar nombre
               </button>
             </div>
+            <FoldSection title="Pokémon" aside={usedSlots(game, ranch)}>
+              <RanchMonList game={game} ranch={ranch} />
+            </FoldSection>
             <FoldSection title="Fondo" aside={RANCH_BACKDROPS[ranchBackdrop(game, ranch)].name}>
               <RanchBackdropPicker game={game} ranch={ranch} />
             </FoldSection>

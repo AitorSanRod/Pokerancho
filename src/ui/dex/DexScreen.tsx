@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { dexSections } from '../../data/pokedexes'
 import { species, SPECIES } from '../../data/species'
-import { applyDexQuery, DEFAULT_DEX_QUERY, DexFilter, isDexQueryActive } from '../../game/collection/dexQuery'
+import { applyDexQuery, DEFAULT_DEX_QUERY, DexFilter, DexSort, isDexQueryActive, ownedLevel } from '../../game/collection/dexQuery'
 import { combinableCount } from '../../game/collection/pieces'
 import { TutorialStep, type GameState } from '../../game/core/state'
 import { tutorialStarter } from '../../game/team/tutorial'
@@ -73,6 +73,7 @@ export function DexScreen({ game }: { game: GameState }) {
                       selected={selectedId === sp.id}
                       tutorialTarget={sp.id === target}
                       onSelect={() => setSelectedId(sp.id)}
+                      footer={query.sort === DexSort.Level && <span className="tiny dex-level">Nv. {ownedLevel(game, sp.id)}</span>}
                     />
                   ))}
                 </div>
