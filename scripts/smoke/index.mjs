@@ -5,6 +5,8 @@
  *   npm run dev          # en otra terminal
  *   npm run smoke
  *
+ * Contra la web publicada (APP_URL=https://…) empieza con una partida nueva, sin la de muestra.
+ *
  * Variables: APP_URL (por defecto http://localhost:5173/) y CHROME_PATH (Chrome o Edge instalado).
  */
 import puppeteer from 'puppeteer-core'
@@ -42,14 +44,19 @@ async function openPage() {
 
 const first = await openPage()
 await first.goto(APP_URL)
-const save = await first.evaluate(buildDemoSave, {})
+// La partida de muestra se monta con el código fuente, que solo sirve npm run dev: en la web publicada, partida nueva
+const save = await first.evaluate(buildDemoSave, {}).catch(() => null)
 await first.evaluate((data) => {
   localStorage.clear()
-  localStorage.setItem('pokerancho-save', data)
+  if (data) localStorage.setItem('pokerancho-save', data)
 }, save)
 await first.reload()
+// Lo que falló al intentar montar la partida de muestra no es de la app
+first.errors.length = 0
+/** Lo que se ve al jugar: el menú de abajo con la partida de muestra; sin ella, la pantalla del inicial */
+const PLAYING = save ? '.bottom-nav' : '.app'
 
-await check('arranca con la partida guardada', () => first.waitForSelector('.bottom-nav', { timeout: WAIT_MS }))
+await check(save ? 'arranca con la partida guardada' : 'arranca con una partida nueva', () => first.waitForSelector(PLAYING, { timeout: WAIT_MS }))
 await check('se pasa por todas las pestañas sin errores', async () => {
   const tabs = await first.$$('.bottom-nav button')
   for (const tab of tabs) {
@@ -64,7 +71,7 @@ await second.goto(APP_URL)
 await check('otra pestaña avisa de que la partida ya está abierta', () => second.waitForSelector('.other-tab', { timeout: WAIT_MS }))
 await check('«Jugar aquí» se la trae y la primera pasa a avisar', async () => {
   await second.click('.other-tab button')
-  await second.waitForSelector('.bottom-nav', { timeout: WAIT_MS })
+  await second.waitForSelector(PLAYING, { timeout: WAIT_MS })
   await first.waitForSelector('.other-tab', { timeout: WAIT_MS })
   if (second.errors.length) throw new Error(second.errors.join(' | '))
 })
