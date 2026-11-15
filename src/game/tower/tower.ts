@@ -6,6 +6,7 @@ import { battleDuration } from '../run/battleTimeline'
 import { foeExpMult, foeStatMult, rollShinyFoe, shinyIntro } from '../run/shinyFoe'
 import { monPerks } from '../team/perks'
 import { ranchPassives } from '../team/ranchPassives'
+import { passEggTime, spawnTowerEgg } from './towerEgg'
 import { keepTowerHp } from './towerHp'
 import { recordWeekFloor, towerWeekBest } from './towerWeek'
 import { towerFoe, towerLevel, towerStatMult } from './towerFoes'
@@ -72,6 +73,7 @@ export function startTower(s: GameState, moveId: string, rng: Rng = Math.random)
     prize: null,
     battleMsLeft: 0,
     gapMsLeft: 0,
+    egg: null,
     startBest: s.towerBest,
     earned: noTowerEarned(),
     end: null,
@@ -116,8 +118,11 @@ function fightFloor(s: GameState, mon: OwnedMon, rng: Rng, startHp?: number) {
   t.battleMsLeft = battleDuration(t.lastBattle)
 }
 
-/** Acaba el combate del piso: si ganó, cobra y echa a andar hacia el siguiente (curado en los de cura); si no, se acaba */
-function finishFloor(s: GameState) {
+/**
+ * Acaba el combate del piso: si ganó, cobra, a veces sale un Huevo Suerte para tocarlo y echa a andar hacia el siguiente
+ * (curado en los de cura); si no, se acaba
+ */
+function finishFloor(s: GameState, rng: Rng) {
   const t = s.tower!
   const mon = towerMon(s)
   if (t.lastBattle!.outcome !== 'win' || !mon) {
@@ -126,6 +131,7 @@ function finishFloor(s: GameState) {
     return
   }
   rewardFloor(s, mon, t.earned, t.lastBattle!.enemy.speciesId, t.prize!)
+  if (t.prize!.egg) spawnTowerEgg(t, rng)
   s.towerBest = Math.max(s.towerBest, t.floor)
   recordWeekFloor(s, t.floor)
   if (isHealFloor(t.floor)) t.hp = null
@@ -145,6 +151,7 @@ export function advanceTower(s: GameState, ms: number, rng: Rng = Math.random) {
       const walked = Math.min(left, t.gapMsLeft)
       t.gapMsLeft -= walked
       left -= walked
+      passEggTime(t, walked)
       if (t.gapMsLeft > 0) return
       startNextFloor(s, rng)
       continue
@@ -152,7 +159,8 @@ export function advanceTower(s: GameState, ms: number, rng: Rng = Math.random) {
     const spent = Math.min(left, t.battleMsLeft)
     t.battleMsLeft -= spent
     left -= spent
-    if (t.battleMsLeft === 0) finishFloor(s)
+    passEggTime(t, spent)
+    if (t.battleMsLeft === 0) finishFloor(s, rng)
   }
 }
 
@@ -169,7 +177,7 @@ export function abandonTower(s: GameState) {
   if (!t || t.end !== null) return
   const mon = towerMon(s)
   if (mon) keepTowerHp(t, mon)
-  Object.assign(t, { end: TowerEnd.Left, battleMsLeft: 0, gapMsLeft: 0 })
+  Object.assign(t, { end: TowerEnd.Left, battleMsLeft: 0, gapMsLeft: 0, egg: null })
 }
 
 /** Tras ver los premios de la subida acabada, se recoge (lo ganado ya estaba sumado) */

@@ -1,3 +1,4 @@
+import type { GameState } from '../../game/core/state'
 import { act } from '../../store/store'
 import { BOOST_EXP_MULT, catchExpBoost } from '../../game/run/expBoost'
 import { ICON } from '../shared/icons'
@@ -6,9 +7,10 @@ import './exp-boost.css'
 
 /**
  * El Huevo Suerte, saltando en la escena mientras se puede tocar (`spot`: de 0, izquierda, a 1, derecha). Tocarlo lo
- * guarda en la Mochila y no cuenta como un paso
+ * guarda en la Mochila y no cuenta como un paso. `onCatch`, la acción que lo recoge (por defecto, la de la ruta; en la
+ * torre, la suya)
  */
-export function ExpBoostSpawn({ spot }: { spot: number }) {
+export function ExpBoostSpawn({ spot, onCatch = catchExpBoost }: { spot: number; onCatch?: (s: GameState) => boolean }) {
   return (
     <button
       className="exp-boost-spawn"
@@ -16,7 +18,7 @@ export function ExpBoostSpawn({ spot }: { spot: number }) {
       aria-label="Huevo Suerte"
       onPointerDown={(e) => {
         e.stopPropagation()
-        act(catchExpBoost)
+        act(onCatch)
       }}
     >
       <ItemIcon item={ICON.ExpBoost} size={56} />

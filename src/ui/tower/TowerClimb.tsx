@@ -4,13 +4,14 @@ import { act } from '../../store/store'
 import { abandonTower, isHealFloor, towerBetweenFloors, towerMon } from '../../game/tower/tower'
 import { setTowerMove } from '../../game/tower/towerMoveSwitch'
 import { TowerEnd } from '../../game/tower/towerRun'
+import { catchTowerEgg } from '../../game/tower/towerEgg'
 import { pastLevelCap, towerLevel } from '../../game/tower/towerFoes'
 import { isPrizeFloor, nextPrizeFloor, towerPrize } from '../../game/tower/towerRewards'
 import { towerBiome } from '../../game/tower/towerScenery'
 import { towerWeekBest } from '../../game/tower/towerWeek'
 import { giftText } from '../gift/giftText'
 import { battleFrame, fighterClass, statusClass } from '../route/battleFrame'
-import { ExpBoostBadge } from '../route/ExpBoost'
+import { ExpBoostBadge, ExpBoostSpawn } from '../route/ExpBoost'
 import { RouteBattle } from '../route/RouteBattle'
 import { WalkScene } from '../route/WalkScene'
 import '../route/run.css'
@@ -49,6 +50,7 @@ export function TowerClimb({ game }: { game: GameState }) {
           walkerClass={battle && frame ? `battling ${fighterClass(battle, frame, 'player')} ${statusClass(frame.event.playerStatus)}` : ''}
         >
           {battle && frame && <RouteBattle record={battle} frame={frame} />}
+          {t.egg && !ended && <ExpBoostSpawn spot={t.egg.spot} onCatch={catchTowerEgg} />}
         </WalkScene>
       )}
       {/* Al cambiar de fondo, la escena nueva aparece con un fundido */}

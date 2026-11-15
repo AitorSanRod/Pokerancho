@@ -1,5 +1,6 @@
 import type { BattleRecord } from '../battle/battle'
 import type { BattleSetup } from '../run/battleReplay'
+import type { TowerEgg } from './towerEgg'
 import type { FloorPrize, TowerEarned } from './towerRewards'
 
 // Forma de una subida a la torre infinita (lo que se guarda en GameState.tower); las reglas, en tower.ts
@@ -26,6 +27,8 @@ export interface TowerRun {
   battleMsLeft: number
   /** Milisegundos reales de paseo que quedan, entre pisos, hasta empezar el siguiente */
   gapMsLeft: number
+  /** Huevo Suerte en la escena, esperando a que se toque (towerEgg.ts); null si no hay */
+  egg: TowerEgg | null
   /** Récord de siempre antes de esta subida, para avisar de uno nuevo al acabar (los premios de piso van por el de la semana) */
   startBest: number
   earned: TowerEarned

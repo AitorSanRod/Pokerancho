@@ -58,6 +58,10 @@ export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {
     }
     if (isRecord(save.tower)) save.tower.battle ??= null
   },
+  // El Huevo Suerte de la torre ya no va solo a la Mochila: sale en la escena y hay que tocarlo
+  60: (save) => {
+    if (isRecord(save.tower)) save.tower.egg ??= null
+  },
 }
 
 /**

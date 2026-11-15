@@ -24,6 +24,7 @@ import {
   towerBlocker,
 } from './tower'
 import { towerWeekBest } from './towerWeek'
+import { catchTowerEgg, TOWER_EGG_VISIBLE_MS } from './towerEgg'
 import { TowerEnd } from './towerRun'
 import { towerMove, towerMoveChoices } from './towerMoves'
 import { floorExp, towerPrize } from './towerRewards'
@@ -35,7 +36,7 @@ vi.mock('../../data/rankingCuts', () => ({ RANKING_EXTRA_CUTS: [] }))
 
 /** Tiempo de sobra para que caiga */
 const FOREVER = Number.MAX_SAFE_INTEGER
-/** Azar que hace shiny al rival (y da el Huevo Suerte) */
+/** Azar que hace shiny al rival */
 const ALWAYS = () => 0
 /** Azar que nunca hace shiny al rival */
 const NEVER: Rng = () => SHINY_FOE_CHANCE
@@ -187,14 +188,41 @@ describe('torre infinita', () => {
     expect(s.money).toBe(money + t.earned.money + t.earned.prizes.reduce((sum, p) => sum + p.money, 0))
   })
 
-  it('los Huevos Suerte de los pisos ganados van a la Mochila', () => {
+  /** Sube al piso 1 con un Huevo Suerte de premio y lo gana: el huevo queda en la escena */
+  function withEggOnScene() {
     const s = withMon(MAX_LEVEL)
-    const eggs = s.luckyEggs
-    startTower(s, firstMove(s), ALWAYS)
-    expect(s.tower!.prize!.egg).toBe(true)
+    startTower(s, firstMove(s), NEVER)
+    s.tower!.prize!.egg = true
     finishBattle(s)
-    expect(s.tower!.earned.eggs).toBe(s.tower!.lastBattle!.outcome === 'win' ? 1 : 0)
-    expect(s.luckyEggs).toBe(eggs + s.tower!.earned.eggs)
+    expect(s.tower!.egg).not.toBeNull()
+    return s
+  }
+
+  it('el Huevo Suerte de un piso ganado sale en la escena y, si se toca, va a la Mochila', () => {
+    const s = withEggOnScene()
+    const eggs = s.luckyEggs
+    expect(catchTowerEgg(s)).toBe(true)
+    expect(s.luckyEggs).toBe(eggs + 1)
+    expect(s.tower!.earned.eggs).toBe(1)
+    expect(s.tower!.egg).toBeNull()
+    expect(catchTowerEgg(s)).toBe(false)
+  })
+
+  it('si no se toca a tiempo (o con la app cerrada), el huevo se pierde', () => {
+    const s = withEggOnScene()
+    const eggs = s.luckyEggs
+    advanceTower(s, TOWER_EGG_VISIBLE_MS - 1, NEVER)
+    expect(s.tower!.egg).not.toBeNull()
+    advanceTower(s, 1, NEVER)
+    expect(s.tower!.egg).toBeNull()
+    expect(catchTowerEgg(s)).toBe(false)
+    expect(s.luckyEggs).toBe(eggs)
+  })
+
+  it('con la subida acabada, el huevo ya no se puede coger', () => {
+    const s = withEggOnScene()
+    abandonTower(s)
+    expect(catchTowerEgg(s)).toBe(false)
   })
 
   it('se cura en los pisos de cura y no pasado el último', () => {

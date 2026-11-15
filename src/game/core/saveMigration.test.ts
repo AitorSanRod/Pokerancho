@@ -33,6 +33,8 @@ const ENFOQUE_VERSION = 52
 const TOWER_ALONE_VERSION = 58
 /** Última versión con el ataque elegido solo en los gimnasios (y la torre sin repetir sus combates) */
 const ATTACK_PER_GYM_VERSION = 59
+/** Última versión con el Huevo Suerte de la torre directo a la Mochila (sin huevo en la escena) */
+const TOWER_EGG_AUTO_VERSION = 60
 const [A, B, C] = STARTERS
 const UNKNOWN_SPECIES = -7
 const OTHER_BACKDROP = Object.values(RanchBackdrop).find((b) => b !== DEFAULT_RANCH_BACKDROP)!
@@ -276,6 +278,16 @@ describe('al actualizar el juego no se pierde nada', () => {
       advanceTower(migrated, 1)
       expect(migrated.tower!.battleMsLeft).toBeGreaterThan(0)
     }
+  })
+
+  it('la subida a la torre de antes del huevo en la escena sigue, sin huevo esperando', () => {
+    const s = advancedGame()
+    s.expeditions = []
+    startTower(s, towerMoveChoices(activeMon(s)!)[0].id)
+    const save = fromOldVersion(s, TOWER_EGG_AUTO_VERSION)
+    delete save.tower.egg
+    const migrated = migrateSave(save)!
+    expect(migrated.tower).toMatchObject({ uid: s.tower!.uid, floor: s.tower!.floor, egg: null })
   })
 
   it('la ruta de antes del ataque de ruta sigue, con el ataque elegido en el gimnasio; la torre sigue sin repetir su piso', () => {

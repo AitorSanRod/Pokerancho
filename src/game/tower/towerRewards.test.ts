@@ -62,7 +62,7 @@ describe('premios de la torre', () => {
     expect(r.earned.pieces).toEqual([FOE])
   })
 
-  it('a veces un piso da un Huevo Suerte, que va a la Mochila', () => {
+  it('a veces un piso saca un Huevo Suerte, pero cobrarlo no lo mete en la Mochila (hay que tocarlo)', () => {
     expect(floorPrize(1, 0, () => TOWER_EGG_CHANCE - 0.001).egg).toBe(true)
     expect(floorPrize(1, 0, () => TOWER_EGG_CHANCE).egg).toBe(false)
     const s = initialState()
@@ -70,7 +70,7 @@ describe('premios de la torre', () => {
     const earned = noTowerEarned()
     const eggs = s.luckyEggs
     rewardFloor(s, activeMon(s)!, earned, FOE, { ...floorPrize(1, 0, NO_EGG), egg: true })
-    expect(s.luckyEggs).toBe(eggs + 1)
-    expect(earned.eggs).toBe(1)
+    expect(s.luckyEggs).toBe(eggs)
+    expect(earned.eggs).toBe(0)
   })
 })

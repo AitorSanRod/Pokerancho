@@ -11,16 +11,16 @@ import { floorsPastCap, pastLevelCap, TOWER_STAT_GROWTH, towerLevel } from './to
 // Premios de la torre infinita, piso a piso: EXP para el Pokémon que sube y ₽ que crecen con el nivel del rival (y,
 // pasado el último piso de nivel, con lo que suben sus stats); cada pocos pisos, el premio de data/towerPrizes.ts la
 // primera vez de la semana que se gana ese piso (towerWeek.ts); pasado el último piso de nivel, un ticket del Pokémon
-// derrotado, y, en cualquiera, a veces un Huevo Suerte, que va derecho a la Mochila (run/expBoost.ts).
+// derrotado, y, en cualquiera, a veces un Huevo Suerte en la escena, que solo se gana si se toca (towerEgg.ts).
 
 /** EXP por victoria por cada nivel del rival, antes de crecer con el nivel (en las rutas, battle/rewards.ts › EXP_PER_LEVEL y expForLevel) */
 export const TOWER_EXP_PER_LEVEL = 4
 /** Pasos de ruta a los que equivale cada piso para el ₽ (se paga como un combate de ruta tras tantos pasos) */
 export const TOWER_MONEY_STEPS = 20
-/** Probabilidad (0–1) de que ganar un piso dé un Huevo Suerte (va a la Mochila) */
-export const TOWER_EGG_CHANCE = 0.03
+/** Probabilidad (0–1) de que, al ganar un piso, salga un Huevo Suerte en la escena (hay que tocarlo: towerEgg.ts) */
+export const TOWER_EGG_CHANCE = 0.025
 
-/** Lo ganado en una subida a la torre; `pieces`, la especie de cada ticket ganado; `prizes`, los premios de piso; `eggs`, Huevos Suerte */
+/** Lo ganado en una subida a la torre; `pieces`, la especie de cada ticket ganado; `prizes`, los premios de piso; `eggs`, Huevos Suerte tocados */
 export interface TowerEarned {
   money: number
   exp: number
@@ -50,7 +50,7 @@ export function towerPrize(floor: number): GiftContents | null {
 /** El siguiente piso con premio por encima del récord `best` */
 export const nextPrizeFloor = (best: number): number => (Math.floor(best / TOWER_PRIZE_EVERY) + 1) * TOWER_PRIZE_EVERY
 
-/** Premio de ganar un piso, tal y como sale al acabar el combate; `piece`, un ticket del rival; `egg`, un Huevo Suerte */
+/** Premio de ganar un piso, tal y como sale al acabar el combate; `piece`, un ticket del rival; `egg`, sale un Huevo Suerte para tocarlo */
 export interface FloorPrize {
   money: number
   exp: number
@@ -78,10 +78,6 @@ export function rewardFloor(s: GameState, mon: OwnedMon, earned: TowerEarned, fo
   if (got.prize) {
     applyGift(s, got.prize)
     earned.prizes.push(got.prize)
-  }
-  if (got.egg) {
-    s.luckyEggs += 1
-    earned.eggs += 1
   }
   if (!got.piece) return
   addPieces(s, foeId, 1)
