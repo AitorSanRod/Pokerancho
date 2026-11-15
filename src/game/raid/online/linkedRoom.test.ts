@@ -78,6 +78,24 @@ function linkedStop() {
 }
 
 describe('sala enlazada al servidor', () => {
+  it('tras retirar a un Pokémon se puede mandar a otro a la misma sala; en el servidor solo cuenta el último', () => {
+    const { s, mon } = raidState()
+    s.raidServer = true
+    const rotation = RaidRotation.Hard
+    const room = linkInto(s, mon, rotation)
+    leaveRaid(s, mon.uid)
+    applyView(s, rotation, room.id, serverView(s, rotation, room))
+    const other = createMon(sparringSpecies(room.raid.boss.speciesId), Math.max(mon.level, room.raid.boss.minLevel ?? 0))
+    s.owned.push(other)
+    expect(raidBlocker(s, other.uid, rotation)).toBeNull()
+    joinRaid(s, other.uid, rotation)
+    applyView(s, rotation, room.id, serverView(s, rotation, room))
+    const mine = s.raids[rotation]!.members.filter((m) => m.kind === RaidMemberKind.Player && !m.left)
+    expect(mine.map((m) => m.id)).toEqual([other.uid])
+    expect(monPlace(s, other.uid)).toBe(MonPlace.Raid)
+    expect(monPlace(s, mon.uid)).toBe(MonPlace.Ranch)
+  })
+
   it('al mandar a un Pokémon la sala espera sitio y se pide entrar con él', () => {
     const { s, mon } = raidState()
     joinRaid(s, mon.uid)

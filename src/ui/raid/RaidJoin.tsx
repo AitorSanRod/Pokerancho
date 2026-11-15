@@ -93,7 +93,7 @@ function JoinPicker({ game, raid, rotation, onJoin }: { game: GameState; raid: R
   const send = () => {
     setNaming(false)
     if (onJoin) onJoin(mon.uid)
-    else act((s) => joinRaid(s, mon.uid))
+    else act((s) => joinRaid(s, mon.uid, rotation))
   }
   const secured = raid.members.some((m) => m.kind === RaidMemberKind.Player && earnsPrize(m, raid.elapsedMs))
 

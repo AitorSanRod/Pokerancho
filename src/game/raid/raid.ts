@@ -76,12 +76,13 @@ export function raidBlocker(s: GameState, uid: string, rotation: RaidRotation, r
 }
 
 /**
- * Sin servidor: manda al Pokémon a la sala local; si ya estuvo contra este jefe, conserva su tiempo y su daño. La sala
- * pasa a esperar sitio en una compartida del servidor (ver online/linkedRoom.ts); mientras, sigue la pelea aquí
+ * Manda al Pokémon a la sala de la partida en esa rotación; si ya estuvo contra este jefe, conserva su tiempo y su
+ * daño. Sin servidor, la sala local, que pasa a esperar sitio en una compartida (ver online/linkedRoom.ts); con
+ * servidor, la sala ya enlazada de la que se retiró otro: el servidor lo sienta y da por salido al anterior
  */
-export function joinRaid(s: GameState, uid: string) {
-  if (raidBlocker(s, uid, LOCAL_ROTATION)) return
-  const raid = s.raids[LOCAL_ROTATION]!
+export function joinRaid(s: GameState, uid: string, rotation: RaidRotation = LOCAL_ROTATION) {
+  if (raidBlocker(s, uid, rotation)) return
+  const raid = s.raids[rotation]!
   addPlayer(s, raid, findMon(s, uid)!, TAB_RAID_LIVES)
   raid.remote ??= pendingLink()
 }
