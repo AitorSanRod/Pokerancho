@@ -3,6 +3,7 @@ import { incursionMove } from '../../data/incursionMoves'
 import { incursion } from '../../data/incursions'
 import type { GameState } from '../../game/core/state'
 import { incursionProgress, IncursionPhase, type ActiveIncursion } from '../../game/incursion/activeIncursion'
+import { newDiscoveries } from '../../game/incursion/foeDiscovery'
 import { freePrizeSpent, payableEarnings } from '../../game/incursion/freeIncursions'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
@@ -60,7 +61,12 @@ export function IncursionView({ game, a }: { game: GameState; a: ActiveIncursion
       )}
       {finished && (
         <div className="incursion-finale">
-          <IncursionSummary outcome={p.record.outcome} earned={payableEarnings(game, a.incursionId, p.record.earned)} prizeSpent={freePrizeSpent(game, a.incursionId)} />
+          <IncursionSummary
+            outcome={p.record.outcome}
+            earned={payableEarnings(game, a.incursionId, p.record.earned)}
+            discovered={newDiscoveries(game, p)}
+            prizeSpent={freePrizeSpent(game, a.incursionId)}
+          />
         </div>
       )}
     </div>

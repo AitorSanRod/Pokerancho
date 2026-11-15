@@ -8,6 +8,7 @@ import { createMon } from '../team/mons'
 import { incursionProgress, IncursionPhase, recordOf, REGROUP_MS } from './activeIncursion'
 import { advanceIncursion, boostIncursionTap, chooseIncursionMove, collectIncursion, continueIncursion, incursionBlocker, retreatIncursion, startIncursion } from './incursionGame'
 import { LegOutcome } from './incursionLeg'
+import { defeatedFoes, newDiscoveries } from './foeDiscovery'
 import { eventStartMs, legDuration } from './incursionTimeline'
 import { PARTY_SIZE } from './party'
 import { noTurnOrders, TAP_WINDOW_MS } from './tapWindow'
@@ -129,12 +130,17 @@ describe('incursión en curso', () => {
     }
   })
 
-  it('las piezas que da no descubren la especie', () => {
+  it('al recoger se descubren los rivales derrotados, pero no las especies de las piezas', () => {
     start()
     continueIncursion(s, endOfLeg(0))
-    const seen = [...s.seen]
-    collectIncursion(s, endOfLeg(1))
+    const end = endOfLeg(1)
+    const p = incursionProgress(s.incursion!, end)
+    const defeated = defeatedFoes(p)
+    const seen = [...s.seen, ...newDiscoveries(s, p)]
+    expect(defeated.length).toBeGreaterThan(0)
+    collectIncursion(s, end)
     expect(s.seen).toEqual(seen)
+    expect(s.seen).toEqual(expect.arrayContaining(defeated))
   })
 
   it('antes de cada turno se para en la ventana de toques; si no llega a los toques, se cierra sin potenciar', () => {

@@ -82,6 +82,20 @@ describe('gimnasio', () => {
     expect(s.badges).toEqual([])
   })
 
+  it('el Pokémon del líder que gana al jugador no se descubre', () => {
+    const s = atTheGym(1)
+    const first = GYM.team[0].speciesId
+    expect(s.seen).not.toContain(first)
+    advanceRun(s, Number.MAX_SAFE_INTEGER)
+    expect(s.seen).not.toContain(first)
+  })
+
+  it('vencido el equipo del líder, todos sus Pokémon se descubren', () => {
+    const s = atTheGym(MAX_LEVEL)
+    advanceRun(s, Number.MAX_SAFE_INTEGER)
+    expect(s.seen).toEqual(expect.arrayContaining(GYM.team.map((f) => f.speciesId)))
+  })
+
   it('lucha con el ataque elegido de la ruta; sin elegir, con el de salida', () => {
     const s = atTheGym(MAX_LEVEL)
     const mon = activeMon(s)!

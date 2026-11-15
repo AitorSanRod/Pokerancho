@@ -63,6 +63,16 @@ describe('entrenador', () => {
     expect(s.run!.lastBattle!.boss).toBe(false)
   })
 
+  it('cada Pokémon suyo se descubre al vencerlo, no al verlo', () => {
+    const s = atTheTrainer(MAX_LEVEL)
+    for (const foe of TRAINER.team) {
+      expect(s.seen).not.toContain(foe.speciesId)
+      finishBattle(s)
+      expect(s.seen).toContain(foe.speciesId)
+      expect(s.run!.earned.discovered).toContain(foe.speciesId)
+    }
+  })
+
   it('fuera de su parada no hay entrenador', () => {
     const s = atTheTrainer(MAX_LEVEL)
     TRAINER.team.forEach(() => finishBattle(s))

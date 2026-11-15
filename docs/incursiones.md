@@ -425,6 +425,7 @@ completar.
     freeIncursions.ts        gratuitas: lo ganado solo se cobra la primera vez
     activeIncursion.ts       la incursión guardada (miembros, órdenes, inicio de cada tramo) y por dónde va con la hora
     damageTally.ts           daño de cada uno del grupo sumando todos los combates, hasta lo que se ve
+    foeDiscovery.ts          rivales derrotados: se descubren en la Pokédex al recoger la incursión
     incursionGame.ts         en la partida: entrar, avanzar, reorganizar, retirarse y cobrar (sin servidor)
 
   src/game/core/state.ts     incursion (la de ahora) e incursionKeys; MonPlace.Incursion

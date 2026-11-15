@@ -8,6 +8,7 @@ import { monPerks } from '../team/perks'
 import { gainExp, maxHp } from '../team/stats'
 import { finalHpFraction, incursionProgress, IncursionPhase, regroupEnd, startNextLeg, type ActiveIncursion } from './activeIncursion'
 import { entryBlock, EntryBlock } from './entry'
+import { discoverDefeatedFoes } from './foeDiscovery'
 import type { Earned } from './incursionRewards'
 import { markFreePlayed, payableEarnings } from './freeIncursions'
 import { canAffordEntry, spendKey } from './keys'
@@ -124,7 +125,10 @@ export function retreatIncursion(s: GameState, now: number) {
   a.retreat = { leg: p.leg, atMs: p.legMs }
 }
 
-/** Al terminar: cobra lo ganado (las gratuitas, solo la primera vez; las piezas no descubren la especie), el Pokémon vuelve al rancho con los PS que le queden y se cierra la incursión */
+/**
+ * Al terminar: cobra lo ganado (las gratuitas, solo la primera vez; las piezas no descubren la especie, pero los rivales
+ * derrotados sí), el Pokémon vuelve al rancho con los PS que le queden y se cierra la incursión
+ */
 export function collectIncursion(s: GameState, now: number): Earned | null {
   const a = s.incursion
   if (!a) return null
@@ -132,6 +136,7 @@ export function collectIncursion(s: GameState, now: number): Earned | null {
   if (p.phase !== IncursionPhase.Finished) return null
   const earned = payableEarnings(s, a.incursionId, p.record.earned)
   markFreePlayed(s, a.incursionId)
+  discoverDefeatedFoes(s, p)
   s.money += boostedMoney(earned.money)
   s.tickets += earned.tickets
   for (const [id, n] of Object.entries(earned.pieces)) addPieces(s, Number(id), n)

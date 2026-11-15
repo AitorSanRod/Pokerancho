@@ -113,7 +113,8 @@ export function startBattle(s: GameState, r: Route, foe: Boss, opts: BattleOpts,
   const intro = opts.intro ?? (opts.shiny ? shinyIntro(enemy.name, level) : undefined)
   run.battleSetup = { seed: Math.floor(rng() * 2 ** 31), player, enemy, prize, taps: [], intro }
   const result = playSetup(run.battleSetup, [])
-  seeOnRoute(s, enemyId)
+  // El Pokémon de un entrenador o del líder no se descubre hasta vencerlo (settleBattle)
+  if (!opts.trainer) seeOnRoute(s, enemyId)
   run.earned.battles++
   run.lastBattle = {
     player: { speciesId: mon.speciesId, name: player.name, level: mon.level, maxHp: player.maxHp, move: player.move },
@@ -146,6 +147,7 @@ function settleBattle(s: GameState, r: Route, rng: Rng) {
     return
   }
   if (record.outcome === 'win') {
+    if (run.battleSetup?.enemy.trainer) seeOnRoute(s, record.enemy.speciesId)
     s.money += record.rewards.money
     s.tickets += record.rewards.tickets
     run.earned.money += record.rewards.money

@@ -60,7 +60,7 @@ export const KANTO: GameMap = {
         { id: 'p1', name: 'Fuente', kind: NodeKind.Heal, steps: 10, potion: Potion.Potion },
         { id: 'd', name: 'Senda', kind: NodeKind.Wild, steps: 15 },
         { id: 'e', name: 'Campo', kind: NodeKind.Wild, steps: 25, encounters: enc([POKEMON.Rattata, 40], [POKEMON.NidoranF, 30], [POKEMON.NidoranM, 30]) },
-        { id: 'f', name: 'Hierba crecida', kind: NodeKind.Wild, steps: 30, levelBonus: 2 },
+        { id: 'o', name: 'Entrenador', kind: NodeKind.Trainer, steps: 15, trainer: TrainerId.JovenRuben },
         { id: 'p2', name: 'Casa de descanso', kind: NodeKind.Heal, steps: 10, landmark: StopLandmark.House, potion: Potion.Potion },
         { id: 'g', name: 'Hierba crecida', kind: NodeKind.Boss, steps: 30, boss: boss(POKEMON.Rattata, 7) },
       ),

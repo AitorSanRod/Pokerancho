@@ -11,6 +11,7 @@ import { Sprite } from '../shared/common'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { RewardOverlay, type RewardItem } from '../shared/RewardOverlay'
+import { discoveryReward } from '../shared/rewardItems'
 
 const TITLE: Partial<Record<IncursionOutcome, string>> = {
   [IncursionOutcome.Win]: '¡Incursión superada!',
@@ -38,13 +39,19 @@ function rewardItems(earned: Earned): RewardItem[] {
   return items
 }
 
-/**
- * Final de la incursión: cómo acabó, lo ganado y el botón de recogerlo (el Pokémon vuelve al rancho). `prizeSpent`: es
- * gratuita y ya se cobró, así que no da nada
- */
-export function IncursionSummary({ outcome, earned, prizeSpent }: { outcome: IncursionOutcome; earned: Earned; prizeSpent: boolean }) {
+interface Props {
+  outcome: IncursionOutcome
+  earned: Earned
+  /** Rivales derrotados que entran nuevos en la Pokédex al recoger */
+  discovered: number[]
+  /** Es gratuita y ya se cobró, así que no da nada */
+  prizeSpent: boolean
+}
+
+/** Final de la incursión: cómo acabó, lo ganado, lo descubierto y el botón de recogerlo (el Pokémon vuelve al rancho) */
+export function IncursionSummary({ outcome, earned, discovered, prizeSpent }: Props) {
   const [shown, setShown] = useState<RewardItem[] | null>(null)
-  const items = rewardItems(earned)
+  const items = [...discovered.map(discoveryReward), ...rewardItems(earned)]
   const collect = () => (items.length ? setShown(items) : act((s) => collectIncursion(s, Date.now())))
 
   return (
