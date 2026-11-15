@@ -1,4 +1,5 @@
-import { TrainerLook } from '../../../data/trainers'
+import { TrainerLook, type Trainer } from '../../../data/trainers'
+import { fixedWho, trainerIdentity, type TrainerWho } from '../../../game/run/trainerIdentity'
 import giovanni from '../../../assets/trainers/giovanni.gif'
 import sailor from '../../../assets/trainers/sailor.png'
 import rocketGruntM from '../../../assets/trainers/rocket-grunt-m.png'
@@ -35,4 +36,10 @@ export const TRAINER_SPRITES: Record<TrainerLook, string> = {
   [TrainerLook.SwimmerF]: swimmerF,
   [TrainerLook.BirdKeeper]: birdKeeper,
   [TrainerLook.BlackBelt]: blackBelt,
+}
+
+/** Nombre («Nadadora Lucía») y dibujo de un entrenador: el que le ha tocado en la ruta o, sin ruta, lo que lleve fijo */
+export function trainerPortrait(t: Trainer, who: TrainerWho = fixedWho(t)): { name: string; sprite: string } {
+  const { name, look } = trainerIdentity(t, who)
+  return { name, sprite: TRAINER_SPRITES[look] }
 }

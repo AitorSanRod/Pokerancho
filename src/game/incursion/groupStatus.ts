@@ -51,7 +51,7 @@ const maxStatuses =(f: GroupFighter): number => (f.boss ? BOSS_MAX_STATUSES : 1)
 
 /** PS que le quita al final del turno un estado de esa fracción de sus PS máximos (a un jefe, con tope) */
 const statusHarm = (f: GroupFighter, fraction: number): number =>
-  Math.max(1, Math.floor(f.maxHp * (f.boss ? Math.min(fraction, BOSS_STATUS_DAMAGE_CAP) : fraction)))
+  Math.max(1, Math.floor(f.maxHp * f.statusHpMult * (f.boss ? Math.min(fraction, BOSS_STATUS_DAMAGE_CAP) : fraction)))
 
 export const hasStatus = (f: GroupFighter, status: StatusId): boolean => f.statuses.some((a) => a.status === status)
 
@@ -96,7 +96,7 @@ function skipsTurn(bf: Battlefield, f: GroupFighter, status: StatusId, rng: Rng)
     return true
   }
   if (info.selfHitChance && rng() < info.selfHitChance) {
-    const dealt = Math.min(f.hp - 1, Math.max(1, Math.floor(f.maxHp * CONFUSION_SELF_HIT)))
+    const dealt = Math.min(f.hp - 1, Math.max(1, Math.floor(f.maxHp * f.statusHpMult * CONFUSION_SELF_HIT)))
     f.hp -= dealt
     bf.log(on(f, { kind: EventKind.Hit, status, amount: dealt, text: 'Se hirió' }))
     return true

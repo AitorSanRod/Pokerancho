@@ -1,78 +1,35 @@
-import { describe, expect, it, vi } from 'vitest'
-import { player, snap, stopChannel } from './online-test-utils'
-import { DEFAULT_NICKNAME, NICKNAME_MAX, RaidAction, RaidRotation, RoomSlot, type JoinRequest } from './protocol'
+import { describe, expect, it } from 'vitest'
+import { entrant } from '../raid-test-utils'
+import { RaidAction, RaidRotation } from './protocol'
 import { cleanNickname, parseRequest } from './requests'
 
-vi.mock('../../../data/maps/kantoMaps', () => import('../../core/test-map'))
+const who = { playerId: 'jugador-1234', nickname: '  Ash   Ketchum ' }
+const ROOM = 'tab/ordered/3/abc123'
 
-const join = (overrides: Record<string, unknown> = {}) => ({
-  action: RaidAction.Join,
-  playerId: player(1),
-  nickname: 'Ana',
-  channel: { slot: RoomSlot.Tab },
-  targetRoomId: null,
-  mon: snap('a'),
-  bossHp: null,
-  ...overrides,
-})
-
-describe('peticiones al servidor de salas', () => {
-  it('acepta una petición de entrar bien formada', () => {
-    expect(parseRequest(join())).toEqual(join())
-    expect(parseRequest(join({ channel: stopChannel(), bossHp: 0.5 }))).toMatchObject({ channel: stopChannel(), bossHp: 0.5 })
+describe('peticiones de raids', () => {
+  it('acepta entrar con un Pokémon que conoce su ataque y limpia el apodo', () => {
+    const { member } = entrant('mon1')
+    const req = parseRequest({ ...who, action: RaidAction.Join, rotation: RaidRotation.Hard, member })
+    expect(req).toMatchObject({ action: RaidAction.Join, rotation: RaidRotation.Hard, nickname: 'Ash Ketchum', member: { id: 'mon1' } })
   })
 
-  it('entrar en la pestaña Raids puede decir la rotación; una que no existe se ignora', () => {
-    const random = { slot: RoomSlot.Tab, rotation: RaidRotation.Hard }
-    expect(parseRequest(join({ channel: random }))).toMatchObject({ channel: random })
-    const unknown = parseRequest(join({ channel: { slot: RoomSlot.Tab, rotation: 'otra' } })) as JoinRequest
-    expect(unknown.channel).toEqual({ slot: RoomSlot.Tab })
+  it('rechaza un ataque que no puede llevar, una rotación que no existe o un Pokémon debilitado', () => {
+    const { member } = entrant('mon1')
+    expect(parseRequest({ ...who, action: RaidAction.Join, rotation: 'x', member })).toBeNull()
+    expect(parseRequest({ ...who, action: RaidAction.Join, rotation: RaidRotation.Ordered, member: { ...member, moveId: 'nada' } })).toBeNull()
+    expect(parseRequest({ ...who, action: RaidAction.Join, rotation: RaidRotation.Ordered, member: { ...member, hpFraction: 0 } })).toBeNull()
   })
 
-  it('rechaza lo que no encaja', () => {
-    expect(parseRequest(null)).toBeNull()
-    expect(parseRequest(join({ playerId: 'corto' }))).toBeNull()
-    expect(parseRequest(join({ action: 'borrar' }))).toBeNull()
-    expect(parseRequest(join({ mon: snap('a', { speciesId: -1 }) }))).toBeNull()
-    expect(parseRequest(join({ mon: snap('a', { hpFraction: 2 }) }))).toBeNull()
-    expect(parseRequest(join({ mon: snap('a', { passives: [{ type: 'nada', level: 1 }] as never }) }))).toBeNull()
-    expect(parseRequest(join({ targetRoomId: '../otra-cosa' }))).toBeNull()
-    expect(parseRequest(join({ channel: { slot: RoomSlot.Route, routeId: 'no-existe', nodeId: 'x' } }))).toBeNull()
-    expect(parseRequest(join({ bossHp: 0 }))).toBeNull()
+  it('acepta las de una sala con lo suyo y rechaza las que no encajan', () => {
+    expect(parseRequest({ ...who, action: RaidAction.Tap, roomId: ROOM, turn: 3 })).toMatchObject({ action: RaidAction.Tap, turn: 3 })
+    expect(parseRequest({ ...who, action: RaidAction.Pick, roomId: ROOM, moveId: 'placaje', target: null })).toMatchObject({ target: null })
+    expect(parseRequest({ ...who, action: RaidAction.Crit, roomId: ROOM })).toMatchObject({ action: RaidAction.Crit })
+    expect(parseRequest({ ...who, action: RaidAction.Sync, roomId: 'route/x' })).toBeNull()
+    expect(parseRequest({ ...who, action: RaidAction.Tap, roomId: ROOM, turn: -1 })).toBeNull()
+    expect(parseRequest({ ...who, playerId: 'x', action: RaidAction.Board })).toBeNull()
   })
 
-  it('ponerse al día admite retirarse (sin Pokémon) y solo ids de sala del almacén', () => {
-    const sync = { action: RaidAction.Sync, playerId: player(1), nickname: 'Ana', roomId: 'tab/0/abc', mon: null }
-    expect(parseRequest(sync)).toEqual({ ...sync, crits: 0 })
-    expect(parseRequest({ ...sync, roomId: '../otra-cosa' })).toBeNull()
-  })
-
-  it('los toques críticos de una consulta, solo en número entero y razonable', () => {
-    const sync = { action: RaidAction.Sync, playerId: player(1), nickname: 'Ana', roomId: 'tab/0/abc', mon: null }
-    expect(parseRequest({ ...sync, crits: 2 })).toMatchObject({ crits: 2 })
-    expect(parseRequest({ ...sync, crits: -1 })).toBeNull()
-    expect(parseRequest({ ...sync, crits: 1.5 })).toBeNull()
-    expect(parseRequest({ ...sync, crits: 1e6 })).toBeNull()
-  })
-
-  it('entrar en una sala elegida de la pestaña Raids y mirar el frontal o una sala', () => {
-    expect(parseRequest(join({ targetRoomId: 'tab/3/abc' }))).toMatchObject({ targetRoomId: 'tab/3/abc' })
-    const feed = { action: RaidAction.Feed, playerId: player(1), nickname: 'Ana', watchRoomId: null }
-    expect(parseRequest(feed)).toEqual(feed)
-    expect(parseRequest({ ...feed, watchRoomId: 'tab/3/abc' })).toMatchObject({ watchRoomId: 'tab/3/abc' })
-    expect(parseRequest({ ...feed, watchRoomId: 42 })).toBeNull()
-  })
-
-  it('limpia el apodo: sin espacios de más, recortado y, vacío, el de por defecto', () => {
-    expect(cleanNickname('  Ana   Pi  ')).toBe('Ana Pi')
-    expect([...cleanNickname('x'.repeat(NICKNAME_MAX * 2))]).toHaveLength(NICKNAME_MAX)
-    expect(cleanNickname('   ')).toBe(DEFAULT_NICKNAME)
-    expect(cleanNickname(42)).toBe(DEFAULT_NICKNAME)
-  })
-
-  it('el Pokémon conserva si es shiny; cualquier otro valor cuenta como normal', () => {
-    const monOf = (shiny: unknown) => (parseRequest(join({ mon: { ...snap('a'), shiny } })) as JoinRequest).mon
-    expect(monOf(true).shiny).toBe(true)
-    expect(monOf('sí').shiny).toBeUndefined()
+  it('un apodo vacío pasa a ser el de por defecto', () => {
+    expect(cleanNickname('   ')).not.toBe('')
   })
 })

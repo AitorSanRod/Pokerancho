@@ -38,8 +38,6 @@ export interface SimResult {
   healMs: number
   /** Media de las vueltas completadas; 0 si ninguna */
   completedMs: number
-  /** Se ha parado en un jefe comunitario (la simulación no juega las salas) */
-  raidAt: number | null
 }
 
 function companionState(route: Route, c: Companion): GameState {
@@ -96,12 +94,11 @@ const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.l
 export function simulate(route: Route, c: Companion, runs: number, patch: SimPatch = {}): SimResult {
   const plays = withDraftData(route, patch, () => Array.from({ length: runs }, () => playOnce(route, c)))
   const first = plays[0]
-  const empty = { runs, completed: 0, fallsAt: [], totalMs: 0, battleMs: 0, healMs: 0, completedMs: 0, raidAt: null }
+  const empty = { runs, completed: 0, fallsAt: [], totalMs: 0, battleMs: 0, healMs: 0, completedMs: 0 }
   if (!first || 'blocked' in first) return { ...empty, blocked: first?.blocked }
   const done = plays.filter((p) => 'phase' in p && p.phase === 'complete') as Exclude<(typeof plays)[number], { blocked: string }>[]
   const all = plays as typeof done
   const fallsAt = Array.from({ length: route.nodes.length }, (_, i) => all.filter((p) => p.phase === 'fainted' && p.stop === i).length)
-  const raid = all.find((p) => p.phase === 'raid')
   return {
     runs,
     completed: done.length,
@@ -110,6 +107,5 @@ export function simulate(route: Route, c: Companion, runs: number, patch: SimPat
     battleMs: mean(all.map((p) => p.battleMs)),
     healMs: mean(all.map((p) => p.healMs)),
     completedMs: mean(done.map((p) => p.ms)),
-    raidAt: raid ? raid.stop : null,
   }
 }

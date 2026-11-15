@@ -1,176 +1,114 @@
-import type { RouteId } from '../../../data/maps'
-import type { Nature } from '../../../data/natures'
-import type { PassiveRef } from '../../../data/passives'
-import type { MonPerks } from '../../team/perks'
-import type { Raid, RaidPlace } from '../raidRoom'
+import type { MemberState } from '../../incursion/fighter'
+import type { MovePick } from '../../incursion/tapWindow'
+import type { RaidRoom } from '../raidRoom'
 
-// Lo que se dicen el juego y el servidor de salas compartidas (worker/raid.ts). Sin cuentas: cada
-// dispositivo se identifica con un id anónimo al azar y un apodo.
-
-/** Dónde vive la sala en la partida: el jefe de la pestaña Raids o el de la parada de la ruta en curso */
-export const RoomSlot = { Tab: 'tab', Route: 'route' } as const
-export type RoomSlot = (typeof RoomSlot)[keyof typeof RoomSlot]
+// Lo que se dicen el juego y el servidor de los jefes de la pestaña Raids (worker/raid.ts). Sin cuentas: cada
+// dispositivo se identifica con un id anónimo al azar y un apodo (el mismo de las incursiones).
 
 /**
- * Rotaciones de jefes de la pestaña Raids, a la vez y cada una con su ciclo (ver raidCycle.ts): una sigue el orden de
+ * Rotaciones de jefes de la pestaña Raids, a la vez y con el mismo calendario (raidSchedule.ts): una sigue el orden de
  * RAID_BOSSES y la de difíciles elige al azar de HARD_RAID_BOSSES (más nivel y mejores premios, ver rotationBosses.ts),
  * para que el jugador pueda escoger entre dos jefes. `Hard` conserva el valor 'random' de cuando era «Al azar»: con
- * él se guardan las partidas, los ciclos y los ids de las salas
+ * él se guardan las partidas y los ids de las salas
  */
 export const RaidRotation = { Ordered: 'ordered', Hard: 'random' } as const
 export type RaidRotation = (typeof RaidRotation)[keyof typeof RaidRotation]
 /** Las rotaciones en el orden en que se enseñan */
 export const RAID_ROTATIONS: RaidRotation[] = [RaidRotation.Ordered, RaidRotation.Hard]
 
-export type RouteChannel = { slot: typeof RoomSlot.Route; routeId: RouteId; nodeId: string }
-
-/**
- * Contra qué jefe es la sala: el del ciclo `cycle` de una rotación de la pestaña Raids (lo decide el servidor, ver
- * raidCycle.ts) o el de una parada de ruta
- */
-export type TabChannel = { slot: typeof RoomSlot.Tab; rotation: RaidRotation; cycle: number }
-export type RoomChannel = TabChannel | RouteChannel
-
-/**
- * El jefe que pide el jugador al entrar: el que haya ahora en una rotación de la pestaña Raids o el de una parada de
- * ruta. Sin `rotation` (clientes de antes de poder estar en las dos), la decide el servidor (ver tabRooms.joinRotation)
- */
-export type JoinChannel = { slot: typeof RoomSlot.Tab; rotation?: RaidRotation } | RouteChannel
-
-export const RaidAction = { Join: 'join', Sync: 'sync', Feed: 'feed' } as const
+export const RaidAction = {
+  /** Lo que hay en la pestaña: cuántos jugadores esperan a cada jefe */
+  Board: 'board',
+  /** Entrar en la sala abierta de una rotación (o cambiar el Pokémon o el ataque del que ya está) */
+  Join: 'join',
+  /** Salir de la sala abierta */
+  Leave: 'leave',
+  /** Ponerse al día con la sala */
+  Sync: 'sync',
+  /** Ha llegado a los toques en una ventana (ver incursion/tapWindow.ts) */
+  Tap: 'tap',
+  /** Cambia el ataque de su Pokémon y a quién lo dirige, desde la próxima ventana */
+  Pick: 'pick',
+  /** Ha acertado el toque crítico en un golpe: su primer golpe del turno siguiente será crítico */
+  Crit: 'crit',
+} as const
 export type RaidAction = (typeof RaidAction)[keyof typeof RaidAction]
-
-/** Lo que el servidor necesita del Pokémon para que luche como en la partida */
-export interface MonSnapshot {
-  uid: string
-  speciesId: number
-  level: number
-  stars: number
-  /** Sin ella (clientes de antes de las naturalezas), neutra */
-  nature?: Nature
-  /** Con los colores shiny; sin él (clientes de antes), normal */
-  shiny?: boolean
-  /** PS con los que entra, como fracción de los máximos */
-  hpFraction: number
-  /** Pasivas de su rancho */
-  passives: PassiveRef[]
-  /** Hitos y colección (team/perks.ts); sin ellos (clientes de antes), ninguno */
-  perks?: MonPerks
-}
 
 interface PlayerRequest {
   playerId: string
   nickname: string
 }
 
-/**
- * Entrar en una sala del jefe: `targetRoomId` si se eligió una (pestaña Raids) y cabe; si no, la del jugador si ya
- * estuvo, una con jugadores si cabe (echando a un bot), la principal o una nueva
- */
+export interface BoardRequest extends PlayerRequest {
+  action: typeof RaidAction.Board
+}
+
 export interface JoinRequest extends PlayerRequest {
   action: typeof RaidAction.Join
-  channel: JoinChannel
-  targetRoomId: string | null
-  mon: MonSnapshot
-  /** Paradas de ruta: vida del jefe (fracción) si hay que abrir una sala en marcha; null, sala nueva */
-  bossHp: number | null
-}
-
-/** Ponerse al día con la sala; `mon` es el Pokémon que el jugador quiere tener dentro (null: ninguno, se retira) */
-export interface SyncRequest extends PlayerRequest {
-  action: typeof RaidAction.Sync
-  roomId: string
-  mon: MonSnapshot | null
-  /** Toques críticos acertados desde la última consulta (ver raidCrit.ts); sin él (clientes de antes), ninguno */
-  crits?: number
-}
-
-/** Lo que hay ahora en la pestaña Raids; `watchRoomId`, la sala que el jugador ha elegido mirar (null: la del frontal) */
-export interface FeedRequest extends PlayerRequest {
-  action: typeof RaidAction.Feed
-  watchRoomId: string | null
-}
-
-export type RaidRequest = JoinRequest | SyncRequest | FeedRequest
-
-/**
- * La sala vista por un jugador: sus Pokémon con su uid y `RaidMemberKind.Player`, los de los demás como `Guest`.
- * `exp` son las rondas de EXP que lleva cada uno de sus Pokémon en la sala (por uid). `closed`: el jefe se escapó
- * (el ciclo pasó al siguiente antes de que cayera)
- */
-export interface RoomView {
-  roomId: string
-  raid: Raid
-  exp: Record<string, number>
-  closed: boolean
-}
-
-/** Una sala en la lista de salas */
-export interface RoomSummary {
-  roomId: string
-  bossSpeciesId: number
-  bossLevel: number
-  hpFraction: number
-  /** Jugadores con un Pokémon dentro (sin contar bots) */
-  players: number
-  bots: number
-  /** Parada de ruta de la sala; null para las de la pestaña Raids */
-  place: RaidPlace | null
-  /** Se puede entrar ahora */
-  open: boolean
-}
-
-/** Fase del ciclo del jefe de la pestaña Raids (ver raidCycle.ts) */
-export const CyclePhase = { Active: 'active', Closing: 'closing' } as const
-export type CyclePhase = (typeof CyclePhase)[keyof typeof CyclePhase]
-
-/** Una rotación de la pestaña Raids según el servidor */
-export interface RotationFeed {
   rotation: RaidRotation
-  /** Posición en la lista de la rotación (ver rotationBosses.ts) del jefe del ciclo actual */
-  bossIndex: number
-  /** Posición en la lista de la rotación del jefe que vendrá después */
-  nextBossIndex: number
-  phase: CyclePhase
-  /** Cerrándose: hora real a partir de la cual puede aparecer el siguiente jefe (si ya no quedan salas pendientes) */
-  nextAt: number | null
-  /** La sala que se ve en el frontal; null si no queda ninguna en pie (se espera al siguiente jefe) */
-  featured: RoomView | null
-  /** Salas del jefe actual de la rotación */
-  rooms: RoomSummary[]
+  /** Su Pokémon, con el uid como id, sus PS y su ataque; si ya tenía otro en la sala, lo cambia por este */
+  member: MemberState
 }
 
-/** La pestaña Raids según el servidor */
-export interface RaidFeed {
-  /** Hora real del servidor: con ella cada móvil cuenta igual las esperas */
+interface RoomRequestBase extends PlayerRequest {
+  roomId: string
+}
+export interface LeaveRequest extends RoomRequestBase {
+  action: typeof RaidAction.Leave
+}
+export interface SyncRequest extends RoomRequestBase {
+  action: typeof RaidAction.Sync
+}
+export interface TapRequest extends RoomRequestBase {
+  action: typeof RaidAction.Tap
+  turn: number
+}
+export interface PickRequest extends RoomRequestBase {
+  action: typeof RaidAction.Pick
+  moveId: string
+  /** Id del rival o aliado; null: el que toque */
+  target: string | null
+}
+export interface CritRequest extends RoomRequestBase {
+  action: typeof RaidAction.Crit
+}
+
+export type RoomRequest = LeaveRequest | SyncRequest | TapRequest | PickRequest | CritRequest
+export type RaidRequest = BoardRequest | JoinRequest | RoomRequest
+
+/** Una rotación en la pestaña: el ciclo de ahora y cuántos jugadores hay en sus salas */
+export interface RotationBoard {
+  rotation: RaidRotation
+  cycle: number
+  players: number
+  rooms: number
+}
+
+/** La pestaña Raids según el servidor; `serverNow`, su hora real, para que cada móvil cuente igual las esperas */
+export interface RaidBoard {
   serverNow: number
-  /** Una por rotación, en el orden de RAID_ROTATIONS */
-  rotations: RotationFeed[]
-  /** Salas de las paradas de ruta con jugadores dentro (solo para mirar) */
-  routeRooms: RoomSummary[]
+  rotations: RotationBoard[]
 }
 
-/** Respuesta del servidor: la sala (null si ya no existe o no hay jefe al que entrar) o la pestaña Raids */
-export interface RaidResponse {
-  view?: RoomView | null
-  feed?: RaidFeed
+/** La sala vista por uno de sus jugadores; las horas, en el reloj del servidor (`serverNow`) */
+export interface RoomView {
+  room: RaidRoom
+  /** El Pokémon de quien pregunta */
+  you: string
+  /** Su cambio de ataque que aún no ha llegado a una ventana */
+  yourPick: MovePick | null
+  /** Su toque crítico acertado que aún no ha llegado a una ventana */
+  yourCrit: boolean
+  serverNow: number
 }
+
+/** Respuesta: la pestaña, la sala, o `gone` (esa sala ya no existe, no está en ella o ya no se puede entrar) */
+export type RaidResponse = { board: RaidBoard } | { room: RoomView } | { gone: true }
 
 /** Letras como mucho de un apodo */
 export const NICKNAME_MAX = 14
 /** Apodo de quien aún no ha elegido uno */
 export const DEFAULT_NICKNAME = 'Entrenador'
 
-/** Prefijo de las salas de las paradas de ruta en el almacén */
-export const ROUTE_CHANNEL_PREFIX = 'route/'
-
-/** Carpeta del almacén con las salas de un mismo jefe */
-export const channelKey = (c: RoomChannel): string =>
-  c.slot === RoomSlot.Tab ? `tab/${c.rotation}/${c.cycle}` : `${ROUTE_CHANNEL_PREFIX}${c.routeId}/${c.nodeId}`
-
-/**
- * Rotación de una sala de la pestaña Raids por su id (empieza por la carpeta de su jefe); sin id, o si es de antes de
- * las rotaciones, la ordenada
- */
-export const roomRotation = (roomId: string | null): RaidRotation =>
-  roomId?.startsWith(`tab/${RaidRotation.Hard}/`) ? RaidRotation.Hard : RaidRotation.Ordered
+/** Carpeta del almacén con las salas de una rotación en un ciclo (empieza el id de cada una) */
+export const channelKey = (rotation: RaidRotation, cycle: number): string => `tab/${rotation}/${cycle}`

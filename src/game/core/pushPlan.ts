@@ -26,8 +26,8 @@ function expeditionJobs(s: GameState, now: number): PushJob[] {
     })
 }
 
-/** Cómo acaba la ruta según la simulación: completada, debilitado o en la parada del jefe comunitario */
-export type RunEnd = { at: number; phase: 'complete' | 'fainted' | 'raid' }
+/** Cómo acaba la ruta según la simulación: completada o debilitado */
+export type RunEnd = { at: number; phase: 'complete' | 'fainted' }
 
 /**
  * Simula la partida hacia delante sobre una copia (como si la app estuviera cerrada) hasta que la ruta deja de andar;
@@ -41,7 +41,7 @@ export function predictRunEnd(s: GameState, now: number): RunEnd | null {
   for (let t = now + RUN_PREDICT_STEP_MS; t <= now + MAX_OFFLINE_MS; t += RUN_PREDICT_STEP_MS) {
     tick(copy, t)
     const phase = copy.run?.phase
-    if (phase && phase !== 'walking') return { at: t, phase }
+    if (phase === 'complete' || phase === 'fainted') return { at: t, phase }
   }
   return null
 }
@@ -49,7 +49,6 @@ export function predictRunEnd(s: GameState, now: number): RunEnd | null {
 const RUN_TEXT: Record<RunEnd['phase'], (name: string, where: string) => { title: string; body: string }> = {
   complete: (name, where) => ({ title: '¡Ruta completada!', body: `${name} ha terminado ${where}. Toca para ver lo que ha ganado.` }),
   fainted: (name, where) => ({ title: `${name} se ha debilitado`, body: `En ${where}. Ha vuelto al rancho a descansar.` }),
-  raid: (name, where) => ({ title: `${name} ha llegado al jefe de ${where}`, body: 'Se ha unido a la pelea contra el jefe comunitario.' }),
 }
 
 function runJobs(s: GameState, now: number): PushJob[] {

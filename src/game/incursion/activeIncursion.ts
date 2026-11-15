@@ -2,7 +2,7 @@ import { incursion, type IncursionId } from '../../data/incursions'
 import type { MemberState } from './fighter'
 import { IncursionOutcome, simulateIncursion, type IncursionRecord, type LegOrders, type Retreat } from './incursionRun'
 import { EventKind } from './events'
-import type { LegResult } from './incursionLeg'
+import type { FightSource, LegResult } from './incursionLeg'
 import { eventStartMs, eventsStarted, legDuration } from './incursionTimeline'
 import { TAP_WINDOW_MS, type MovePick } from './tapWindow'
 
@@ -12,15 +12,22 @@ import { TAP_WINDOW_MS, type MovePick } from './tapWindow'
 /** Milisegundos reales que dura una sala de reorganizar: lo que hay para cambiar de movimiento */
 export const REGROUP_MS = 90_000
 
-/** Lo que decide cómo va una incursión: lo comparten la partida y el servidor */
-export interface IncursionPlan {
-  incursionId: IncursionId
+/**
+ * Lo que decide cómo va una pelea de grupo por tramos (una incursión o un jefe de la pestaña Raids): lo comparten la
+ * partida y el servidor
+ */
+export interface GroupPlan {
   /** Cómo entró cada uno (jugadores y bots); el de un jugador lleva el uid de su Pokémon */
   members: MemberState[]
   orders: LegOrders[]
   /** Hora real (ms) en que empezó cada tramo */
   legStarts: number[]
   retreat: Retreat | null
+}
+
+/** Lo que decide cómo va una incursión */
+export interface IncursionPlan extends GroupPlan {
+  incursionId: IncursionId
 }
 
 /** Lo del grupo con otros jugadores que sabe el móvil (ver online/protocol.ts › GroupView) */
@@ -67,15 +74,21 @@ export interface IncursionProgress {
 
 let cache: { key: string; record: IncursionRecord } | null = null
 
-/** La incursión simulada; se guarda la última, porque la pantalla la pide muchas veces seguidas */
-export function recordOf(a: IncursionPlan): IncursionRecord {
-  const key = JSON.stringify([a.incursionId, a.members, a.orders, a.retreat])
-  if (cache?.key !== key) cache = { key, record: simulateIncursion(incursion(a.incursionId), a.members, a.orders, a.retreat) }
+/** La pelea de `src` simulada; se guarda la última, porque la pantalla la pide muchas veces seguidas */
+export function groupRecord(a: GroupPlan, src: FightSource): IncursionRecord {
+  const key = JSON.stringify([src.id, a.members, a.orders, a.retreat])
+  if (cache?.key !== key) cache = { key, record: simulateIncursion(src, a.members, a.orders, a.retreat) }
   return cache.record
 }
 
-export function incursionProgress(a: IncursionPlan, now: number): IncursionProgress {
-  const record = recordOf(a)
+/** La incursión simulada */
+export const recordOf = (a: IncursionPlan): IncursionRecord => groupRecord(a, incursion(a.incursionId))
+
+export const incursionProgress = (a: IncursionPlan, now: number): IncursionProgress => groupProgress(a, incursion(a.incursionId), now)
+
+/** Por dónde va a la hora `now` la pelea de grupo de `src` */
+export function groupProgress(a: GroupPlan, src: FightSource, now: number): IncursionProgress {
+  const record = groupRecord(a, src)
   const leg = record.legs.length - 1
   const duration = legDuration(record.legs[leg])
   const elapsed = Math.max(0, now - a.legStarts[leg])
@@ -103,7 +116,7 @@ function openTap(leg: LegResult, ms: number): IncursionProgress['tap'] {
 }
 
 /** Fracción de PS con la que acaba un Pokémon: la del último evento que le tocó antes del final (o de la retirada) */
-export function finalHpFraction(a: IncursionPlan, p: IncursionProgress, id: string): number {
+export function finalHpFraction(a: GroupPlan, p: IncursionProgress, id: string): number {
   for (let l = p.leg; l >= 0; l--) {
     const leg = p.record.legs[l]
     const seen = l === p.leg ? eventsStarted(leg, p.legMs) : leg.events.length

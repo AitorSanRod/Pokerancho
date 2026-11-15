@@ -2,7 +2,6 @@ import { isValidPath, legSteps, node, NodeKind, pathFrom, route, type Route } fr
 import { species } from '../../data/species'
 import type { Rng } from '../core/random'
 import { activeMon, MonPlace, monPlace, TutorialStep, type GameState, type Run } from '../core/state'
-import { advanceRouteRaid, enterRouteRaid } from '../raid/routeRaid'
 import { stepsPerMinute } from '../team/stats'
 import { advanceExpBoost, boostActive, BOOST_TAP_EXP, newExpBoost, reachEggSpot } from './expBoost'
 import { completeRoute, gainRunExp, spendBattleTime, startStopBattle } from './runBattle'
@@ -42,8 +41,6 @@ export function startRun(s: GameState, routeId: string, path = pathFrom(route(ro
     lastBattle: null,
     battleSetup: null,
     battleMsLeft: 0,
-    raid: null,
-    raidRejoinHp: null,
     heal: null,
     boost: newExpBoost(routeId, path, s.luckyEggArmed, rng),
     unlocked: null,
@@ -76,12 +73,7 @@ export function advanceRun(s: GameState, realMs: number, rng: Rng = Math.random)
       left -= spendHealTime(s, route(run.routeId), left)
       continue
     }
-    if (run.phase === 'raid') {
-      const used = advanceRouteRaid(s, left * s.timeScale, rng) / s.timeScale
-      if (used === 0 && run.phase === 'raid') return
-      left -= used
-      continue
-    }
+
     if (run.phase !== 'walking') return
     const stepsPerMs = (stepsPerMinute(activeMon(s)!) * s.timeScale) / 60000
     const steps = left * stepsPerMs
@@ -123,9 +115,8 @@ function arrive(s: GameState, r: Route, rng: Rng) {
   run.stop++
   run.steps = 0
   const n = node(r, run.path[run.stop])
-  // Con combate o cura, el final de la ruta se decide al acabar (ver runBattle.ts y runHeal.ts) o al caer el jefe comunitario
-  if (n.kind === NodeKind.Wild || n.kind === NodeKind.Boss) startStopBattle(s, r, n, rng)
-  else if (n.kind === NodeKind.Raid) enterRouteRaid(s, r, n, rng)
+  // Con combate o cura, el final de la ruta se decide al acabar (ver runBattle.ts y runHeal.ts)
+  if (n.kind === NodeKind.Wild || n.kind === NodeKind.Boss || n.kind === NodeKind.Raid) startStopBattle(s, r, n, rng)
   else if (n.kind === NodeKind.Heal) drinkStopPotion(s, n)
   else if (n.kind === NodeKind.Gym) enterGym(s, r, rng)
   else if (n.kind === NodeKind.Trainer) enterTrainer(s, r, rng)

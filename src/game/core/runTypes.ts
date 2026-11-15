@@ -6,13 +6,11 @@ import type { ExpBoost } from '../run/expBoost'
 import type { RunGym } from '../run/runGym'
 import type { RunTrainer } from '../run/runTrainer'
 import type { RouteBattleSetup } from '../run/tapCrit'
-import type { Raid } from '../raid/raidRoom'
 import type { ExpeditionFocus } from '../team/expeditionFocus'
 
 // La ruta en curso y las expediciones, tal y como se guardan en la partida (los reexporta state.ts)
 
-/** `raid`: luchando contra el jefe comunitario de la parada (ver raid/routeRaid.ts) */
-export type RunPhase = 'walking' | 'raid' | 'complete' | 'fainted'
+export type RunPhase = 'walking' | 'complete' | 'fainted'
 
 /** Victorias seguidas contra el jefe de una parada y cuándo fue la última (ms reales) */
 export interface RouteRaidStreak {
@@ -42,13 +40,7 @@ export interface Run {
   battleSetup: RouteBattleSetup | null
   /** Milisegundos reales que quedan del combate en curso; mientras sea > 0 no se dan pasos */
   battleMsLeft: number
-  /** Sala del jefe comunitario de la parada en la que está luchando (fase `raid`) */
-  raid: Raid | null
-  /**
-   * Vida del jefe comunitario (fracción de la total) cuando el Pokémon gastó sus vidas y volvió al principio de la
-   * ruta; al llegar de nuevo a la parada entra en una sala con el jefe lo más cerca posible de ella. null si no
-   */
-  raidRejoinHp: number | null
+
   /** Cura de la parada de poción en la que está parado el Pokémon; mientras `msLeft` sea > 0 no se dan pasos */
   heal: StopHeal | null
   /** Huevo Suerte: si sale en esta ruta y dónde, y si la ruta va con uno usado (ver run/expBoost.ts) */

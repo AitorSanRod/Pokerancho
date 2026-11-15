@@ -11,8 +11,8 @@ export interface Encounter {
 }
 
 /**
- * Tipos de parada. `Raid`: jefe comunitario; al llegar empieza una pelea en sala con los que van llegando (ver
- * game/raid/routeRaid.ts). `Heal`: sin combate, el Pokémon se para y se cura con la poción de la parada (ver
+ * Tipos de parada. `Raid`: jefe comunitario; un combate como el de un jefe y, al vencerlo, el premio de su tabla de
+ * raids (ver game/raid/routeRaid.ts). `Heal`: sin combate, el Pokémon se para y se cura con la poción de la parada (ver
  * game/run/runHeal.ts). `Gym`: el líder del gimnasio (`gym`, ver data/gyms.ts) saca su equipo uno tras otro y el
  * jugador puede cambiar de ataque en cualquier momento (ver game/run/runGym.ts). `Trainer`: un entrenador (`trainer`, ver
  * data/trainers.ts) saca su equipo uno tras otro y cada Pokémon suyo da más EXP (ver game/run/runTrainer.ts). Previstos
@@ -45,6 +45,8 @@ export const RouteId = {
   GimnasioCarmin: 'gimnasio-carmin',
   SSAnne: 'ss-anne',
   SSAnne2: 'ss-anne2',
+  TunelRoca: 'tunel-roca',
+  PuebloLavanda: 'pueblo-lavanda',
 } as const
 export type RouteId = (typeof RouteId)[keyof typeof RouteId]
 
@@ -62,8 +64,6 @@ export interface Boss {
   passives?: PassiveRef[]
   /** Tabla de premios (`RAID_PRIZE_TABLES`) si es jefe comunitario: obligatoria en las paradas `NodeKind.Raid` */
   tier?: RaidTier
-  /** Minutos que tardaría en caer con un solo Pokémon de su nivel, si es jefe comunitario; sin él, RAID_SOLO_MINUTES */
-  soloMinutes?: number
 }
 
 interface RouteEdge {
@@ -139,8 +139,8 @@ export const enc = (...chances: [speciesId: number, chance: number][]): Encounte
 /** Jefe de una parada: `boss(POKEMON.Pidgeotto, 7)` */
 export const boss = (speciesId: number, level: number, passives?: PassiveRef[]): Boss => ({ speciesId, level, passives })
 
-/** Jefe comunitario de una parada `NodeKind.Raid`: `raidBoss(POKEMON.Pidgeotto, 12, RaidTier.Low, { soloMinutes: 10 })` */
-export const raidBoss = (speciesId: number, level: number, tier: RaidTier, opts: { soloMinutes?: number } = {}): Boss => ({ speciesId, level, tier, ...opts })
+/** Jefe comunitario de una parada `NodeKind.Raid`: `raidBoss(POKEMON.Pidgeotto, 12, RaidTier.Low)` */
+export const raidBoss = (speciesId: number, level: number, tier: RaidTier): Boss => ({ speciesId, level, tier })
 
 /** Atajo para un camino sin bifurcar: cada nodo enlaza con el siguiente de la lista */
 type Stop = Omit<RouteNode, 'next'> & { steps: number }

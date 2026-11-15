@@ -35,7 +35,7 @@ function Result({ route, result, walk }: { route: Route; result: SimResult; walk
           ))}
         </ul>
       )}
-      {result.raidAt !== null && <p className="sim-warn">Se para en el jefe comunitario (parada {result.raidAt}): esas salas no se simulan.</p>}
+
     </div>
   )
 }

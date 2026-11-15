@@ -5,7 +5,7 @@ export const MONEY_GUIDE: Guide = {
   id: 'money',
   icon: ICON.Money,
   title: 'Ganar dinero',
-  summary: 'Rutas, expediciones, raids y el obsequio diario',
+  summary: 'Rutas, expediciones, raids, torre, venta y el obsequio diario',
   steps: [
     {
       image: shot('money-run'),
@@ -25,7 +25,17 @@ export const MONEY_GUIDE: Guide = {
     {
       image: shot('raid-prize'),
       title: 'Derrota jefes comunitarios',
-      text: 'Los premios de las raids traen ₽, tickets y EXP. El jefe de una parada de ruta da menos dinero si lo repites seguido; descansa un rato y vuelve a darlo entero.',
+      text: 'Los premios de las raids traen ₽, tickets y EXP, por la parte de la vida del jefe que le quitéis. El jefe de una parada de ruta da menos dinero si lo repites seguido; descansa un rato y vuelve a darlo entero.',
+    },
+    {
+      image: shot('tower-tab'),
+      title: 'Sube la torre',
+      text: 'Cada piso de la torre da ₽ y EXP, y algunos, un premio la primera vez de cada semana. Cuanto más alto, más pagan.',
+    },
+    {
+      image: shot('shop-sell'),
+      title: 'Vende lo que sobra',
+      text: 'En Tienda › Venta el servidor te compra Pokémon repetidos, tickets y trozos de MissingNo: el precio depende de la rareza.',
     },
     {
       image: shot('money-gift'),

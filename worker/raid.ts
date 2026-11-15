@@ -1,81 +1,87 @@
-import { channelKey, RaidAction, RoomSlot, type JoinRequest, type RaidRequest, type RaidResponse, type RoomView, type SyncRequest } from '../src/game/raid/online/protocol'
+import { RAID_ROTATIONS, RaidAction, type BoardRequest, type JoinRequest, type RaidBoard, type RaidResponse, type RoomRequest } from '../src/game/raid/online/protocol'
+import { damageDue } from '../src/game/raid/online/damageTally'
+import { startPush } from '../src/game/raid/online/raidPushes'
 import { parseRequest } from '../src/game/raid/online/requests'
-import { isExpired, isSettled, joinStopRoom, syncRoom } from '../src/game/raid/online/roomServer'
-import { markRoom, roomPushes } from '../src/game/raid/online/raidPushes'
-import { viewFor } from '../src/game/raid/online/sharedRoom'
-import { deleteRoom, deleteRooms, loadChannel, loadRoom, saveRoom } from './db/rooms'
+import { advanceShared, createShared, critShared, joinShared, leaveShared, pickShared, roomFor, roomView, tapShared } from '../src/game/raid/online/sharedRaid'
+import { roomBoss } from '../src/game/raid/raidRoom'
+import { cycleAt } from '../src/game/raid/raidSchedule'
+import { countChannel, loadChannel, loadRoom, saveRoom } from './db/rooms'
 import type { Env } from './env'
 import { json, readJson } from './http'
 import { notifyRaid } from './push/notify'
-import { CONFLICT, feedTab, joinTab, noteTabFall } from './raidTab'
 
-// POST /api/raid: salas compartidas de los jefes comunitarios (RaidRequest, ver src/game/raid/online/protocol.ts).
-// Toda la lógica es la del juego; aquí solo se lee y se guarda en D1. Sin cuentas: el jugador va por su id. Las de la
-// pestaña Raids van por ciclos (raidTab.ts); las de las paradas de ruta, aquí.
+// POST /api/raid: las salas de los jefes de la pestaña Raids (RaidRequest, ver src/game/raid/online/protocol.ts). Toda
+// la lógica es la del juego (el calendario, las salas y las ventanas de toques); aquí solo se lee y se guarda en D1.
+// Sin cuentas: el jugador va por su id.
 
 /** Veces que se repite una petición si otro jugador ha escrito la sala justo a la vez */
 const MAX_ATTEMPTS = 5
 /** Letras al azar del id de una sala nueva */
 const ROOM_ID_LENGTH = 8
-/** Bytes como mucho de una petición de sala */
-const MAX_REQUEST_BYTES = 16 * 1024
+/** Bytes como mucho de una petición */
+const MAX_REQUEST_BYTES = 8 * 1024
+/** Una consulta que no cambia nada solo se guarda (para que la sala no caduque) si lleva este tiempo sin guardarse */
+const TOUCH_MS = 10 * 60 * 1000
 
+const CONFLICT = Symbol('conflict')
 type Outcome = RaidResponse | typeof CONFLICT
 
-const viewed = async (view: Promise<RoomView | null | typeof CONFLICT>): Promise<Outcome> => {
-  const v = await view
-  return v === CONFLICT ? CONFLICT : { view: v }
+const GONE: RaidResponse = { gone: true }
+
+const randomId = () => crypto.randomUUID().replaceAll('-', '').slice(0, ROOM_ID_LENGTH)
+
+/** Cuántos esperan o luchan contra el jefe de ahora de cada rotación */
+async function board(db: D1Database, now: number): Promise<RaidBoard> {
+  const cycle = cycleAt(now)
+  const rotations = await Promise.all(RAID_ROTATIONS.map(async (rotation) => ({ rotation, cycle, ...(await countChannel(db, rotation, cycle)) })))
+  return { serverNow: now, rotations }
 }
 
-async function joinStop(db: D1Database, req: JoinRequest): Promise<RoomView | typeof CONFLICT> {
-  if (req.channel.slot !== RoomSlot.Route) throw new Error('joinStop solo es para paradas de ruta')
-  const channel = req.channel
+/**
+ * Entrar en la sala abierta de la rotación (o cambiar el Pokémon o el ataque): la suya si ya está en una, la que tenga
+ * más jugadores con sitio o una nueva. Al sentarse por primera vez se le programa el aviso de cuando empiece la pelea
+ */
+async function join(db: D1Database, req: JoinRequest): Promise<Outcome> {
   const now = Date.now()
-  const stored = await loadChannel(db, channel)
-  const expired = stored.filter((s) => isExpired(s.room, now))
-  await deleteRooms(
-    db,
-    expired.map((s) => s.room.id),
+  const cycle = cycleAt(now)
+  const stored = await loadChannel(db, req.rotation, cycle)
+  const found = roomFor(
+    stored.map((s) => s.room),
+    req.playerId,
   )
-  const live = stored.filter((s) => !expired.includes(s))
-  const newId = () => `${channelKey(channel)}/${crypto.randomUUID().replaceAll('-', '').slice(0, ROOM_ID_LENGTH)}`
-  const marks = live.map((s) => markRoom(s.room))
-  const room = joinStopRoom(
-    live.map((s) => s.room),
-    { ...req, channel },
-    now,
-    Math.random,
-    newId,
-  )
-  const index = live.findIndex((s) => s.room === room)
-  if (!(await saveRoom(db, { room, version: live[index]?.version ?? null }))) return CONFLICT
-  // Solo se guarda la sala elegida: lo que haya pasado en las demás se avisará cuando se guarden
-  if (index >= 0) await notifyRaid(db, roomPushes(room, marks[index], now), req.playerId)
-  return viewFor(room, req.playerId)
+  const room = found ?? createShared(`tab/${req.rotation}/${cycle}/${randomId()}`, req.rotation, cycle, now, Math.random)
+  const version = stored.find((s) => s.room === found)?.version ?? null
+  const isNew = !room.seats.some((s) => s.playerId === req.playerId)
+  advanceShared(room, now)
+  if (req.member.level < (roomBoss(room).minLevel ?? 0)) return GONE
+  if (!joinShared(room, req.playerId, req.nickname, req.member, now)) return GONE
+  if (!(await saveRoom(db, { room, version }, now))) return CONFLICT
+  if (isNew) await notifyRaid(db, [startPush(room, req.playerId)])
+  return { room: roomView(room, req.playerId, now)! }
 }
 
-async function sync(db: D1Database, req: SyncRequest): Promise<RoomView | null | typeof CONFLICT> {
+async function roomAction(db: D1Database, req: RoomRequest): Promise<Outcome> {
   const now = Date.now()
   const stored = await loadRoom(db, req.roomId)
-  if (!stored) return null
-  if (isExpired(stored.room, now)) {
-    await deleteRooms(db, [req.roomId])
-    return null
-  }
-  const mark = markRoom(stored.room)
-  const view = syncRoom(stored.room, req, now, Math.random)
-  // Una parada terminada de la que ya han salido todos no se guarda: se borra
-  const kept = isSettled(stored.room) ? await deleteRoom(db, stored) : await saveRoom(db, stored)
-  if (!kept) return CONFLICT
-  if (!(await noteTabFall(db, stored.room, now))) return CONFLICT
-  await notifyRaid(db, roomPushes(stored.room, mark, now), req.playerId)
-  return view
+  const room = stored?.room
+  if (!stored || !room || !room.seats.some((s) => s.playerId === req.playerId)) return GONE
+  const before = JSON.stringify(room)
+  const savedAt = room.updatedAt
+  advanceShared(room, now)
+  if (req.action === RaidAction.Leave) leaveShared(room, req.playerId)
+  if (req.action === RaidAction.Tap) tapShared(room, req.playerId, req.turn, now)
+  if (req.action === RaidAction.Pick) pickShared(room, req.playerId, { moveId: req.moveId, target: req.target }, now)
+  if (req.action === RaidAction.Crit) critShared(room, req.playerId, now)
+  const changed = JSON.stringify({ ...room, updatedAt: savedAt }) !== before || damageDue(room, now)
+  if ((changed || now - savedAt > TOUCH_MS) && !(await saveRoom(db, stored, now))) return CONFLICT
+  const view = roomView(room, req.playerId, now)
+  return view ? { room: view } : GONE
 }
 
-function handle(db: D1Database, req: RaidRequest): Promise<Outcome> {
-  if (req.action === RaidAction.Feed) return feedTab(db, req).then((feed) => (feed === CONFLICT ? CONFLICT : { feed }))
-  if (req.action === RaidAction.Sync) return viewed(sync(db, req))
-  return viewed(req.channel.slot === RoomSlot.Tab ? joinTab(db, req) : joinStop(db, req))
+function handle(db: D1Database, req: BoardRequest | JoinRequest | RoomRequest): Promise<Outcome> {
+  if (req.action === RaidAction.Board) return board(db, Date.now()).then((b) => ({ board: b }))
+  if (req.action === RaidAction.Join) return join(db, req)
+  return roomAction(db, req)
 }
 
 export async function raidRoute(request: Request, env: Env): Promise<Response> {

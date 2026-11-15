@@ -1,6 +1,6 @@
-import { node, NodeKind, type Route } from '../../data/maps'
+import { node, NodeKind, type Route, type RouteId } from '../../data/maps'
 import type { GameState } from '../core/state'
-import type { RaidPlace } from './raidRoom'
+
 
 // Repetir seguido la misma parada de jefe comunitario da cada vez menos dinero, para que una ruta corta con jefe no
 // rinda más que avanzar. La racha se olvida si pasa ROUTE_RAID_STREAK_RESET_MS sin derrotarlo.
@@ -11,6 +11,12 @@ export const ROUTE_RAID_STREAK_RESET_MS = 5 * 60 * 1000
 export const ROUTE_RAID_REPEAT_MONEY_MULT = 0.5
 /** Fracción mínima del dinero del jefe, por muchas veces seguidas que se repita */
 export const ROUTE_RAID_MIN_MONEY_MULT = 0.1
+
+/** Parada de ruta (`NodeKind.Raid`) con jefe comunitario */
+export interface RaidPlace {
+  routeId: RouteId
+  nodeId: string
+}
 
 const placeKey = (p: RaidPlace) => `${p.routeId}/${p.nodeId}`
 

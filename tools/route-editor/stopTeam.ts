@@ -1,14 +1,15 @@
 // En la tarjeta de una parada de entrenador o de gimnasio: el dibujo de quien la defiende y su equipo, con nivel.
 
-import { GYMS, type GymFoe } from '../../src/data/gyms'
+import { GYMS } from '../../src/data/gyms'
+import type { TrainerTeam } from '../../src/data/trainerTeam'
 import { TRAINERS } from '../../src/data/trainers'
 import { LEADER_SPRITES } from '../../src/ui/route/gym/leaderSprites'
-import { TRAINER_SPRITES } from '../../src/ui/route/gym/trainerSprites'
+import { trainerPortrait } from '../../src/ui/route/gym/trainerSprites'
 import { DICTS, spriteById } from './catalog'
 import type { NodeDraft } from './draft'
 import { esc } from './fields'
 
-function strip(name: string, image: string | undefined, team: GymFoe[]) {
+function strip(name: string, image: string | undefined, team: TrainerTeam) {
   const foes = team.map((f) => `<figure><img src="${esc(spriteById(f.speciesId))}" alt="" />Nv. ${f.level}${f.statMult && f.statMult !== 1 ? ` ×${f.statMult}` : ''}</figure>`)
   const who = image ? `<img class="trainer" src="${esc(image)}" alt="${esc(name)}" title="${esc(name)}" />` : `<b>${esc(name)}</b>`
   return `<div class="full foe-strip">${who}${foes.join('')}</div>`
@@ -19,7 +20,9 @@ export function stopTeam(n: NodeDraft): string {
   if (n.kind === 'Trainer') {
     const id = DICTS.TrainerId[n.trainer as keyof typeof DICTS.TrainerId]
     const t = id && TRAINERS[id]
-    return t ? strip(t.name, TRAINER_SPRITES[t.look], t.team) : ''
+    if (!t) return ''
+    const { name, sprite } = trainerPortrait(t)
+    return strip(name, sprite, t.team)
   }
   if (n.kind === 'Gym') {
     const id = DICTS.GymId[n.gym as keyof typeof DICTS.GymId]

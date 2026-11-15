@@ -17,6 +17,9 @@ export const BOT_LEVEL_SPREAD = 2
 
 const BOT_PREFIX = 'bot-'
 
+/** Id del bot número `i` de un grupo */
+export const botId = (i: number): string => `${BOT_PREFIX}${i}`
+
 /** Si ese Pokémon del grupo es de un bot */
 export const isBot = (id: string): boolean => id.startsWith(BOT_PREFIX)
 
@@ -74,7 +77,7 @@ export function fillWithBots(inc: Incursion, members: MemberState[], rng: Rng): 
     const taken = party.map((m) => incursionMove(m.moveId))
     const level = botLevel(inc, members, rng)
     const speciesId = botSpecies(inc, level, taken, rng)
-    party.push(freshMember({ id: `${BOT_PREFIX}${i}`, speciesId, level, stars: 0, moveId: botMove(speciesId, level, taken) }))
+    party.push(freshMember({ id: botId(i), speciesId, level, stars: 0, moveId: botMove(speciesId, level, taken) }))
   }
   return party
 }

@@ -10,8 +10,11 @@ import { ItemIcon } from '../shared/ItemIcon'
 import { IncursionMenu, IncursionMenuPanel } from './IncursionMenu'
 import { IncursionStage } from './IncursionStage'
 import { IncursionStrip } from './IncursionStrip'
+import { act } from '../../store/store'
+import { boostIncursionTap } from '../../game/incursion/incursionGame'
+import { sendIncursionTap } from '../../net/incursionSync'
 import { MoveBar } from './MoveBar'
-import { sceneTargeting } from './pickAction'
+import { incursionPilot, sceneTargeting } from './pickAction'
 import { TapPad } from './TapPad'
 import { IncursionSummary } from './IncursionSummary'
 import { RegroupPanel } from './RegroupPanel'
@@ -34,10 +37,14 @@ export function IncursionView({ game, a }: { game: GameState; a: ActiveIncursion
   const myMonUp = !!mine && mine.hp > 0 && !mine.out
   const finished = p.phase === IncursionPhase.Finished
   const choosing = myMonUp && !finished && p.phase !== IncursionPhase.Regroup
+  const pilot = incursionPilot(a)
+  const tap = p.tap
+  const onGoal = () => (a.online ? void sendIncursionTap(p.leg, tap!.turn) : act((s) => boostIncursionTap(s, Date.now())))
+  const tapPad = tap && myMonUp && <TapPad move={incursionMove(a.pendingPick?.moveId ?? mine!.moveId!)} windowKey={`${p.leg}:${tap.turn}`} msLeft={tap.msLeft} onGoal={onGoal} />
 
   return (
     <div className="screen incursion-view">
-      <IncursionStage biome={inc.biome} scene={scene} uid={a.uid} targeting={choosing && !p.tap ? sceneTargeting(a, scene) : null} overlay={p.tap && myMonUp && <TapPad a={a} move={incursionMove(a.pendingPick?.moveId ?? mine!.moveId!)} leg={p.leg} turn={p.tap.turn} msLeft={p.tap.msLeft} />} />
+      <IncursionStage biome={inc.biome} scene={scene} uid={a.uid} targeting={choosing && !tap ? sceneTargeting(pilot, scene) : null} overlay={tapPad} />
       <div className="incursion-hud">
         <header className="incursion-head">
           <span className="incursion-head-title small">
@@ -53,7 +60,7 @@ export function IncursionView({ game, a }: { game: GameState; a: ActiveIncursion
         {p.phase === IncursionPhase.Waiting && <p className="incursion-hud-note">Esperando a los toques del grupo…</p>}
         {menuOpen && <IncursionMenuPanel a={a} p={p} scene={scene} finished={finished} />}
       </div>
-      {choosing && <MoveBar game={game} a={a} scene={scene} />}
+      {choosing && <MoveBar game={game} pilot={pilot} scene={scene} />}
       {p.phase === IncursionPhase.Regroup && (
         <div className="incursion-bottom-sheet">
           <RegroupPanel game={game} a={a} members={members} msLeft={p.regroupMsLeft} />

@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { move } from '../../data/incursionMoves'
 import { seqRng } from '../core/test-utils'
 import { stat } from './fighter'
-import { turnOrder } from './groupBattle'
+import { fightRoom, turnOrder } from './groupBattle'
+import { noTurnOrders } from './tapWindow'
 import { ally, enemy, field } from './incursion-test-utils'
 
 const QUICK = move('prueba-rapido', 'Rápido', 'normal', 40, [], { priority: 1 })
@@ -36,5 +37,13 @@ describe('orden del turno', () => {
     const { bf } = field([a], [b])
     expect(stat(a, 'spe')).toBeGreaterThan(stat(b, 'spe'))
     expect(turnOrder(bf, seqRng(0.5))[0].id).toBe('a')
+  })
+})
+
+describe('límite de tiempo', () => {
+  it('acabado el tiempo no empieza otro turno y se pierde la sala', () => {
+    const { bf, events } = field([ally('a')], [enemy('e')])
+    expect(fightRoom(bf, seqRng(0.5), noTurnOrders, () => true)).toBe('lose')
+    expect(events).toEqual([])
   })
 })

@@ -53,7 +53,7 @@ export function IncursionStage({ biome, scene, uid, overlay, targeting }: Props)
         <div className="route-battle">
           {crit && <div key={`flash-${scene.seq}`} className="battle-flash" />}
           {scene.party.map((m, i) => (
-            <StageFighter key={m.id} m={m} spot={partySpot(i)} side="party" mine={m.id === uid} scene={scene} idleDelay={-i * IDLE_PHASE_S} target={targetOf(m.id)} />
+            <StageFighter key={m.id} m={m} spot={partySpot(i, scene.party.length)} side="party" mine={m.id === uid} scene={scene} idleDelay={-i * IDLE_PHASE_S} target={targetOf(m.id)} />
           ))}
           {scene.foes.map((m, i) => (
             <StageFighter key={m.id} m={m} spot={foeSpot(i, scene.foes.length)} side="foe" mine={false} scene={scene} idleDelay={-i * IDLE_PHASE_S} target={targetOf(m.id)} />

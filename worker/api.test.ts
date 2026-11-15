@@ -1,13 +1,12 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { STARTERS } from '../src/data/species'
 import { cloudUpload, SaveRejection } from '../src/game/core/cloudSave'
 import { initialState, SAVE_VERSION } from '../src/game/core/state'
 import { chooseStarter } from '../src/game/core/test-utils'
-import { RAID_ROTATIONS, RaidAction, RaidRotation, RoomSlot } from '../src/game/raid/online/protocol'
-import { rotationBoss } from '../src/game/raid/rotationBosses'
-import { stopChannel } from '../src/game/raid/online/online-test-utils'
-import { ROOM_MAX_CATCHUP_MS } from '../src/game/raid/online/sharedRoom'
-import { deleteIdleStopRooms } from './db/rooms'
+import { RaidAction, RaidRotation } from '../src/game/raid/online/protocol'
+import { entrant } from '../src/game/raid/raid-test-utils'
+import { cycleEnd, fightStart, lobbyStart } from '../src/game/raid/raidSchedule'
+import { deleteOldRooms } from './db/rooms'
 import { MailKind, sendMail } from './mail'
 import { testWorker } from './test/api'
 
@@ -63,101 +62,56 @@ describe('partida en la nube', () => {
   })
 })
 
-describe('salas compartidas', () => {
-  const mon = (uid: string) => ({ uid, speciesId: STARTERS[0], level: 15, stars: 0, hpFraction: 1, passives: [] })
-  const join = (playerId: string, uid: string, channel: object = { slot: RoomSlot.Tab }) => ({
-    action: RaidAction.Join,
-    playerId,
-    nickname: playerId,
-    channel,
-    targetRoomId: null,
-    mon: mon(uid),
-    bossHp: null,
+describe('salas de la pestaña Raids', () => {
+  const CYCLE = 1000
+  const member = (id: string) => entrant(id, 60).member
+  const join = (playerId: string, id: string, rotation: RaidRotation = RaidRotation.Ordered) => ({ action: RaidAction.Join, playerId, nickname: playerId, rotation, member: member(id) })
+  const inRoom = (action: string, playerId: string, roomId: string, extra: object = {}) => ({ action, playerId, nickname: playerId, roomId, ...extra })
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(lobbyStart(CYCLE) + 1000)
   })
-  const feed = (playerId: string) => ({ action: RaidAction.Feed, playerId, nickname: playerId, watchRoomId: null })
+  afterEach(() => vi.useRealTimers())
 
-  /** La rotación `rotation` de la pestaña Raids según el servidor */
-  const board = async (api: ReturnType<typeof testWorker>, rotation: RaidRotation) =>
-    (await api.call('/api/raid', { body: feed('player-zzzz') })).data.feed.rotations.find((b: { rotation: string }) => b.rotation === rotation)
-
-  it('la pestaña Raids la decide el servidor: una rotación de cada, sin nadie jugando el frontal es la sala principal', async () => {
+  it('dos jugadores que entran contra el mismo jefe acaban en la misma sala, y la pestaña los cuenta', async () => {
     const api = testWorker()
-    const { feed: f } = (await api.call('/api/raid', { body: feed('player-aaaa') })).data
-    expect(f.routeRooms).toEqual([])
-    expect(f.rotations.map((b: { rotation: string }) => b.rotation)).toEqual(RAID_ROTATIONS)
-    const [ordered, random] = f.rotations
-    expect(ordered).toMatchObject({ bossIndex: 0, phase: 'active', nextAt: null })
-    expect(rotationBoss(RaidRotation.Hard, random.bossIndex).speciesId).not.toBe(rotationBoss(RaidRotation.Ordered, ordered.bossIndex).speciesId)
-    for (const b of f.rotations) {
-      expect(b.rooms).toHaveLength(1)
-      expect(b.featured.roomId).toBe(b.rooms[0].roomId)
-    }
-    const again = (await api.call('/api/raid', { body: feed('player-bbbb') })).data.feed
-    expect(again.rotations.map((b: { featured: { roomId: string } }) => b.featured.roomId)).toEqual(f.rotations.map((b: { featured: { roomId: string } }) => b.featured.roomId))
+    const a = (await api.call('/api/raid', { body: join('player-aaaa', 'a1') })).data.room
+    const b = (await api.call('/api/raid', { body: join('player-bbbb', 'b1') })).data.room
+    expect(b.room.id).toBe(a.room.id)
+    expect(b.room.entrants.map((e: { trainer: string }) => e.trainer)).toEqual(['player-aaaa', 'player-bbbb'])
+    const { board } = (await api.call('/api/raid', { body: { action: RaidAction.Board, playerId: 'player-cccc', nickname: 'C' } })).data
+    expect(board.rotations.find((r: { rotation: string }) => r.rotation === RaidRotation.Ordered)).toMatchObject({ cycle: CYCLE, players: 2, rooms: 1 })
   })
 
-  it('quien entra sin elegir sala va a la del frontal de la rotación ordenada, y la lista lo cuenta', async () => {
+  it('cada rotación tiene sus salas', async () => {
     const api = testWorker()
-    const front = (await board(api, RaidRotation.Ordered)).featured
-    const view = (await api.call('/api/raid', { body: join('player-aaaa', 'a1') })).data.view
-    expect(view.roomId).toBe(front.roomId)
-    expect((await board(api, RaidRotation.Ordered)).rooms).toMatchObject([{ roomId: front.roomId, players: 1 }])
+    const a = (await api.call('/api/raid', { body: join('player-aaaa', 'a1', RaidRotation.Ordered) })).data.room
+    const b = (await api.call('/api/raid', { body: join('player-bbbb', 'b1', RaidRotation.Hard) })).data.room
+    expect(b.room.id).not.toBe(a.room.id)
   })
 
-  it('quien elige una sala de la rotación al azar entra en ella', async () => {
+  it('con la pelea empezada ya no se entra; quien estaba, la ve empezar', async () => {
     const api = testWorker()
-    const front = (await board(api, RaidRotation.Hard)).featured
-    const view = (await api.call('/api/raid', { body: { ...join('player-aaaa', 'a1'), targetRoomId: front.roomId } })).data.view
-    expect(view.roomId).toBe(front.roomId)
-    expect((await board(api, RaidRotation.Hard)).rooms).toMatchObject([{ roomId: front.roomId, players: 1 }])
-    expect((await board(api, RaidRotation.Ordered)).rooms).toMatchObject([{ players: 0 }])
+    const a = (await api.call('/api/raid', { body: join('player-aaaa', 'a1') })).data.room
+    vi.setSystemTime(fightStart(CYCLE))
+    expect((await api.call('/api/raid', { body: join('player-bbbb', 'b1') })).data).toEqual({ gone: true })
+    const seen = (await api.call('/api/raid', { body: inRoom(RaidAction.Sync, 'player-aaaa', a.room.id) })).data.room
+    expect(seen.room.fight.members[0].id).toBe('a1')
   })
 
-  it('las salas de las paradas de ruta con jugadores salen aparte, solo para mirar', async () => {
+  it('al salir de la sala abierta ya no está en ella', async () => {
     const api = testWorker()
-    await api.call('/api/raid', { body: join('player-aaaa', 'a1', stopChannel()) })
-    const { routeRooms } = (await api.call('/api/raid', { body: feed('player-bbbb') })).data.feed
-    expect(routeRooms).toMatchObject([{ players: 1, place: { routeId: stopChannel().routeId } }])
+    const a = (await api.call('/api/raid', { body: join('player-aaaa', 'a1') })).data.room
+    expect((await api.call('/api/raid', { body: inRoom(RaidAction.Leave, 'player-aaaa', a.room.id) })).data).toEqual({ gone: true })
+    expect((await api.call('/api/raid', { body: inRoom(RaidAction.Sync, 'player-aaaa', a.room.id) })).data).toEqual({ gone: true })
   })
 
-  it('una sala de ruta con el jefe ya caído deja de salir en la lista (no se acumulan salas de «1 jugador»)', async () => {
+  it('la tarea programada borra las salas de ciclos ya jugados', async () => {
     const api = testWorker()
-    const { view } = (await api.call('/api/raid', { body: join('player-aaaa', 'a1', stopChannel()) })).data
-    await api.env.DB.prepare("UPDATE rooms SET data = json_set(data, '$.raid.hp', 0) WHERE id = ?").bind(view.roomId).run()
-    await api.call('/api/raid', { body: { action: RaidAction.Sync, playerId: 'player-aaaa', nickname: 'A', roomId: view.roomId, mon: mon('a1') } })
-    expect((await api.call('/api/raid', { body: feed('player-bbbb') })).data.feed.routeRooms).toEqual([])
-  })
-
-  it('la tarea programada borra las salas de ruta sin jugadores que nadie toca en ROOM_MAX_CATCHUP_MS', async () => {
-    const api = testWorker()
-    const { view } = (await api.call('/api/raid', { body: join('player-aaaa', 'a1', stopChannel()) })).data
-    const leave = { action: RaidAction.Sync, playerId: 'player-aaaa', nickname: 'A', roomId: view.roomId, mon: null }
-    await api.call('/api/raid', { body: leave })
-    const room = () => api.env.DB.prepare('SELECT id FROM rooms WHERE id = ?').bind(view.roomId).first()
-    await deleteIdleStopRooms(api.env.DB, Date.now())
-    expect(await room()).not.toBeNull()
-    await deleteIdleStopRooms(api.env.DB, Date.now() + ROOM_MAX_CATCHUP_MS + 1)
-    expect(await room()).toBeNull()
-  })
-
-  it('una sala de ruta terminada se borra cuando su último jugador ve cómo acabó', async () => {
-    const api = testWorker()
-    const { view } = (await api.call('/api/raid', { body: join('player-aaaa', 'a1', stopChannel()) })).data
-    await api.env.DB.prepare("UPDATE rooms SET data = json_set(data, '$.raid.hp', 0) WHERE id = ?").bind(view.roomId).run()
-    const sync = { action: RaidAction.Sync, playerId: 'player-aaaa', nickname: 'A', roomId: view.roomId, mon: mon('a1') }
-    const seen = (await api.call('/api/raid', { body: sync })).data.view
-    expect(seen.raid.hp).toBe(0)
-    expect(await api.env.DB.prepare('SELECT id FROM rooms WHERE id = ?').bind(view.roomId).first()).toBeNull()
-  })
-
-  it('dos jugadores que entran contra el mismo jefe acaban en la misma sala y se ven', async () => {
-    const api = testWorker()
-    const a = (await api.call('/api/raid', { body: join('player-aaaa', 'a1') })).data.view
-    const b = (await api.call('/api/raid', { body: join('player-bbbb', 'b1') })).data.view
-    expect(b.roomId).toBe(a.roomId)
-    const sync = { action: RaidAction.Sync, playerId: 'player-aaaa', nickname: 'A', roomId: a.roomId, mon: mon('a1') }
-    const again = (await api.call('/api/raid', { body: sync })).data.view
-    expect(again.raid.members.map((m: { kind: string }) => m.kind).sort()).toEqual(['guest', 'player'])
+    const a = (await api.call('/api/raid', { body: join('player-aaaa', 'a1') })).data.room
+    await deleteOldRooms(api.env.DB, cycleEnd(CYCLE + 2))
+    expect(await api.env.DB.prepare('SELECT id FROM rooms WHERE id = ?').bind(a.room.id).first()).toBeNull()
   })
 
   it('una petición mal formada se rechaza', async () => {

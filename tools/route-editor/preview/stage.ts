@@ -6,7 +6,7 @@ import { NodeKind, type Boss, type Encounter, type Route, type RouteNode } from 
 import type { Potion } from '../../../src/data/potions'
 import { TRAINERS } from '../../../src/data/trainers'
 import { LEADER_SPRITES } from '../../../src/ui/route/gym/leaderSprites'
-import { TRAINER_SPRITES } from '../../../src/ui/route/gym/trainerSprites'
+import { trainerPortrait } from '../../../src/ui/route/gym/trainerSprites'
 
 export interface StageTrainer {
   name: string
@@ -36,7 +36,7 @@ export function stopStage(r: Route, n: RouteNode): Stage {
   if ((n.kind === NodeKind.Boss || n.kind === NodeKind.Raid) && n.boss) return { foes: [n.boss], boss: true }
   if (n.kind === NodeKind.Trainer && n.trainer) {
     const t = TRAINERS[n.trainer]
-    return { foes: t.team, boss: false, trainer: { name: t.name, sprite: TRAINER_SPRITES[t.look] } }
+    return { foes: t.team, boss: false, trainer: trainerPortrait(t) }
   }
   if (n.kind === NodeKind.Gym && n.gym) {
     const g = GYMS[n.gym]

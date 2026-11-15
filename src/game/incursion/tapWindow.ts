@@ -23,12 +23,15 @@ export interface MovePick {
 }
 
 /**
- * Lo que se decide en una ventana, por el id de cada Pokémon: quiénes potenciaron su ataque con los toques y quiénes
- * cambiaron de ataque u objetivo (sigue así hasta que lo vuelvan a cambiar)
+ * Lo que se decide en una ventana, por el id de cada Pokémon: quiénes potenciaron su ataque con los toques, quiénes
+ * cambiaron de ataque u objetivo (sigue así hasta que lo vuelvan a cambiar) y quiénes acertaron el toque crítico en un
+ * golpe del turno anterior: su primer golpe a un rival de este turno es crítico (×TAP_CRIT_MULT, battle/attack.ts).
+ * Sin `crits` (las incursiones, que no tienen toque crítico), ninguno
  */
 export interface TurnOrders {
   boosted: string[]
   picks: Record<string, MovePick>
+  crits?: string[]
 }
 
 export const noTurnOrders = (): TurnOrders => ({ boosted: [], picks: {} })

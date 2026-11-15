@@ -1,7 +1,7 @@
 // Un Pokémon del equipo de un líder de gimnasio o de un entrenador, en el editor: claves de los diccionarios (POKEMON,
 // IMOVE) en lugar de sus valores, para que el formulario las muestre y el código las escriba tal cual.
 
-import type { GymFoe } from '../../../src/data/gyms'
+import type { TrainerFoe } from '../../../src/data/trainerTeam'
 import { DICTS, keyOf } from '../catalog'
 import type { PassiveDraft } from '../draft'
 import { MOVE_IDS } from '../incursion/incCatalog'
@@ -23,7 +23,7 @@ export const emptyFoe = (level = 20): FoeDraft => ({ species: '', level, statMul
 const moveKey = (id: string): string => Object.keys(MOVE_IDS).find((k) => MOVE_IDS[k] === id) ?? (keyOf({}, id) || id)
 
 /** Borrador de un Pokémon del equipo del juego (o pegado) */
-export const foeDraft = (f: GymFoe): FoeDraft => ({
+export const foeDraft = (f: TrainerFoe): FoeDraft => ({
   species: keyOf(DICTS.POKEMON, f.speciesId),
   level: f.level,
   statMult: f.statMult ?? null,

@@ -1,7 +1,6 @@
-// Cambios de texto en un fichero de datos con un diccionario de ids y una tabla por id (GymId + GYMS en gyms.ts,
-// TrainerId + TRAINERS en trainers.ts), para guardar una entrada desde el editor: la entrada (sustituida o al final) y,
-// si es nueva, su clave en el diccionario. Funciones puras (texto → texto); lanzan un error legible si el fichero no
-// tiene la forma esperada.
+// Cambios de texto en un fichero de datos con un diccionario de ids y una tabla por id (GymId + GYMS en gyms.ts),
+// para guardar una entrada desde el editor: la entrada (sustituida o al final) y, si es nueva, su clave en el
+// diccionario. Funciones puras (texto → texto); lanzan un error legible si el fichero no tiene la forma esperada.
 
 /** Qué diccionario y qué tabla del fichero: `{ dict: 'GymId', record: 'GYMS', file: 'gyms.ts' }` */
 export interface RecordFile {

@@ -118,6 +118,15 @@ Esto aporta:
 - Al retirarse, cada uno se queda con lo ganado en las salas superadas hasta ese momento (como al perder); el premio
   final solo se da al terminarla.
 
+## La pelea de los jefes de Raids
+
+El mismo motor juega la pelea contra el jefe de la pestaña Raids (`game/raid/raidFight.ts`): todo lo de los tramos
+recibe un `FightSource` (salas, premios, revivires y límite de tiempo), que una incursión ya es tal cual y un jefe de
+raid arma con una sola sala. Lo que añade la raid: grupo de 10 (en la escena, filas de tres), límite de tiempo
+(`fightRoom › outOfTime`), rivales con `statMult`, `atkMult` y `statusHpMult` (sus estados pesan sobre la vida sin el
+multiplicador de sala) y el toque crítico en las órdenes de cada turno (`TurnOrders.crits`). Las piezas de la pantalla
+(`MoveBar`, `TapPad`, `PickDialog`, apuntar en la escena) van por un `FightPilot` (`ui/incursion/pickAction.ts`).
+
 ## Combate de grupo
 
 ```

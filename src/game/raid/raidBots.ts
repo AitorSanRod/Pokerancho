@@ -1,73 +1,68 @@
-import { BOT_TRAINERS } from '../../data/raidBosses'
+import { BOT_TRAINERS, type RaidBoss } from '../../data/raidBosses'
 import { Rarity, rarityOf, SPECIES } from '../../data/species'
-import { randInt, type Rng } from '../core/random'
-import { hasRoom, newMember, presentMembers, RaidMemberKind, type Raid } from './raidRoom'
+import { hitsAllies, incursionMove } from '../../data/incursionMoves'
+import { randInt, seededRng } from '../core/random'
+import type { MemberState } from '../incursion/fighter'
+import { botId, botMove, freshMember } from '../incursion/party'
+import { RAID_LOBBY_MS, lobbyStart } from './raidSchedule'
+import { RAID_ROOM_SIZE, roomBoss, type RaidRoom } from './raidRoom'
 
-// Bots que llenan la sala mientras no haya servidor. Con jugadores reales, este módulo se cambia por lo que diga el
-// servidor sobre quién entra y quién sale.
+// Los bots de una sala de la pestaña Raids: salen de la semilla de la sala (iguales en todos los móviles y en el
+// servidor) y van llegando con la sala abierta, uno cada RAID_BOT_EVERY_MS, hasta llenarla al empezar la pelea. Cada
+// jugador que entra ocupa el sitio de un bot: si no queda hueco, el último bot en llegar se va.
 
-/** Cuántos bots puede haber en una sala y cómo llegan */
-export interface BotPolicy {
-  /** Mínimo: si se va uno y quedan menos, entra otro enseguida */
-  min: number
-  max: number
-  /** Bots que entran de media por minuto de juego mientras haya menos del máximo (al azar: unas veces antes, otras después) */
-  joinPerMinute: number
-  /** Minutos de juego que pueden pasar como mucho sin que entre ninguno mientras haya menos del máximo; sin él, no hay tope */
-  maxGapMinutes?: number
-}
-
-/** Bots de la sala del jefe de la pestaña Raids: siempre hay de 2 a 5 */
-export const RAID_BOTS: BotPolicy = { min: 2, max: 5, joinPerMinute: 0.06, maxGapMinutes: 10 }
-/** Minutos de juego que se queda un bot, al azar entre ambos */
-const RAID_BOT_STAY_MINUTES: readonly [number, number] = [15, 90]
+/** Milisegundos reales entre la llegada de un bot y la del siguiente: con la sala llena justo al empezar la pelea */
+export const RAID_BOT_EVERY_MS = RAID_LOBBY_MS / RAID_ROOM_SIZE
 /** Niveles por debajo del jefe con los que llega un bot, al azar entre ambos */
-const RAID_BOT_LEVELS_BELOW_BOSS: readonly [number, number] = [0, 6]
+const RAID_BOT_LEVELS_BELOW_BOSS: readonly [number, number] = [2, 8]
 /** Rarezas de las especies que llevan los bots */
 const BOT_RARITIES: Rarity[] = [Rarity.Common, Rarity.Rare]
 
 const botSpecies = () => SPECIES.filter((sp) => BOT_RARITIES.includes(rarityOf(sp)))
 
-const presentBots = (raid: Raid) => presentMembers(raid).filter((m) => m.kind === RaidMemberKind.Bot)
+let cache: { key: string; bots: MemberState[] } | null = null
 
-const pick = <T>(list: T[], rng: Rng): T => list[Math.floor(rng() * list.length)]
+/** Veces que se vuelve a sacar la especie de un bot si su ataque daría también a la sala (como Surf o Terremoto) */
+const BOT_REROLLS = 20
 
-/** Entra un bot nuevo en la sala */
-export function addBot(raid: Raid, rng: Rng) {
-  const busy = new Set(presentMembers(raid).map((m) => m.trainer))
-  const free = BOT_TRAINERS.filter((t) => !busy.has(t))
+/** Un bot con una especie al azar cuyo ataque no dé a su propio grupo (con diez en la sala, los tumbaría a todos) */
+function rollBot(i: number, boss: RaidBoss, taken: MemberState[], rng: () => number): MemberState {
+  const pool = botSpecies()
   const [minBelow, maxBelow] = RAID_BOT_LEVELS_BELOW_BOSS
-  const [minStay, maxStay] = RAID_BOT_STAY_MINUTES
-  const bot = newMember(
-    {
-      id: `bot-${raid.nextBotId++}`,
-      kind: RaidMemberKind.Bot,
-      trainer: pick(free.length ? free : BOT_TRAINERS, rng),
-      speciesId: pick(botSpecies(), rng).id,
-      level: Math.max(1, raid.boss.level - randInt(minBelow, maxBelow, rng)),
-      stars: 0,
-    },
-    1,
-    randInt(minStay, maxStay, rng) * 60_000,
-  )
-  raid.members.push(bot)
-  raid.sinceBotMs = 0
-}
-
-/** Entra uno nuevo al azar a su ritmo medio, o seguro si ya ha pasado el tope de `policy` sin que entre nadie */
-function botJoins(raid: Raid, ms: number, policy: BotPolicy, rng: Rng): boolean {
-  if (presentBots(raid).length >= policy.max || !hasRoom(raid)) return false
-  const overdue = policy.maxGapMinutes !== undefined && raid.sinceBotMs >= policy.maxGapMinutes * 60_000
-  return overdue || rng() < (policy.joinPerMinute * ms) / 60_000
-}
-
-/** Los bots cuyo tiempo se acaba se van; entra alguno nuevo al azar y siempre hay al menos el mínimo de `policy` */
-export function updateBots(raid: Raid, ms: number, policy: BotPolicy, rng: Rng) {
-  raid.sinceBotMs += ms
-  for (const bot of presentBots(raid)) {
-    bot.stayMs = Math.max(0, bot.stayMs! - ms)
-    if (bot.stayMs === 0) bot.left = true
+  const level = Math.max(1, boss.level - randInt(minBelow, maxBelow, rng))
+  const moves = taken.map((b) => incursionMove(b.moveId))
+  let bot = freshMember({ id: botId(i), speciesId: pool[0].id, level, stars: 0, moveId: '' })
+  for (let roll = 0; roll < BOT_REROLLS; roll++) {
+    const speciesId = pool[randInt(0, pool.length - 1, rng)].id
+    bot = { ...bot, speciesId, moveId: botMove(speciesId, level, moves) }
+    if (!hitsAllies(incursionMove(bot.moveId))) break
   }
-  while (presentBots(raid).length < policy.min && hasRoom(raid)) addBot(raid, rng)
-  if (botJoins(raid, ms, policy, rng)) addBot(raid, rng)
+  return bot
 }
+
+/**
+ * Los bots que puede llegar a tener la sala, en orden de llegada: cada uno con su ataque según lo que lleven los de
+ * antes (curar o provocar si nadie lo hace, ver incursion/party.ts)
+ */
+export function roomBots(boss: RaidBoss, seed: number): MemberState[] {
+  const key = `${boss.speciesId}:${boss.level}:${seed}`
+  if (cache?.key === key) return cache.bots
+  const rng = seededRng(seed)
+  const bots: MemberState[] = []
+  for (let i = 0; i < RAID_ROOM_SIZE; i++) bots.push(rollBot(i, boss, bots, rng))
+  cache = { key, bots }
+  return bots
+}
+
+/** Bots que han llegado ya a la sala abierta del ciclo a la hora `now`: el primero al abrir y uno más cada RAID_BOT_EVERY_MS */
+export const botsArrived = (cycle: number, now: number): number =>
+  Math.max(0, Math.min(RAID_ROOM_SIZE, Math.floor((now - lobbyStart(cycle)) / RAID_BOT_EVERY_MS) + 1))
+
+/** Los bots que se ven en la sala abierta: los que han llegado, sin pasar de los huecos que dejan los jugadores */
+export function shownBots(room: RaidRoom, now: number): MemberState[] {
+  const free = Math.max(0, RAID_ROOM_SIZE - room.entrants.length)
+  return roomBots(roomBoss(room), room.seed).slice(0, Math.min(botsArrived(room.cycle, now), free))
+}
+
+/** Nombre del entrenador de un bot de la sala */
+export const botTrainer = (room: RaidRoom, index: number): string => BOT_TRAINERS[(room.seed + index) % BOT_TRAINERS.length]

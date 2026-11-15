@@ -1,18 +1,15 @@
 import { useState } from 'react'
-import { act } from '../../store/store'
-import type { ActiveIncursion } from '../../game/incursion/activeIncursion'
-import { boostIncursionTap } from '../../game/incursion/incursionGame'
 import { MoveClass, moveClass, type IncursionMove } from '../../data/incursionMoves'
 import { TAP_WINDOW_MS } from '../../game/incursion/tapWindow'
-import { sendIncursionTap } from '../../net/incursionSync'
 
 interface Props {
-  a: ActiveIncursion
   /** El ataque que usará tu Pokémon este turno: dice cuántos toques hacen falta y qué mejora */
   move: IncursionMove
-  leg: number
-  turn: number
+  /** La ventana (tramo y turno): al cambiar, la cuenta empieza de cero */
+  windowKey: string
   msLeft: number
+  /** Al llegar a los toques: se apunta en la partida (sin servidor) o se avisa al servidor */
+  onGoal: () => void
 }
 
 /** Qué mejora al potenciar cada clase de ataque */
@@ -24,11 +21,9 @@ const GAIN: Record<MoveClass, string> = {
 
 /**
  * Ventana de toques antes del turno del grupo: toda la escena es el botón. Con los toques de su ataque antes de que se
- * acabe el tiempo, lo potencia este turno (sin servidor se apunta en la partida; con él, se avisa al servidor)
+ * acabe el tiempo, lo potencia este turno
  */
-
-export function TapPad({ a, move, leg, turn, msLeft }: Props) {
-  const key = `${leg}:${turn}`
+export function TapPad({ move, windowKey: key, msLeft, onGoal }: Props) {
   const [count, setCount] = useState({ key, taps: 0 })
   const taps = count.key === key ? count.taps : 0
   const goal = move.tapGoal
@@ -38,9 +33,7 @@ export function TapPad({ a, move, leg, turn, msLeft }: Props) {
     if (done) return
     const next = taps + 1
     setCount({ key, taps: next })
-    if (next < goal) return
-    if (a.online) void sendIncursionTap(leg, turn)
-    else act((s) => boostIncursionTap(s, Date.now()))
+    if (next === goal) onGoal()
   }
 
   return (

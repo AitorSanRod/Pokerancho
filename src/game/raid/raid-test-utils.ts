@@ -1,23 +1,29 @@
-import { signatureMove } from '../../data/moves'
-import { species, SPECIES } from '../../data/species'
-import { effectiveness } from '../../data/types'
-import { initialState } from '../core/state'
-import { chooseStarter } from '../core/test-utils'
-import { ensureRaid, LOCAL_ROTATION } from './raid'
+import { POKEMON } from '../../data/pokemon'
+import { initialState, type GameState, type OwnedMon } from '../core/state'
+import { freshMember } from '../incursion/party'
+import { repertoire } from '../incursion/repertoire'
+import { createMon } from '../team/mons'
+import { RaidRotation } from './online/protocol'
+import type { RaidEntrant } from './raidRoom'
+import { cycleBoss } from './rotationBosses'
 
-const hurts = (from: number, to: number) => effectiveness(signatureMove(from).type, species(to).types) > 0
+// Piezas para los tests de la pestaña Raids, sin depender de los números reales.
 
-/** Una especie que puede herir al jefe y a la que el jefe puede herir (sin depender de cuál sea hoy el jefe) */
-export const sparringSpecies = (bossId: number): number => SPECIES.find((sp) => hurts(sp.id, bossId) && hurts(bossId, sp.id))!.id
+export const ROTATION = RaidRotation.Ordered
 
-/** Partida tras el tutorial, con un inicial que puede herir al primer jefe y llega a su nivel mínimo, y el jefe ya aparecido */
-export function raidState() {
+/** Un Pokémon de un jugador para la sala, con su primer ataque */
+export function entrant(id: string, level = 50): RaidEntrant {
+  const moveId = repertoire(POKEMON.Snorlax, level)[0].id
+  return { member: freshMember({ id, speciesId: POKEMON.Snorlax, level, stars: 0, moveId }), trainer: id }
+}
+
+/** Partida con un Pokémon en el rancho que puede ir contra el jefe del ciclo */
+export function raidReady(cycle: number): { s: GameState; mon: OwnedMon; move: string } {
   const s = initialState()
   s.tutorial = null
-  ensureRaid(s)
-  const raid = s.raids[LOCAL_ROTATION]!
-  chooseStarter(s, sparringSpecies(raid.boss.speciesId))
-  const mon = s.owned[0]
-  mon.level = Math.max(mon.level, raid.boss.minLevel ?? 0)
-  return { s, raid, mon }
+  const level = Math.max(cycleBoss(ROTATION, cycle).minLevel ?? 1, cycleBoss(ROTATION, cycle).level)
+  const mon = createMon(POKEMON.Snorlax, level, 0)
+  s.owned.push(mon)
+  s.activeUid = mon.uid
+  return { s, mon, move: repertoire(mon.speciesId, mon.level)[0].id }
 }

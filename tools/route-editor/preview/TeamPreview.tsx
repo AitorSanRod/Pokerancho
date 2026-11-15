@@ -3,10 +3,9 @@ import type { GymId } from '../../../src/data/gyms'
 import { Biome, NodeKind, type Route } from '../../../src/data/maps'
 import type { TrainerId } from '../../../src/data/trainers'
 import { LEADER_SPRITES } from '../../../src/ui/route/gym/leaderSprites'
-import { TRAINER_SPRITES } from '../../../src/ui/route/gym/trainerSprites'
+import { trainerPortrait } from '../../../src/ui/route/gym/trainerSprites'
 import { gymIdValue } from '../gym/gymCodegen'
 import type { GymDraft } from '../gym/gymDraft'
-import { trainerIdValue } from '../trainer/trainerCodegen'
 import type { TrainerDraft } from '../trainer/trainerDraft'
 import { CompanionPicker } from './CompanionPicker'
 import { useCompanion } from './useCompanion'
@@ -21,12 +20,13 @@ export type TeamDraft = { kind: 'trainer'; draft: TrainerDraft } | { kind: 'gym'
 /** Lo que se ve y lo que se simula: el equipo en escena y una ruta de una sola parada con él */
 function teamSetup(t: TeamDraft, biome: Biome): { stage: Stage; route: Route; patch: SimPatch } {
   const isGym = t.kind === 'gym'
-  const id = (t.kind === 'gym' ? gymIdValue(t.draft) : trainerIdValue(t.draft)) || 'borrador'
+  const id = (t.kind === 'gym' ? gymIdValue(t.draft) : t.draft.idKey) || 'borrador'
   const gym = t.kind === 'gym' ? draftToGym(t.draft) : null
   const trainer = t.kind === 'trainer' ? draftToTrainer(t.draft) : null
   const team = gym?.team ?? trainer?.team ?? []
-  const name = gym?.leader ?? trainer?.name ?? ''
-  const sprite = gym ? LEADER_SPRITES[id as GymId] : trainer && TRAINER_SPRITES[trainer.look]
+  const portrait = trainer && trainerPortrait(trainer)
+  const name = gym?.leader ?? portrait?.name ?? ''
+  const sprite = gym ? LEADER_SPRITES[id as GymId] : portrait?.sprite
   const levels = team.map((f) => f.level)
   const stop = isGym ? { kind: NodeKind.Gym, gym: id as GymId } : { kind: NodeKind.Trainer, trainer: id as TrainerId }
   const route: Route = {

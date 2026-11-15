@@ -13,13 +13,11 @@ export interface RaidBoss {
   level: number
   /** Nivel que necesita un Pokémon para entrar en su sala; sin él, puede entrar cualquiera */
   minLevel?: number
-  /** Minutos que tardaría en caer con un solo Pokémon de su nivel, si es jefe comunitario; sin él, RAID_SOLO_MINUTES */
-  soloMinutes?: number
   /** Tabla de premios que da al caer */
   tier: RaidTier
   /** Multiplica las cantidades de su tabla de premios (₽, tickets, tickets del jefe y EXP); sin él, ×1 */
   prizeMult?: number
-  /** Multiplica todas sus stats (PS, Ataque, Defensa y Velocidad): su vida en la sala y sus golpes; sin él, ×1 */
+  /** Multiplica todas sus stats (PS, Ataque, Defensa y Velocidad): su vida en la pelea y sus golpes; sin él, ×1 */
   statMult?: number
 }
 

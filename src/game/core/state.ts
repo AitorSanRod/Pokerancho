@@ -12,8 +12,8 @@ import type { DailyMissions } from '../collection/missions'
 import type { ActiveIncursion } from '../incursion/activeIncursion'
 import type { IncursionQueue } from '../incursion/online/linkedIncursion'
 import type { TowerRun } from '../tower/towerRun'
-import { RaidRotation } from '../raid/online/protocol'
-import type { Raid, RaidPrize } from '../raid/raidRoom'
+import { noTabRaids, type TabRaids } from '../raid/raid'
+import type { RaidPrize } from '../raid/raidRoom'
 import type { UpgradeId } from '../team/upgrades'
 import type { OwnedMon } from './monTypes'
 import type { Expedition, RouteRaidStreak, Run } from './runTypes'
@@ -95,21 +95,16 @@ export interface GameState {
   run: Run | null
   expeditions: Expedition[]
   /**
-   * Salas de la pestaña Raids, una por rotación de jefes (se puede luchar en las dos a la vez). Sin servidor solo se
-   * juega la ordenada; con él, solo están las salas con un Pokémon del jugador dentro
+   * Salas de la pestaña Raids en las que está el jugador, una por rotación de jefes (puede estar en las dos a la vez):
+   * con servidor, el reflejo de la suya; sin él, la local con bots (ver raid/raid.ts)
    */
   raids: TabRaids
-  /** Premios de los jefes de la pestaña Raids derrotados, pendientes de recoger allí */
+  /** Premios de los jefes de la pestaña Raids que no se recogieron al terminar la pelea, pendientes en Notificaciones */
   raidPrizes: RaidPrize[]
-  /** Salas compartidas del servidor que el jugador ha dejado sin que el servidor lo sepa aún (ver net/raidSync.ts) */
+  /** Salas del servidor que el jugador ha dejado sin que el servidor lo sepa aún (ver net/raidSync.ts) */
   roomsToLeave: string[]
   /** Racha de victorias seguidas contra el jefe de cada parada (`ruta/parada`), para rebajar su dinero (ver routeRaidStreak.ts) */
   routeRaidStreaks: Record<string, RouteRaidStreak>
-  /**
-   * La pestaña Raids la lleva el servidor (net/raidFeed.ts lo sabe al hablar con él): sin un Pokémon propio dentro no
-   * se juega nada aquí y el jefe que se ve es el del servidor. false: sin servidor, todo en local con bots
-   */
-  raidServer: boolean
   /**
    * Sello de intercambios: sube con cada intercambio que el servidor aplica a la partida de la nube (ver
    * trade/tradeOps.ts). El servidor no deja subir una partida con un sello más viejo que el suyo: así no vuelve lo ya dado
@@ -120,12 +115,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 61
-
-export type TabRaids = Record<RaidRotation, Raid | null>
-
-/** Ninguna sala en la pestaña Raids */
-export const noTabRaids = (): TabRaids => ({ [RaidRotation.Ordered]: null, [RaidRotation.Hard]: null })
+export const SAVE_VERSION = 62
 
 export function initialState(): GameState {
   return {
@@ -172,7 +162,6 @@ export function initialState(): GameState {
     raidPrizes: [],
     roomsToLeave: [],
     routeRaidStreaks: {},
-    raidServer: false,
     tradeStamp: 0,
     timeScale: 1,
     lastTick: Date.now(),
@@ -200,7 +189,7 @@ export type MonPlace = (typeof MonPlace)[keyof typeof MonPlace]
 export function monPlace(s: GameState, uid: string): MonPlace {
   if (s.run && uid === s.activeUid) return MonPlace.Run
   if (s.expeditions.some((e) => e.uid === uid)) return MonPlace.Expedition
-  if (Object.values(s.raids).some((r) => r?.members.some((m) => m.id === uid && !m.left))) return MonPlace.Raid
+  if (Object.values(s.raids).some((r) => r?.uid === uid)) return MonPlace.Raid
   if (s.tower?.end === null && s.tower.uid === uid) return MonPlace.Tower
   if (s.incursion?.uid === uid || s.incursionQueue?.uid === uid) return MonPlace.Incursion
   if (findMon(s, uid)?.ranch === null) return MonPlace.Box

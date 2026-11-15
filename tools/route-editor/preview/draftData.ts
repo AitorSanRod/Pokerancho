@@ -1,7 +1,8 @@
 // Del borrador del editor a los datos del juego (Route, Trainer, Gym), para pintarlos con los componentes de verdad y
 // simularlos con el motor. Lo que aún está a medias (un Pokémon mal escrito) se salta en lugar de romper la vista.
 
-import type { Gym, GymFoe } from '../../../src/data/gyms'
+import type { Gym } from '../../../src/data/gyms'
+import type { TrainerTeam } from '../../../src/data/trainerTeam'
 import type { Encounter, Route, RouteNode } from '../../../src/data/maps'
 import type { Trainer } from '../../../src/data/trainers'
 import { DICTS } from '../catalog'
@@ -10,7 +11,7 @@ import type { EncDraft, NodeDraft, RouteDraft } from '../draft'
 import type { GymDraft } from '../gym/gymDraft'
 import { MOVE_IDS } from '../incursion/incCatalog'
 import type { FoeDraft } from '../team/teamDraft'
-import type { TrainerDraft } from '../trainer/trainerDraft'
+import { draftWho, type TrainerDraft } from '../trainer/trainerDraft'
 
 const BACKDROPS = import.meta.glob<string>('../../../src/assets/routes/*', { eager: true, query: '?url', import: 'default' })
 
@@ -29,7 +30,7 @@ function bossOf(n: NodeDraft) {
   const speciesId = speciesOf(n.boss.species)
   if (!speciesId) return undefined
   const tier = n.kind === 'Raid' ? dictValue(DICTS.RaidTier, n.boss.tier) : undefined
-  return { speciesId, level: n.boss.level, passives: n.boss.passives, tier, soloMinutes: n.boss.soloMinutes ?? undefined }
+  return { speciesId, level: n.boss.level, passives: n.boss.passives, tier }
 }
 
 function nodeOf(n: NodeDraft, next: NodeDraft | undefined): RouteNode {
@@ -70,7 +71,7 @@ export function draftToRoute(d: RouteDraft): Route {
 }
 
 /** El equipo del borrador, sin los Pokémon aún sin escribir */
-export const teamOf = (team: FoeDraft[]): GymFoe[] =>
+export const teamOf = (team: FoeDraft[]): TrainerTeam =>
   team.flatMap((f) => {
     const speciesId = speciesOf(f.species)
     if (!speciesId) return []
@@ -79,8 +80,7 @@ export const teamOf = (team: FoeDraft[]): GymFoe[] =>
   })
 
 export const draftToTrainer = (d: TrainerDraft): Trainer => ({
-  name: d.name || 'Entrenador',
-  look: dictValue(DICTS.TrainerLook, d.look) ?? DICTS.TrainerLook.Sailor,
+  ...draftWho(d),
   team: teamOf(d.team),
 })
 

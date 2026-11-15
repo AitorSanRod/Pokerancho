@@ -26,12 +26,12 @@ export const PLAY_GUIDE: Guide = {
     {
       image: shot('play-start'),
       title: 'Sal de ruta',
-      text: 'Mira quién puede aparecer (los que aún no has visto salen como ?) y pulsa «¡En marcha!». A partir de aquí todo es automático.',
+      text: 'Mira quién puede aparecer (los que aún no has visto salen como ?), elige el ataque de tu compañero y pulsa «¡En marcha!». A partir de aquí todo es automático; el ataque lo puedes cambiar cuando quieras con la barra de abajo.',
     },
     {
       image: shot('play-run'),
       title: 'Combate solo',
-      text: 'Tu Pokémon camina de parada en parada y combate él solo. Toca la pantalla para dar pasos más rápido; los combates van siempre a su velocidad. Ganar no cura: si cae, la ruta acaba y pierdes parte del dinero ganado en ella.',
+      text: 'Tu Pokémon camina de parada en parada y combate él solo: salvajes, jefes, entrenadores y, en algunas, un jefe comunitario. Toca la pantalla para dar pasos más rápido; los combates van siempre a su velocidad. Ganar no cura (solo las paradas de poción): si cae, la ruta acaba y pierdes parte del dinero ganado en ella.',
     },
     {
       image: shot('play-expeditions'),

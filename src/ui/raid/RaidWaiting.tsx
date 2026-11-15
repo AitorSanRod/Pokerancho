@@ -1,32 +1,19 @@
-import type { GameState } from '../../game/core/state'
-import type { Raid } from '../../game/raid/raidRoom'
-import { WalkScene } from '../route/WalkScene'
-import { Sprite } from '../shared/common'
+import { species } from '../../data/species'
+import type { RaidRotation } from '../../game/raid/online/protocol'
+import { cycleBoss } from '../../game/raid/rotationBosses'
+import { cycleAt, cycleEnd } from '../../game/raid/raidSchedule'
 import { formatClock } from '../shared/format'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
-import { raidBiome } from './raidBiome'
-import '../route/battle.css'
-import './raid-scene.css'
+import { RaidBossStage } from './RaidBossStage'
 
-/** Mismo tamaño que el jefe en la pelea */
-const BOSS_SPRITE_SIZE = 168
-
-/** Entre un jefe y otro: la escena vacía con el siguiente en silueta y la cuenta atrás (en tiempo real) para que aparezca */
-export function RaidWaiting({ game, raid }: { game: GameState; raid: Raid }) {
+/** Con la pelea en marcha y sin Pokémon tuyo dentro: el siguiente jefe en silueta y cuánto falta para que abra su sala */
+export function RaidWaiting({ rotation, now }: { rotation: RaidRotation; now: number }) {
+  const cycle = cycleAt(now)
+  const current = species(cycleBoss(rotation, cycle).speciesId).name
   return (
     <>
-      <div className="raid-stage">
-        <WalkScene biome={raidBiome(raid)} moving={false} speed={1}>
-          <div className="route-battle">
-            <div className="route-fighter enemy boss raid-boss-fighter">
-              <div className="raid-idle boss">
-                <Sprite id={raid.boss.speciesId} size={BOSS_SPRITE_SIZE} silhouette />
-              </div>
-            </div>
-          </div>
-        </WalkScene>
-      </div>
+      <RaidBossStage speciesId={cycleBoss(rotation, cycle + 1).speciesId} silhouette />
       <div className="raid-summary">
         <div className="row between">
           <strong>Siguiente jefe</strong>
@@ -34,7 +21,8 @@ export function RaidWaiting({ game, raid }: { game: GameState; raid: Raid }) {
             <ItemIcon item={ICON.Raid} size={18} /> Jefe comunitario
           </span>
         </div>
-        <p className="raid-eta">Aparece en {formatClock(raid.startsInMs / game.timeScale)}</p>
+        <p className="raid-eta">Su sala abre en {formatClock(cycleEnd(cycle) - now)}</p>
+        <p className="small muted">Ahora se está luchando contra {current}: la sala se cierra al empezar la pelea.</p>
       </div>
     </>
   )

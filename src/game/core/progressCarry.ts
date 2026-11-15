@@ -10,7 +10,7 @@ import type { GameState } from './state'
 type Save = Record<string, unknown>
 
 /** Lo que puede seguir a medias de una versión a otra */
-export type CarriedKey = 'run' | 'raids' | 'raidServer' | 'incursion' | 'incursionQueue' | 'tower'
+export type CarriedKey = 'run' | 'raids' | 'incursion' | 'incursionQueue' | 'tower'
 
 /**
  * SAVE_VERSION en la que cambió por última vez la forma o las reglas de cada cosa a medias: una partida guardada con
@@ -19,8 +19,7 @@ export type CarriedKey = 'run' | 'raids' | 'raidServer' | 'incursion' | 'incursi
  */
 export const CARRIED_SINCE: Record<CarriedKey, number> = {
   run: 58,
-  raids: 58,
-  raidServer: 58,
+  raids: 62,
   incursion: 58,
   incursionQueue: 58,
   tower: 58,
@@ -41,14 +40,13 @@ function routeHasPath(routeId: unknown, path: unknown): boolean {
 
 /** Si lo guardado aún encaja con la partida: lo que nombra (Pokémon, ruta, incursión) sigue existiendo */
 function stillFits(key: CarriedKey, v: unknown, save: Save, uids: Set<unknown>): boolean {
-  if (key === 'raidServer') return typeof v === 'boolean'
   if (v === null) return true
   if (!isRecord(v)) return false
   switch (key) {
     case 'run':
       return uids.has(save.activeUid) && routeHasPath(v.routeId, v.path)
     case 'raids':
-      return RAID_ROTATIONS.every((r) => v[r] === null || isRecord(v[r]))
+      return RAID_ROTATIONS.every((r) => v[r] === null || (isRecord(v[r]) && uids.has((v[r] as Save).uid)))
     case 'tower':
       return uids.has(v.uid)
     case 'incursion':

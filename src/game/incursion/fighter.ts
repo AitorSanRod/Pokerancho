@@ -64,6 +64,8 @@ export interface GroupFighter {
   /** Orden en que cayó (los revivires se gastan en ese orden); null si está en pie */
   fellAt: number | null
   boss: BossMechanics | null
+  /** Fracción de sus PS máximos sobre la que pesan sus estados (ver IncursionFoe › statusHpMult) */
+  statusHpMult: number
 }
 
 /** Cómo entra un Pokémon del grupo en un tramo */
@@ -93,16 +95,19 @@ function fighter(id: string, team: Team, speciesId: number, level: number, base:
   return {
     id, team, speciesId, name: sp.name, level, types: sp.types, base, hp: base.hp, maxHp: base.hp,
     move: moves[0], moves, bonus: combineBonus([]), perks: noPerks(), statuses: [], stages: noStages(), taunt: null,
-    out: false, fellAt: null, boss: null, target: null,
+    out: false, fellAt: null, boss: null, target: null, statusHpMult: 1,
   }
 }
 
-/** Stats con el bono de sus hitos */
-function withPerks(base: Stats, perks: MonPerks): Stats {
+/** Todas las stats por `mult` */
+function scaled(base: Stats, mult: number): Stats {
   const out = { ...base }
-  for (const k of Object.keys(out) as (keyof Stats)[]) out[k] = Math.max(1, Math.round(out[k] * (1 + perks.stats)))
+  for (const k of Object.keys(out) as (keyof Stats)[]) out[k] = Math.max(1, Math.round(out[k] * mult))
   return out
 }
+
+/** Stats con el bono de sus hitos */
+const withPerks = (base: Stats, perks: MonPerks): Stats => scaled(base, 1 + perks.stats)
 
 /** Un Pokémon del grupo, con su nivel */
 export function partyFighter(m: MemberState): GroupFighter {
@@ -116,11 +121,11 @@ export function partyFighter(m: MemberState): GroupFighter {
 
 /** Un rival de una sala, con su nivel */
 export function foeFighter(foe: IncursionFoe, id: string): GroupFighter {
-  const base = calcStats(foe.speciesId, foe.level)
+  const base = scaled(calcStats(foe.speciesId, foe.level), foe.statMult ?? 1)
   base.hp = Math.round(base.hp * FOE_HP_MULT * (foe.hpMult ?? 1))
-  base.atk = Math.round(base.atk * FOE_ATK_MULT)
+  base.atk = Math.max(1, Math.round(base.atk * FOE_ATK_MULT * (foe.atkMult ?? 1)))
   const f = fighter(id, Team.Foe, foe.speciesId, foe.level, base, foe.moveIds)
-  return { ...f, bonus: combineBonus(foe.passives ?? []), boss: foe.boss ?? null }
+  return { ...f, bonus: combineBonus(foe.passives ?? []), boss: foe.boss ?? null, statusHpMult: foe.statusHpMult ?? 1 }
 }
 
 /** Lo que sale del tramo para el siguiente */

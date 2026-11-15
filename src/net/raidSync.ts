@@ -1,102 +1,85 @@
-import { useEffect, useSyncExternalStore } from 'react'
 import { act, getState } from '../store/store'
-import { applyView, dropLink, forgetRoom, markCritsSent, presenceKey, ROOM_KEYS, roomAt, roomRequest, type RoomKey } from '../game/raid/online/linkedRoom'
-import { DEFAULT_NICKNAME, RaidAction } from '../game/raid/online/protocol'
+import { IncursionPhase } from '../game/incursion/activeIncursion'
+import { IncursionOutcome } from '../game/incursion/incursionRun'
+import { RaidLink, type TabRaid } from '../game/raid/raid'
+import { fightDue } from '../game/raid/raidLobby'
+import { raidProgress } from '../game/raid/raidPlay'
+import { applyRoomView, dropRoom, joinRequest } from '../game/raid/online/linkedRaid'
+import { DEFAULT_NICKNAME, RAID_ROTATIONS, RaidAction, type RaidResponse, type RaidRotation, type RoomRequest } from '../game/raid/online/protocol'
 import { nickname, playerId } from './identity'
 import { postRaid, RaidApiError } from './raidApi'
 
-// Mantiene las salas de la partida al día con el servidor: pide entrar en las que esperan sitio, consulta las
-// enlazadas y avisa de las que se han dejado. Las consultas, solo con la app delante: cerrada, el servidor sigue
-// jugando y al volver se consulta enseguida. Entrar se pide también con la app oculta, para que la parada no espere. Cada consulta gasta cuota del plan de Cloudflare: ver docs/servidor.md.
+// Mantiene las salas de la partida al día con el servidor: pide entrar (o cambiar el Pokémon o el ataque), consulta
+// las suyas y avisa de las que se han dejado. Solo con la app delante; al volver se consulta enseguida. Sin servidor, o
+// si deja de tener la sala, se sigue en local con bots. Cada consulta gasta cuota del plan de Cloudflare: ver
+// docs/servidor.md.
 
-/** Milisegundos reales entre consultas de una sala mientras su pelea está en pantalla */
-const WATCH_SYNC_MS = 5_000
-/** Milisegundos reales entre consultas con la app abierta y la pelea fuera de pantalla (EXP, caída del jefe…) */
-const BACKGROUND_SYNC_MS = 60_000
+/** Milisegundos reales entre consultas con la sala abierta (para ver quién entra) */
+const LOBBY_SYNC_MS = 30_000
+/** Milisegundos reales entre consultas en la pelea, sin ventana de toques pendiente */
+const FIGHT_SYNC_MS = 10_000
+/** Con la ventana de toques abierta: lo que se decide en ella llega antes */
+const TAP_SYNC_MS = 3_000
+/** Con una ventana ya cerrada de la que aún no se sabe el resultado: hace falta enseguida para que empiece el turno */
+const TAP_RESULT_SYNC_MS = 800
 /** Cada cuánto se mira si toca alguna consulta */
 const LOOP_MS = 1_000
 
-let watchers = 0
 let busy = false
-const lastSync: Partial<Record<RoomKey, number>> = {}
-
-let online: boolean | null = null
-const listeners = new Set<() => void>()
-function setOnline(value: boolean) {
-  if (online === value) return
-  online = value
-  listeners.forEach((l) => l())
-}
+const lastSync: Partial<Record<RaidRotation, number>> = {}
 
 const who = () => ({ playerId: playerId(), nickname: nickname() ?? DEFAULT_NICKNAME })
-const syncEvery = () => (watchers > 0 ? WATCH_SYNC_MS : BACKGROUND_SYNC_MS)
-const syncNow = () => ROOM_KEYS.forEach((key) => delete lastSync[key])
 
-async function syncRoom(key: RoomKey, now: number, hidden: boolean) {
-  const req = roomRequest(getState(), key)
-  if (!req) return
-  const joining = req.action === RaidAction.Join
-  if (!joining && (hidden || now - (lastSync[key] ?? 0) < syncEvery())) return
-  lastSync[key] = now
-  const sentRoomId = joining ? null : req.roomId
-  const presence = presenceKey(getState(), key)
+/** Cada cuánto se consulta la sala según por dónde va su pelea */
+function syncEvery(tr: TabRaid, now: number): number {
+  const p = raidProgress(tr, now)
+  // Ya es la hora y aún no se tiene la pelea del servidor: se pide enseguida
+  if (!p) return fightDue(tr.room, now) ? TAP_RESULT_SYNC_MS : LOBBY_SYNC_MS
+  if (p.phase === IncursionPhase.Tap) return TAP_SYNC_MS
+  return p.record.outcome === IncursionOutcome.Waiting ? TAP_RESULT_SYNC_MS : FIGHT_SYNC_MS
+}
+
+/** Aplica lo que diga el servidor de la sala de la rotación; si ya no la tiene (o no le admite), se sigue en local */
+function apply(rotation: RaidRotation, res: RaidResponse) {
+  if ('room' in res) act((s) => applyRoomView(s, rotation, res.room, Date.now()))
+  else if ('gone' in res) act((s) => dropRoom(s, rotation))
+}
+
+async function syncRotation(rotation: RaidRotation, now: number) {
+  const s = getState()
+  const tr = s.raids[rotation]
+  if (!tr || tr.link === RaidLink.Local) return
+  const join = joinRequest(s, rotation)
+  if (!join && now - (lastSync[rotation] ?? 0) < syncEvery(tr, now)) return
+  lastSync[rotation] = now
   try {
-    const view = await postRaid({ ...req, ...who() })
-    setOnline(true)
-    act((s) => {
-      // Si ha entrado o salido mientras, la respuesta ya no vale: la próxima consulta lo pondrá al día
-      if (!joining && presenceKey(s, key) !== presence) return
-      const applied = applyView(s, key, sentRoomId, view)
-      if (applied && !joining) markCritsSent(s, key, req.crits ?? 0)
-      if (joining && !applied && view) s.roomsToLeave.push(view.roomId)
-    })
+    apply(rotation, await postRaid(join ? { ...join, ...who() } : { action: RaidAction.Sync, roomId: tr.room.id, ...who() }))
   } catch (e) {
     if (!(e instanceof RaidApiError)) throw e
-    setOnline(false)
-    // Sin servidor no se espera más: la sala se juega en local, como antes
-    if (joining) act((s) => roomAt(s, key)?.remote?.roomId === null && dropLink(s, key))
+    // Sin servidor no se espera más para entrar: la sala se juega en local
+    if (join) act((s2) => dropRoom(s2, rotation))
   }
 }
 
-/** Avisa al servidor de las salas que se han dejado (retirarse de la parada); si falla, se reintenta más tarde */
+/** Avisa al servidor de las salas que se han dejado; si falla, se reintenta más tarde */
 async function flushLeaves() {
   for (const roomId of getState().roomsToLeave) {
-    await postRaid({ action: RaidAction.Sync, roomId, mon: null, ...who() })
-    act((s) => forgetRoom(s, roomId))
+    await postRaid({ action: RaidAction.Leave, roomId, ...who() })
+    act((s) => {
+      s.roomsToLeave = s.roomsToLeave.filter((id) => id !== roomId)
+    })
   }
-}
-
-let lastPlayerId: string | null = null
-
-/**
- * Al entrar o salir de una cuenta cambia el id de jugador: sus Pokémon salen de las salas con el id anterior (la
- * próxima consulta los sienta con el nuevo)
- */
-async function leaveAsPreviousPlayer() {
-  const previous = lastPlayerId
-  lastPlayerId = playerId()
-  if (!previous || previous === lastPlayerId) return
-  for (const key of ROOM_KEYS) {
-    const req = roomRequest(getState(), key)
-    if (req?.action === RaidAction.Sync) await postRaid({ ...req, mon: null, playerId: previous, nickname: who().nickname })
-  }
-}
-
-const ignoreNetwork = (e: unknown) => {
-  if (!(e instanceof RaidApiError)) throw e
 }
 
 async function step() {
-  if (busy) return
+  if (busy || document.hidden) return
   busy = true
-  const hidden = document.hidden
   try {
-    if (!hidden) {
-      await leaveAsPreviousPlayer().catch(ignoreNetwork)
-      await flushLeaves().catch(ignoreNetwork)
-    }
+    await flushLeaves().catch((e: unknown) => {
+      if (!(e instanceof RaidApiError)) throw e
+    })
     const now = Date.now()
-    for (const key of ROOM_KEYS) await syncRoom(key, now, hidden)
+    for (const rotation of RAID_ROTATIONS) await syncRotation(rotation, now)
   } finally {
     busy = false
   }
@@ -107,7 +90,7 @@ export function startRaidSync(): () => void {
   const id = setInterval(step, LOOP_MS)
   const onVisible = () => {
     if (document.hidden) return
-    syncNow()
+    for (const r of RAID_ROTATIONS) delete lastSync[r]
     void step()
   }
   document.addEventListener('visibilitychange', onVisible)
@@ -118,24 +101,20 @@ export function startRaidSync(): () => void {
   }
 }
 
-/** La pelea de una sala está en pantalla: se consulta más a menudo, y enseguida al abrirla */
-export function useWatchRaid() {
-  useEffect(() => {
-    watchers++
-    syncNow()
-    return () => {
-      watchers--
-    }
-  }, [])
+/** Manda una decisión del jugador en la pelea de la rotación y aplica la respuesta; sin conexión, no pasa nada */
+async function sendToRoom(rotation: RaidRotation, extra: Pick<RoomRequest, 'action'> & Partial<{ turn: number; moveId: string; target: string | null }>) {
+  const tr = getState().raids[rotation]
+  if (tr?.link !== RaidLink.Online) return
+  try {
+    apply(rotation, await postRaid({ ...extra, roomId: tr.room.id, ...who() } as RoomRequest))
+  } catch (e) {
+    if (!(e instanceof RaidApiError)) throw e
+  }
 }
 
-/** Si la última consulta llegó al servidor (null: aún no se ha hecho ninguna) */
-export function useRaidOnline(): boolean | null {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l)
-      return () => listeners.delete(l)
-    },
-    () => online,
-  )
-}
+/** Ha llegado a los toques en la ventana `turn` */
+export const sendRaidTap = (rotation: RaidRotation, turn: number) => sendToRoom(rotation, { action: RaidAction.Tap, turn })
+/** Cambia el ataque de su Pokémon y a quién lo dirige, desde la próxima ventana */
+export const sendRaidPick = (rotation: RaidRotation, moveId: string, target: string | null) => sendToRoom(rotation, { action: RaidAction.Pick, moveId, target })
+/** Ha acertado el toque crítico: su primer golpe del turno siguiente será crítico */
+export const sendRaidCrit = (rotation: RaidRotation) => sendToRoom(rotation, { action: RaidAction.Crit })

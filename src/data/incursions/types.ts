@@ -42,6 +42,15 @@ export interface IncursionFoe {
   moveIds: string[]
   /** Multiplicador de sus PS máximos (los jefes aguantan a 5) */
   hpMult?: number
+  /** Multiplica todas sus stats, PS incluidos (además de `hpMult`): los jefes de raid difíciles; sin él, ×1 */
+  statMult?: number
+  /** Multiplica su Ataque (además de FOE_ATK_MULT): el jefe de raid, que pega a una sala entera; sin él, ×1 */
+  atkMult?: number
+  /**
+   * Fracción de sus PS máximos sobre la que pesan sus estados (quemadura, veneno, confusión): el jefe de raid, con su
+   * vida de sala, los sufre como si tuviera la suya; sin él, 1 (sobre todos sus PS)
+   */
+  statusHpMult?: number
   passives?: PassiveRef[]
   boss?: BossMechanics
 }

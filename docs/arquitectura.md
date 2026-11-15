@@ -38,10 +38,10 @@ src/
                       ranchTypes (tipos de rancho), evolution, stones, expedition, upgrades,
                       tutorial
     collection/       dex (vistos, capturados, favoritos), pieces, gacha, shredder
-    raid/             raidEngine (lo común a toda sala: crear, entrar, salir, avanzar, reparto), raid (jefe de la
-                      pestaña Raids), routeRaid (jefes de las paradas de ruta), raidRoom (tipos y sala), raidCombat
-                      (rondas), raidBots (bots de la sala), raidPrizes (reparto y recogida), raidLives (vidas de la
-                      pestaña Raids), raidEstimate (tiempo que falta), stopRoom (salas de parada sin la partida)
+    raid/             Jefes de la pestaña Raids: raidSchedule (calendario: sala abierta y pelea), rotationBosses (jefe de
+                      cada ciclo), raidRoom (la sala), raidBots, raidLobby (de la sala a la pelea), raidFight (la pelea
+                      con el motor de incursiones), raidCrit (anillo crítico), raid + raidPlay (en la partida: entrar,
+                      salir, pelea local, cobrar), raidPrizes; routeRaid + routeRaidStreak (premio de las paradas de ruta)
     incursion/        Incursiones (mazmorras de 5; ver docs/incursiones.md): incursionRun (tramos encadenados, retirada),
                       incursionLeg (un tramo: salas hasta reorganizar o el final), groupBattle (combate N contra M),
                       moveEffects + targeting (qué hace cada movimiento y a quién), groupStatus, bossMechanics, revives,
@@ -50,12 +50,11 @@ src/
     trade/            Intercambios: tradeGoods (qué se ofrece y pide, límites, validar), tradeGive (lo que sale de la
                       partida), tradeReceive (lo que entra; repetidos), tradeOps (operaciones que aplican servidor y móvil),
                       tradeProtocol (tablón y peticiones), goodText (textos), serverSale (venta al servidor)
-      online/         Salas compartidas: protocol (lo que se dicen juego y servidor), linkedRoom (la sala de la
-                      partida enlazada a la del servidor), sharedRoom + roomServer (lo que hace el servidor),
-                      raidCycle + tabRooms (los jefes de la pestaña Raids por rotaciones y ciclos), skipAhead (resumir salas
-                      viejas), requests (validar lo que le llega)
+      online/         Salas de la pestaña Raids con servidor: protocol (lo que se dicen juego y servidor), sharedRaid (la sala
+                      en el servidor), linkedRaid (la sala de la partida enlazada a la del servidor), requests (validar
+                      lo que le llega), damageTally (daño para el ranking), raidPushes (aviso de que empieza)
   net/                identity (id de jugador y apodo), raidApi (fetch a /api/raid), raidSync (bucle de consultas),
-                      raidFeed (la pestaña Raids según el servidor),
+                      raidBoard (la pestaña Raids según el servidor),
                       account (cuenta: /api/auth), cloudSync + cloudState + cloudLink (partida en la nube), dailyGift (obsequio diario),
                       push (notificaciones), tradeApi + tradeBoard (intercambios: /api/trade)
   ui/
@@ -74,9 +73,9 @@ src/
     route/            Pestaña Ruta: lista de rutas y diálogo de comenzar, ruta en curso, combate, escena por bioma
                       (pixelScene/: pixel art generado y animado en canvas, ver fondos.md)
     expeditions/      Enviar, seguir y recoger expediciones
-    raid/             Pestaña Ruta › Raids y la pelea contra un jefe comunitario (RaidBattleScene: la escena de ruta con
-                      el grupo en filas desordenadas, partySpot; roundReplay reparte los golpes en el tiempo), lista de
-                      la sala, enviar o retirar a tu Pokémon, apodo (NicknameDialog) y aviso de conexión (RaidLinkNote)
+    raid/             Pestaña Ruta › Raids: una pestaña por rotación, la sala abierta (RaidLobby: lista, entrar, cambiar o
+                      salir), la pelea (RaidFightView, con las piezas de la incursión en curso), el anillo crítico, el
+                      final y el apodo (NicknameDialog)
     incursion/        Pestaña Ruta › Incursiones: lista con información, preparación (Pokémon y movimiento), la
                       incursión en curso (IncursionStage sobre la escena de ruta; sceneState rehace cada momento desde
                       los eventos), sala de reorganizar, retirada y final
@@ -85,16 +84,15 @@ src/
     shop/             Mejoras
 worker/
   index.ts            Entrada: /api/raid, /api/save y /api/auth/* (la web la sirve Cloudflare sin pasar por aquí)
-  raid.ts             POST /api/raid: salas de ruta y ponerse al día (lee de D1, llama a game/raid/online y guarda)
+  raid.ts             POST /api/raid: las salas de la pestaña Raids (lee de D1, llama a game/raid/online y guarda)
   incursion.ts        POST /api/incursion: cola y grupos de incursión (lee de D1, llama a game/incursion/online y guarda)
-  raidTab.ts          La pestaña Raids: sus rotaciones (tabla raid_cycles), entrar y la acción feed
   save.ts             GET / POST /api/save: la partida de la cuenta con sesión
   gift.ts             GET / POST /api/gift: el obsequio diario de la cuenta con sesión
   push/               Notificaciones: routes (/api/push/*), webPush (VAPID y cifrado), store (D1), notify, send
-  scheduled.ts        Tarea programada de cada minuto: raids sin nadie mirando y avisos que tocan
+  scheduled.ts        Tarea programada de cada minuto: borrar salas viejas, ranking y avisos que tocan
   auth/               Cuentas: routes (rutas), credentials (crear y entrar), links (correos: confirmar y recuperar),
                       session (cookie), crypto (PBKDF2 y tokens)
-  db/                 Consultas a D1: rooms, cycle, saves, gifts, users (cuentas, sesiones y enlaces)
+  db/                 Consultas a D1: rooms, saves, gifts, users (cuentas, sesiones y enlaces)
   mail.ts             Correos con Brevo
   test/               D1 de pruebas sobre node:sqlite y un Worker de pruebas con cookie
 ```
@@ -142,28 +140,24 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `game/collection/pieces.ts` | Piezas por especie y combinación (desbloqueo, ★ o ₽) |
 | `game/collection/gacha.ts` | Tiradas (piezas) y compra de tickets |
 | `game/collection/shredder.ts` | Trituradora (piezas → trozos de MissingNo) y compra de piezas con trozos |
-| `game/raid/raidEngine.ts` | Lo común a toda sala: vida del jefe, crear sala, entrar y salir, EXP, avanzar rondas (`advanceRoom`) y reparto al caer |
-| `game/raid/raid.ts` | Jefe de la pestaña Raids: aparición, enviar y retirar, y el siguiente al caer |
+| `game/raid/raidSchedule.ts` | Calendario de la pestaña Raids por la hora real: ciclo, sala abierta (`RAID_LOBBY_MS`) y pelea (`RAID_FIGHT_MS`) |
+| `game/raid/rotationBosses.ts` | La lista de jefes de cada rotación (`HARD_RAID_BOSSES` con las stats ×`HARD_RAID_STAT_MULT`) y el jefe de cada ciclo (`cycleBoss`, con semilla en la difícil) |
+| `game/raid/raidRoom.ts` | La sala (`RaidRoom`: entrantes, semilla y pelea), sentar, cambiar y sacar; tipo del premio (`RaidPrize`) |
+| `game/raid/raidBots.ts` | Bots de la sala: salen de su semilla y llegan con la sala abierta; cada jugador ocupa el sitio de uno |
+| `game/raid/raidLobby.ts` | El paso a la pelea: a su hora (`fightDue`), con los jugadores y bots hasta llenarla (`startFight`) |
+| `game/raid/raidFight.ts` | La pelea para el motor de incursiones (`raidSource`: el jefe como rival con sus mecánicas, revivires y límite de tiempo) y la parte del jefe quitada |
+| `game/raid/raidCrit.ts` | Cuándo sale el anillo crítico en la pelea (`fightRingAt`) |
+| `game/raid/raid.ts` | En la partida: `TabRaid` (sala, Pokémon, enlace con el servidor), entrar o cambiar (`joinRaid`), salir, por qué no se puede |
+| `game/raid/raidPlay.ts` | En la partida: la pelea local (empieza a su hora, cierra ventanas), ataque, toques y crítico, cobrar y, al acabar el ciclo, el premio a Notificaciones |
+| `game/raid/raidPrizes.ts` | Tirada de la tabla, premio por la parte del jefe quitada (`fightPrize`) y recogida |
+| `game/raid/routeRaid.ts` | Jefes de las paradas de ruta: al vencerlos (un combate de jefe de la ruta), su premio de raid |
 | `game/raid/routeRaidStreak.ts` | Racha de victorias seguidas contra el jefe de cada parada: rebaja su dinero y se olvida a los 5 min |
-| `game/raid/routeRaid.ts` | Jefes de las paradas de ruta: al llegar, entrar en una sala de la parada o abrir otra; retirarse (derrota); al caer, la ruta sigue |
-| `game/raid/raidRoom.ts` | Tipos de la sala (`Raid`, `RaidMember`, `RaidPrize`) y quién está dentro |
-| `game/raid/raidCombat.ts` | Una ronda: todos pegan al jefe con la fórmula de siempre y el jefe pega a uno; revivir |
-| `game/raid/raidBots.ts` | Bots que entran y salen de la sala (en local y en el servidor) |
-| `game/raid/rotationBosses.ts` | La lista de jefes de cada rotación de la pestaña Raids (`RAID_BOSSES`; `HARD_RAID_BOSSES` con las stats ×`HARD_RAID_STAT_MULT`) y el jefe de una posición (`rotationBoss`) |
-| `game/raid/raidEstimate.ts` | Tiempo que tardará en caer el jefe: simula rondas sobre una copia de la sala con un azar de semilla fija |
-| `game/raid/raidPrizes.ts` | Quién cobra (presencia mínima o seguir dentro), tirada de la tabla y recogida |
-| `game/raid/raidLives.ts` | Vidas contra los jefes de la pestaña Raids: al gastarlas sale de la sala y cobra en el acto, sin volver contra ese jefe en ninguna de sus salas (el servidor lo comprueba en `tabRooms.joinTabRoom` y al consultar no vuelve a sentar a quien las ha gastado, tampoco en las paradas) |
-| `game/raid/stopRoom.ts` | Salas de parada sin la partida: abrir una nueva o en marcha (`stopRoom`) y avanzarla (`advanceStopRoom`) |
-| `game/raid/online/protocol.ts` | Peticiones y respuestas entre el juego y el servidor de salas |
-| `game/raid/online/linkedRoom.ts` | La sala de la partida enlazada a la del servidor: qué pedir (`roomRequest`) y aplicar la respuesta (`applyView`) |
-| `game/raid/online/sharedRoom.ts` | La sala del servidor: asientos de jugadores, echar a un bot, ponerse al día (`catchUp`) y la vista de cada jugador |
-| `game/raid/online/roomServer.ts` | Las acciones del servidor: elegir sala (`pickRoom`), entrar y ponerse al día; caducidad |
+| `game/raid/online/protocol.ts` | Peticiones y respuestas entre el juego y el servidor de raids |
+| `game/raid/online/sharedRaid.ts` | La sala del servidor: asientos, elegir sala (`roomFor`), entrar y salir, cerrar ventanas (`advanceShared`), toques, ataques y críticos, la vista de cada jugador |
+| `game/raid/online/linkedRaid.ts` | La sala de la partida enlazada a la del servidor: qué pedir (`joinRequest`), aplicar la respuesta (`applyRoomView`) y seguir en local (`dropRoom`) |
 | `game/raid/online/requests.ts` | Validación de lo que llega al servidor y limpieza del apodo |
-| `net/raidSync.ts` | Bucle que entra, consulta y avisa de las salas dejadas; cada cuánto se consulta |
-| `game/raid/online/raidCycle.ts` | Los jefes de la pestaña Raids por rotaciones (en orden y difíciles) y ciclos: qué jefe sigue, cuándo se cierra, cuándo pasa al siguiente (con tope), qué sala va al frontal |
-| `game/raid/online/tabRooms.ts` | Las salas de la pestaña Raids en el servidor: ponerlas al día con su ciclo, sala principal, en qué rotación entra el jugador y su parte de la respuesta `feed` |
-| `net/raidFeed.ts` | La pestaña Raids según el servidor: jefe, frontal, lista de salas y hora del servidor |
-| `game/raid/online/skipAhead.ts` | Resumir de golpe lo que una sala lleva sin consultar (el Worker tiene poca CPU por petición) |
+| `net/raidSync.ts` | Bucle que entra, consulta y avisa de las salas dejadas; cada cuánto se consulta; toques, ataques y críticos |
+| `net/raidBoard.ts` | La pestaña Raids según el servidor: cuántos esperan a cada jefe y la hora del servidor |
 | `game/core/accountRules.ts` | Lo que comparten web y servidor de cuentas: email, contraseña, códigos de error |
 | `game/core/cloudSave.ts` | Partida en la nube: qué hacer al conectar (`cloudAction`), progreso sin subir (`hasUnsavedProgress`), app sin actualizar (`isFromNewerApp`, `SaveRejection`), recuperar una copia (`stateFromSaved`), resumen y validar la subida |
 | `net/account.ts` | Cuenta opcional: sesión, enlaces de los correos, entrar, crearla, recuperar la contraseña (`/api/auth`) |
@@ -269,87 +263,46 @@ primeros siguen ocupando su hueco en su rancho (`OwnedMon.ranch`).
 
 ## Jefes comunitarios
 
-Hay dos clases de sala (`Raid`), con la misma mecánica (`raidEngine.ts`): `advanceRoom` consume el tiempo de juego
-en rondas fijas (`RAID_ROUND_MS`): pasa el tiempo (presencia y revivir), entran y salen bots según su `BotPolicy`, el
-Pokémon del jugador gana su EXP y se juega la ronda (`playRound`). `lastRound` guarda los golpes de la última ronda
-para que la UI los pinte: `ui/raid/roundReplay.ts` los reparte en orden a lo largo de la ronda siguiente (con
-`roundMsLeft`), así la pelea se ve por turnos aunque el motor la juegue de golpe. Por eso, cuando la pelea se para
-(cae el jefe o el Pokémon de la ruta gasta sus vidas), la sala no se cierra en el acto: `raidEnding.ts` le da un final
-(`endingMs`) en el que se ve entera la última ronda y un cierre con su cartel (`ui/raid/RaidFinale.tsx`); solo al
-acabar se aplica el resultado. Las salas del servidor también: al llegar la respuesta con el jefe a 0 empieza el final y,
-mientras dura, no se piden ni aplican más respuestas para esa sala. Al caer el jefe, `settleFall` tira el premio de cada Pokémon del jugador que cobra, los saca
-de la sala y devuelve los premios: cada clase de sala decide qué hace con ellos.
+- **Calendario** (`raidSchedule.ts`): la hora real se parte en ciclos de una hora, iguales en todos los móviles y en el
+  servidor sin guardar nada: 30 min de sala abierta y 30 de pelea. El jefe de cada ciclo y rotación lo da
+  `rotationBosses.ts › cycleBoss` (la difícil, al azar con la semilla del ciclo).
+- **La sala** (`RaidRoom`, la misma en la partida y en el servidor): los Pokémon de los jugadores (`entrants`, con su
+  `MemberState` de incursión y su ataque), una semilla y la pelea (`fight`, un `GroupPlan` de incursión). Los bots no
+  se guardan: salen de la semilla (`roomBots`) y, con la sala abierta, se ven los que han llegado a esa hora sin pasar
+  de los huecos (`shownBots`). A su hora, `startFight` mete a los jugadores y completa con bots hasta 10.
+- **La pelea es una incursión de una sala** (`raidFight.ts › raidSource`): el motor de incursiones juega cualquier
+  `FightSource` (las salas, premios, revivires y límite de tiempo de una incursión o de un jefe de raid), así que la
+  pelea se simula, se cierran sus ventanas de toques (`settleGroupTaps`) y se reproduce igual que un tramo de incursión
+  (`groupProgress`), con las órdenes de cada turno (toques, cambios de ataque y, solo aquí, críticos: `TurnOrders.crits`).
+- **En la partida** (`GameState.raids`, un `TabRaid` por rotación): `joinRaid` sienta al Pokémon en la sala local
+  (`link: Joining`) y `net/raidSync.ts` pide sitio al servidor; con su respuesta (`applyRoomView`) la sala es su
+  reflejo (`Online`, con las horas pasadas al reloj del móvil). Sin servidor (o si deja de tenerla, `dropRoom`) se
+  sigue en local (`Local`): `raidPlay.ts › advanceRaids` empieza la pelea a su hora y cierra las ventanas pasadas con lo
+  que tuviera el jugador decidido, también con la app cerrada. Terminada, `collectRaid` cobra (`fightPrize`, por la parte
+  del jefe quitada) y el Pokémon vuelve al rancho; si nadie la recoge, al acabar el ciclo el premio va a
+  `GameState.raidPrizes` (Notificaciones). Salir con la sala abierta deja su id en `GameState.roomsToLeave` hasta que
+  el servidor lo sabe.
+- **Paradas de ruta** (`NodeKind.Raid`): un combate de jefe de la ruta más (`startStopBattle`); al ganarlo,
+  `settleBattle` suma el premio de raid de la parada (`routeRaid.ts › winRouteRaid`, con la racha de `routeRaidStreak.ts`)
+  a lo ganado en la ruta. No tienen sala ni pasan por el servidor.
 
-- **Pestaña Raids** (`GameState.raids`, una sala por rotación, `place: null`): sin servidor solo se juega la
-  ordenada (`LOCAL_ROTATION`), que aparece al acabar el tutorial (`ensureRaid`) y siempre tiene jefe; con servidor se
-  puede tener un Pokémon en la sala de cada rotación a la vez. Se manda a un Pokémon del rancho (`raidRoomBlocker` dice
-  si se puede entrar en la sala y `monRaidBlocker` qué Pokémon pueden ir: el selector solo enseña esos); al caer, el premio queda pendiente en `GameState.raidPrizes` (se recoge en
-  la pestaña) y sale el siguiente de `RAID_BOSSES` con los bots que siguen dentro.
-- **Paradas de ruta** (`NodeKind.Raid`, `Run.raid`, `place` = ruta y parada): al llegar el Pokémon de la ruta
-  (`arrive` → `enterRouteRaid`), entra en una sala; mientras no haya servidor, a veces se simula que ya había una en
-  marcha (con el jefe por encima de `ROUTE_RAID_JOIN_MIN_HP`). La ruta pasa a la fase `raid` y no avanza hasta que
-  cae el jefe o se retira (`retreatRouteRaid`, derrota sin su premio). Al caer, su premio se suma a lo ganado en la
-  ruta (`Run.earned`, con el jefe en `raidBosses` para el resumen) y la ruta sigue o se completa. Nunca pasa por
-  `raidPrizes`: son cosas separadas. En pantalla no se cambia de vista: `RunView` pinta `RaidBattle` dentro de su
-  `WalkScene` (sin el Pokémon que camina, que va en el grupo) y su marcador añade `RouteRaidHud`.
-
-Los participantes son `RaidMember` con `kind: 'player' | 'guest' | 'bot'`: `player` son los del jugador de este
-dispositivo, `guest` los de otros jugadores (solo en salas compartidas). Los que se van se quedan en la lista con
-`left: true` hasta que cae el jefe, para el reparto.
-
-### Salas compartidas (servidor)
+### Salas con servidor
 
 Paso a paso del despliegue y del consumo del plan gratuito: [servidor.md](servidor.md).
 
-- **El servidor manda.** `worker/raid.ts` (`POST /api/raid`) guarda cada sala en D1 (`SharedRoom`: la `Raid` de
-  siempre más los asientos de cada jugador) y, en cada petición, la juega hasta la hora real con el mismo motor
-  (`catchUp` → `advanceRoom` / `advanceStopRoom`), con bots de servidor. Nadie la juega entre peticiones: con todos
-  los jugadores con la app cerrada, se pone al día (hasta 12 h) en la siguiente consulta. Como el Worker gratuito
-  tiene 10 ms de CPU por petición, solo se juegan de verdad las últimas `ROOM_PLAYED_ROUNDS` rondas; lo anterior se
-  resume con el ritmo de la sala (`skipAhead`, con `roomPace` de `raidEstimate.ts`).
+- **El servidor no juega la pelea.** `worker/raid.ts` (`POST /api/raid`) guarda cada sala en D1 (`SharedRaid`: la sala
+  de siempre más el asiento de cada jugador y lo que han decidido para la próxima ventana) y, en cada petición, la pone
+  al día (`advanceShared`): a su hora empieza la pelea y cada ventana de toques ya pasada (más `TAP_CLOSE_DELAY_MS`) se
+  cierra con lo que llegó a tiempo. Cada móvil simula la pelea igual con esas órdenes y la misma semilla.
+- **Entrar** (`Join`): solo con la sala abierta; la sala en la que ya está el jugador, la que tenga más jugadores con
+  sitio o una nueva (`roomFor`); al llenarse, el último bot en llegar se va. Volver a entrar cambia su Pokémon o su
+  ataque. Al sentarse por primera vez se programa el aviso push de cuando empiece la pelea (`raidPushes.ts`).
 - **Sin cuentas.** Cada dispositivo tiene un id anónimo y un apodo (`net/identity.ts`, en `localStorage` aparte de
-  la partida). Cada uno ve la sala con sus Pokémon por su uid y los demás como `guest` (`viewFor`).
-- **Pestaña Raids por ciclos** (`raidCycle.ts`, `tabRooms.ts`, `worker/raidTab.ts`, tabla `raid_cycles`): los jefes los
-  decide el servidor, iguales para todos; los móviles no simulan nada de la pestaña (`GameState.raidServer`) salvo su
-  propia sala. Hay dos rotaciones a la vez (`RaidRotation`), cada una con sus ciclos y sus salas (carpeta
-  `tab/<rotación>/<ciclo>`): la ordenada sigue `RAID_BOSSES` y la de difíciles (`RaidRotation.Hard`, que guarda el valor `random` de
-  cuando era «Al azar») elige al azar de su propia lista, `HARD_RAID_BOSSES`, uno que no repita el suyo ni sea de la especie
-  de los de la otra (`followingBoss`). Cada rotación lee su lista con `rotationBosses.ts › rotationBoss` (lo usan
-  `cycleBoss`, la espera del frontal y las pestañas). Cada ciclo sabe ya su jefe siguiente (`nextBossIndex`), para enseñarlo en la
-  espera. Un jugador solo tiene un Pokémon en la pestaña, en una de las dos. En cada ciclo hay un jefe, una sala principal (con bots, aunque no juegue nadie)
-  y las que se abran al llenarse. Cuando cae en la primera sala, el ciclo se cierra: empieza la espera
-  (`CYCLE_COOLDOWN_MS`), ya no se abren salas (solo se puede entrar en las que aún pelean con jugadores) y el frontal
-  pasa a ellas. El siguiente aparece cuando ha pasado la espera y no queda ninguna sala con jugadores en pie, o al
-  llegar al tope (`CYCLE_MAX_EXTRA_MS`): entonces el jefe se escapa de las que quedaban (`closed`, sin premio). Cada
-  petición pone al día como mucho `ROOMS_PER_REQUEST` salas (las pedidas y la pendiente más vieja).
-- **Frontal y lista** (acción `feed`, `net/raidFeed.ts`): el servidor devuelve, por rotación, el jefe del ciclo, la sala del frontal
-  (la que el jugador eligió mirar; si no, la de más jugadores; si no, la principal), las salas del jefe y las de las
-  paradas de ruta con jugadores (columnas `players` y `summary` de `rooms`), y su hora, con la que se cuentan las
-  esperas. La UI enseña en cada rotación la sala propia si la hay (`GameState.raids[rotación]`) y, si no, la del frontal; entrar desde ahí
-  (`joinServerRaid`) pide esa sala (`targetRoomId`, cuyo id dice su rotación: `roomRotation`; sin ella, la del canal, `channel.rotation`; sin ninguna, la rotación donde ya estuvo o la ordenada). En la partida, cada sala enlazada se nombra con `RoomKey` (su rotación o la ruta, `linkedRoom.ts`). Al caer el jefe, el siguiente no se crea en el móvil.
-- **Entrar en una parada** (`joinStopRoom`): la sala de ese jefe en la que ya estuvo el jugador; si no, la que tenga
-  más jugadores; si está llena, sale un bot para hacerle sitio. Las salas solo de bots, caídas, llenas de jugadores o
-  con el jefe por debajo de `ROUTE_RAID_JOIN_MIN_HP` no se ofrecen. Si no vale ninguna, sala nueva (en marcha con la
-  vida que pide el cliente, `bossHp`).
-- **En la partida** (`online/linkedRoom.ts`): `joinRaid` y `enterRouteRaid` dejan la sala esperando sitio
-  (`Raid.remote.roomId` null, `isSearching`): la de la pestaña se sigue jugando en local; la de una parada se queda
-  quieta, sin bots, y la ruta muestra «Buscando entrenadores…» (`RaidSearching`) hasta que el servidor contesta, para
-  entrar antes en una sala con jugadores que en una de bots. Esa espera solo vale con la app delante: si un avance
-  salta más de `ROUTE_RAID_SEARCH_MS` (la app estaba cerrada u oculta y nadie pidió sitio), la sala se juega en local
-  y, al caer el jefe, el tiempo que sobra sigue la ruta (`advanceRun` lleva también la pelea de la parada).
-  `net/raidSync.ts` pide entrar (también con la app oculta; las demás consultas, solo delante); con la respuesta la sala
-  local pasa a ser el reflejo de la del servidor (`applyView`) y `tick` ya no la juega (solo corre su reloj para la
-  animación). Cada consulta manda el Pokémon que el jugador quiere dentro (o ninguno, para retirarse) y su nivel; la
-  respuesta trae la sala y las rondas de EXP contadas, y lo que pase se resuelve con las mismas funciones que en
-  local (`fallTabRaid`, `finishRouteRaid`, `startOver`). Retirarse de una parada deja el id en
-  `GameState.roomsToLeave` hasta que el servidor lo sabe.
-- **Sin servidor** (`npm run dev`, sin red): si la petición de entrar falla, la sala sigue en local
-  como antes, con bots locales. Si una sala enlazada deja de responder se reintenta; si el servidor ya no la tiene,
-  sigue en local.
-- **Limpieza de las paradas**: al consultar una sala de parada terminada (jefe caído o escapado), el jugador ve cómo
-  acabó y sale (`syncRoom`); cuando ya no queda nadie dentro (`isSettled`), la sala se borra en vez de guardarse. La
-  tarea programada borra además las salas de parada sin jugadores que nadie ha tocado en `ROOM_MAX_CATCHUP_MS`
-  (`deleteIdleStopRooms`). Así la lista «Salas › Ruta» solo enseña peleas en curso con jugadores.
+  la partida). Cada uno ve la sala sin los ids de los demás (`roomView`).
+- **La pestaña** (`Board`, `net/raidBoard.ts`): cuántos jugadores y salas hay en el ciclo de cada rotación (columna
+  `players` de `rooms`) y la hora del servidor, con la que se cuentan las esperas.
+- **Ranking de daño**: al terminar la pelea, quien guarda la sala apunta una sola vez el daño de cada jugador al jefe
+  (`damageTally.ts`). La tarea programada borra las salas de ciclos ya jugados (`deleteOldRooms`).
 - **Concurrencia**: cada sala lleva una versión; la escritura es `UPDATE … WHERE version = <la leída>` y, si otro
   jugador escribió antes, no cambia nada y se repite la petición entera (hasta 5 veces).
 

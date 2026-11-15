@@ -36,12 +36,19 @@ for (const shot of SHOTS.filter((s) => s.name.startsWith(filter))) {
   if (shot.hold) await holdRequests(page, shot.hold)
   await page.goto(APP_URL)
   const save = await page.evaluate(buildDemoSave, shot.scenario ?? {})
-  await page.evaluateOnNewDocument((data) => {
-    if (sessionStorage.getItem('tutorial-shot')) return
-    localStorage.clear()
-    localStorage.setItem('pokerancho-save', data)
-    sessionStorage.setItem('tutorial-shot', '1')
-  }, save)
+  // El anuncio más nuevo del tablón, ya visto: si no, su ventana taparía la captura
+  const announcement = await page.evaluate(async () => (await import('/src/data/announcements.ts')).LATEST_ANNOUNCEMENT?.id ?? null)
+  await page.evaluateOnNewDocument(
+    (data, seenId) => {
+      if (sessionStorage.getItem('tutorial-shot')) return
+      localStorage.clear()
+      localStorage.setItem('pokerancho-save', data)
+      if (seenId) localStorage.setItem('pokerancho-seen-badges', JSON.stringify({ 'board:prompt': seenId }))
+      sessionStorage.setItem('tutorial-shot', '1')
+    },
+    save,
+    announcement,
+  )
   await page.reload()
   await page.addStyleTag({ content: CLEAN_CSS })
   await wait(LOAD_MS)

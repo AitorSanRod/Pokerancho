@@ -22,7 +22,7 @@ export interface BossDraft {
   level: number
   passives: PassiveDraft[]
   tier: string
-  soloMinutes: number | null
+
 }
 
 export interface NodeDraft {
@@ -62,7 +62,7 @@ export interface RouteDraft {
   nodes: NodeDraft[]
 }
 
-const emptyBoss = (): BossDraft => ({ species: '', level: 10, passives: [], tier: 'Low', soloMinutes: null })
+const emptyBoss = (): BossDraft => ({ species: '', level: 10, passives: [], tier: 'Low' })
 
 export const emptyNode = (id: string, kind = 'Wild', steps = 20): NodeDraft => ({
   id,
@@ -111,7 +111,7 @@ function nodeDraft(n: RouteNode, steps: number): NodeDraft {
     ownEncounters: !!n.encounters,
     encounters: n.encounters ? encDrafts(n.encounters) : [{ species: '', chance: 100 }],
     boss: b
-      ? { species: keyOf(DICTS.POKEMON, b.speciesId), level: b.level, passives: [...(b.passives ?? [])], tier: keyOf(DICTS.RaidTier, b.tier) || 'Low', soloMinutes: b.soloMinutes ?? null }
+      ? { species: keyOf(DICTS.POKEMON, b.speciesId), level: b.level, passives: [...(b.passives ?? [])], tier: keyOf(DICTS.RaidTier, b.tier) || 'Low' }
       : emptyBoss(),
     potion: keyOf(DICTS.Potion, n.potion) || 'Potion',
     gym: keyOf(DICTS.GymId, n.gym) || 'Plateada',

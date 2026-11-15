@@ -1,7 +1,7 @@
 import { Badge } from './badges'
 import { IMOVE } from './incursionMoves'
-import type { Boss } from './maps/mapCommon'
 import { POKEMON } from './pokemon'
+import type { TrainerTeam } from './trainerTeam'
 
 // Gimnasios: el líder y su equipo, que saca uno tras otro en la parada de gimnasio (`NodeKind.Gym`) de su ruta
 // (kantoMaps.ts). Este fichero es para editarlo a mano. Ganar al último da la medalla la primera vez (ver
@@ -10,25 +10,13 @@ import { POKEMON } from './pokemon'
 export const GymId = { Plateada: 'plateada', Celeste: 'celeste', CiudadCarmin: 'ciudad-carmin' } as const
 export type GymId = (typeof GymId)[keyof typeof GymId]
 
-/** Un Pokémon del líder: especie y nivel, y a mano sus pasivas de tipo, su multiplicador de stats y sus ataques */
-export interface GymFoe extends Boss {
-  /** Multiplicador de sus stats (1 = las de su nivel, 1.2 = +20 %); sin él, 1 */
-  statMult?: number
-  /**
-   * Ataques de incursión que usa (`IMOVE.X.id`), de daño: en cada turno, el que más daño espera hacer al rival (tipo,
-   * potencia y precisión). Sin ellos, el suyo de siempre
-   */
-  moves?: string[]
-}
-
 export interface Gym {
   /** Nombre del líder, tal y como se ve */
   leader: string
   badge: Badge
   /** Nivel máximo para entrar: un Pokémon por encima no puede empezar su ruta (subir de nivel dentro no lo echa) */
   maxLevel: number
-  /** Su equipo, en el orden en que los saca */
-  team: GymFoe[]
+  team: TrainerTeam
 }
 
 export const GYMS: Record<GymId, Gym> = {

@@ -1,7 +1,7 @@
 import { EffectKind, effectOf, hasArea, hitsAllies, MoveClass, moveClass, STAT_NAME, type IncursionMove, type StatChange } from '../../data/incursionMoves'
 import type { MissReason } from '../battle/battle'
 import type { Rng } from '../core/random'
-import { damage } from '../battle/attack'
+import { damage, TAP_CRIT_MULT } from '../battle/attack'
 import { allies, enemies, hurt, restore, type Battlefield } from './battlefield'
 import { EventKind, on } from './events'
 import { damageSide, isUp, type GroupFighter } from './fighter'
@@ -30,6 +30,13 @@ function miss(bf: Battlefield, actor: GroupFighter, target: GroupFighter, reason
   return 0
 }
 
+/** Si le toca el crítico del toque (ver tapWindow.ts), lo gasta: solo vale para su primer golpe a un rival del turno */
+function takeTapCrit(bf: Battlefield, actor: GroupFighter): boolean {
+  if (!bf.critReady.includes(actor.id)) return false
+  bf.critReady = bf.critReady.filter((id) => id !== actor.id)
+  return true
+}
+
 /**
  * Un golpe a un rival (o a un compañero, con los de área que dan a todos): puede fallar, esquivarlo o salir un crítico;
  * quien provoca recibe menos. Las pasivas que drenan o ponen estados solo cuentan contra rivales. Devuelve el daño hecho
@@ -37,7 +44,9 @@ function miss(bf: Battlefield, actor: GroupFighter, target: GroupFighter, reason
 function strike(bf: Battlefield, actor: GroupFighter, target: GroupFighter, mv: IncursionMove, mult: number, rng: Rng): number {
   if (!hits(rng, mv.accuracy)) return miss(bf, actor, target, 'miss')
   if (target.bonus.dodge > 0 && rng() < target.bonus.dodge) return miss(bf, actor, target, 'dodge')
-  const { dealt, eff, crit } = damage(damageSide(actor), damageSide(target), mv, rng)
+  const tapCrit = target.team !== actor.team && takeTapCrit(bf, actor)
+  const { dealt, eff, crit: rolled } = damage(damageSide(actor), damageSide(target), mv, rng, tapCrit ? TAP_CRIT_MULT : 1)
+  const crit = rolled || tapCrit
   if (eff === 0) return miss(bf, actor, target, 'immune')
   const boost = tapMult(bf, actor)
   const raw = Math.max(1, Math.floor(dealt * mult * boost * (1 - (target.taunt?.guard ?? 0))))

@@ -1,7 +1,6 @@
-import { Biome, route } from '../../data/maps'
+import { Biome } from '../../data/maps'
 import { species } from '../../data/species'
 import type { PokeType } from '../../data/types'
-import type { Raid } from '../../game/raid/raidRoom'
 
 /** Paisaje de la pelea del jefe de la pestaña Raids (que no está en ninguna ruta), según su primer tipo */
 const TYPE_BIOME: Record<PokeType, Biome> = {
@@ -25,6 +24,5 @@ const TYPE_BIOME: Record<PokeType, Biome> = {
   fairy: Biome.Forest,
 }
 
-/** Paisaje del jefe: el de su ruta o, sin ruta, el de su primer tipo */
-export const raidBiome = (raid: Raid): Biome =>
-  raid.place ? route(raid.place.routeId).biome : TYPE_BIOME[species(raid.boss.speciesId).types[0]]
+/** Paisaje del jefe: el de su primer tipo */
+export const raidBiome = (speciesId: number): Biome => TYPE_BIOME[species(speciesId).types[0]]

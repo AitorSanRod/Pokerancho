@@ -41,7 +41,7 @@ export const EVOLVE_GUIDE: Guide = {
     {
       image: shot('evo-passives'),
       title: 'Pasivas de rancho',
-      text: `Con ${PASSIVE_LEVELS} Pokémon de un tipo en el rancho de tu compañero (un raro cuenta como 2, un épico como 3 y un legendario como 5), él gana en rutas, raids y torre el nivel 1, 2 o 3 de la pasiva de ese tipo. Se ven tocando el botón de arriba a la izquierda del rancho. Un tipo de rancho de la Tienda rebaja en uno los que hacen falta.`,
+      text: `Con ${PASSIVE_LEVELS} Pokémon de un tipo en el rancho de tu compañero (un raro cuenta como 2, un épico como 3 y un legendario como 5), él gana en rutas, gimnasios y torre el nivel 1, 2 o 3 de la pasiva de ese tipo (en raids e incursiones cuentan los de la sala o el grupo). Se ven tocando el botón de arriba a la izquierda del rancho. Un tipo de rancho de la Tienda rebaja en uno los que hacen falta.`,
     },
   ],
 }

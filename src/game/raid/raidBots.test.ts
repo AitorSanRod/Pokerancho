@@ -1,55 +1,37 @@
-import { describe, expect, it, vi } from 'vitest'
-import { seqRng } from '../core/test-utils'
-import { RAID_BOTS, updateBots } from './raidBots'
-import { RAID_ROUND_MS } from './raidCombat'
-import { newMember, presentMembers, RAID_ROOM_SIZE, RaidMemberKind } from './raidRoom'
-import { raidState } from './raid-test-utils'
+import { describe, expect, it } from 'vitest'
+import { isBot } from '../incursion/party'
+import { RaidRotation } from './online/protocol'
+import { botsArrived, RAID_BOT_EVERY_MS, roomBots, shownBots } from './raidBots'
+import { newRoom, RAID_ROOM_SIZE, roomBoss, seatEntrant } from './raidRoom'
+import { fightStart, lobbyStart } from './raidSchedule'
+import { entrant } from './raid-test-utils'
 
-vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
-
-const ALWAYS_JOIN = seqRng(0)
-const NEVER_JOIN = seqRng(0.9999)
+const CYCLE = 5
+const room = () => newRoom('sala', RaidRotation.Ordered, CYCLE, 1234)
 
 describe('bots de la sala', () => {
-  it('siempre hay al menos el mínimo', () => {
-    const { raid } = raidState()
-    updateBots(raid, RAID_ROUND_MS, RAID_BOTS, NEVER_JOIN)
-    expect(presentMembers(raid)).toHaveLength(RAID_BOTS.min)
-  })
-
-  it('nunca pasan del máximo', () => {
-    const { raid } = raidState()
-    for (let i = 0; i < RAID_BOTS.max * 3; i++) updateBots(raid, RAID_ROUND_MS, RAID_BOTS, ALWAYS_JOIN)
-    expect(presentMembers(raid)).toHaveLength(RAID_BOTS.max)
-  })
-
-  it('se van al acabar su tiempo y entra otro en su lugar', () => {
-    const { raid } = raidState()
-    updateBots(raid, RAID_ROUND_MS, RAID_BOTS, NEVER_JOIN)
-    const first = raid.members[0]
-    updateBots(raid, first.stayMs!, RAID_BOTS, NEVER_JOIN)
-    expect(first.left).toBe(true)
-    expect(presentMembers(raid).length).toBeGreaterThanOrEqual(RAID_BOTS.min)
-  })
-
-  it('si pasa el tope de minutos sin que entre ninguno, entra uno seguro', () => {
-    const { raid } = raidState()
-    const gapMs = RAID_BOTS.maxGapMinutes! * 60_000
-    updateBots(raid, RAID_ROUND_MS, RAID_BOTS, NEVER_JOIN)
-    const before = presentMembers(raid).length
-    for (let t = RAID_ROUND_MS; t < gapMs; t += RAID_ROUND_MS) updateBots(raid, RAID_ROUND_MS, RAID_BOTS, NEVER_JOIN)
-    expect(presentMembers(raid).length).toBe(before)
-    updateBots(raid, RAID_ROUND_MS, RAID_BOTS, NEVER_JOIN)
-    expect(presentMembers(raid).length).toBe(before + 1)
-    expect(raid.sinceBotMs).toBe(0)
-  })
-
-  it('no entran si la sala está llena', () => {
-    const { raid } = raidState()
-    for (let i = 0; i < RAID_ROOM_SIZE; i++) {
-      raid.members.push(newMember({ id: `p${i}`, kind: RaidMemberKind.Player, trainer: '', speciesId: 1, level: 1, stars: 0 }))
+  it('salen siempre los mismos de la semilla, con nivel por debajo del jefe', () => {
+    const boss = roomBoss(room())
+    const bots = roomBots(boss, 1234)
+    expect(bots).toHaveLength(RAID_ROOM_SIZE)
+    expect(roomBots(boss, 1234)).toEqual(bots)
+    for (const b of bots) {
+      expect(isBot(b.id)).toBe(true)
+      expect(b.level).toBeLessThan(boss.level)
     }
-    updateBots(raid, RAID_ROUND_MS, RAID_BOTS, ALWAYS_JOIN)
-    expect(presentMembers(raid)).toHaveLength(RAID_ROOM_SIZE)
+  })
+
+  it('llegan uno al abrir y uno más cada rato hasta llenar la sala al empezar la pelea', () => {
+    expect(botsArrived(CYCLE, lobbyStart(CYCLE))).toBe(1)
+    expect(botsArrived(CYCLE, lobbyStart(CYCLE) + RAID_BOT_EVERY_MS)).toBe(2)
+    expect(botsArrived(CYCLE, fightStart(CYCLE))).toBe(RAID_ROOM_SIZE)
+  })
+
+  it('cada jugador ocupa el sitio de un bot', () => {
+    const r = room()
+    const now = fightStart(CYCLE) - 1
+    const before = shownBots(r, now).length
+    seatEntrant(r, entrant('a'))
+    expect(shownBots(r, now)).toHaveLength(Math.min(before, RAID_ROOM_SIZE - 1))
   })
 })

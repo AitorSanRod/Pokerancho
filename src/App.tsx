@@ -5,7 +5,6 @@ import { TutorialStep } from './game/core/state'
 import { startAccount } from './net/account'
 import { startCloudSync } from './net/cloudSync'
 import { startPush } from './net/push'
-import { startRaidFeed } from './net/raidFeed'
 import { startIncursionSync } from './net/incursionSync'
 import { startServerGifts } from './net/serverGifts'
 import { startRaidSync } from './net/raidSync'
@@ -46,12 +45,11 @@ export default function App() {
   useEffect(preloadScreens, [])
   // Otras pantallas pueden llevar a una pestaña (p. ej. comprar una llave en la Tienda)
   useEffect(() => listenTabRequests(setTab), [])
-  // Salas compartidas de los jefes comunitarios: entrar, ponerse al día y avisar al salir
+  // Salas de los jefes de la pestaña Raids: entrar, ponerse al día y avisar al salir
   useEffect(startRaidSync, [])
   useEffect(startIncursionSync, [])
   // Regalos del servidor, para todos o para este jugador (en Notificaciones)
   useEffect(startServerGifts, [])
-  useEffect(startRaidFeed, [])
   // Notificaciones push: el plan de avisos al ocultarse la app y la suscripción al día con la cuenta
   useEffect(startPush, [])
   // Cuenta opcional: sesión, enlaces de los correos y partida en la nube

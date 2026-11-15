@@ -23,10 +23,7 @@ function passivesCode(b: BossDraft) {
 function bossCode(n: NodeDraft) {
   const b = n.boss
   const species = `POKEMON.${b.species || '¿?'}`
-  if (n.kind === 'Raid') {
-    const opts = isNum(b.soloMinutes) ? `, { soloMinutes: ${b.soloMinutes} }` : ''
-    return `boss: raidBoss(${species}, ${b.level}, RaidTier.${b.tier}${opts})`
-  }
+  if (n.kind === 'Raid') return `boss: raidBoss(${species}, ${b.level}, RaidTier.${b.tier})`
   return `boss: boss(${species}, ${b.level}${passivesCode(b)})`
 }
 

@@ -2,18 +2,17 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { incursionMove } from '../../data/incursionMoves'
 import { findMon, type GameState } from '../../game/core/state'
-import type { ActiveIncursion } from '../../game/incursion/activeIncursion'
 import { PickSide, pickSide } from '../../game/incursion/movePicks'
 import { monRepertoire } from '../../game/incursion/repertoire'
 import { Bar, Sprite } from '../shared/common'
 import { MovePicker } from './MovePicker'
-import { choosePick, pickCandidates, type Pick } from './pickAction'
+import { pickCandidates, type FightPilot, type Pick } from './pickAction'
 import type { SceneState } from './sceneState'
 import '../shared/overlays.css'
 
 interface Props {
   game: GameState
-  a: ActiveIncursion
+  pilot: FightPilot
   scene: SceneState
   /** El ataque que lleva ahora (o el que tiene pendiente) */
   current: Pick
@@ -24,8 +23,8 @@ interface Props {
  * Cambiar en plena pelea el ataque de tu Pokémon y a quién lo dirige: rival o aliado según el ataque, o «Automático».
  * Vale desde el próximo turno y sigue así hasta que lo vuelvas a cambiar
  */
-export function PickDialog({ game, a, scene, current, onClose }: Props) {
-  const mon = findMon(game, a.uid)
+export function PickDialog({ game, pilot, scene, current, onClose }: Props) {
+  const mon = findMon(game, pilot.uid)
   const [moveId, setMoveId] = useState(current.moveId)
   const [target, setTarget] = useState<string | null>(current.target)
   if (!mon) return null
@@ -34,7 +33,7 @@ export function PickDialog({ game, a, scene, current, onClose }: Props) {
   const chosen = candidates.some((c) => c.id === target) ? target : null
 
   const save = () => {
-    choosePick(a, { moveId, target: chosen })
+    pilot.choose({ moveId, target: chosen })
     onClose()
   }
 

@@ -8,14 +8,14 @@ import { POKEMON } from '../../src/data/pokemon'
 import { Potion } from '../../src/data/potions'
 import { RaidTier } from '../../src/data/raidBosses'
 import { sprite } from '../../src/data/species'
-import { TrainerId, TrainerLook } from '../../src/data/trainers'
+import { Gender, TrainerClass, TrainerId, TrainerName } from '../../src/data/trainers'
 import { TYPE_INFO, type PokeType } from '../../src/data/types'
 import { WILD_STAT_MULT } from '../../src/game/run/runBattle'
 import { pixelSceneFor } from '../../src/ui/route/pixelScene'
 
 export { KANTO, NodeKind, WILD_STAT_MULT }
 
-export const DICTS = { POKEMON, Biome, RouteId, StopLandmark, Potion, RaidTier, NodeKind, GymId, TrainerId, TrainerLook, Badge } as const
+export const DICTS = { POKEMON, Biome, RouteId, StopLandmark, Potion, RaidTier, NodeKind, GymId, TrainerId, TrainerClass, TrainerName, Gender, Badge } as const
 
 const MISSING_MARK = 'missing-key:'
 

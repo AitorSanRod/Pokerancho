@@ -1,7 +1,8 @@
 /**
  * Partida de demostración para las capturas de los tutoriales. Se ejecuta DENTRO del navegador (con `page.evaluate`)
  * e importa los módulos del juego desde el servidor de desarrollo de Vite, así que no puede usar nada de fuera.
- * `scenario` añade lo que necesite cada captura: ruta en curso, expedición, Pokémon contra el jefe o premio de raid.
+ * `scenario` añade lo que necesite cada captura: ruta en curso, expedición, Pokémon en la sala del jefe ('lobby') o ya
+ * en su pelea ('fight') o premio de raid.
  */
 export async function buildDemoSave(scenario) {
   const { initialState } = await import('/src/game/core/state.ts')
@@ -10,7 +11,7 @@ export async function buildDemoSave(scenario) {
   const { addPieces, PIECES_PER_COMBINE } = await import('/src/game/collection/pieces.ts')
   const { startRun } = await import('/src/game/run/run.ts')
   const { sendExpedition, EXPEDITION_DURATIONS } = await import('/src/game/team/expedition.ts')
-  const { ensureRaid, joinRaid } = await import('/src/game/raid/raid.ts')
+
   const { RouteId } = await import('/src/data/maps/mapCommon.ts')
   const { POKEMON: P } = await import('/src/data/pokemon.ts')
   const { Stone } = await import('/src/data/stones.ts')
@@ -54,6 +55,19 @@ export async function buildDemoSave(scenario) {
     const grassAndFire = SPECIES.filter((sp) => sp.types.includes(PokeType.Fire) || sp.types.includes(PokeType.Grass)).slice(0, 14)
     for (const sp of grassAndFire) markCaught(s, sp.id)
   }
+  if (scenario.mints) s.mints = 2
+  if (scenario.tm) s.tms['follow-me'] = 1
+  if (scenario.gym) {
+    // Brock vencido (su medalla en el Perfil) y su gimnasio en la lista de rutas
+    s.unlockedRoutes.push(RouteId.Ruta1Boss, RouteId.GimnasioPlateada)
+    s.badges = ['boulder']
+  }
+  if (scenario.gymRun) startRun(s, RouteId.GimnasioPlateada)
+  if (scenario.tower) {
+    const { startTower } = await import('/src/game/tower/tower.ts')
+    const { towerMoveChoices } = await import('/src/game/tower/towerMoves.ts')
+    startTower(s, towerMoveChoices(s.owned[0])[0].id)
+  }
   if (scenario.run) startRun(s, RouteId.Ruta1)
   // El Huevo Suerte sale enseguida
   if (scenario.boost) s.run.boost.spawnAt = { stop: 0, steps: 1 }
@@ -62,10 +76,7 @@ export async function buildDemoSave(scenario) {
     sendExpedition(s, uidOf(P.Rattata), RouteId.PuebloPaleta, EXPEDITION_DURATIONS[0])
     s.upgrades.expeditionSlots = 1
   }
-  if (scenario.raid) {
-    ensureRaid(s)
-    joinRaid(s, uidOf(P.Pikachu))
-  }
+  if (scenario.raid) await setUpRaid(s, uidOf(P.Pikachu), scenario.raid)
   if (scenario.raidPrize) {
     s.raidPrizes.push({ bossSpeciesId: P.Snorlax, uid: uidOf(P.Pikachu), money: 1500, tickets: 2, pieces: 1, exp: 250 })
   }
@@ -78,6 +89,27 @@ export async function buildDemoSave(scenario) {
   if (scenario.incursion) await setUpIncursion(s, uidOf(P.Charmander), scenario.incursion)
   s.lastTick = Date.now()
   return JSON.stringify(s)
+
+  /**
+   * Su Pokémon en la sala local del jefe de ahora (sin mirar su nivel mínimo ni la hora): con 'fight', la pelea ya
+   * empezada hace un rato
+   */
+  async function setUpRaid(s, uid, stage) {
+    const { raidEntrant, RaidLink } = await import('/src/game/raid/raid.ts')
+    const { startFight } = await import('/src/game/raid/raidLobby.ts')
+    const { newRoom, seatEntrant } = await import('/src/game/raid/raidRoom.ts')
+    const { cycleAt } = await import('/src/game/raid/raidSchedule.ts')
+    const { RaidRotation } = await import('/src/game/raid/online/protocol.ts')
+    const { monRepertoire } = await import('/src/game/incursion/repertoire.ts')
+    const mon = s.owned.find((m) => m.uid === uid)
+    const room = newRoom('demo', RaidRotation.Ordered, cycleAt(Date.now()), 7)
+    seatEntrant(room, raidEntrant(s, uid, monRepertoire(mon)[0].id))
+    if (stage === 'fight') {
+      startFight(room)
+      room.fight.legStarts = [Date.now() - 20_000]
+    }
+    s.raids[RaidRotation.Ordered] = { room, uid, link: RaidLink.Local, pendingPick: null, pendingCrit: false }
+  }
 
   /**
    * La incursión de prueba con Charmander y bots, en el momento que pide la captura: `tap` (en la primera ventana de

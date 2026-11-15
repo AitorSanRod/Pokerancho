@@ -1,6 +1,5 @@
-import type { Incursion } from '../../data/incursions'
 import type { MemberState } from './fighter'
-import { LegOutcome, simulateLeg, type LegResult, type LegStart } from './incursionLeg'
+import { LegOutcome, simulateLeg, type FightSource, type LegResult, type LegStart } from './incursionLeg'
 import { addEarnings, noEarnings, type Earned } from './incursionRewards'
 import { earnedBefore } from './incursionTimeline'
 import { INCURSION_REVIVES } from './revives'
@@ -49,14 +48,14 @@ const withMoves = (start: LegStart, moves: Record<string, string>): LegStart => 
 export const turnsFromOrders = (orders: LegOrders[]): TapResolver => (leg, turn) => orders[leg]?.turns?.[turn]
 
 export function simulateIncursion(
-  inc: Incursion,
+  inc: FightSource,
   members: MemberState[],
   orders: LegOrders[],
   retreat: Retreat | null = null,
   resolveTaps: TapResolver = turnsFromOrders(orders),
 ): IncursionRecord {
   const legs: LegResult[] = []
-  let start: LegStart = { room: 0, members, revives: INCURSION_REVIVES }
+  let start: LegStart = { room: 0, members, revives: inc.revives ?? INCURSION_REVIVES }
   let earned = noEarnings()
   for (const [i, order] of orders.entries()) {
     const leg = simulateLeg(inc, withMoves(start, order.moves), order.seed, (turn, endMs) => resolveTaps(i, turn, endMs))

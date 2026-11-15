@@ -24,7 +24,7 @@
   margin-top: 10px;
 }
 
-/* Con servidor: pestañas «Jefe» y «Salas», premio pendiente y aviso de que el jefe ya cayó en otra sala */
+/* Una pestaña por rotación de jefes y el aviso de premios pendientes */
 .raid-tabs {
   margin: 8px 16px 0;
 }
@@ -45,35 +45,40 @@
 .raid-prize-banner .btn {
   flex-shrink: 0;
 }
-.raid-closing {
-  margin: 0 0 4px;
-  padding: 8px 10px;
-  border-radius: var(--radius);
-  background: var(--card-2);
+/* Tu Pokémon en la sala abierta (RaidEntry) */
+.raid-entry {
+  margin-bottom: 8px;
+}
+.raid-tabs .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
 }
 
-/* Lista de salas (RaidRooms) */
-.raid-room-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* La pelea (RaidFightView): la franja de PS de una sala de diez, más compacta y en dos filas si no cabe */
+.raid-fight .incursion-strip-side:not(.foes) {
+  flex-wrap: wrap;
 }
-.raid-room {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border: 2px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--card);
+.raid-fight .incursion-strip-mon:not(.boss) {
+  width: 28px;
 }
-.raid-room.current {
-  border-color: var(--accent);
+.raid-crit-note {
+  color: var(--accent);
 }
-.raid-room-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+/* El anillo crítico: mientras se ve, toda la escena es el botón; el anillo va sobre el jefe */
+.raid-crit-pad {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.raid-crit-spot {
+  position: absolute;
+  left: 74%;
+  bottom: 30%;
+  width: 0;
+  height: 0;
 }

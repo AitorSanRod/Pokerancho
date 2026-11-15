@@ -1,145 +1,23 @@
-import type { RouteId } from '../../data/maps'
-import type { Nature } from '../../data/natures'
-import type { StatusId } from '../../data/passives'
 import type { RaidBoss } from '../../data/raidBosses'
-import type { RingResult } from '../battle/critTiming'
-import type { MonPerks } from '../team/perks'
+import type { GroupPlan } from '../incursion/activeIncursion'
+import type { MemberState } from '../incursion/fighter'
+import type { RaidRotation } from './online/protocol'
+import { cycleBoss } from './rotationBosses'
 
-/** Participantes que caben a la vez en una sala (jugadores y bots) */
+// Una sala de jefe de la pestaña Raids, igual en la partida (sin servidor) y en el servidor: mientras está abierta se
+// entra (cada jugador con un Pokémon y su ataque) y van llegando bots (raidBots.ts); al empezar la pelea se cierra con
+// los que haya, los bots completan los huecos (raidLobby.ts) y se juega con el motor de incursiones (raidFight.ts).
+
+/** Pokémon que caben en una sala, jugadores y bots */
 export const RAID_ROOM_SIZE = 10
 
-/** Id del jefe en los golpes de una ronda */
-export const BOSS_ID = 'boss'
-
-/**
- * Quién está detrás de un participante: `Player`, un Pokémon de este jugador; `Guest`, el de otro jugador real (solo
- * en las salas compartidas del servidor); `Bot`, uno de relleno
- */
-export const RaidMemberKind = { Player: 'player', Guest: 'guest', Bot: 'bot' } as const
-export type RaidMemberKind = (typeof RaidMemberKind)[keyof typeof RaidMemberKind]
-
-/** Un Pokémon de la sala. Los del jugador se identifican por su uid; los demás, por un id propio de la sala */
-export interface RaidMember {
-  id: string
-  kind: RaidMemberKind
+/** El Pokémon de un jugador en la sala (el id de `member` es el uid de su Pokémon) y el apodo de su entrenador */
+export interface RaidEntrant {
+  member: MemberState
   trainer: string
-  speciesId: number
-  level: number
-  stars: number
-  /** Sin ella (bots y salas de antes de las naturalezas), neutra */
-  nature?: Nature
-  /** Con los colores shiny; sin él (bots y salas de antes), normal */
-  shiny?: boolean
-  /** PS actuales como fracción de sus PS máximos (0 = debilitado) */
-  hpFraction: number
-  /** Milisegundos de juego que le quedan para revivir; 0 si está luchando */
-  downMs: number
-  /** Milisegundos de juego que ha estado dentro durante el jefe actual */
-  presentMs: number
-  /** Daño total hecho al jefe actual */
-  damage: number
-  /** Ya no está en la sala, pero se recuerda para el reparto del jefe actual */
-  left: boolean
-  /** Bots: milisegundos de juego que le quedan antes de irse; null para los jugadores */
-  stayMs: number | null
-  /** Veces que aún puede caer (cada vez que cae, una menos); null si no tiene límite */
-  lives: number | null
-  /** Hitos y colección de los Pokémon de los jugadores (team/perks.ts); sin él (bots y salas de antes), ninguno */
-  perks?: MonPerks
 }
 
-/** Un golpe de la última ronda, para que la UI lo pinte; `from`/`to` son ids de participante o BOSS_ID */
-export interface RaidHit {
-  from: string
-  to: string
-  dealt: number
-  /** Eficacia del ataque (0, 0.5, 1, 2…) */
-  eff: number
-  fainted: boolean
-  /** Daño que le hace al jefe un estado suyo (quemadura, veneno, confusión), contado a `from`, quien se lo puso */
-  status?: StatusId
-  /** Golpe del jugador hecho crítico con un toque (ver raidCrit.ts) */
-  tapCrit?: boolean
-}
-
-/** El toque crítico de la ronda que se ve: sus toques (ms de la ronda) y, una vez vigilado el golpe, cómo fue */
-export interface RaidCrit {
-  round: number
-  taps: number[]
-  settled: boolean
-  result: RingResult
-}
-
-/** Un estado alterado del jefe (ver raidBossStatus.ts) */
-export interface BossStatus {
-  status: StatusId
-  /** Participante que se lo puso: se le cuenta el daño que haga */
-  by: string
-  /** Rondas que le quedan (sueño, congelación); null si dura hasta que cae el jefe */
-  rounds: number | null
-}
-
-/** Parada de ruta (`NodeKind.Raid`) en la que está una sala */
-export interface RaidPlace {
-  routeId: RouteId
-  nodeId: string
-}
-
-/**
- * Enlace de una sala con su copia compartida del servidor (ver raid/online/). `roomId` null: aún entrando (mientras,
- * se juega en local); con id, el servidor manda y la sala local es solo su reflejo
- */
-export interface RoomLink {
-  roomId: string | null
-  /** Rondas de EXP que el servidor ha contado a cada Pokémon del jugador (por uid) y ya se le han dado */
-  exp: Record<string, number>
-  /** Mientras entra en una parada: vida del jefe (fracción) si el servidor tiene que abrir una sala en marcha; null, nueva */
-  openHp: number | null
-  /** Mientras entra en la pestaña Raids: la sala elegida (la del frontal o una de la lista); null, la que diga el servidor */
-  target: string | null
-  /** Toques críticos acertados que aún no se han mandado al servidor (ver raidCrit.ts) */
-  pendingCrits?: number
-}
-
-/** Enlace de una sala que espera sitio en una compartida del servidor */
-export const pendingLink = (openHp: number | null = null, target: string | null = null): RoomLink => ({ roomId: null, exp: {}, openHp, target })
-
-/** Un jefe comunitario y una sala luchando contra él */
-export interface Raid {
-  boss: RaidBoss
-  /** Parada de ruta de la sala; null para el jefe de la pestaña Raids */
-  place: RaidPlace | null
-  hp: number
-  maxHp: number
-  /** Milisegundos de juego desde que apareció este jefe */
-  elapsedMs: number
-  /** Milisegundos de juego que faltan para la próxima ronda */
-  roundMsLeft: number
-  /** Milisegundos de juego que le quedan al final de la pelea (ver raidEnding.ts); 0 mientras se lucha */
-  endingMs: number
-  round: number
-  members: RaidMember[]
-  lastRound: RaidHit[]
-  /** Toques del jugador alrededor de su golpe en la ronda que se ve (solo en el móvil; ver raidCrit.ts) */
-  crit?: RaidCrit
-  /**
-   * Estados alterados del jefe. Opcional para no cortar las salas en marcha al actualizar (sin subir SAVE_VERSION): las
-   * empezadas antes no lo tienen y siguen sin estados hasta que cae su jefe; las nuevas (`newRaid`) empiezan con []
-   */
-  bossStatuses?: BossStatus[]
-  /** Jefes de la pestaña Raids derrotados desde el principio: decide cuál sale ahora (0 en las salas de ruta) */
-  felled: number
-  /** Contador para dar ids únicos a los bots */
-  nextBotId: number
-  /** Milisegundos de juego desde que entró el último bot (o desde que apareció el jefe) */
-  sinceBotMs: number
-  /** Milisegundos de juego que faltan para que aparezca el jefe (pestaña Raids, tras caer el anterior); 0 si ya está */
-  startsInMs: number
-  /** Sala compartida del servidor de la que es reflejo; null si se juega solo en local */
-  remote: RoomLink | null
-}
-
-/** Premio de un jefe comunitario derrotado */
+/** Premio de un jefe de la pestaña Raids, por la parte de su vida que le quitó la sala */
 export interface RaidPrize {
   bossSpeciesId: number
   /** Pokémon del jugador que luchó y se lleva la EXP */
@@ -151,24 +29,43 @@ export interface RaidPrize {
   exp: number
 }
 
-type MemberIdentity = Pick<RaidMember, 'id' | 'kind' | 'trainer' | 'speciesId' | 'level' | 'stars' | 'nature' | 'shiny'>
-
-/** Participante recién llegado: en pie, sin daño ni tiempo dentro */
-export function newMember(who: MemberIdentity, hpFraction = 1, stayMs: number | null = null): RaidMember {
-  return { ...who, hpFraction, downMs: 0, presentMs: 0, damage: 0, left: false, stayMs, lives: null }
+export interface RaidRoom {
+  id: string
+  rotation: RaidRotation
+  /** Ciclo del calendario (raidSchedule.ts): dice el jefe y cuándo empieza la pelea */
+  cycle: number
+  /** Semilla de los bots de la sala y de la pelea */
+  seed: number
+  /** Los Pokémon de los jugadores, por orden de llegada */
+  entrants: RaidEntrant[]
+  /** La pelea: quiénes luchan (jugadores y bots, en ese orden) y las órdenes de cada turno; null con la sala abierta */
+  fight: GroupPlan | null
 }
 
-/** Ha gastado todas sus vidas: ya no puede seguir en la pelea */
-export const outOfLives = (m: RaidMember): boolean => m.lives === 0
+export const newRoom = (id: string, rotation: RaidRotation, cycle: number, seed: number): RaidRoom => ({ id, rotation, cycle, seed, entrants: [], fight: null })
 
-/** Los que siguen en la sala (luchando o esperando a revivir) */
-export const presentMembers = (raid: Raid): RaidMember[] => raid.members.filter((m) => !m.left)
+export const roomBoss = (room: Pick<RaidRoom, 'rotation' | 'cycle'>): RaidBoss => cycleBoss(room.rotation, room.cycle)
 
-export const hasRoom = (raid: Raid): boolean => presentMembers(raid).length < RAID_ROOM_SIZE
+/** Ya no cabe otro jugador: todos los sitios son de jugadores (los bots se echan para hacer sitio) */
+export const roomFull = (room: RaidRoom): boolean => room.entrants.length >= RAID_ROOM_SIZE
 
-/** Orden de la lista de la sala: primero los Pokémon del jugador, después los de otros jugadores y al final los bots */
-const ROSTER_ORDER: Record<RaidMemberKind, number> = { [RaidMemberKind.Player]: 0, [RaidMemberKind.Guest]: 1, [RaidMemberKind.Bot]: 2 }
+/**
+ * Sienta al Pokémon (si ya estaba, se cambia por el nuevo: otro ataque u otro Pokémon del mismo jugador); si la sala
+ * se llena, el último bot en llegar se va. false si no cabe o la pelea ya ha empezado
+ */
+export function seatEntrant(room: RaidRoom, entrant: RaidEntrant, replaces: string | null = null): boolean {
+  if (room.fight) return false
+  const at = room.entrants.findIndex((e) => e.member.id === (replaces ?? entrant.member.id))
+  if (at >= 0) room.entrants[at] = entrant
+  else if (roomFull(room)) return false
+  else room.entrants.push(entrant)
+  return true
+}
 
-/** Los que están en la sala, en el orden de la lista (dentro de cada grupo, por orden de llegada) */
-export const rosterMembers = (raid: Raid): RaidMember[] =>
-  presentMembers(raid).sort((a, b) => ROSTER_ORDER[a.kind] - ROSTER_ORDER[b.kind])
+/** Saca de la sala abierta a ese Pokémon; false si la pelea ya ha empezado */
+export function unseat(room: RaidRoom, memberId: string): boolean {
+  if (room.fight) return false
+  room.entrants = room.entrants.filter((e) => e.member.id !== memberId)
+  return true
+}
+

@@ -5,23 +5,17 @@ import { addPieces } from '../collection/pieces'
 import type { Rng } from '../core/random'
 import { findMon, type GameState } from '../core/state'
 import { gainExp } from '../team/stats'
-import { outOfLives, type RaidMember, type RaidPrize } from './raidRoom'
+import type { RaidPrize } from './raidRoom'
 
-/** Fracción mínima de la pelea (desde que apareció el jefe hasta que cayó) que hay que haber estado dentro para cobrar */
-export const RAID_MIN_PRESENCE = 0.1
+/** EXP de la pelea, además de la de la tabla, por cada nivel del jefe (con todo el jefe quitado; si no, su parte) */
+export const RAID_FIGHT_EXP_PER_LEVEL = 20
 
-/** Fracción de la pelea que ha estado dentro (1 al empezar, cuando aún no ha pasado tiempo) */
-export const presenceShare = (m: RaidMember, fightMs: number): number => (fightMs > 0 ? Math.min(1, m.presentMs / fightMs) : 1)
-
-/** Ha estado dentro al menos RAID_MIN_PRESENCE de los `fightMs` de pelea */
-export const presentEnough = (m: RaidMember, fightMs: number): boolean => m.presentMs >= fightMs * RAID_MIN_PRESENCE
-
-/**
- * Cobra al caer el jefe quien estuvo dentro al menos RAID_MIN_PRESENCE de la pelea o quien seguía dentro; no quien salió
- * por gastar sus vidas, que ya cobró al salir (ver raidLives.ts)
- */
-export const earnsPrize = (m: RaidMember, fightMs: number): boolean =>
-  !m.left || (!outOfLives(m) && presentEnough(m, fightMs))
+const FIELD: Record<RaidPrizeKind, 'money' | 'tickets' | 'pieces' | 'exp'> = {
+  [RaidPrizeKind.Money]: 'money',
+  [RaidPrizeKind.Tickets]: 'tickets',
+  [RaidPrizeKind.BossPieces]: 'pieces',
+  [RaidPrizeKind.Exp]: 'exp',
+}
 
 /**
  * Tira cada línea de la tabla de premios de la categoría del jefe por separado, con sus cantidades por el `prizeMult`
@@ -29,16 +23,27 @@ export const earnsPrize = (m: RaidMember, fightMs: number): boolean =>
  */
 export function rollPrize(boss: RaidBoss, uid: string, rng: Rng): RaidPrize {
   const prize: RaidPrize = { bossSpeciesId: boss.speciesId, uid, money: 0, tickets: 0, pieces: 0, exp: 0 }
-  const field: Record<RaidPrizeKind, 'money' | 'tickets' | 'pieces' | 'exp'> = {
-    [RaidPrizeKind.Money]: 'money',
-    [RaidPrizeKind.Tickets]: 'tickets',
-    [RaidPrizeKind.BossPieces]: 'pieces',
-    [RaidPrizeKind.Exp]: 'exp',
-  }
   const mult = boss.prizeMult ?? 1
-  for (const roll of RAID_PRIZE_TABLES[boss.tier]) if (rng() < roll.chance) prize[field[roll.kind]] += Math.round(roll.amount * mult)
+  for (const roll of RAID_PRIZE_TABLES[boss.tier]) if (rng() < roll.chance) prize[FIELD[roll.kind]] += Math.round(roll.amount * mult)
   prize.money = boostedMoney(prize.money)
   return prize
+}
+
+/**
+ * El premio de la pestaña Raids de un Pokémon: el de la tabla más la EXP de la pelea, todo por `share`, la parte de la
+ * vida del jefe que le quitó la sala (1 si cayó). Los tickets y las piezas, redondeados hacia abajo
+ */
+export function fightPrize(boss: RaidBoss, uid: string, share: number, rng: Rng): RaidPrize {
+  const full = rollPrize(boss, uid, rng)
+  full.exp += boss.level * RAID_FIGHT_EXP_PER_LEVEL
+  const part = Math.max(0, Math.min(1, share))
+  return {
+    ...full,
+    money: Math.round(full.money * part),
+    exp: Math.round(full.exp * part),
+    tickets: Math.floor(full.tickets * part),
+    pieces: Math.floor(full.pieces * part),
+  }
 }
 
 /**

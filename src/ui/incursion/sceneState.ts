@@ -1,5 +1,5 @@
 import type { StatusId } from '../../data/passives'
-import type { ActiveIncursion, IncursionProgress } from '../../game/incursion/activeIncursion'
+import type { GroupPlan, IncursionProgress } from '../../game/incursion/activeIncursion'
 import { EventKind, type IncursionEvent } from '../../game/incursion/events'
 import { Team } from '../../game/incursion/fighter'
 import type { GroupPassive } from '../../game/incursion/groupPassives'
@@ -47,7 +47,7 @@ export interface SceneState {
   roomSeq: number
 }
 
-function partyAtStart(a: ActiveIncursion, p: IncursionProgress): SceneMon[] {
+function partyAtStart(a: GroupPlan, p: IncursionProgress): SceneMon[] {
   const members = p.leg === 0 ? a.members : p.record.legs[p.leg - 1].next.members
   return members.map((m) => ({
     id: m.id, team: Team.Party, speciesId: m.speciesId, name: species(m.speciesId).name, level: m.level,
@@ -85,9 +85,10 @@ function apply(scene: SceneState, e: IncursionEvent, seq: number) {
   if (e.kind === EventKind.Out) target.out = true
 }
 
-export function sceneAt(a: ActiveIncursion, p: IncursionProgress): SceneState {
+/** Cómo está la pelea de grupo a esa altura; `revives`, con los que empezó (sin ellos, los de una incursión) */
+export function sceneAt(a: GroupPlan, p: IncursionProgress, revives = INCURSION_REVIVES): SceneState {
   const leg = p.record.legs[p.leg]
-  const startRevives = p.leg === 0 ? INCURSION_REVIVES : p.record.legs[p.leg - 1].next.revives
+  const startRevives = p.leg === 0 ? revives : p.record.legs[p.leg - 1].next.revives
   const startRoom = p.leg === 0 ? 0 : p.record.legs[p.leg - 1].next.room
   const scene: SceneState = {
     room: startRoom, party: partyAtStart(a, p), foes: [], revives: startRevives, passives: [], current: null, seq: 0, move: null,

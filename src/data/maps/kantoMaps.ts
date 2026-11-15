@@ -17,6 +17,8 @@ const ruta5 = asset(new URL('../../assets/routes/route-5.webp', import.meta.url)
 const ruta6 = asset(new URL('../../assets/routes/route-6.webp', import.meta.url))
 const ciudadCarmin = asset(new URL('../../assets/routes/vermilion-city.webp', import.meta.url))
 const ssAnne = asset(new URL('../../assets/routes/ss-anne.webp', import.meta.url))
+const tunelRoca = asset(new URL('../../assets/routes/rock-tunnel.webp', import.meta.url))
+const puebloLavanda = asset(new URL('../../assets/routes/lavender-town.webp', import.meta.url))
 
 export const KANTO: GameMap = {
   id: 'kanto',
@@ -60,7 +62,7 @@ export const KANTO: GameMap = {
         { id: 'p1', name: 'Fuente', kind: NodeKind.Heal, steps: 10, potion: Potion.Potion },
         { id: 'd', name: 'Senda', kind: NodeKind.Wild, steps: 15 },
         { id: 'e', name: 'Campo', kind: NodeKind.Wild, steps: 25, encounters: enc([POKEMON.Rattata, 40], [POKEMON.NidoranF, 30], [POKEMON.NidoranM, 30]) },
-        { id: 'o', name: 'Entrenador', kind: NodeKind.Trainer, steps: 15, trainer: TrainerId.JovenRuben },
+        { id: 'o', name: 'Entrenador', kind: NodeKind.Trainer, steps: 15, trainer: TrainerId.Joven1 },
         { id: 'p2', name: 'Casa de descanso', kind: NodeKind.Heal, steps: 10, landmark: StopLandmark.House, potion: Potion.Potion },
         { id: 'g', name: 'Hierba crecida', kind: NodeKind.Boss, steps: 30, boss: boss(POKEMON.Rattata, 7) },
       ),
@@ -77,7 +79,7 @@ export const KANTO: GameMap = {
       unlocks: RouteId.BosqueVerde,
       nodes: chain(
         { id: 's', name: 'Ruta 1', kind: NodeKind.Start, steps: 0 },
-        { id: 'a', name: 'Entrada a Bosque Verde', kind: NodeKind.Raid, steps: 30, boss: raidBoss(POKEMON.Pidgeotto, 10, RaidTier.Low, { soloMinutes: 5 }) },
+        { id: 'a', name: 'Entrada a Bosque Verde', kind: NodeKind.Raid, steps: 30, boss: raidBoss(POKEMON.Pidgeotto, 10, RaidTier.Low) },
       ),
     },
     {
@@ -95,11 +97,12 @@ export const KANTO: GameMap = {
         { id: 'a', name: 'Sotobosque', kind: NodeKind.Wild, steps: 80, landmark: StopLandmark.Sign },
         { id: 'b', name: 'Matorral', kind: NodeKind.Wild, steps: 90, encounters: enc([POKEMON.Oddish, 15], [POKEMON.Bellsprout, 15], [POKEMON.Caterpie, 25], [POKEMON.Weedle, 25], [POKEMON.Pidgey, 20]) },
         { id: 'p1', name: 'Manantial', kind: NodeKind.Heal, steps: 15, potion: Potion.Potion },
+        { id: 'o', name: 'Entrenador', kind: NodeKind.Trainer, steps: 15, trainer: TrainerId.Cazabichos2 },
         { id: 'c', name: 'Tronco hueco', kind: NodeKind.Wild, steps: 80, landmark: StopLandmark.Log, encounters: enc([POKEMON.Metapod, 43], [POKEMON.Kakuna, 43], [POKEMON.Pikachu, 14]) },
         { id: 'd', name: 'Claro', kind: NodeKind.Wild, steps: 80, levelBonus: 1, encounters: enc([POKEMON.Pikachu, 25], [POKEMON.Caterpie, 20], [POKEMON.Metapod, 20], [POKEMON.Kakuna, 15], [POKEMON.Oddish, 10], [POKEMON.Pidgey, 10]) },
         { id: 'p2', name: 'Cabaña del guardabosques', kind: NodeKind.Heal, steps: 15, potion: Potion.Potion },
         { id: 'e', name: 'Corazón del bosque', kind: NodeKind.Wild, steps: 70, levelBonus: 2, encounters: enc([POKEMON.Pikachu, 50], [POKEMON.Metapod, 15], [POKEMON.Kakuna, 15], [POKEMON.Butterfree, 10], [POKEMON.Beedrill, 10]) },
-        { id: 'g', name: 'Final', kind: NodeKind.Raid, steps: 45, boss: raidBoss(POKEMON.Shroomish, 17, RaidTier.Low, { soloMinutes: 18 }) },
+        { id: 'g', name: 'Final', kind: NodeKind.Raid, steps: 45, boss: raidBoss(POKEMON.Shroomish, 17, RaidTier.Low) },
       ),
     },
     {
@@ -151,9 +154,9 @@ export const KANTO: GameMap = {
       unlocks: RouteId.Ruta3,
       nodes: chain(
         { id: 's', name: 'Afueras de la ciudad', kind: NodeKind.Start, steps: 0 },
-        { id: 'a', name: 'Rocket team', kind: NodeKind.Raid, steps: 20, boss: raidBoss(POKEMON.Meowth, 25, RaidTier.Low, { soloMinutes: 10 }) },
-        { id: 'b', name: 'Rocket team', kind: NodeKind.Raid, steps: 20, boss: raidBoss(POKEMON.Koffing, 25, RaidTier.Low, { soloMinutes: 10 }) },
-        { id: 'c', name: 'Rocket team', kind: NodeKind.Raid, steps: 20, boss: raidBoss(POKEMON.Ekans, 25, RaidTier.Mid, { soloMinutes: 30 }) },
+        { id: 'a', name: 'Rocket team', kind: NodeKind.Raid, steps: 20, boss: raidBoss(POKEMON.Meowth, 25, RaidTier.Low) },
+        { id: 'b', name: 'Rocket team', kind: NodeKind.Raid, steps: 20, boss: raidBoss(POKEMON.Koffing, 25, RaidTier.Low) },
+        { id: 'c', name: 'Rocket team', kind: NodeKind.Raid, steps: 20, boss: raidBoss(POKEMON.Ekans, 25, RaidTier.Mid) },
       ),
     },
     {
@@ -180,7 +183,7 @@ export const KANTO: GameMap = {
         { id: 'j4', name: 'Médium del Monte Moon', kind: NodeKind.Boss, steps: 40, boss: boss(POKEMON.Gastly, 25, [{ type: 'ghost', level: 1 }]) },
         { id: 'p5', name: 'Refugio del montañero', kind: NodeKind.Heal, steps: 15, potion: Potion.SuperPotion },
         { id: 'j5', name: 'Ladrón de fósiles', kind: NodeKind.Boss, steps: 40, boss: boss(POKEMON.Aerodactyl, 27, [{ type: 'rock', level: 2 }]) },
-        { id: 'z', name: 'Pie del Monte Moon', kind: NodeKind.Raid, steps: 60, boss: raidBoss(POKEMON.Primeape, 30, RaidTier.Mid, { soloMinutes: 25 }) },
+        { id: 'z', name: 'Pie del Monte Moon', kind: NodeKind.Raid, steps: 60, boss: raidBoss(POKEMON.Primeape, 30, RaidTier.Mid) },
       ),
     },
     {
@@ -204,7 +207,7 @@ export const KANTO: GameMap = {
         { id: 'c2', name: 'Fuente renovadora', kind: NodeKind.Heal, steps: 120, landmark: StopLandmark.Sign, potion: Potion.SuperPotion },
         { id: 'd', name: 'Cráter lunar', kind: NodeKind.Wild, steps: 100, levelBonus: 5, statMult: 1.5 },
         { id: 'j3', name: 'Entrenador de planta', kind: NodeKind.Boss, steps: 40, boss: boss(POKEMON.Victreebel, 36, [{ type: 'grass', level: 2 }]) },
-        { id: 'e', name: 'Cima del monte', kind: NodeKind.Raid, steps: 80, boss: raidBoss(POKEMON.Lapras, 38, RaidTier.Mid, { soloMinutes: 30 }) },
+        { id: 'e', name: 'Cima del monte', kind: NodeKind.Raid, steps: 80, boss: raidBoss(POKEMON.Lapras, 38, RaidTier.Mid) },
       ),
     },
     {
@@ -225,7 +228,7 @@ export const KANTO: GameMap = {
         { id: 'c', name: 'Pueblo', kind: NodeKind.Wild, steps: 100, landmark: StopLandmark.House, statMult: 1.2 },
         { id: 'd', name: 'Pajarero', kind: NodeKind.Boss, steps: 110, landmark: StopLandmark.Sign, statMult: 1.5, boss: boss(POKEMON.Vileplume, 40, [{ type: 'bug', level: 1 }]) },
         { id: 'g', name: 'Entrada de la ciudad', kind: NodeKind.Wild, steps: 20 },
-        { id: 'h', name: 'Jefe del camino', kind: NodeKind.Raid, steps: 20, boss: raidBoss(POKEMON.Fearow, 40, RaidTier.Mid, { soloMinutes: 30 }) },
+        { id: 'h', name: 'Jefe del camino', kind: NodeKind.Raid, steps: 20, boss: raidBoss(POKEMON.Fearow, 40, RaidTier.Mid) },
       ),
     },
     {
@@ -327,7 +330,7 @@ export const KANTO: GameMap = {
       backdrop: { image: ssAnne, focusY: 55 },
       levels: [53, 58],
       encounters: enc([POKEMON.Vulpix, 20], [POKEMON.Magnemite, 10], [POKEMON.Shellder, 10], [POKEMON.Ditto, 5], [POKEMON.Nidorina, 15], [POKEMON.Nidorino, 15], [POKEMON.Machop, 5], [POKEMON.Wartortle, 19], [POKEMON.Porygon, 1]),
-      reward: { tickets: 5, money: 5000, exp: 6000 },
+      reward: { tickets: 5, money: 5000, exp: 3500 },
       unlocks: RouteId.SSAnne2,
       nodes: chain(
         { id: 's', name: 'Pasarela de embarque', kind: NodeKind.Start, steps: 0 },
@@ -354,11 +357,57 @@ export const KANTO: GameMap = {
       biome: Biome.Ship,
       backdrop: { image: ssAnne, focusY: 55 },
       levels: [55, 58],
+      unlocks: RouteId.TunelRoca,
       encounters: [],
-      reward: { tickets: 5, money: 5000, exp: 6000 },
+      reward: { tickets: 5, money: 5000, exp: 4000 },
       nodes: chain(
         { id: 's', name: 'Pasarela de embarque', kind: NodeKind.Start, steps: 0 },
         { id: 'o', name: 'Giovanni', kind: NodeKind.Trainer, steps: 5, trainer: TrainerId.Giovanni },
+      ),
+    },
+    {
+      id: RouteId.TunelRoca,
+      name: 'Túnel Roca',
+      description: 'Túnel lleno de nuevos Pokémon en dirección a Pueblo Lavanda.',
+      biome: Biome.MtMoon,
+      backdrop: { image: tunelRoca, focusY: 12 },
+      levels: [55, 60],
+      unlocks: RouteId.PuebloLavanda,
+      encounters: enc([POKEMON.Sandslash, 10], [POKEMON.Sandshrew, 10], [POKEMON.Graveler, 10], [POKEMON.Golem, 5], [POKEMON.Diglett, 10], [POKEMON.Foongus, 5], [POKEMON.Cubone, 5], [POKEMON.Paras, 5], [POKEMON.Omanyte, 5], [POKEMON.Sandile, 15], [POKEMON.Onix, 15], [POKEMON.Drowzee, 5]),
+      reward: { tickets: 5, money: 5000, exp: 4500 },
+      nodes: chain(
+        { id: 's', name: 'Inicio', kind: NodeKind.Start, steps: 0 },
+        { id: 'a', name: 'Primera planta', kind: NodeKind.Wild, steps: 40, statMult: 1.2 },
+        { id: 'b', name: 'Pasadizo', kind: NodeKind.Wild, steps: 60, levelBonus: 2, statMult: 1.2 },
+        { id: 'c', name: 'Subida a la siguiente planta', kind: NodeKind.Boss, steps: 40, statMult: 2.5, boss: boss(POKEMON.Sableye, 57, [{ type: 'ghost', level: 3 }, { type: 'dark', level: 3 }, { type: 'psychic', level: 2 }]) },
+        { id: 'd', name: 'Segunda planta', kind: NodeKind.Wild, steps: 30, levelBonus: 1, statMult: 1.2 },
+        { id: 'e', name: 'Segunda planta', kind: NodeKind.Wild, steps: 50, levelBonus: 2, statMult: 1.3 },
+        { id: 'f', name: 'Descanso', kind: NodeKind.Heal, steps: 30, potion: Potion.SuperPotion },
+        { id: 'g', name: 'Subida a la tercera planta', kind: NodeKind.Wild, steps: 20, levelBonus: 3, statMult: 1.5 },
+        { id: 'h', name: 'Tercera planta', kind: NodeKind.Wild, steps: 50, levelBonus: 3, statMult: 1.5 },
+        { id: 'i', name: 'Tercera planta', kind: NodeKind.Wild, steps: 50, levelBonus: 3, statMult: 1.5 },
+        { id: 'j', name: 'Salida', kind: NodeKind.Boss, steps: 60, statMult: 2.5, boss: boss(POKEMON.Amoonguss, 60, [{ type: 'grass', level: 3 }, { type: 'bug', level: 3 }, { type: 'steel', level: 3 }, { type: 'ground', level: 3 }, { type: 'normal', level: 3 }]) },
+      ),
+    },
+    {
+      id: RouteId.PuebloLavanda,
+      name: 'Pueblo Lavanda',
+      description: 'Un pueblo tranquilo y sombrío. Dicen que en la Torre Pokémon rondan los fantasmas.',
+      biome: Biome.MeadowDusk,
+      backdrop: { image: puebloLavanda, focusY: 37 },
+      levels: [58, 63],
+      encounters: enc([POKEMON.Gastly, 25], [POKEMON.Haunter, 25], [POKEMON.Pawniard, 3], [POKEMON.Mimikyu, 2], [POKEMON.Houndour, 25], [POKEMON.Umbreon, 20]),
+      reward: { tickets: 2, money: 5500, exp: 5000 },
+      nodes: chain(
+        { id: 's', name: 'Entrada al pueblo', kind: NodeKind.Start, steps: 0 },
+        { id: 'a', name: 'Calles empedradas', kind: NodeKind.Wild, steps: 50, statMult: 1 },
+        { id: 'b', name: 'Centro Pokémon', kind: NodeKind.Heal, steps: 40, potion: Potion.SuperPotion },
+        { id: 'c', name: 'Jardín de flores', kind: NodeKind.Wild, steps: 50, statMult: 1.5 },
+        { id: 'd', name: 'Entrenador', kind: NodeKind.Trainer, steps: 50, trainer: TrainerId.Joven5 },
+        { id: 'e', name: 'Casa del Sr. Fuji', kind: NodeKind.Wild, steps: 50, landmark: StopLandmark.House },
+        { id: 'f', name: 'Entrenador', kind: NodeKind.Trainer, steps: 50, trainer: TrainerId.Montanero2 },
+        { id: 'g', name: 'Tienda Pokémon', kind: NodeKind.Heal, steps: 40, potion: Potion.SuperPotion },
+        { id: 'h', name: 'Torre Pokémon', kind: NodeKind.Boss, steps: 70, statMult: 1.2, boss: boss(POKEMON.Gengar, 63, [{ type: 'ghost', level: 3 }, { type: 'psychic', level: 3 }]) },
       ),
     },
   ],

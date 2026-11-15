@@ -1,35 +1,35 @@
 import { useState } from 'react'
 import type { GameState } from '../../game/core/state'
-import { tabRaidRotations } from '../../game/raid/raid'
-import { rotationBoss } from '../../game/raid/rotationBosses'
-import { RAID_ROTATIONS, roomRotation, type RaidRotation } from '../../game/raid/online/protocol'
-import { useRaidFeed, type FeedState } from '../../net/raidFeed'
+import { RAID_ROTATIONS, type RaidRotation } from '../../game/raid/online/protocol'
+import type { RaidPrize } from '../../game/raid/raidRoom'
+import { cycleBoss } from '../../game/raid/rotationBosses'
+import { cycleAt, RaidStage, stageAt } from '../../game/raid/raidSchedule'
+import { serverNow, useRaidBoard } from '../../net/raidBoard'
 import { Sprite } from '../shared/common'
-import { RaidFront } from './RaidFront'
-import { RaidLocal } from './RaidLocal'
+import { RewardOverlay } from '../shared/RewardOverlay'
+import { raidPrizeRewards } from '../shared/rewardItems'
+import { RaidFightView } from './RaidFightView'
+import { RaidLobby } from './RaidLobby'
 import { RaidPrizeBanner } from './RaidPrizes'
-import { RaidRooms } from './RaidRooms'
+import { RaidWaiting } from './RaidWaiting'
 import { ROTATION_LABEL } from './rotations'
 import './raid.css'
-
-const ROOMS_TAB = 'rooms'
-type RaidTab = RaidRotation | typeof ROOMS_TAB
 
 /** Tamaño del jefe en la pestaña de su rotación */
 const TAB_SPRITE_SIZE = 24
 
-/** La pestaña con la que se abre: la rotación de la sala que mirabas o, si no, la primera en la que esté tu Pokémon */
-const firstTab = (game: GameState, feed: FeedState): RaidTab =>
-  feed.watchRoomId ? roomRotation(feed.watchRoomId) : (tabRaidRotations(game)[0] ?? roomRotation(null))
+/** La rotación con la que se abre: la primera en la que esté tu Pokémon */
+const firstTab = (game: GameState): RaidRotation => RAID_ROTATIONS.find((r) => game.raids[r]) ?? RAID_ROTATIONS[0]
 
 /**
- * Pestaña Ruta › Raids. Con servidor, los jefes y las salas son los suyos, iguales para todos: una pestaña por rotación
- * de jefes (la sala del frontal o la tuya) y «Salas» (todas las de los jefes y, para mirar, las de ruta con jugadores).
- * Sin servidor, la sala local de siempre
+ * Pestaña Ruta › Raids: una pestaña por rotación de jefes, todas con el mismo calendario (raidSchedule.ts). Con la sala
+ * abierta se entra con un Pokémon y su ataque; al empezar, la pelea a pantalla completa, como la de una incursión. Con
+ * servidor, la sala es la suya, con otros jugadores; sin él, en local con bots
  */
 export function RaidScreen({ game }: { game: GameState }) {
-  const feed = useRaidFeed()
-  const [tab, setTab] = useState<RaidTab>(() => firstTab(game, feed))
+  const board = useRaidBoard()
+  const [tab, setTab] = useState<RaidRotation>(() => firstTab(game))
+  const [collected, setCollected] = useState<RaidPrize | null>(null)
   if (game.tutorial !== null) {
     return (
       <div className="screen scroll">
@@ -38,36 +38,51 @@ export function RaidScreen({ game }: { game: GameState }) {
     )
   }
 
-  const boards = feed.feed?.rotations ?? []
-  const rooms = boards.reduce((n, b) => n + b.rooms.length, 0)
-  const board = boards.find((b) => b.rotation === tab)
+  const now = serverNow(board)
+  const tr = game.raids[tab]
+  const other = RAID_ROTATIONS.find((r) => r !== tab)!
+  const overlay = collected && <RewardOverlay title="¡Premio del jefe!" items={raidPrizeRewards([collected])} onClose={() => setCollected(null)} />
+  const tabs = <RotationTabs game={game} tab={tab} now={now} onTab={setTab} />
 
+  if (tr?.room.fight) {
+    const switcher = game.raids[other] && (
+      <button className="btn ghost small" onClick={() => setTab(other)}>
+        {ROTATION_LABEL[other]}
+      </button>
+    )
+    return (
+      <>
+        {overlay}
+        <RaidFightView game={game} tr={tr} rotation={tab} switcher={switcher} onCollected={setCollected} />
+      </>
+    )
+  }
+
+  const fightRunning = !tr && stageAt(cycleAt(now), now) === RaidStage.Fight
   return (
     <div className="screen raid-screen">
-      {game.raidServer && (
-        <div className="segmented raid-tabs">
-          {RAID_ROTATIONS.map((rotation) => {
-            const boss = boards.find((b) => b.rotation === rotation)
-            return (
-              <button key={rotation} className={tab === rotation ? 'active' : ''} onClick={() => setTab(rotation)}>
-                {boss && <Sprite id={rotationBoss(rotation, boss.bossIndex).speciesId} size={TAB_SPRITE_SIZE} animated={false} />}
-                {ROTATION_LABEL[rotation]}
-              </button>
-            )
-          })}
-          <button className={tab === ROOMS_TAB ? 'active' : ''} onClick={() => setTab(ROOMS_TAB)}>
-            Salas {rooms > 0 && <span className="count-badge">{rooms}</span>}
-          </button>
-        </div>
-      )}
+      {overlay}
+      {tabs}
       <RaidPrizeBanner game={game} />
-      {!game.raidServer ? (
-        <RaidLocal game={game} />
-      ) : tab === ROOMS_TAB ? (
-        <RaidRooms game={game} state={feed} onWatch={setTab} />
-      ) : (
-        <RaidFront game={game} state={feed} board={board ?? null} />
-      )}
+      {fightRunning ? <RaidWaiting rotation={tab} now={now} /> : <RaidLobby game={game} rotation={tab} board={board} now={now} />}
+    </div>
+  )
+}
+
+/** Una pestaña por rotación, con su jefe de ahora (o el que está luchando tu Pokémon) */
+function RotationTabs({ game, tab, now, onTab }: { game: GameState; tab: RaidRotation; now: number; onTab: (r: RaidRotation) => void }) {
+  return (
+    <div className="segmented raid-tabs">
+      {RAID_ROTATIONS.map((rotation) => {
+        const cycle = game.raids[rotation]?.room.cycle ?? cycleAt(now)
+        return (
+          <button key={rotation} className={tab === rotation ? 'active' : ''} onClick={() => onTab(rotation)}>
+            <Sprite id={cycleBoss(rotation, cycle).speciesId} size={TAB_SPRITE_SIZE} animated={false} />
+            {ROTATION_LABEL[rotation]}
+            {game.raids[rotation] && <span className="dot" />}
+          </button>
+        )
+      })}
     </div>
   )
 }

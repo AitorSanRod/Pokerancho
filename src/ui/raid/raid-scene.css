@@ -1,4 +1,4 @@
-/* Pelea contra el jefe comunitario vista como un combate de ruta (RaidBattleScene) */
+/* La escena del jefe: quieto en la sala abierta (RaidBossStage) y lo común de la pelea con la de incursión (IncursionStage) */
 
 .raid-stage {
   position: relative;
@@ -13,47 +13,11 @@
 .route-fighter.enemy.boss.raid-boss-fighter {
   left: 77%;
 }
-/* Los números sobre el jefe salen en carriles (--pop-x) para no pisarse; los del jugador, más grandes y en amarillo */
-.raid-boss-fighter .battle-pop {
-  top: 30px;
-  translate: calc(-50% + var(--pop-x, 0px)) 0;
-  font-size: 16px;
-  opacity: 0.85;
-}
-.raid-boss-fighter .battle-pop.mine {
-  z-index: 2;
-  font-size: 24px;
-  color: var(--yellow);
-  opacity: 1;
-}
-/* El marcador del jefe, a sus pies, algo más a la izquierda para que quepa en la pantalla */
-.battle-hud-slot.raid-boss-hud {
-  left: 72%;
-}
 .raid-boss-fighter .sprite {
   display: flex;
   filter: drop-shadow(0 3px 0 #0003);
 }
 
-/* Cada Pokémon del grupo: centrado en su sitio y, en las filas de atrás, más pequeño */
-.raid-party-mon {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transform: translateX(-50%) scale(var(--spot-scale));
-  transform-origin: bottom center;
-  animation: party-enter 0.5s ease-out;
-}
-.raid-party-mon .sprite {
-  display: flex;
-  transform: scaleX(-1);
-  filter: drop-shadow(0 2px 0 #0003);
-}
-.raid-party-mon .battle-pop {
-  top: 12px;
-  font-size: 15px;
-}
 /* A los pies del suyo: así queda pegada a él sea cual sea el tamaño de su sprite */
 .raid-mine-tag {
   position: absolute;
@@ -70,34 +34,6 @@
   font-weight: 900;
   color: var(--accent);
 }
-/* Cuenta atrás para revivir, encima del sprite tumbado */
-.raid-revive-count {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  z-index: 2;
-  translate: -50% -50%;
-  display: grid;
-  place-items: center;
-  min-width: 30px;
-  height: 30px;
-  padding: 0 6px;
-  border-radius: 15px;
-  background: #222c;
-  color: #fff;
-  font-size: 15px;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-  box-shadow: 0 2px 0 #0004;
-}
-/* Debilitado: tumbado y en gris hasta que vuelve */
-.raid-party-mon.down .sprite {
-  filter: grayscale(1) brightness(0.75);
-  opacity: 0.6;
-  rotate: 14deg;
-  translate: 0 6px;
-}
-
 /* En reposo se balancean un poco (cada uno con su desfase) y el jefe respira: la escena nunca está quieta */
 .raid-idle {
   animation: party-idle 1.6s ease-in-out infinite var(--idle-delay, 0s);
@@ -147,12 +83,6 @@
     translate: -28px 0;
   }
 }
-@keyframes party-enter {
-  from {
-    translate: -60px 0;
-    opacity: 0;
-  }
-}
 @keyframes party-lunge-0 {
   50% {
     translate: 20px 0;
@@ -184,9 +114,4 @@
   80% {
     translate: 6px 0;
   }
-}
-/* Golpe del jugador hecho crítico con un toque (RaidCritRing) */
-.battle-pop.tap-crit {
-  color: var(--yellow);
-  font-size: 1.25em;
 }

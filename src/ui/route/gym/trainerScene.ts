@@ -1,11 +1,11 @@
-import type { GymFoe } from '../../../data/gyms'
 import { GYMS } from '../../../data/gyms'
 import { node, NodeKind, route } from '../../../data/maps'
 import { species } from '../../../data/species'
 import { TRAINERS } from '../../../data/trainers'
+import type { TrainerTeam } from '../../../data/trainerTeam'
 import type { Run } from '../../../game/core/state'
 import { LEADER_SPRITES } from './leaderSprites'
-import { TRAINER_SPRITES } from './trainerSprites'
+import { trainerPortrait } from './trainerSprites'
 
 /** Lo que se ve del combate contra un líder de gimnasio o un entrenador: quién es, cuántos Pokémon tiene y cuál ha sacado */
 export interface TrainerScene {
@@ -18,7 +18,7 @@ export interface TrainerScene {
   foeName: string
 }
 
-const sceneOf = (name: string, sprite: string | undefined, team: GymFoe[], index: number): TrainerScene => ({
+const sceneOf = (name: string, sprite: string | undefined, team: TrainerTeam, index: number): TrainerScene => ({
   name,
   sprite,
   index,
@@ -32,7 +32,8 @@ export function trainerScene(run: Run): TrainerScene | null {
   if (n.kind === NodeKind.Gym && n.gym && run.gym) return sceneOf(GYMS[n.gym].leader, LEADER_SPRITES[n.gym], GYMS[n.gym].team, run.gym.index)
   if (n.kind === NodeKind.Trainer && n.trainer && run.trainer) {
     const trainer = TRAINERS[n.trainer]
-    return sceneOf(trainer.name, TRAINER_SPRITES[trainer.look], trainer.team, run.trainer.index)
+    const { name, sprite } = trainerPortrait(trainer, run.trainer.who)
+    return sceneOf(name, sprite, trainer.team, run.trainer.index)
   }
   return null
 }

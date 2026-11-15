@@ -1,4 +1,4 @@
-import { legSteps, NodeKind, type Boss, type Route, type RouteNode } from '../../data/maps'
+import { legSteps, node, NodeKind, type Boss, type Route, type RouteNode } from '../../data/maps'
 import type { Move } from '../../data/moves'
 import { makeFighter } from '../battle/battle'
 import { boostedMoney, expReward, moneyReward, pieceReward, ticketReward } from '../battle/rewards'
@@ -19,6 +19,7 @@ import { rewardsFor } from './tapCrit'
 import { nextGymFoe, winGym } from './runGym'
 import { routeMove } from './runMove'
 import { nextTrainerFoe } from './runTrainer'
+import { winRouteRaid } from '../raid/routeRaid'
 import { foeExpMult, foeStatMult, rollShinyFoe, shinyIntro } from './shinyFoe'
 
 /**
@@ -68,11 +69,12 @@ export interface BattleOpts {
 
 /**
  * Resuelve el combate de la parada pero no lo aplica: PS, premio y derrota se aplican en `settleBattle` cuando
- * termina su tiempo, para que el estado no se adelante a lo que ve el jugador. Los jefes luchan con sus stats
- * completas (sin WILD_STAT_MULT), con sus pasivas del mapa, y dan más premio. Cualquiera de los dos puede salir shiny.
+ * termina su tiempo, para que el estado no se adelante a lo que ve el jugador. Los jefes (también los comunitarios de
+ * las paradas de raid) luchan con sus stats completas (sin WILD_STAT_MULT), con sus pasivas del mapa, y dan más premio.
+ * Cualquiera de los dos puede salir shiny.
  */
 export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng) {
-  const isBoss = n.kind === NodeKind.Boss
+  const isBoss = n.kind === NodeKind.Boss || n.kind === NodeKind.Raid
   const rival = rivalOf(r, n, rng)
   const shiny = rollShinyFoe(rng)
   const statMult = foeStatMult(n.statMult ?? (isBoss ? 1 : WILD_STAT_MULT), shiny)
@@ -159,6 +161,8 @@ function settleBattle(s: GameState, r: Route, rng: Rng) {
     }
     run.earned.wins++
     advanceMission(s, MissionKind.WinBattles)
+    const stop = node(r, run.path[run.stop])
+    if (stop.kind === NodeKind.Raid) winRouteRaid(s, r, stop, s.lastTick, rng)
     // El líder del gimnasio o el entrenador saca el siguiente; al caer el último del líder, la medalla
     if (run.gym && nextGymFoe(s, r, rng)) return
     if (run.gym) winGym(s)

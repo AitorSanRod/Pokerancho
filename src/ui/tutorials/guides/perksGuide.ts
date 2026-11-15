@@ -33,7 +33,7 @@ export const PERKS_GUIDE: Guide = {
     {
       image: shot('perks-crit'),
       title: 'Toque crítico',
-      text: `En los combates de ruta y contra los jefes, a veces sale un anillo sobre el rival antes del golpe de tu Pokémon: estate atento. Toca una sola vez justo cuando se cierre y el golpe hará ×${TAP_CRIT_MULT} de daño (puede tumbar al jefe). Si tocas antes, después o varias veces, falla.`,
+      text: `En los combates de ruta y en la pelea de las raids, a veces sale un anillo sobre el rival antes del golpe de tu Pokémon: estate atento. Toca una sola vez justo cuando se cierre y hará ×${TAP_CRIT_MULT} de daño (en las raids, tu primer golpe del turno siguiente). Si tocas antes, después o varias veces, falla.`,
     },
     {
       image: shot('perks-boost'),

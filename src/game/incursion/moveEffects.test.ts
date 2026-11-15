@@ -170,3 +170,25 @@ describe('ataques de incursión', () => {
     expect(party.every((p) => p.hp < p.maxHp)).toBe(true)
   })
 })
+
+describe('toque crítico', () => {
+  /** Daño que hace `a` de un golpe a un rival nuevo, con el crítico del toque o sin él */
+  function hitWith(crit: boolean): { dealt: number; crit: boolean | undefined; left: string[] } {
+    const a = ally('a')
+    const foe = enemy('e', { hpMult: 50 })
+    const { bf, events } = field([a], [foe])
+    bf.critReady = crit ? ['a'] : []
+    performMove(bf, a, seqRng(0.5))
+    const hit = events.find((e) => e.kind === EventKind.Hit)!
+    return { dealt: foe.maxHp - foe.hp, crit: hit.crit, left: bf.critReady }
+  }
+
+  it('el primer golpe a un rival sale crítico, pega más y gasta el crítico', () => {
+    const plain = hitWith(false)
+    const tapped = hitWith(true)
+    expect(plain.crit).toBe(false)
+    expect(tapped.crit).toBe(true)
+    expect(tapped.dealt).toBeGreaterThan(plain.dealt)
+    expect(tapped.left).toEqual([])
+  })
+})

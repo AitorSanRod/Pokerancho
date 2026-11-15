@@ -31,7 +31,7 @@ export const enemy = (id: string, extra: Partial<IncursionFoe> = {}): GroupFight
 
 export function field(party: GroupFighter[], foes: GroupFighter[], revives = 0): { bf: Battlefield; events: IncursionEvent[] } {
   const events: IncursionEvent[] = []
-  return { bf: { party, foes, revives, turn: 1, falls: 0, passives: [], boosted: [], log: (e) => events.push(e) }, events }
+  return { bf: { party, foes, revives, turn: 1, falls: 0, passives: [], boosted: [], critReady: [], log: (e) => events.push(e) }, events }
 }
 
 /** Ventanas de toques que se cierran sin que nadie potencie su ataque */

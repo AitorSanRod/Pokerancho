@@ -11,13 +11,7 @@ const opts = (dict: Record<string, unknown>): [string, string][] => Object.keys(
 function bossFields(n: NodeDraft, p: string) {
   const b = n.boss
   const base = label('Pokémon', speciesInput(`${p}.boss.species`, b.species)) + label('Nivel', numInput(`${p}.boss.level`, b.level))
-  if (n.kind === 'Raid') {
-    return (
-      base +
-      label('Premios', select(`${p}.boss.tier`, b.tier, opts(DICTS.RaidTier))) +
-      label('Minutos en solitario', optNumInput(`${p}.boss.soloMinutes`, b.soloMinutes, 'por defecto'), 'lo que tardaría un Pokémon solo')
-    )
-  }
+  if (n.kind === 'Raid') return base + label('Premios', select(`${p}.boss.tier`, b.tier, opts(DICTS.RaidTier)))
   const passives = b.passives
     .map(
       (ps, i) => `<div class="passive">

@@ -1,69 +1,10 @@
 /**
  * Lista de capturas de los tutoriales. Cada una: `name` (fichero .webp), `scenario` (qué añadir a la partida de
- * demostración, ver demoSave.mjs), `steps` (toques hasta llegar a la pantalla) y `focus` (lo que se resalta).
+ * demostración, ver demoSave.mjs), `steps` (toques hasta llegar a la pantalla) y `focus` (lo que se resalta). Las de
+ * las guías más nuevas, en guideShots.mjs.
  */
-const NAV = { route: 1, gacha: 2, ranch: 3, shop: 4, dex: 5 }
-
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
-async function tap(page, selector, after = 600) {
-  const el = await page.waitForSelector(selector, { timeout: 4000 })
-  await el.click()
-  await wait(after)
-}
-
-const nav = (page, tab) => tap(page, `.bottom-nav button:nth-child(${NAV[tab]})`)
-
-/** Abre la ficha del Pokémon del rancho de esa especie (por su clave de POKEMON, p. ej. 'Bulbasaur') */
-async function openRanchMon(page, name) {
-  const index = await page.evaluate(async (key) => {
-    const { POKEMON } = await import('/src/data/pokemon.ts')
-    const isSprite = (img) => img.src.endsWith(`/${POKEMON[key]}.png`) || img.src.endsWith(`/${POKEMON[key]}.gif`)
-    return [...document.querySelectorAll('.ranch-mon')].findIndex((el) => [...el.querySelectorAll('img')].some(isSprite))
-  }, name)
-  if (index < 0) throw new Error(`${name} no está en el rancho`)
-  await (await page.$$('.ranch-mon'))[index].click()
-  await wait(900)
-}
-
-/** Lleva arriba una sección de la ficha por su título */
-async function showSection(page, title) {
-  const el = await page.waitForSelector(`::-p-text(${title})`, { timeout: 4000 })
-  await el.evaluate((node) => node.scrollIntoView({ block: 'start' }))
-  await wait(500)
-}
-
-/** Toca la escena de la ruta hasta que empieza un combate y deja que se vean unos golpes */
-async function tapUntilBattle(page) {
-  for (let i = 0; i < 200 && !(await page.$('.route-battle')); i++) {
-    await page.mouse.click(195, 500)
-    await wait(100)
-  }
-  await wait(2600)
-}
-
-/** Toca la escena de la ruta (para llegar antes a los combates) hasta que sale un anillo del toque crítico */
-async function tapUntilRing(page) {
-  for (let i = 0; i < 600 && !(await page.$('.tap-ring-closing')); i++) {
-    if (!(await page.$('.route-battle'))) await page.mouse.click(195, 500)
-    await wait(100)
-  }
-  await wait(450)
-}
-
-const toRoute = (p) => nav(p, 'route')
-const toRouteTab = async (p, label, after) => {
-  await toRoute(p)
-  await tap(p, `::-p-aria(${label})`, after)
-}
-const openMenu = async (p, entry) => {
-  await tap(p, '.ranch-menu-button')
-  await tap(p, `::-p-text(${entry})`)
-}
-const routeBattle = async (p) => {
-  await toRoute(p)
-  await tapUntilBattle(p)
-}
+import { GUIDE_SHOTS } from './guideShots.mjs'
+import { tap, nav, openRanchMon, showSection, tapUntilRing, toRoute, toRouteTab, openMenu, routeBattle } from './steps.mjs'
 
 export const SHOTS = [
   // Mejoras, misiones y toques
@@ -112,19 +53,19 @@ export const SHOTS = [
   { name: 'play-expeditions', scenario: { expedition: true }, steps: (p) => toRouteTab(p, 'Expediciones'), focus: '::-p-aria(Expediciones)' },
   { name: 'play-gacha', steps: (p) => nav(p, 'gacha'), focus: '::-p-text(Tirar x1)' },
   { name: 'play-dex', steps: (p) => nav(p, 'dex'), focus: '.dex-cell.ready' },
-  // Raids
+  // Raids: «raid-join» y «raid-nickname» necesitan la sala abierta (la primera media hora de cada hora, raidSchedule.ts)
   { name: 'raid-tab', steps: toRoute, focus: '::-p-aria(Raids)' },
-  { name: 'raid-join', steps: (p) => toRouteTab(p, 'Raids', 1500), focus: '.mon-picker' },
-  { name: 'raid-send', steps: (p) => toRouteTab(p, 'Raids', 1500), focus: '::-p-text(Mandar a )' },
+  { name: 'raid-join', steps: (p) => toRouteTab(p, 'Raids', 1500), focus: '::-p-text(Entrar en la sala)' },
+  { name: 'raid-send', scenario: { raid: 'lobby' }, steps: (p) => toRouteTab(p, 'Raids', 1500), focus: '::-p-text(Salir de la sala)' },
   {
     name: 'raid-nickname',
     steps: async (p) => {
       await toRouteTab(p, 'Raids', 1500)
-      await tap(p, '::-p-text(Mandar a )')
+      await tap(p, '::-p-text(Entrar en la sala)')
     },
   },
-  { name: 'raid-battle', scenario: { raid: true }, steps: (p) => toRouteTab(p, 'Raids', 3000), focus: '::-p-text(Caerá en)' },
-  { name: 'raid-prize', scenario: { raidPrize: true }, steps: (p) => toRouteTab(p, 'Raids', 1500), focus: '::-p-text(Recoger premio)' },
+  { name: 'raid-battle', scenario: { raid: 'fight' }, steps: (p) => toRouteTab(p, 'Raids', 3000), focus: '.move-bar' },
+  { name: 'raid-prize', scenario: { raidPrize: true }, steps: (p) => toRouteTab(p, 'Raids', 1500), focus: '.raid-prize-banner' },
   // Incursiones
   { name: 'inc-tab', steps: toRoute, focus: '::-p-aria(Incursiones)' },
   {
@@ -140,7 +81,7 @@ export const SHOTS = [
     name: 'inc-prep',
     steps: async (p) => {
       await toRouteTab(p, 'Incursiones')
-      await tap(p, '::-p-text(Preparar)', 900)
+      await tap(p, '.btn.go', 900)
     },
     focus: '.incursion-moves',
   },
@@ -170,7 +111,7 @@ export const SHOTS = [
     name: 'evo-stones',
     steps: async (p) => {
       await nav(p, 'shop')
-      await tap(p, '::-p-text(Piedras evolutivas)')
+      await tap(p, '::-p-text(Objetos evolutivos)')
     },
     focus: '.shop-fold-stones .shop-grid',
   },
@@ -197,4 +138,5 @@ export const SHOTS = [
     focus: '.route-start .segmented',
   },
   { name: 'money-gift', steps: (p) => openMenu(p, 'Obsequio diario'), focus: '.gift-days' },
+  ...GUIDE_SHOTS,
 ]

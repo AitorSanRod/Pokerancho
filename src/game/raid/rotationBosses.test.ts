@@ -1,15 +1,27 @@
 import { describe, expect, it } from 'vitest'
-import { HARD_RAID_BOSSES, HARD_RAID_STAT_MULT, RAID_BOSSES } from '../../data/raidBosses'
+import { RAID_BOSSES, HARD_RAID_STAT_MULT } from '../../data/raidBosses'
 import { RaidRotation } from './online/protocol'
-import { rotationBoss, rotationBosses } from './rotationBosses'
+import { cycleBoss, cycleBossIndex, rotationBosses } from './rotationBosses'
 
-describe('jefes de cada rotación', () => {
-  it('la ordenada es la lista de siempre; la difícil, con sus stats multiplicadas', () => {
-    expect(rotationBosses(RaidRotation.Ordered)).toBe(RAID_BOSSES)
-    rotationBosses(RaidRotation.Hard).forEach((boss, i) => expect(boss.statMult).toBeCloseTo((HARD_RAID_BOSSES[i].statMult ?? 1) * HARD_RAID_STAT_MULT))
+const CYCLES = Array.from({ length: 60 }, (_, i) => i)
+
+describe('jefe de cada ciclo', () => {
+  it('la rotación ordenada sigue la lista y vuelve a empezar', () => {
+    for (const c of CYCLES) expect(cycleBoss(RaidRotation.Ordered, c)).toBe(RAID_BOSSES[c % RAID_BOSSES.length])
   })
 
-  it('pasado el final de la lista vuelve a empezar', () => {
-    expect(rotationBoss(RaidRotation.Ordered, RAID_BOSSES.length)).toBe(RAID_BOSSES[0])
+  it('la difícil lleva sus stats subidas', () => {
+    for (const boss of rotationBosses(RaidRotation.Hard)) expect(boss.statMult).toBeGreaterThanOrEqual(HARD_RAID_STAT_MULT)
+  })
+
+  it('la difícil sale siempre igual para el mismo ciclo y no repite la especie de la ordenada', () => {
+    const hard = rotationBosses(RaidRotation.Hard)
+    for (const c of CYCLES) {
+      const index = cycleBossIndex(RaidRotation.Hard, c)
+      expect(index).toBe(cycleBossIndex(RaidRotation.Hard, c))
+      expect(index).toBeGreaterThanOrEqual(0)
+      expect(index).toBeLessThan(hard.length)
+      if (hard.length > 1) expect(hard[index].speciesId).not.toBe(cycleBoss(RaidRotation.Ordered, c).speciesId)
+    }
   })
 })

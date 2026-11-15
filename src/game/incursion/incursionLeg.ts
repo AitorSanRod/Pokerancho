@@ -1,4 +1,4 @@
-import { RoomKind, type Incursion } from '../../data/incursions'
+import { RoomKind, type IncursionPrize, type IncursionRoom } from '../../data/incursions'
 import { seededRng, type Rng } from '../core/random'
 import type { Battlefield } from './battlefield'
 import { EventKind, view, type IncursionEvent } from './events'
@@ -13,6 +13,22 @@ import { TAP_WINDOW_MS, type TurnOrders } from './tapWindow'
 // Un tramo de incursión: las salas desde `start.room` hasta la siguiente de reorganizar o el final. Lo único que se
 // decide dentro son los toques de antes de cada turno: la simulación se para en la primera ventana de la que aún no se
 // sabe quién ha potenciado su ataque. Con la misma entrada, semilla y toques sale siempre lo mismo en todos los móviles.
+
+/**
+ * Lo que se juega por tramos: las salas de una incursión (data/incursions/) o la de un jefe de la pestaña Raids
+ * (raid/raidFight.ts). Una incursión ya lo es tal cual
+ */
+export interface FightSource {
+  /** Distingue lo simulado (la simulación se guarda por él, ver activeIncursion.ts › recordOf) */
+  id: string
+  rooms: IncursionRoom[]
+  /** Premio al ganar, para cada uno */
+  prizes: IncursionPrize[]
+  /** Revivires del grupo para toda la pelea; sin él, INCURSION_REVIVES */
+  revives?: number
+  /** Milisegundos de cada tramo tras los que ya no empieza otro turno (y se pierde la sala); sin él, sin límite */
+  timeLimitMs?: number
+}
 
 export interface LegStart {
   /** Primera sala del tramo */
@@ -43,12 +59,12 @@ export interface LegResult {
 
 function battlefield(start: LegStart, log: (e: IncursionEvent) => void): Battlefield {
   const party = start.members.map(partyFighter)
-  const bf: Battlefield = { party, foes: [], revives: start.revives, turn: 0, falls: 0, passives: [], boosted: [], log }
+  const bf: Battlefield = { party, foes: [], revives: start.revives, turn: 0, falls: 0, passives: [], boosted: [], critReady: [], log }
   refreshPassives(bf)
   return bf
 }
 
-export function simulateLeg(inc: Incursion, start: LegStart, seed: number, resolveTaps: LegTaps): LegResult {
+export function simulateLeg(inc: FightSource, start: LegStart, seed: number, resolveTaps: LegTaps): LegResult {
   const rng: Rng = seededRng(seed)
   const events: IncursionEvent[] = []
   const turns: TurnOrders[] = []
@@ -58,6 +74,7 @@ export function simulateLeg(inc: Incursion, start: LegStart, seed: number, resol
     elapsedMs += eventMs(e)
   }
   const bf = battlefield(start, log)
+  const outOfTime = () => inc.timeLimitMs !== undefined && elapsedMs >= inc.timeLimitMs
   /** Abre la ventana de toques del turno y da sus órdenes (undefined: aún no se saben) */
   const tapWindow = () => {
     const turn = turns.length
@@ -89,7 +106,7 @@ export function simulateLeg(inc: Incursion, start: LegStart, seed: number, resol
     }
     bf.foes = room.foes.map((slot, i) => foeFighter(pickFoe(slot, rng), `foe-${r}-${i}`))
     log({ kind: EventKind.Room, room: r, text: room.name, fighters: [...bf.party, ...bf.foes].map(view) })
-    const outcome = fightRoom(bf, rng, tapWindow)
+    const outcome = fightRoom(bf, rng, tapWindow, outOfTime)
     if (outcome === 'waiting') return result(LegOutcome.Waiting, r)
     if (outcome === 'lose') return result(LegOutcome.Lose, r)
     log({ kind: EventKind.Cleared, room: r, reward: room.reward, text: `¡${room.name} superada!` })

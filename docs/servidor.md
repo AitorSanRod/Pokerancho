@@ -3,13 +3,13 @@
 Pokérancho se publica como un **Worker de Cloudflare**: sirve la web (`dist/`) y una pequeña API en `/api/*` con una
 base de datos **D1** (SQLite). Por la API van:
 
-- **Salas compartidas** de los jefes comunitarios (pestaña Raids y paradas de ruta), sin cuenta.
+- **Salas compartidas** de los jefes de la pestaña Raids, sin cuenta.
 - **Cuentas opcionales** con email y contraseña, para guardar la partida en la nube y seguirla en otro dispositivo.
   Los correos de confirmar la cuenta y recuperar la contraseña los manda **Brevo** (gratis, sin tarjeta).
 
 Sin servidor (p. ej. con `npm run dev`) se juega todo igual en local: raids con bots y sin cuentas.
 
-Cómo funciona por dentro: [arquitectura.md › Salas compartidas](arquitectura.md#salas-compartidas-servidor) y
+Cómo funciona por dentro: [arquitectura.md › Salas con servidor](arquitectura.md#salas-con-servidor) y
 [› Cuentas](arquitectura.md#cuentas-y-partida-en-la-nube).
 
 ## Qué hay montado
@@ -19,17 +19,17 @@ Cómo funciona por dentro: [arquitectura.md › Salas compartidas](arquitectura.
 | Configuración del Worker: nombre, web, base de datos | `wrangler.jsonc` |
 | Esquema de la base de datos (cuentas, sesiones, partidas, salas) | `migrations/0001_init.sql` |
 | Entrada del Worker y rutas de la API | `worker/index.ts` |
-| Salas: `POST /api/raid` | `worker/raid.ts` + `worker/db/rooms.ts` |
+| Salas de la pestaña Raids: `POST /api/raid` (cuántos esperan, entrar, salir, ponerse al día, toques, ataque y crítico). Una consulta sin cambios no escribe en D1; las salas de ciclos ya jugados las borra la tarea programada. Las tablas, en `migrations/0018_raid_schedule.sql` | `worker/raid.ts` + `worker/db/rooms.ts` |
 | Incursiones con otros jugadores: `POST /api/incursion` (cola, grupo, reorganizar, votos). Una consulta sin cambios no escribe en D1; los grupos sin consultas en 24 h los borra la tarea programada | `worker/incursion.ts` + `worker/db/incursions.ts`; tablas en `migrations/0010_incursions.sql` |
 | Partida en la nube: `GET` / `POST /api/save` (solo con sesión) | `worker/save.ts` + `worker/db/saves.ts` |
 | Cuentas: `/api/auth/*` (crear, confirmar, entrar, salir, recuperar, apodo) | `worker/auth/` + `worker/db/users.ts` |
 | Regalos para todos o para un jugador: `GET /api/server-gifts` (los de todos, sin cuenta; los de un jugador, con su sesión; cada partida apunta los que ya recogió). Se ponen y caducan con una migración en la tabla `server_gifts` (ver `migrations/0011_server_gifts.sql` y `0013_save_safety.sql`) | `worker/serverGifts.ts`, `src/game/collection/serverGifts.ts` |
 | Obsequio diario: `GET` / `POST /api/gift` (solo con sesión) | `worker/gift.ts` + `worker/db/gifts.ts` |
 | Intercambios: `GET` (tablón) / `POST /api/trade` (anunciar, aceptar, retirar, recoger; solo con sesión) | `worker/trade.ts` + `worker/tradeActions.ts` + `worker/db/trades.ts`, `tradeWrites.ts`; tablas en `migrations/0007_trades.sql` |
-| Rankings de dinero y de daño a jefes: `GET /api/ranking` (solo con sesión, apodo y sin ocultarse; las fotos se rehacen cada hora). El daño lo apunta el propio servidor, en su semana, al terminar cada jefe comunitario (caer o escaparse, al guardar la sala) y cada incursión (al guardar el grupo): una escritura por Pokémon de jugador con cuenta. La foto solo cuenta la semana en curso (desde el lunes a las 00:00 UTC) y borra las anteriores | `worker/ranking.ts` + `worker/db/ranking.ts`, `worker/db/damageRanking.ts`; tablas en `migrations/0008_ranking.sql`, `0009_damage_ranking.sql` y `0012_weekly_boss_damage.sql` |
+| Rankings de dinero y de daño a jefes: `GET /api/ranking` (solo con sesión, apodo y sin ocultarse; las fotos se rehacen cada hora). El daño lo apunta el propio servidor, en su semana, al terminar la pelea de cada sala de la pestaña Raids (al guardar la sala) y cada incursión (al guardar el grupo): una escritura por Pokémon de jugador con cuenta. La foto solo cuenta la semana en curso (desde el lunes a las 00:00 UTC) y borra las anteriores | `worker/ranking.ts` + `worker/db/ranking.ts`, `worker/db/damageRanking.ts`; tablas en `migrations/0008_ranking.sql`, `0009_damage_ranking.sql` y `0012_weekly_boss_damage.sql` |
 | Errores de los jugadores: `POST /api/error-report` (botón «Enviar error» de la pantalla «Algo ha fallado»; sin cuenta también, con sesión se apunta de quién es). El mismo error activo suma en su fila en vez de crear otra | `worker/errorReport.ts`, `src/game/core/errorReport.ts`; tabla en `migrations/0014_error_reports.sql` |
 | Notificaciones push: `/api/push/*` y el envío (VAPID, cifrado) | `worker/push/` |
-| Tarea programada cada minuto (raids sin nadie mirando, borrar paradas viejas, anuncios caducados, ranking cada hora, avisos que tocan) | `worker/scheduled.ts`, `triggers` en `wrangler.jsonc` |
+| Tarea programada cada minuto (borrar salas de raid viejas, anuncios caducados, ranking cada hora, avisos que tocan) | `worker/scheduled.ts`, `triggers` en `wrangler.jsonc` |
 | Correos (Brevo) y su texto / cupo (250 al día entre todos y 5 por hora desde una IP, para no pasar de los 300 diarios del plan gratuito) | `worker/mail.ts` / `worker/db/mailLog.ts` (tabla `mail_log`, `migrations/0017_mail_log.sql`) |
 | Lógica del juego que usa el servidor (con tests) | `src/game/raid/online/`, `src/game/core/cloudSave.ts`, `accountRules.ts`, `ranking.ts` |
 | Cliente: cuenta, partida en la nube, id y apodo, cada cuánto consulta | `src/net/` |
@@ -106,8 +106,8 @@ cada navegador tendría que volver a activar los avisos. Sin ellas, Ajustes › 
 ### 6. Probarlo
 
 1. Abre la web en el móvil y en el ordenador (o en una ventana de incógnito: cuenta como otro jugador).
-2. **Raids**: en los dos, termina el tutorial, ve a *Ruta › Raids* y manda un Pokémon (la primera vez pide el
-   apodo). Los dos aparecen en la misma sala.
+2. **Raids**: en los dos, termina el tutorial, ve a *Ruta › Raids* y, con la sala abierta (la primera media hora de
+   cada hora UTC), entra con un Pokémon (la primera vez pide el apodo). Los dos aparecen en la misma sala.
 3. **Cuenta**: *Ajustes (engranaje) › Cuenta › Crear una cuenta*. Llega un correo (mira en spam); al abrir el
    enlace vuelves a la web con la sesión iniciada y la partida se sube sola. En otro dispositivo, en la pantalla del
    inicial, pulsa «¿Ya tienes cuenta? Entrar» y sigues con esa partida.
@@ -134,27 +134,28 @@ Límites del plan gratuito de Cloudflare (se renuevan cada día; si se pasan, la
 | Recurso | Límite gratis | Qué lo gasta |
 |---|---|---|
 | Peticiones al Worker | 100 000 / día | Solo `/api/*`: la web la sirve Cloudflare sin pasar por el Worker |
-| CPU por petición | 10 ms | Las salas juegan como mucho 30 rondas por consulta (`ROOM_PLAYED_ROUNDS`); lo anterior se resume |
+| CPU por petición | 10 ms | Cerrar las ventanas de toques de una sala simula su pelea (media hora como mucho, unos pocos ms) |
 | Filas escritas en D1 | 100 000 / día | Cada consulta de sala y cada subida de partida escriben una; los rankings, una por cuenta activa y ranking cada hora (24 al día); el daño a jefes, una por Pokémon de jugador con cuenta al terminar cada jefe o incursión |
 | Filas leídas en D1 | 5 millones / día | Sobra |
 | Almacenamiento D1 | 5 GB | Una sala ocupa unos KB; una partida, decenas de KB (máx. 1 MB, `MAX_SAVE_BYTES`) |
-| Tarea programada (cron) | Incluida | Una ejecución por minuto (≈ 1 440 al día), con poca CPU: pone al día como mucho 3 salas y manda como mucho 20 avisos |
+| Tarea programada (cron) | Incluida | Una ejecución por minuto (≈ 1 440 al día), con poca CPU: borra salas viejas y manda como mucho 20 avisos |
 | Correos (Brevo) | 300 / día | Crear cuenta, entrar sin confirmar y recuperar contraseña (como mucho uno por minuto y cuenta) |
 
-Lo que consulta cada jugador (solo con la app delante; cerrada, el servidor sigue y se pone al día al volver):
+Lo que consulta cada jugador (solo con la app delante; cerrada, las ventanas de toques se cierran solas al pasar):
 
 | Situación | Peticiones por hora |
 |---|---|
-| Mirando la pelea de un jefe (cada 5 s) | ≈ 720 |
-| App abierta en otra pestaña con un Pokémon en una sala (cada 60 s; se puede estar en una sala de cada rotación de Raids y en la de la ruta) | ≈ 60 por sala |
+| Con un Pokémon en una sala abierta (cada 30 s; una sala por rotación) | ≈ 120 por sala |
+| En la pelea de un jefe (cada 10 s; cada 3 s con la ventana de toques abierta y enseguida al cerrarse, para saber el resultado) | ≈ 1500 mientras dura (media hora como mucho) |
+| Mirando la pestaña Raids sin estar en una sala (cada 20 s) | ≈ 180 |
 | Con cuenta: subir la partida (cada 2 min) | ≈ 30 |
 | Con cuenta: tablón de intercambios y Notificaciones (cada 60 s, `REFRESH_EVERY_MS` en `src/net/tradeBoard.ts`) | ≈ 60 |
 | Buscando grupo de incursión (cada 3 s, como mucho ≈ 1 min) o en su sala de reorganizar (cada 3 s, como mucho 90 s) | ≈ 1200 mientras dura |
 | Jugando un tramo de incursión (cada 10 s, `PLAY_SYNC_MS` en `src/net/incursionSync.ts`) | ≈ 360 |
 | Sin Pokémon en salas y sin cuenta | 0 |
 
-Con 100 000 peticiones al día caben ≈ 130 horas diarias de alguien mirando una pelea: de sobra para poco tráfico. Si
-se quedara corto, sube `WATCH_SYNC_MS` y `BACKGROUND_SYNC_MS` en `src/net/raidSync.ts` o `UPLOAD_EVERY_MS` en
+Con 100 000 peticiones al día caben ≈ 65 horas diarias de alguien jugando la pelea de un jefe: de sobra para poco
+tráfico. Si se quedara corto, sube `FIGHT_SYNC_MS` y `TAP_SYNC_MS` en `src/net/raidSync.ts` o `UPLOAD_EVERY_MS` en
 `src/net/cloudSync.ts`. El consumo se ve en *Workers & Pages → pokerancho → Metrics* y en *D1 → pokerancho*.
 
 ## Mantenimiento
@@ -168,8 +169,8 @@ se quedara corto, sube `WATCH_SYNC_MS` y `BACKGROUND_SYNC_MS` en `src/net/raidSy
   su partida y sesiones): `DELETE FROM users WHERE email = 'alguien@ejemplo.com';`. Borrar todas las salas (los
   jugadores que estuvieran dentro siguen en local): `DELETE FROM rooms;`.
 - **Cambias el juego** (jefes, reglas, `RAID_ROOM_SIZE`…): el Worker usa el mismo código de `src/game` y `src/data`,
-  así que se actualiza con cada despliegue. Las salas ya guardadas siguen con su jefe hasta que caen o caducan (24 h
-  sin consultas).
+  así que se actualiza con cada despliegue. Ojo con desplegar en plena pelea: si cambia cómo se juega, el móvil y el
+  servidor simulan lo mismo solo cuando los dos tienen la versión nueva.
 - **Cambias `SAVE_VERSION`**: las partidas de la nube de otra versión se migran igual que las del navegador, sin perder
   nada. El servidor no deja que una app sin actualizar suba encima de una partida guardada con una versión más nueva
   (responde 409 con `outdated-app` y la app pide actualizar, sin perder lo jugado en el móvil).
@@ -194,5 +195,5 @@ se quedara corto, sube `WATCH_SYNC_MS` y `BACKGROUND_SYNC_MS` en `src/net/raidSy
   spam. Con un dominio propio se puede verificar en Brevo y mejora.
 - **Sin cuenta, todo está en el navegador**: si se borran los datos del sitio se pierde la partida y el dispositivo
   es un jugador nuevo para las raids. Con cuenta se recupera entrando otra vez.
-- **No es tiempo real al milisegundo**: el servidor juega la sala cuando alguien consulta y cada cliente pregunta
-  cada pocos segundos. Para un juego idle basta.
+- **No es tiempo real al milisegundo**: el servidor cierra las ventanas de toques cuando alguien consulta y cada
+  cliente pregunta cada pocos segundos; si el resultado de una ventana tarda, se ve «Esperando a los toques de la sala…».

@@ -10,6 +10,7 @@ import { Stone } from '../../data/stones'
 import { isTm } from '../../data/tms'
 import { ExpeditionFocus } from '../team/expeditionFocus'
 import { repairExpeditions } from '../team/expeditionSalvage'
+import { legacyTrainerWho } from '../run/runTrainer'
 import { isBadge } from '../../data/badges'
 import { salvageMissions } from '../collection/missions'
 import { SERVER_GIFT_ID } from '../collection/serverGifts'
@@ -58,6 +59,19 @@ export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {
     }
     if (isRecord(save.tower)) save.tower.battle ??= null
   },
+  // La parada de jefe comunitario es un combate más de la ruta (sin sala): la ruta que estaba luchando en una se pierde.
+  // Las salas de la pestaña Raids cambian de forma (progressCarry.ts) y las del servidor de antes ya no existen
+  61: (save) => {
+    const run = save.run
+    if (isRecord(run)) {
+      if (run.phase === 'raid') save.run = null
+      delete run.raid
+      delete run.raidRejoinHp
+      // El entrenador de la parada lleva ahora quién le ha tocado ser (al azar desde esta versión)
+      if (isRecord(run.trainer)) run.trainer.who ??= legacyTrainerWho(run.routeId, run.path, run.stop)
+    }
+    save.roomsToLeave = []
+  },
   // El Huevo Suerte de la torre ya no va solo a la Mochila: sale en la escena y hay que tocarlo
   60: (save) => {
     if (isRecord(save.tower)) save.tower.egg ??= null
@@ -81,7 +95,7 @@ function refundIncursionKey(save: Save) {
  * en ella ya se sumó al ganarlo), igual que la sala de raid y la incursión en curso (se devuelve su llave) o en cola, y
  * el Pokémon vuelve al rancho. El multiplicador de tiempo (solo de desarrollo) vuelve siempre a x1
  */
-const IN_PROGRESS: (keyof GameState)[] = ['run', 'raids', 'raidServer', 'incursion', 'incursionQueue', 'tower', 'timeScale']
+const IN_PROGRESS: (keyof GameState)[] = ['run', 'raids', 'incursion', 'incursionQueue', 'tower', 'timeScale']
 /** Ranchos que puede llegar a tener el jugador: el primero más todos los de la tienda */
 const MAX_RANCHES = 1 + UPGRADES.ranches.prices.length
 

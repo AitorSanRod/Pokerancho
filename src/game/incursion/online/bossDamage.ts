@@ -8,7 +8,7 @@ import type { Seat, SharedIncursion } from './sharedIncursion'
 // jefes, sumando todos los tramos hasta el final (o la retirada). Se apunta una sola vez, al terminar la incursión.
 
 /** Daño de cada Pokémon de los jugadores a los jefes en lo jugado; sin los bots ni los que no les hicieron nada */
-export function bossDamage(p: IncursionProgress, seats: Seat[]): Map<string, number> {
+export function bossDamage(p: IncursionProgress, seats: Pick<Seat, 'memberId'>[]): Map<string, number> {
   const total = new Map(seats.map((s) => [s.memberId, 0]))
   for (const [l, leg] of p.record.legs.slice(0, p.leg + 1).entries()) {
     const seen = l === p.leg ? eventsStarted(leg, p.legMs) : leg.events.length

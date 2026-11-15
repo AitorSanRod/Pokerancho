@@ -16,6 +16,8 @@ export interface Battlefield {
   passives: GroupPassive[]
   /** Pokémon del grupo que han potenciado su ataque este turno con los toques (ver tapWindow.ts) */
   boosted: string[]
+  /** Pokémon del grupo cuyo primer golpe a un rival de este turno es crítico: acertaron el toque crítico (tapWindow.ts) */
+  critReady: string[]
   log: Log
 }
 

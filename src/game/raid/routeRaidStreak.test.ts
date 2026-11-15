@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { NodeKind, pathFrom, route, RouteId } from '../../data/maps'
 import { initialState, type GameState } from '../core/state'
-import type { RaidPlace } from './raidRoom'
+import type { RaidPlace } from './routeRaidStreak'
 import {
   pathRaidMoneyMult,
   recordRouteRaidFall,

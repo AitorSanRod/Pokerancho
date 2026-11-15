@@ -7,12 +7,13 @@ import { activeMon, initialState, type GameState } from '../core/state'
 import { chooseStarter, seqRng } from '../core/test-utils'
 import { MAX_LEVEL, maxHp } from '../team/stats'
 import { advanceRun, startRun, walk } from './run'
-import { TRAINER_EXP_MULT } from './runTrainer'
+import { legacyTrainerWho, TRAINER_EXP_MULT } from './runTrainer'
+import { fixedWho, trainerIdentity } from './trainerIdentity'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
 /** Nivel de los Pokémon del entrenador de prueba */
 const { FOE_LEVEL } = vi.hoisted(() => ({ FOE_LEVEL: 20 }))
-// Entrenador de prueba: dos Pokémon flojos al mismo nivel
+// Entrenador de prueba (de la primera clase, sin nombre): dos Pokémon flojos al mismo nivel
 vi.mock('../../data/trainers', async (original) => {
   const real = await original<typeof import('../../data/trainers')>()
   const { POKEMON: P } = await import('../../data/pokemon')
@@ -20,7 +21,7 @@ vi.mock('../../data/trainers', async (original) => {
     { speciesId: P.Pidgey, level: FOE_LEVEL },
     { speciesId: P.Rattata, level: FOE_LEVEL },
   ]
-  const trainer = { name: 'Entrenador de prueba', look: real.TrainerLook.Sailor, team }
+  const trainer = { trainerClass: Object.values(real.TrainerClass)[0], team }
   return { ...real, TRAINERS: { ...real.TRAINERS, [real.TrainerId.MarineroDani]: trainer } }
 })
 
@@ -49,7 +50,7 @@ describe('entrenador', () => {
     TRAINER.team.forEach((foe, i) => {
       expect(s.run!.trainer!.index).toBe(i)
       expect(s.run!.lastBattle!.enemy.speciesId).toBe(foe.speciesId)
-      expect(s.run!.lastBattle!.events[0].text).toContain(TRAINER.name)
+      expect(s.run!.lastBattle!.events[0].text).toContain(trainerIdentity(TRAINER, s.run!.trainer!.who).name)
       finishBattle(s)
     })
     expect(s.run!.trainer).toBeNull()
@@ -75,9 +76,24 @@ describe('entrenador', () => {
 
   it('fuera de su parada no hay entrenador', () => {
     const s = atTheTrainer(MAX_LEVEL)
+    const who = trainerIdentity(TRAINER, s.run!.trainer!.who).name
     TRAINER.team.forEach(() => finishBattle(s))
     walk(s, route(ROUTE).nodes[1].next[0].steps)
     expect(s.run!.trainer).toBeNull()
-    expect(s.run!.lastBattle!.events[0].text).not.toContain(TRAINER.name)
+    expect(s.run!.lastBattle!.events[0].text).not.toContain(who)
+  })
+
+  it('quién es se elige al llegar y se mantiene con todo su equipo', () => {
+    const s = atTheTrainer(MAX_LEVEL)
+    const who = s.run!.trainer!.who
+    finishBattle(s)
+    expect(s.run!.trainer!.who).toEqual(who)
+  })
+
+  it('una ruta guardada frente a él sin quién es toma lo fijo; fuera de su parada, nada', () => {
+    const run = atTheTrainer(MAX_LEVEL).run!
+    expect(legacyTrainerWho(run.routeId, run.path, run.stop)).toEqual(fixedWho(TRAINER))
+    expect(legacyTrainerWho(run.routeId, run.path, 0)).toBeNull()
+    expect(legacyTrainerWho('ruta-quitada', run.path, run.stop)).toBeNull()
   })
 })
