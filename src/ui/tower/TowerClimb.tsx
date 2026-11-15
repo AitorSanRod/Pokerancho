@@ -1,22 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
-import { species } from '../../data/species'
-import { activeMon, type GameState } from '../../game/core/state'
+import { useState } from 'react'
+import type { GameState } from '../../game/core/state'
 import { act } from '../../store/store'
-import {
-  abandonTower,
-  canContinueTower,
-  isHealFloor,
-  nextFloor,
-  setTowerMove,
-  TOWER_AWAY_FLOORS,
-  towerBetweenFloors,
-  towerMon,
-} from '../../game/tower/tower'
+import { abandonTower, isHealFloor, setTowerMove, towerBetweenFloors, towerMon } from '../../game/tower/tower'
 import { pastLevelCap, towerLevel } from '../../game/tower/towerFoes'
 import { isPrizeFloor, nextPrizeFloor, towerPrize } from '../../game/tower/towerRewards'
 import { towerBiome } from '../../game/tower/towerScenery'
 import { giftText } from '../gift/giftText'
 import { battleFrame, fighterClass, statusClass } from '../route/battleFrame'
+import { ExpBoostBadge } from '../route/ExpBoost'
 import { RouteBattle } from '../route/RouteBattle'
 import { WalkScene } from '../route/WalkScene'
 import '../route/run.css'
@@ -24,26 +15,16 @@ import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { TowerMoveBar } from './TowerMoveBar'
 import { towerMoveBarRoom } from './towerMoveBarRoom'
 
-/** Milisegundos que camina entre un piso y el siguiente */
-const FLOOR_GAP_MS = 700
-
 /**
  * La subida en curso, a pantalla completa como una ruta: escena, cabecera encima y, abajo, la barra de ataques de las
- * incursiones (el cambio vale desde el siguiente piso). Entre pisos, el siguiente sale solo mientras se mira. Al volver a
- * la pantalla (o tras pasar a segundo plano, en el que sube sola unos pisos) queda parada hasta «Seguir subiendo»
+ * incursiones (el cambio vale desde el siguiente piso). Sube sola, se mire o no: aquí solo se ve por dónde va
  */
 export function TowerClimb({ game }: { game: GameState }) {
   const t = game.tower!
   const mon = towerMon(game)
-  const between = towerBetweenFloors(game)
-  const canGo = canContinueTower(game)
-  // Al llegar a la pantalla con la torre esperando, no sigue sola: se retoma a mano
-  const [paused, setPaused] = useState(between)
+  const walking = towerBetweenFloors(game)
   const [abandoning, setAbandoning] = useState(false)
-  const walking = between && canGo && !paused
-  const pause = useCallback(() => setPaused(true), [setPaused])
-  useNextFloor(walking, t.floor, pause)
-  const battle = !between && t.lastBattle ? t.lastBattle : null
+  const battle = !walking && t.lastBattle ? t.lastBattle : null
   const frame = battle && battleFrame(battle, t.battleMsLeft)
   const prizeFloor = nextPrizeFloor(game.towerBest)
   const biome = towerBiome(t.floor)
@@ -72,31 +53,18 @@ export function TowerClimb({ game }: { game: GameState }) {
           <span className="small">
             Piso {t.floor} · rival Nv. {towerLevel(t.floor)}
           </span>
-          {between && (
-            <button className="btn ghost small hud-abandon" onClick={() => setAbandoning(true)}>
-              Abandonar
-            </button>
-          )}
+          <button className="btn ghost small hud-abandon" onClick={() => setAbandoning(true)}>
+            Abandonar
+          </button>
         </div>
         <span className="tiny muted">
           Récord: piso {game.towerBest} · Próximo premio: piso {prizeFloor} ({giftText(towerPrize(prizeFloor)!)})
         </span>
-        {between && <FloorNote game={game} />}
+        {walking && <FloorNote game={game} />}
+        {t.earned.eggs > 0 && <ExpBoostBadge active={false} />}
       </div>
 
-      {battle && <div className="tap-hint">Si sales, sube sola hasta {TOWER_AWAY_FLOORS} pisos más y te espera</div>}
-      {walking && <div className="tap-hint">Subiendo al piso {t.floor}…</div>}
-
-      {between && !walking && (
-        <div className="tower-panel">
-          {!canGo && <p className="notice small">{blockedText(game)}</p>}
-          {canGo && paused && (
-            <button className="btn primary wide" onClick={() => setPaused(false)}>
-              Seguir subiendo (piso {t.floor})
-            </button>
-          )}
-        </div>
-      )}
+      <div className="tap-hint">{walking ? `Subiendo al piso ${t.floor}…` : 'Sigue subiendo sola aunque salgas, hasta que caiga'}</div>
 
       {mon && (
         <TowerMoveBar
@@ -110,19 +78,12 @@ export function TowerClimb({ game }: { game: GameState }) {
 
       {abandoning && (
         <ConfirmDialog title="¿Abandonar la torre?" confirmLabel="Abandonar" onConfirm={() => act(abandonTower)} onCancel={() => setAbandoning(false)}>
-          La subida se acaba aquí: te quedas con lo ganado. La próxima empezará desde el piso 1.
+          La subida se acaba aquí: te quedas con lo ganado, sin el piso en el que está luchando. La próxima empezará desde
+          el piso 1.
         </ConfirmDialog>
       )}
     </div>
   )
-}
-
-/** Por qué no puede seguir: su Pokémon no es el compañero o está en una ruta */
-function blockedText(game: GameState): string {
-  const mon = towerMon(game)
-  if (!mon) return 'El Pokémon que subía ya no está.'
-  if (activeMon(game)?.uid !== mon.uid) return `Para seguir, ${species(mon.speciesId).name} tiene que ser tu compañero.`
-  return 'Tu compañero está en una ruta: termínala para seguir subiendo.'
 }
 
 /** Lo que tiene de especial el siguiente piso */
@@ -134,18 +95,4 @@ function FloorNote({ game }: { game: GameState }) {
     pastLevelCap(t.floor) && 'el rival da un ticket suyo',
   ].filter(Boolean)
   return notes.length > 0 ? <span className="run-hud-note">Piso {t.floor}: {notes.join(' · ')}</span> : null
-}
-
-/** Con `go`, empieza el siguiente piso tras un paseo corto; pasar a segundo plano para (`onHidden`) en lugar de seguir */
-function useNextFloor(go: boolean, floor: number, onHidden: () => void) {
-  useEffect(() => {
-    const hide = () => document.hidden && onHidden()
-    document.addEventListener('visibilitychange', hide)
-    return () => document.removeEventListener('visibilitychange', hide)
-  }, [onHidden])
-  useEffect(() => {
-    if (!go) return
-    const id = setTimeout(() => (document.hidden ? onHidden() : act(nextFloor)), FLOOR_GAP_MS)
-    return () => clearTimeout(id)
-  }, [go, floor, onHidden])
 }

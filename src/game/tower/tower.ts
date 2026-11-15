@@ -2,6 +2,7 @@ import { makeFighter, simulateBattle, type BattleRecord } from '../battle/battle
 import type { Rng } from '../core/random'
 import { activeMon, MonPlace, monPlace, type GameState, type OwnedMon } from '../core/state'
 import { battleDuration } from '../run/battleTimeline'
+import { foeExpMult, foeStatMult, rollShinyFoe, shinyIntro } from '../run/shinyFoe'
 import { monPerks } from '../team/perks'
 import { ranchPassives } from '../team/ranchPassives'
 import { recordWeekFloor } from './towerWeek'
@@ -11,19 +12,16 @@ import { floorPrize, noTowerEarned, rewardFloor, type FloorPrize, type TowerEarn
 
 // Torre infinita: el compañero sube piso a piso contra rivales cada vez más fuertes (towerFoes.ts),
 // con el ataque elegido, que se cambia cuando se quiera (towerMoves.ts), y premios en cada piso (towerRewards.ts), hasta que cae.
-// Lucha una copia con sus stats, pasivas e hitos (sus PS de verdad no cambian). El combate en curso sigue aunque no se
-// mire, pero el siguiente piso solo empieza cuando la pantalla lo pide (nextFloor): salir la deja parada entre pisos,
-// tal cual, para retomarla con el mismo compañero. Con la app cerrada sigue sola TOWER_AWAY_FLOORS pisos y luego espera.
+// Lucha una copia con sus stats, pasivas e hitos (sus PS de verdad no cambian). Sube sola, se mire o no: tras cada
+// victoria pasea TOWER_FLOOR_GAP_MS y empieza el siguiente piso, con la app delante, en otra pantalla o cerrada, hasta
+// que cae o se abandona. Los rivales pueden salir shiny, como en las rutas (run/shinyFoe.ts).
 
 /** Cada cuántos pisos se cura del todo antes de seguir */
 export const TOWER_HEAL_EVERY = 25
 /** Último piso tras el que se cura; más arriba ya no hay curas */
 export const TOWER_LAST_HEAL_FLOOR = 100
-
-/** Pisos que sube sola con la app cerrada o en segundo plano antes de pararse a esperar */
-export const TOWER_AWAY_FLOORS = 5
-/** Milisegundos de paseo entre pisos que sube sola; más que un tick con la app delante, así solo sigue con ella cerrada */
-export const TOWER_AWAY_GAP_MS = 2000
+/** Milisegundos reales que camina entre un piso ganado y el siguiente */
+export const TOWER_FLOOR_GAP_MS = 700
 
 /** Cómo acabó la subida: cayó o la abandonó */
 export const TowerEnd = { Fainted: 'fainted', Left: 'left' } as const
@@ -43,8 +41,8 @@ export interface TowerRun {
   prize: FloorPrize | null
   /** Milisegundos reales que quedan del combate del piso; 0 entre pisos */
   battleMsLeft: number
-  /** Pisos empezados solos, sin la pantalla delante, desde la última vez que la pantalla pidió uno */
-  awayFloors: number
+  /** Milisegundos reales de paseo que quedan, entre pisos, hasta empezar el siguiente */
+  gapMsLeft: number
   /** Récord antes de esta subida: los premios de piso solo se dan por encima */
   startBest: number
   earned: TowerEarned
@@ -54,14 +52,11 @@ export interface TowerRun {
 
 export const towerActive = (s: GameState): boolean => s.tower !== null && s.tower.end === null
 
-/** Subiendo y entre dos pisos: esperando a que la pantalla pida el siguiente */
+/** Subiendo y entre dos pisos: paseando hasta el siguiente */
 export const towerBetweenFloors = (s: GameState): boolean => towerActive(s) && s.tower!.battleMsLeft === 0
 
 /** El Pokémon que sube */
 export const towerMon = (s: GameState): OwnedMon | null => s.owned.find((m) => m.uid === s.tower?.uid) ?? null
-
-/** Puede seguir: está entre pisos, su Pokémon es el compañero y no está en una ruta */
-export const canContinueTower = (s: GameState): boolean => towerBetweenFloors(s) && activeMon(s)?.uid === s.tower!.uid && s.run === null
 
 /** Lo que dice cada sitio en el que puede estar el compañero para no poder subir */
 const AWAY_TEXT: Partial<Record<MonPlace, string>> = {
@@ -100,7 +95,7 @@ export function startTower(s: GameState, moveId: string, rng: Rng = Math.random)
     lastBattle: null,
     prize: null,
     battleMsLeft: 0,
-    awayFloors: 0,
+    gapMsLeft: 0,
     startBest: s.towerBest,
     earned: noTowerEarned(),
     end: null,
@@ -114,18 +109,12 @@ export function setTowerMove(s: GameState, moveId: string) {
   if (towerActive(s) && mon && knowsMove(mon, moveId)) s.tower!.moveId = moveId
 }
 
-/** Empieza el combate del siguiente piso, si se puede */
-export function nextFloor(s: GameState, rng: Rng = Math.random) {
-  if (!canContinueTower(s)) return
-  s.tower!.awayFloors = 0
-  fightFloor(s, towerMon(s)!, rng)
-}
-
-/** Combate del piso en el que está, contra un rival al azar a su nivel */
+/** Combate del piso en el que está, contra un rival al azar a su nivel, que puede salir shiny (más fuerte y con más EXP) */
 function fightFloor(s: GameState, mon: OwnedMon, rng: Rng) {
   const t = s.tower!
   const enemyId = towerFoe(s, t.floor, rng)
   const level = towerLevel(t.floor)
+  const shiny = rollShinyFoe(rng)
   const player = makeFighter('player', mon.speciesId, mon.level, {
     stars: mon.stars,
     nature: mon.nature,
@@ -134,13 +123,15 @@ function fightFloor(s: GameState, mon: OwnedMon, rng: Rng) {
     move: towerMove(mon, t.moveId),
   })
   player.hp = Math.min(player.maxHp, t.hp ?? player.maxHp)
-  const enemy = makeFighter('enemy', enemyId, level, { statMult: towerStatMult(t.floor) })
+  const enemy = makeFighter('enemy', enemyId, level, { statMult: foeStatMult(towerStatMult(t.floor), shiny) })
   const result = simulateBattle(player, enemy, rng)
-  const prize = floorPrize(t.floor, t.startBest)
+  if (shiny) result.events[0] = { ...result.events[0], text: shinyIntro(enemy.name, level) }
+  const base = floorPrize(t.floor, t.startBest, rng)
+  const prize = { ...base, exp: base.exp * foeExpMult(shiny) }
   t.prize = prize
   t.lastBattle = {
     player: { speciesId: mon.speciesId, name: player.name, level: mon.level, maxHp: player.maxHp, move: player.move },
-    enemy: { speciesId: enemyId, name: enemy.name, level, maxHp: enemy.maxHp },
+    enemy: { speciesId: enemyId, name: enemy.name, level, maxHp: enemy.maxHp, ...(shiny ? { shiny: true } : {}) },
     events: result.events,
     outcome: result.outcome,
     boss: false,
@@ -150,7 +141,7 @@ function fightFloor(s: GameState, mon: OwnedMon, rng: Rng) {
   t.battleMsLeft = battleDuration(t.lastBattle)
 }
 
-/** Acaba el combate del piso: si ganó, cobra y queda esperando al siguiente (curado en los de cura); si no, se acaba */
+/** Acaba el combate del piso: si ganó, cobra y echa a andar hacia el siguiente (curado en los de cura); si no, se acaba */
 function finishFloor(s: GameState) {
   const t = s.tower!
   const mon = towerMon(s)
@@ -163,34 +154,45 @@ function finishFloor(s: GameState) {
   recordWeekFloor(s, t.floor)
   if (isHealFloor(t.floor)) t.hp = null
   t.floor++
+  t.gapMsLeft = TOWER_FLOOR_GAP_MS
 }
 
 /**
- * Pasa `ms` reales: el combate en curso sigue a su velocidad (se mire o no) hasta acabar. Si sobra tiempo para el paseo
- * hasta el siguiente piso (app cerrada o en segundo plano), sube sola, hasta TOWER_AWAY_FLOORS pisos
+ * Pasa `ms` reales, se mire o no: el combate en curso sigue a su velocidad y, al ganarlo, pasea hasta el siguiente piso
+ * y lo empieza, una y otra vez, hasta que se acaba el tiempo o cae
  */
 export function advanceTower(s: GameState, ms: number, rng: Rng = Math.random) {
   const t = s.tower
   let left = ms
-  while (t && t.end === null && t.battleMsLeft > 0) {
+  while (t && t.end === null && left > 0) {
+    if (t.battleMsLeft === 0) {
+      const walked = Math.min(left, t.gapMsLeft)
+      t.gapMsLeft -= walked
+      left -= walked
+      if (t.gapMsLeft > 0) return
+      startNextFloor(s, rng)
+      continue
+    }
     const spent = Math.min(left, t.battleMsLeft)
     t.battleMsLeft -= spent
     left -= spent
-    if (t.battleMsLeft > 0) return
-    finishFloor(s)
-    if (left < TOWER_AWAY_GAP_MS || !canGoAlone(s)) return
-    left -= TOWER_AWAY_GAP_MS
-    t.awayFloors++
-    fightFloor(s, towerMon(s)!, rng)
+    if (t.battleMsLeft === 0) finishFloor(s)
   }
 }
 
-/** Puede empezar sola el siguiente piso: le quedan pisos sin la pantalla */
-const canGoAlone = (s: GameState): boolean => canContinueTower(s) && s.tower!.awayFloors < TOWER_AWAY_FLOORS
+/** Tras el paseo, el combate del siguiente piso; si su Pokémon ya no está, la subida se acaba */
+function startNextFloor(s: GameState, rng: Rng) {
+  const mon = towerMon(s)
+  if (mon) fightFloor(s, mon, rng)
+  else s.tower!.end = TowerEnd.Fainted
+}
 
-/** El jugador la deja entre pisos: se acaba ahí, con lo ganado */
+/** El jugador la deja cuando quiera: se acaba ahí, con lo ganado (el piso en pleno combate no cuenta) */
 export function abandonTower(s: GameState) {
-  if (towerBetweenFloors(s)) s.tower!.end = TowerEnd.Left
+  if (!towerActive(s)) return
+  s.tower!.end = TowerEnd.Left
+  s.tower!.battleMsLeft = 0
+  s.tower!.gapMsLeft = 0
 }
 
 /** Tras ver los premios de la subida acabada, se recoge (lo ganado ya estaba sumado) */

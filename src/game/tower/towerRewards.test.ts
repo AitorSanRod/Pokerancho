@@ -6,9 +6,11 @@ import { piecesOf } from '../collection/pieces'
 import { activeMon, initialState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
 import { TOWER_LEVEL_CAP_FLOOR } from './towerFoes'
-import { floorExp, floorMoney, floorPrize, nextPrizeFloor, noTowerEarned, rewardFloor, towerPrize } from './towerRewards'
+import { floorExp, floorMoney, floorPrize, nextPrizeFloor, noTowerEarned, rewardFloor, TOWER_EGG_CHANCE, towerPrize } from './towerRewards'
 
 const FOE = SPECIES[5].id
+/** Azar que nunca da el Huevo Suerte */
+const NO_EGG = () => 1
 
 function onFloor(floor: number, best = 0) {
   const s = initialState()
@@ -16,7 +18,7 @@ function onFloor(floor: number, best = 0) {
   const earned = noTowerEarned()
   const money = s.money
   const tickets = s.tickets
-  rewardFloor(s, activeMon(s)!, earned, FOE, floorPrize(floor, best))
+  rewardFloor(s, activeMon(s)!, earned, FOE, floorPrize(floor, best, NO_EGG))
   return { s, earned, money: s.money - money, tickets: s.tickets - tickets }
 }
 
@@ -58,5 +60,17 @@ describe('premios de la torre', () => {
     const r = onFloor(TOWER_LEVEL_CAP_FLOOR + 1)
     expect(piecesOf(r.s, FOE)).toBe(1)
     expect(r.earned.pieces).toEqual([FOE])
+  })
+
+  it('a veces un piso da un Huevo Suerte, que va a la Mochila', () => {
+    expect(floorPrize(1, 0, () => TOWER_EGG_CHANCE - 0.001).egg).toBe(true)
+    expect(floorPrize(1, 0, () => TOWER_EGG_CHANCE).egg).toBe(false)
+    const s = initialState()
+    chooseStarter(s, POKEMON.Charmander)
+    const earned = noTowerEarned()
+    const eggs = s.luckyEggs
+    rewardFloor(s, activeMon(s)!, earned, FOE, { ...floorPrize(1, 0, NO_EGG), egg: true })
+    expect(s.luckyEggs).toBe(eggs + 1)
+    expect(earned.eggs).toBe(1)
   })
 })

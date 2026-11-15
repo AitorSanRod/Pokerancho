@@ -62,6 +62,8 @@ export interface BattleOpts {
   shiny?: boolean
   /** Multiplicador de la EXP que da (los Pokémon de un entrenador, runTrainer.ts); sin él, 1 */
   expMult?: number
+  /** Nivel por el que se calcula la EXP si no es el del rival (con el Huevo Suerte, el del Pokémon del jugador) */
+  expLevel?: number
 }
 
 /**
@@ -72,11 +74,17 @@ export interface BattleOpts {
 export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng) {
   const isBoss = n.kind === NodeKind.Boss
   const rival = rivalOf(r, n, rng)
-  // Con el Huevo Suerte usado, los rivales de las paradas salen al nivel del Pokémon del jugador
-  const foe = boostActive(s.run!) ? { ...rival, level: activeMon(s)!.level } : rival
   const shiny = rollShinyFoe(rng)
   const statMult = foeStatMult(n.statMult ?? (isBoss ? 1 : WILD_STAT_MULT), shiny)
-  startBattle(s, r, foe, { boss: isBoss, statMult, shiny }, rng)
+  startBattle(s, r, rival, { boss: isBoss, statMult, shiny, expLevel: boostedExpLevel(s, rival.level) }, rng)
+}
+
+/**
+ * Con el Huevo Suerte usado, los rivales de las paradas mantienen su nivel pero dan la EXP de uno del nivel del
+ * Pokémon del jugador (o la suya, si es mayor)
+ */
+function boostedExpLevel(s: GameState, foeLevel: number): number | undefined {
+  return boostActive(s.run!) ? Math.max(foeLevel, activeMon(s)!.level) : undefined
 }
 
 /**
@@ -99,7 +107,7 @@ export function startBattle(s: GameState, r: Route, foe: Boss, opts: BattleOpts,
   const prize = {
     money: moneyReward(level, legSteps(r, run.path, run.stop), rng) * (opts.boss ? BOSS_MONEY_MULT : 1),
     tickets: opts.boss ? BOSS_TICKETS : ticketReward(enemyId, rng),
-    exp: expReward(level, mon.level) * (opts.boss ? BOSS_EXP_MULT : 1) * (opts.expMult ?? 1) * (boostActive(run) ? BOOST_EXP_MULT : 1) * foeExpMult(opts.shiny === true),
+    exp: expReward(opts.expLevel ?? level, mon.level) * (opts.boss ? BOSS_EXP_MULT : 1) * (opts.expMult ?? 1) * (boostActive(run) ? BOOST_EXP_MULT : 1) * foeExpMult(opts.shiny === true),
     piece: pieceReward(enemyId, rng),
   }
   const intro = opts.intro ?? (opts.shiny ? shinyIntro(enemy.name, level) : undefined)

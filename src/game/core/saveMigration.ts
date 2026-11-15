@@ -39,6 +39,15 @@ export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {
   52: (save) => {
     if (Array.isArray(save.expeditions)) for (const e of save.expeditions) if (isRecord(e)) e.focus ??= ExpeditionFocus.Exp
   },
+  // La torre sube sola sin límite (paseo entre pisos en lugar de pisos sin pantalla) y da Huevos Suerte
+  58: (save) => {
+    const t = save.tower
+    if (!isRecord(t)) return
+    delete t.awayFloors
+    t.gapMsLeft = 0
+    if (isRecord(t.earned)) t.earned.eggs ??= 0
+    if (isRecord(t.prize)) t.prize.egg ??= false
+  },
 }
 
 /**

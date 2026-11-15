@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
-import { RouteId } from '../../data/maps'
+import { route, RouteId } from '../../data/maps'
 import { POKEMON } from '../../data/pokemon'
 import { activeMon, initialState } from '../core/state'
 import { chooseStarter, seqRng } from '../core/test-utils'
+import { expForLevel } from '../battle/rewards'
 import { maxHp } from '../team/stats'
-import { advanceExpBoost, BOOST_TAP_EXP, BOOST_VISIBLE_MS, boostActive, catchExpBoost, EGG_ROUTE_CHANCE, luckyEggBlocker, spendLuckyEgg } from './expBoost'
+import { advanceExpBoost, BOOST_EXP_MULT, BOOST_TAP_EXP, BOOST_VISIBLE_MS, boostActive, catchExpBoost, EGG_ROUTE_CHANCE, luckyEggBlocker, spendLuckyEgg } from './expBoost'
 import { endRun, restartRun, startRun, tapRun, walk } from './run'
+import { foeExpMult } from './shinyFoe'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
 
@@ -88,7 +90,7 @@ describe('usar el Huevo Suerte', () => {
     expect(boostActive(s.run!)).toBe(true)
   })
 
-  it('cada toque da su EXP y los rivales salen al nivel del Pokémon', () => {
+  it('cada toque da su EXP y los rivales, a su nivel, dan la EXP de uno del nivel del Pokémon', () => {
     const s = ready()
     s.luckyEggs = 1
     spendLuckyEgg(s)
@@ -97,7 +99,9 @@ describe('usar el Huevo Suerte', () => {
     for (let i = 0; i < TAPS; i++) expect(tapRun(s)).toBe(true)
     expect(s.run!.earned.exp).toBe(TAPS * BOOST_TAP_EXP)
     walk(s, Infinity)
-    expect(s.run!.lastBattle!.enemy.level).toBe(30)
+    const battle = s.run!.lastBattle!
+    expect(battle.enemy.level).toBeLessThanOrEqual(route(RouteId.PuebloPaleta).levels[1])
+    expect(battle.rewards.exp).toBe(expForLevel(30) * BOOST_EXP_MULT * foeExpMult(battle.enemy.shiny === true))
   })
 
   it('sin huevo, los toques no dan EXP', () => {

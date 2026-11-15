@@ -15,17 +15,22 @@ import { createMon } from '../team/mons'
 import { UPGRADES } from '../team/upgrades'
 import { stateFromSaved } from './cloudSave'
 import { migrateSave, SAVE_MIGRATIONS } from './saveMigration'
+import { CARRIED_SINCE } from './progressCarry'
 import { ExpeditionFocus } from '../team/expeditionFocus'
-import { initialState, MonPlace, monPlace, SAVE_VERSION, type GameState } from './state'
+import { activeMon, initialState, MonPlace, monPlace, SAVE_VERSION, type GameState } from './state'
 import { BADGE_IDS } from '../../data/badges'
 import { backupTeam } from './teamBackup'
 import { testExpedition } from './test-utils'
+import { advanceTower, startTower } from '../tower/tower'
+import { towerMoveChoices } from '../tower/towerMoves'
 
 vi.mock('../../data/maps/kantoMaps', () => import('./test-map'))
 
 const OLD = SAVE_VERSION - 1
 /** Última versión sin el enfoque de las expediciones */
 const ENFOQUE_VERSION = 52
+/** Última versión con la torre parada tras unos pisos sin pantalla (sin paseo entre pisos ni Huevos Suerte) */
+const TOWER_ALONE_VERSION = 58
 const [A, B, C] = STARTERS
 const UNKNOWN_SPECIES = -7
 const OTHER_BACKDROP = Object.values(RanchBackdrop).find((b) => b !== DEFAULT_RANCH_BACKDROP)!
@@ -230,7 +235,7 @@ describe('al actualizar el juego no se pierde nada', () => {
     const s = advancedGame()
     s.expeditions = s.expeditions.filter((e) => e.uid !== s.activeUid)
     startRun(s, RouteId.PuebloPaleta)
-    const migrated = migrateSave(fromOldVersion(s))!
+    const migrated = migrateSave(fromOldVersion(s, CARRIED_SINCE.run - 1))!
     expect(migrated.run).toBeNull()
     expect(monPlace(migrated, migrated.activeUid!)).toBe(MonPlace.Ranch)
   })
@@ -251,6 +256,24 @@ describe('al actualizar el juego no se pierde nada', () => {
     const migrated = migrateSave(save)!
     expect(migrated.expeditions.map((e) => e.uid)).toEqual(s.expeditions.map((e) => e.uid))
     expect(migrated.expeditions.every((e) => e.focus === ExpeditionFocus.Exp)).toBe(true)
+  })
+
+  it('la subida a la torre de antes de que subiera sola sigue, y sigue subiendo', () => {
+    const s = advancedGame()
+    s.expeditions = []
+    startTower(s, towerMoveChoices(activeMon(s)!)[0].id)
+    advanceTower(s, s.tower!.battleMsLeft)
+    const save = fromOldVersion(s, TOWER_ALONE_VERSION)
+    delete save.tower.gapMsLeft
+    delete save.tower.earned.eggs
+    save.tower.awayFloors = 3
+    const migrated = migrateSave(save)!
+    expect(migrated.tower).toMatchObject({ uid: s.tower!.uid, floor: s.tower!.floor, gapMsLeft: 0, earned: { eggs: 0 } })
+    expect(migrated.tower).not.toHaveProperty('awayFloors')
+    if (migrated.tower!.end === null) {
+      advanceTower(migrated, 1)
+      expect(migrated.tower!.battleMsLeft).toBeGreaterThan(0)
+    }
   })
 
   it('las expediciones nunca se pierden al cambiar de versión: siguen con sus condiciones aunque su ruta ya no exista', () => {
@@ -274,7 +297,7 @@ describe('al actualizar el juego no se pierde nada', () => {
 
   it('en cualquier cambio de versión, la incursión en curso se descarta y se devuelve su llave', () => {
     const s = advancedGame()
-    const save = { ...fromOldVersion(s), incursion: { incursionId: IncursionId.CuevaHelada, uid: s.owned[0].uid } }
+    const save = { ...fromOldVersion(s, CARRIED_SINCE.incursion - 1), incursion: { incursionId: IncursionId.CuevaHelada, uid: s.owned[0].uid } }
     const migrated = migrateSave(save)!
     expect(migrated.incursion).toBeNull()
     expect(migrated.incursionKeys[IncursionId.CuevaHelada]).toBe(Math.min(MAX_KEYS, (s.incursionKeys[IncursionId.CuevaHelada] ?? 0) + 1))

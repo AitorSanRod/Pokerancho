@@ -7,7 +7,7 @@ import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { BagGroup, BagTile } from './BagParts'
 
-const EFFECT = `toda la ruta: EXP ×${BOOST_EXP_MULT} en los combates, +${BOOST_TAP_EXP} EXP por cada toque caminando y los rivales al nivel de tu Pokémon`
+const EFFECT = `toda la ruta: EXP ×${BOOST_EXP_MULT} en los combates, +${BOOST_TAP_EXP} EXP por cada toque caminando y los rivales dan la EXP de uno de tu nivel`
 
 /** Huevos Suerte de la Mochila: se usan aquí, con confirmación, para la próxima ruta */
 export function LuckyEggGroup({ game }: { game: GameState }) {

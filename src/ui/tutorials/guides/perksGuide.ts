@@ -38,7 +38,7 @@ export const PERKS_GUIDE: Guide = {
     {
       image: shot('perks-boost'),
       title: 'Huevo Suerte',
-      text: `En algunas rutas (${EGG_ROUTE_CHANCE * 100} %) aparece un Huevo Suerte un momento: tócalo y va a la Mochila. Úsalo allí y la próxima ruta entera dará ×${BOOST_EXP_MULT} de EXP en los combates, +${BOOST_TAP_EXP} EXP por toque y rivales a tu nivel.`,
+      text: `En algunas rutas (${EGG_ROUTE_CHANCE * 100} %) aparece un Huevo Suerte un momento: tócalo y va a la Mochila. Úsalo allí y la próxima ruta entera dará ×${BOOST_EXP_MULT} de EXP en los combates, +${BOOST_TAP_EXP} EXP por toque y rivales que dan la EXP de uno de tu nivel.`,
     },
   ],
 }

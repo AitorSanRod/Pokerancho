@@ -32,7 +32,7 @@ export function ExpBoostBadge({ active }: { active: boolean }) {
       {active ? (
         <>
           <strong>EXP ×{BOOST_EXP_MULT}</strong>
-          <span className="grow tiny">Cada toque da EXP · rivales a tu nivel</span>
+          <span className="grow tiny">Cada toque da EXP · rivales con EXP de tu nivel</span>
         </>
       ) : (
         <span className="grow tiny">¡Huevo Suerte guardado en la Mochila!</span>

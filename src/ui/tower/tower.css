@@ -2,22 +2,6 @@
 .tower-head {
   gap: 4px;
 }
-/* Lo de abajo de la subida (TowerClimb): seguir o por qué no puede seguir, sobre la escena */
-.tower-panel {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  z-index: 3;
-  max-height: 60%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.tower-panel .btn.primary {
-  box-shadow: 0 2px 8px #0004;
-}
 .tower-rules ul {
   margin: 0;
   padding-left: 18px;
@@ -35,13 +19,12 @@
 .move-bar.inline {
   position: static;
 }
-/* En la subida, la barra va fija abajo; la escena, los avisos y «Seguir subiendo» quedan encima (--move-bar-room, lo que
+/* En la subida, la barra va fija abajo; la escena y los avisos quedan encima (--move-bar-room, lo que
    ocupa la barra según sus ataques, lo pone TowerClimb) */
 .tower-climb .scene {
   bottom: var(--move-bar-room);
 }
-.tower-climb .tap-hint,
-.tower-climb .tower-panel {
+.tower-climb .tap-hint {
   bottom: calc(var(--move-bar-room) + 8px);
 }
 /* Fundido al cambiar el fondo de la torre (cada pocos pisos): la escena nueva sale de la oscuridad */

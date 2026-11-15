@@ -65,7 +65,9 @@ function TowerStart({ game }: { game: GameState }) {
           </li>
           <li>Pasado el {TOWER_LEVEL_CAP_FLOOR}, rivales de todas partes, más fuertes en cada piso, y cada uno da un ticket suyo.</li>
           <li>Elige el ataque y cámbialo cuando quieras durante la subida: vale desde el siguiente piso.</li>
-          <li>Si sales, la torre te espera en el siguiente piso.</li>
+          <li>Algunos rivales salen shiny: más fuertes, pero con mucha más EXP.</li>
+          <li>A veces un piso da un Huevo Suerte, que va a la Mochila.</li>
+          <li>Sube sola aunque salgas o cierres la app, hasta que caiga o la abandones.</li>
         </ul>
       </div>
       <TowerBegin mon={mon} />

@@ -16,6 +16,7 @@ export function TowerSummary({ tower, mon }: { tower: TowerRun; mon: OwnedMon | 
     ...earningsRewards({ wins: won, exp: e.exp, money: e.money, tickets: 0, pieces: e.pieces }).slice(1),
     ...e.prizes.flatMap((p, i) => giftRewards(p).map((item) => ({ ...item, key: `prize-${i}-${item.key}`, detail: 'Premio de piso' }))),
   ]
+  if (e.eggs > 0) items.push(eggReward(e.eggs))
   if (mon && e.levelsGained > 0) items.push(levelUpReward(mon.speciesId, mon.level))
   return (
     <RewardOverlay
@@ -35,5 +36,16 @@ function floorReward(tower: TowerRun, won: number): RewardItem {
     title: `${won} ${won === 1 ? 'piso superado' : 'pisos superados'}`,
     detail: record ? '¡Nuevo récord!' : tower.end === TowerEnd.Left ? `Abandonaste antes del piso ${tower.floor}` : `Cayó en el piso ${tower.floor}`,
     color: record ? '#d8a020' : '#6a6a80',
+  }
+}
+
+/** Los Huevos Suerte que dieron los pisos, ya en la Mochila */
+function eggReward(count: number): RewardItem {
+  return {
+    key: 'eggs',
+    icon: <ItemIcon item={ICON.ExpBoost} size={96} />,
+    title: `+${count} ${count === 1 ? 'Huevo Suerte' : 'Huevos Suerte'}`,
+    detail: 'En la Mochila',
+    color: '#d8a020',
   }
 }
