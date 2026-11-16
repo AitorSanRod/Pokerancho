@@ -18,11 +18,11 @@ export type CarriedKey = 'run' | 'raids' | 'incursion' | 'incursionQueue' | 'tow
  * IncursionQueue o TowerRun, o algo que haga que lo guardado ya no se juegue igual
  */
 export const CARRIED_SINCE: Record<CarriedKey, number> = {
-  run: 58,
-  raids: 62,
+  run: 64,
+  raids: 64,
   incursion: 58,
   incursionQueue: 58,
-  tower: 58,
+  tower: 64,
 }
 
 const isRecord = (v: unknown): v is Save => typeof v === 'object' && v !== null && !Array.isArray(v)

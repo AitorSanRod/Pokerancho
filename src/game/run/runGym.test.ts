@@ -100,9 +100,10 @@ describe('gimnasio', () => {
     const s = atTheGym(MAX_LEVEL)
     const mon = activeMon(s)!
     expect(s.run!.lastBattle!.player.move).toEqual(towerMove(mon, defaultRouteMove(mon)))
-    const chosen = towerMoveChoices(mon).at(-1)!.id
     const other = initialState()
     chooseStarter(other, POKEMON.Squirtle)
+    activeMon(other)!.level = MAX_LEVEL
+    const chosen = towerMoveChoices(activeMon(other)!).find((m) => m.id !== defaultRouteMove(activeMon(other)!))!.id
     other.unlockedRoutes.push(ROUTE)
     startRun(other, ROUTE)
     pickRouteMove(other, chosen, other.lastTick)

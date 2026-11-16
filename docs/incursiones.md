@@ -205,7 +205,7 @@ de cueva helada (variante de `cave` o bioma nuevo, con la skill `fondos-pixel-ar
 
 ## Movimientos y repertorio
 
-Las paradas de jefe de ruta siguen con su ataque único (`signatureMove`); en la pelea de la pestaña Raids, uno de daño de su repertorio (`raid/raidMoves.ts`); en las rutas y la torre, el Pokémon del jugador lucha con uno de daño de su repertorio de incursión, elegido (`run/runMove.ts`). Las incursiones tienen su propia lista de ataques
+Las paradas de jefe de ruta siguen con su ataque único (`signatureMove`); en las rutas, la torre y la pelea de la pestaña Raids, el Pokémon del jugador lucha con uno de sus ataques de combate, elegido (`data/combatMoves/`, `combat/combatRepertoire.ts`): una lista aparte, que no cambia nada de las incursiones ni de los bots de las raids (cada `MemberState` dice de qué lista sale su ataque, `MoveBook`). Las incursiones tienen su propia lista de ataques
 (`data/incursionMoves/`, editable a mano; los de daño empezaron como copia de los de ruta). Además de los que tocan a
 cada tipo y rareza hay un **catálogo** (`incursionMoves/catalog/`, un fichero por tipo, unos 300) con los de los juegos
 que encajan aquí, para los repertorios a mano: sin OHKO, golpes múltiples, daño fijo, potencia variable ni efectos que
@@ -270,8 +270,8 @@ Pokémon de los tipos que dice cada una (a cualquier nivel, aunque evolucione, y
 compran: salen como premio final de incursión (`IncursionPrizeKind.Tm`, con poca probabilidad) y se intercambian
 entre jugadores. Se enseñan en la ficha, en la sección «MT», que solo sale si tienes alguna que ese Pokémon pueda
 aprender. El servidor no ve las MTs de cada Pokémon: acepta el ataque de una MT en cualquiera que pueda aprenderla
-(`tms.ts › mayKnow`), igual que se fía de su nivel. En la ficha del Pokémon (rancho y Pokédex), la «i» junto a su ataque abre todos sus ataques: el de rutas y
-jefes y el repertorio de incursión nivel a nivel (`repertoire.ts › learnTimeline`).
+(`tms.ts › mayKnow`), igual que se fía de su nivel. En la ficha del Pokémon (rancho y Pokédex), la «i» junto a su ataque abre todos sus ataques: los de combate
+(rutas, torre y raids, `combatRepertoire.ts › combatLearnTimeline`) y el repertorio de incursión nivel a nivel (`repertoire.ts › learnTimeline`).
 
 Cada tipo tiene su papel en el grupo por su ataque de apoyo:
 

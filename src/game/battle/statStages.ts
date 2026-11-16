@@ -1,4 +1,4 @@
-import type { BoostStat } from '../../data/incursionMoves'
+import { STAT_NAME, type BoostStat, type StatChange } from '../../data/incursionMoves'
 
 // Subidas y bajadas de stats por etapas, como en los juegos: cada stat va de −MAX_STAGES a +MAX_STAGES. En las incursiones
 // duran hasta acabar la sala (incursion/restRooms.ts › leaveRoom) o hasta caer; en las rutas, lo que dura el combate.
@@ -19,4 +19,11 @@ export function addStages(stages: Stages, k: BoostStat, n: number): number {
   const applied = next - stages[k]
   stages[k] = next
   return applied
+}
+
+/** Cómo lo cuentan los juegos: cuántas etapas se aplicaron de las que pedía */
+export function stageText(name: string, c: StatChange, applied: number): string {
+  const stat = `${STAT_NAME[c.stat]} de ${name}`
+  if (applied === 0) return c.stages > 0 ? `¡${stat} no puede subir más!` : `¡${stat} no puede bajar más!`
+  return `¡${stat} ${applied > 0 ? 'subió' : 'bajó'}${Math.abs(applied) > 1 ? ' mucho' : ''}!`
 }

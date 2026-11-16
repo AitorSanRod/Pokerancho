@@ -107,7 +107,8 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `data/species.ts` | Especies (desde `pokemon.json`, reducidas a 4 stats), rarezas, sprites, iniciales |
 | `data/pokemon.ts` | `POKEMON`: número de cada especie por su nombre (`POKEMON.Pidgey`), para no escribir ids sueltos |
 | `data/types.ts` | Tipos y tabla de eficacias |
-| `data/moves.ts` | Un movimiento de daño por tipo y rareza; `signatureMove` da el de cada especie |
+| `data/moves.ts` | Un movimiento de daño por tipo y rareza; `signatureMove` da el de cada rival salvaje o jefe de ruta |
+| `data/combatMoves/` | Ataques de combate del Pokémon del jugador (rutas, torre y raids): escalera por tipo y nivel, ajustes respecto al ataque de incursión y propios de especie; `combatMove`, `bookMove` (`MoveBook`: de qué lista sale cada ataque en la pelea de grupo) |
 | `data/maps/kantoMaps.ts` | Rutas de Kanto; solo datos. Cada región tendrá su `xxxMaps.ts` |
 | `data/maps/mapCommon.ts` | Tipos y diccionarios de los mapas, atajos para escribirlos (`enc`, `boss`, `chain`) y consultas de caminos (`pathFrom`, `isValidPath`) |
 | `data/maps/index.ts` | Entrada de la carpeta (se importa como `data/maps`): lista de regiones y `route(id)` |

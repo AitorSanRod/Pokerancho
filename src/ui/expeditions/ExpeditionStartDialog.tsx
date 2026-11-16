@@ -13,6 +13,7 @@ import {
   sendExpedition,
 } from '../../game/team/expedition'
 import { EXPEDITION_FOCUSES, ExpeditionFocus } from '../../game/team/expeditionFocus'
+import { byPickOrder } from '../../game/team/pickOrder'
 import { Sprite } from '../shared/common'
 import { formatMinutes } from '../shared/format'
 import { MonPicker } from '../shared/MonPicker'
@@ -32,7 +33,7 @@ interface Props {
 
 /** Antes de mandar de expedición: el paisaje de la ruta con el Pokémon elegido, la duración y lo que se puede esperar */
 export function ExpeditionStartDialog({ game, route: r, mons, onClose }: Props) {
-  const [uid, setUid] = useState(mons[0].uid)
+  const [uid, setUid] = useState(byPickOrder(game, mons)[0].uid)
   const [duration, setDuration] = useState(EXPEDITION_DURATIONS[1])
   const [focus, setFocus] = useState<ExpeditionFocus>(ExpeditionFocus.Exp)
   const mon = mons.find((m) => m.uid === uid) ?? mons[0]
@@ -51,7 +52,7 @@ export function ExpeditionStartDialog({ game, route: r, mons, onClose }: Props) 
       </HeroLayout>
       <div className="route-start-body">
         <div className="label">¿Quién va?</div>
-        <MonPicker mons={mons} selectedUid={mon.uid} onSelect={setUid} />
+        <MonPicker game={game} mons={mons} selectedUid={mon.uid} onSelect={setUid} />
         <div className="label">Duración</div>
         <div className="segmented">
           {EXPEDITION_DURATIONS.map((d) => (

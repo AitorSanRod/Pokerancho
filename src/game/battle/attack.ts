@@ -5,11 +5,14 @@ import type { Rng } from '../core/random'
 import { label, type Fighter, type Push } from './battle'
 import { perkDamageMult, type MonPerks } from '../team/perks'
 import { cappedHit, koHealAmount } from './combatBonus'
-import { MAX_STAGES } from './statStages'
+import { addStages, stageMult } from './statStages'
 import { blockedByStatus, inflictStatus } from './status'
+import { drainOnHit, heal, isAreaMove, onFoeHit, onSelf } from './strikeEffects'
 
 /** Multiplicador de daño si el movimiento es del mismo tipo que el Pokémon */
 const STAB = 1.5
+/** Fracción del daño normal que hace a cada uno un golpe en área (también al único rival de una ruta o al jefe de la raid) */
+export const AREA_DAMAGE_MULT = 0.6
 /** Fracción del daño normal que se hace a sí mismo un Pokémon confuso al golpearse */
 export const CONFUSION_SELF_DAMAGE = 0.5
 /** Multiplicador del daño del crítico por el toque del jugador (ver run/tapCrit.ts) */
@@ -41,21 +44,19 @@ export const bestMove = (pool: Move[], atk: Fighter, def: Fighter): Move =>
 
 /** Pasiva de Bicho: cada vez que ataca, sube etapas de Velocidad (sin pasar del tope) */
 function speedUp(atk: Fighter) {
-  atk.speStages = Math.min(MAX_STAGES, atk.speStages + atk.bonus.speedPerAttack)
+  if (atk.bonus.speedPerAttack > 0) addStages(atk.stages, 'spe', atk.bonus.speedPerAttack)
 }
+
+/** Sus stats de Ataque y Defensa con las etapas que lleva subidas o bajadas */
+const staged = (f: Fighter): DamageSide => ({
+  ...f,
+  stats: { ...f.stats, atk: f.stats.atk * stageMult(f.stages.atk), def: f.stats.def * stageMult(f.stages.def) },
+})
 
 /** Si desde este ataque toca otro (cambio de ataque en pleno combate), lo pone */
 function switchMove(atk: Fighter) {
   const current = atk.moveSwitches?.filter((s) => s.fromAttack <= atk.attacks).at(-1)
   if (current) atk.move = current.move
-}
-
-/** Recupera PS (sin pasar del máximo) y lo anuncia */
-export function heal(f: Fighter, amount: number, push: Push) {
-  const healed = Math.min(f.maxHp - f.hp, Math.ceil(amount))
-  if (healed <= 0) return
-  f.hp += healed
-  push({ kind: 'heal', side: f.side, text: `+${healed} PS` })
 }
 
 /** El único ataque de `atk` no le hace nada a `def` por tipos: en su lugar usa Forcejeo */
@@ -79,7 +80,7 @@ export function attack(atk: Fighter, def: Fighter, push: Push, rng: Rng) {
   const blocked = blockedByStatus(atk, push, rng)
   if (blocked === 'skip') return
   if (blocked === 'self-hit') {
-    const { dealt } = damage(atk, atk, atk.move, rng)
+    const { dealt } = damage(staged(atk), staged(atk), atk.move, rng)
     atk.hp = Math.max(0, atk.hp - Math.max(1, Math.floor(dealt * CONFUSION_SELF_DAMAGE)))
     push({ kind: 'hit', side: atk.side, status: atk.status!, text: 'Se hirió' })
     if (atk.hp === 0) push({ kind: 'faint', side: atk.side, text: `¡${label(atk)} se debilitó!` })
@@ -94,18 +95,35 @@ export function attack(atk: Fighter, def: Fighter, push: Push, rng: Rng) {
   const tapCrit = atk.tapCrits.includes(atk.attacks)
   const mv = atk.move
   push({ kind: 'attack', side: atk.side, text: `${label(atk)} usó ${mv.name}.`, ...(atk.moveSwitches?.length || atk.movePool?.length ? { move: mv } : {}) })
-  if (rng() * 100 >= mv.accuracy) return push({ kind: 'miss', side: def.side, miss: 'miss', text: '¡Pero falló!' })
-  if (def.bonus.dodge > 0 && rng() < def.bonus.dodge) return push({ kind: 'miss', side: def.side, miss: 'dodge', text: '¡Lo esquivó!' })
-  const { dealt, eff, crit } = damage(atk, def, mv, rng, tapCrit ? TAP_CRIT_MULT : 1)
+  if (!strike(atk, def, mv, tapCrit, push, rng)) return
+  onSelf(atk, mv, push)
+}
+
+/** El golpe del ataque y sus efectos; false si el combate acaba con él (el rival cae) */
+function strike(atk: Fighter, def: Fighter, mv: Move, tapCrit: boolean, push: Push, rng: Rng): boolean {
+  if (rng() * 100 >= mv.accuracy) {
+    push({ kind: 'miss', side: def.side, miss: 'miss', text: '¡Pero falló!' })
+    return true
+  }
+  if (def.bonus.dodge > 0 && rng() < def.bonus.dodge) {
+    push({ kind: 'miss', side: def.side, miss: 'dodge', text: '¡Lo esquivó!' })
+    return true
+  }
+  const mult = (tapCrit ? TAP_CRIT_MULT : 1) * (isAreaMove(mv) ? AREA_DAMAGE_MULT : 1)
+  const { dealt, eff, crit } = damage(staged(atk), staged(def), mv, rng, mult)
 
   const taken = cappedHit(dealt, def.bonus, def.maxHp)
   def.hp = Math.max(0, def.hp - taken)
   const note = [crit || tapCrit ? '¡Crítico!' : '', eff > 1 ? '¡Es muy eficaz!' : eff < 1 ? 'No es muy eficaz…' : ''].filter(Boolean).join(' ')
   push({ kind: 'hit', side: def.side, crit: crit || tapCrit, tapCrit, eff, text: note })
   if (atk.bonus.drain > 0) heal(atk, taken * atk.bonus.drain, push)
+  drainOnHit(atk, mv, taken, push)
   if (def.hp === 0) {
     push({ kind: 'faint', side: def.side, text: `¡${label(def)} se debilitó!` })
-    return heal(atk, koHealAmount(atk.bonus, atk.maxHp), push)
+    heal(atk, koHealAmount(atk.bonus, atk.maxHp), push)
+    return false
   }
   for (const { status, chance } of atk.bonus.inflicts) if (rng() < chance) inflictStatus(def, status, push)
+  onFoeHit(def, mv, push, rng)
+  return true
 }

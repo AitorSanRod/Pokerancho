@@ -53,6 +53,7 @@ export function OfferPicker({ game, value, onChange, onInvalid, onCorrected }: P
       </div>
       {kind === GoodKind.Mon && (
         <MonPicker
+          game={game}
           mons={givableMons(game)}
           selectedUid={value?.kind === GoodKind.Mon ? value.uid : undefined}
           onSelect={(uid) => onChange({ kind: GoodKind.Mon, uid })}

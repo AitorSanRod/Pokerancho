@@ -7,6 +7,7 @@ import { raidMoveChoices } from '../../game/raid/raidMoves'
 import type { RaidRotation } from '../../game/raid/online/protocol'
 import { cycleBoss } from '../../game/raid/rotationBosses'
 import { cycleAt, RaidStage, stageAt } from '../../game/raid/raidSchedule'
+import { byPickOrder } from '../../game/team/pickOrder'
 import { Sprite } from '../shared/common'
 import { MonPicker } from '../shared/MonPicker'
 import { HeroLayout } from '../shared/sheet/HeroLayout'
@@ -24,10 +25,10 @@ interface Props {
   onClose: () => void
 }
 
-/** Los que pueden ir: los del rancho y el que ya está en la sala (para cambiarle el ataque), los de más nivel primero */
+/** Los que pueden ir: los del rancho y el que ya está en la sala (para cambiarle el ataque), en el orden del selector */
 function candidates(game: GameState, rotation: RaidRotation): OwnedMon[] {
   const own = game.raids[rotation]?.uid
-  return game.owned.filter((m) => m.uid === own || monPlace(game, m.uid) === MonPlace.Ranch).sort((a, b) => b.level - a.level)
+  return byPickOrder(game, game.owned.filter((m) => m.uid === own || monPlace(game, m.uid) === MonPlace.Ranch))
 }
 
 /** Entrar en la sala abierta (o cambiar tu Pokémon o su ataque): quién va y con qué ataque empieza la pelea */
@@ -58,7 +59,7 @@ export function RaidJoinDialog({ game, rotation, now, onClose }: Props) {
       </HeroLayout>
       <div className="route-start-body">
         <div className="label">¿Quién va?</div>
-        <MonPicker mons={mons} selectedUid={mon?.uid} onSelect={setUid} lockOf={(m) => (fits(m) ? null : 'other')} />
+        <MonPicker game={game} mons={mons} selectedUid={mon?.uid} onSelect={setUid} lockOf={(m) => (fits(m) ? null : 'other')} />
         {mon && move && <RouteMoveBar mon={mon} moveId={move.id} moves={moves} inline onPick={setMoveId} />}
         <p className="tiny muted">
           {boss.minLevel ? `Hace falta Nv. ${boss.minLevel}. ` : ''}

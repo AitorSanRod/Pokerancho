@@ -15,7 +15,7 @@ import { createMon } from '../team/mons'
 import { UPGRADES } from '../team/upgrades'
 import { stateFromSaved } from './cloudSave'
 import { migrateSave, SAVE_MIGRATIONS } from './saveMigration'
-import { CARRIED_SINCE } from './progressCarry'
+import { CARRIED_SINCE, type CarriedKey } from './progressCarry'
 import { ExpeditionFocus } from '../team/expeditionFocus'
 import { activeMon, initialState, MonPlace, monPlace, SAVE_VERSION, type GameState } from './state'
 import { BADGE_IDS } from '../../data/badges'
@@ -103,10 +103,21 @@ const KEPT: (keyof GameState)[] = [
 /** El paso de verdad de la versión anterior, que algún test sustituye por uno de prueba */
 const REAL_STEP = SAVE_MIGRATIONS[OLD]
 
+const REAL_CARRY = { ...CARRIED_SINCE }
+
 afterEach(() => {
   if (REAL_STEP) SAVE_MIGRATIONS[OLD] = REAL_STEP
   else delete SAVE_MIGRATIONS[OLD]
+  Object.assign(CARRIED_SINCE, REAL_CARRY)
 })
+
+/**
+ * Para probar los pasos de migración de lo que va a medias aunque después cambiaran sus reglas (y ya no se conserve):
+ * como si siguiera desde esa versión
+ */
+function carriedFrom(version: number) {
+  for (const key of Object.keys(CARRIED_SINCE) as CarriedKey[]) CARRIED_SINCE[key] = Math.min(CARRIED_SINCE[key], version)
+}
 
 describe('al actualizar el juego no se pierde nada', () => {
   it('el compañero se mantiene aunque no sea el primer Pokémon del rancho', () => {
@@ -275,6 +286,7 @@ describe('al actualizar el juego no se pierde nada', () => {
     s.expeditions = []
     startTower(s, towerMoveChoices(activeMon(s)!)[0].id)
     advanceTower(s, s.tower!.battleMsLeft)
+    carriedFrom(TOWER_ALONE_VERSION)
     const save = fromOldVersion(s, TOWER_ALONE_VERSION)
     delete save.tower.gapMsLeft
     delete save.tower.earned.eggs
@@ -291,6 +303,7 @@ describe('al actualizar el juego no se pierde nada', () => {
   it('la sala de raid de antes de poder entrar en la pelea empezada sigue, sin entrada pendiente', () => {
     const { s, mon, move } = raidReady(RAID_CYCLE)
     joinRaid(s, ROTATION, mon.uid, move, lobbyStart(RAID_CYCLE))
+    carriedFrom(RAID_NO_LATE_JOIN_VERSION)
     const save = fromOldVersion(s, RAID_NO_LATE_JOIN_VERSION)
     delete save.raids[ROTATION].pendingJoin
     const migrated = migrateSave(save)!
@@ -302,6 +315,7 @@ describe('al actualizar el juego no se pierde nada', () => {
     const s = advancedGame()
     s.expeditions = []
     startTower(s, towerMoveChoices(activeMon(s)!)[0].id)
+    carriedFrom(TOWER_EGG_AUTO_VERSION)
     const save = fromOldVersion(s, TOWER_EGG_AUTO_VERSION)
     delete save.tower.egg
     const migrated = migrateSave(save)!
@@ -313,6 +327,7 @@ describe('al actualizar el juego no se pierde nada', () => {
     s.expeditions = []
     startRun(s, RouteId.PuebloPaleta)
     const moveId = s.run!.moveId
+    carriedFrom(ATTACK_PER_GYM_VERSION)
     const save = fromOldVersion(s, ATTACK_PER_GYM_VERSION)
     delete save.run.moveId
     save.run.gym = { index: 1, moveId }

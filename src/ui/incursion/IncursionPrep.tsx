@@ -10,6 +10,7 @@ import { freePrizeSpent } from '../../game/incursion/freeIncursions'
 import { keysOf, needsKey } from '../../game/incursion/keys'
 import { enterQueue } from '../../game/incursion/online/linkedIncursion'
 import { monRepertoire } from '../../game/incursion/repertoire'
+import { byPickOrder } from '../../game/team/pickOrder'
 import { passiveWeightOf } from '../../game/team/ranchPassives'
 import { Sprite } from '../shared/common'
 import { MonPicker } from '../shared/MonPicker'
@@ -23,7 +24,7 @@ const usable = (inc: Incursion, m: OwnedMon) => canEnter(inc, m.level) && m.hp >
 
 /** Antes de entrar: quién va (solo los del rancho con el nivel justo), con qué movimiento y qué suma a las pasivas */
 export function IncursionPrep({ game, inc, onClose }: { game: GameState; inc: Incursion; onClose: () => void }) {
-  const mons = game.owned.filter((m) => monPlace(game, m.uid) === MonPlace.Ranch).sort((a, b) => b.level - a.level)
+  const mons = byPickOrder(game, game.owned.filter((m) => monPlace(game, m.uid) === MonPlace.Ranch))
   const [uid, setUid] = useState(mons.find((m) => usable(inc, m))?.uid)
   const [moveId, setMoveId] = useState<string | null>(null)
   const mon = mons.find((m) => m.uid === uid)
@@ -44,7 +45,7 @@ export function IncursionPrep({ game, inc, onClose }: { game: GameState; inc: In
       </HeroLayout>
       <div className="route-start-body">
         <div className="label">¿Quién va?</div>
-        <MonPicker mons={mons} selectedUid={mon?.uid} onSelect={setUid} lockOf={(m) => (usable(inc, m) ? null : 'other')} />
+        <MonPicker game={game} mons={mons} selectedUid={mon?.uid} onSelect={setUid} lockOf={(m) => (usable(inc, m) ? null : 'other')} />
         {mon && <PassiveShare mon={mon} />}
         {move && (
           <>

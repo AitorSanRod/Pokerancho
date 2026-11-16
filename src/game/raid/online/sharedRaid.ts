@@ -4,7 +4,7 @@ import type { MemberState } from '../../incursion/fighter'
 import { TAP_CLOSE_DELAY_MS } from '../../incursion/online/sharedIncursion'
 import { settleGroupTaps } from '../../incursion/tapSettle'
 import type { MovePick } from '../../incursion/tapWindow'
-import { mayKnow } from '../../incursion/tms'
+import { mayKnowCombatMove } from '../../combat/combatRepertoire'
 import { fightProgress, raidSource } from '../raidFight'
 import { fightDue, startFight } from '../raidLobby'
 import { lateJoinBlocker, seatLate } from '../raidLateJoin'
@@ -126,7 +126,7 @@ export function tapShared(room: SharedRaid, playerId: string, turn: number, now:
 /** El jugador cambia el ataque de su Pokémon y a quién lo dirige: entra en la próxima ventana (si conoce el ataque) */
 export function pickShared(room: SharedRaid, playerId: string, pick: MovePick, now: number) {
   const member = fighting(room, playerId, now)
-  if (member && mayKnow(member.speciesId, member.level, pick.moveId) && raidMoveAllowed(pick.moveId)) room.pickPending = { ...room.pickPending, [member.id]: pick }
+  if (member && mayKnowCombatMove(member.speciesId, member.level, pick.moveId) && raidMoveAllowed(pick.moveId)) room.pickPending = { ...room.pickPending, [member.id]: pick }
 }
 
 /** El jugador ha acertado el toque crítico: su primer golpe del turno siguiente será crítico */

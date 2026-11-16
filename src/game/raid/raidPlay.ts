@@ -1,7 +1,7 @@
 import type { Rng } from '../core/random'
 import { findMon, type GameState } from '../core/state'
 import { finalHpFraction, IncursionPhase, type IncursionProgress } from '../incursion/activeIncursion'
-import { monKnows } from '../incursion/repertoire'
+import { knowsCombatMove } from '../combat/combatRepertoire'
 import { settleGroupTaps } from '../incursion/tapSettle'
 import type { MovePick, TurnOrders } from '../incursion/tapWindow'
 import { maxHp } from '../team/stats'
@@ -92,7 +92,7 @@ function liveFight(s: GameState, rotation: RaidRotation, now: number): TabRaid |
 export function setRaidPick(s: GameState, rotation: RaidRotation, pick: MovePick, now: number): boolean {
   const tr = liveFight(s, rotation, now)
   const mon = tr && findMon(s, tr.uid)
-  if (!tr || !mon || !monKnows(mon, pick.moveId) || !raidMoveAllowed(pick.moveId)) return false
+  if (!tr || !mon || !knowsCombatMove(mon, pick.moveId) || !raidMoveAllowed(pick.moveId)) return false
   tr.pendingPick = { moveId: pick.moveId, target: pick.target }
   return true
 }

@@ -1,23 +1,29 @@
-import { moveClass, MoveClass, type IncursionMove } from '../../data/incursionMoves'
+import type { IncursionMove } from '../../data/incursionMoves'
 import { signatureMove, type Move } from '../../data/moves'
+import { routeMoveChoices } from '../combat/combatRepertoire'
 import type { OwnedMon } from '../core/state'
-import { monRepertoire } from '../incursion/repertoire'
 
 // El ataque de la torre infinita y de las rutas (run/runMove.ts): se elige al empezar y se cambia cuando se quiera, entre
-// los de daño del repertorio de incursión del Pokémon (por nivel y MT). Solo cuentan su tipo, su potencia y su
-// precisión: sus efectos no.
+// los ataques de combate del Pokémon (combat/combatRepertoire.ts), con sus efectos y su prioridad.
 
-/** Los ataques que puede elegir en la torre: los de daño de su repertorio */
-export const towerMoveChoices = (mon: OwnedMon): IncursionMove[] => monRepertoire(mon).filter((mv) => moveClass(mv) === MoveClass.Damage)
+/** Los ataques que puede elegir en la torre y en las rutas: como mucho ROUTE_MOVE_SLOTS (ver combatRepertoire.ts) */
+export const towerMoveChoices = (mon: OwnedMon): IncursionMove[] => routeMoveChoices(mon)
 
 /** Sabe ese ataque y lo puede llevar en la torre */
 export const knowsTowerMove = (mon: OwnedMon, moveId: string): boolean => towerMoveChoices(mon).some((m) => m.id === moveId)
 
-/** Un ataque de incursión como ataque de combate de ruta: solo su tipo, su potencia y su precisión */
+/** Un ataque de incursión como ataque de un rival de ruta (entrenadores y líderes): solo su tipo, potencia y precisión */
 export const strikeOf = (mv: IncursionMove): Move => ({ id: mv.id, name: mv.name, type: mv.type, power: mv.power, accuracy: mv.accuracy })
 
-/** El ataque elegido como ataque de combate; si ya no lo sabe, el suyo de siempre */
+/** Un ataque de combate como ataque del Pokémon del jugador: con su prioridad y sus efectos */
+export const combatStrike = (mv: IncursionMove): Move => ({ ...strikeOf(mv), priority: mv.priority, effects: mv.effects })
+
+/**
+ * El ataque elegido como ataque de combate. Si ya no lo lleva (al subir de nivel aprendió otro que lo dejó fuera de los
+ * que caben), el primero de los que lleva; sin ninguno, el suyo de siempre
+ */
 export function towerMove(mon: OwnedMon, moveId: string): Move {
-  const mv = towerMoveChoices(mon).find((m) => m.id === moveId)
-  return mv ? strikeOf(mv) : signatureMove(mon.speciesId)
+  const choices = towerMoveChoices(mon)
+  const mv = choices.find((m) => m.id === moveId) ?? choices[0]
+  return mv ? combatStrike(mv) : signatureMove(mon.speciesId)
 }

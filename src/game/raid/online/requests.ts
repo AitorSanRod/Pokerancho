@@ -1,7 +1,8 @@
 import { isKnownSpecies } from '../../../data/species'
 import type { MemberState } from '../../incursion/fighter'
 import { freshMember } from '../../incursion/party'
-import { mayKnow } from '../../incursion/tms'
+import { MoveBook } from '../../../data/combatMoves'
+import { mayKnowCombatMove } from '../../combat/combatRepertoire'
 import { isNature } from '../../team/natures'
 import { parsePerks } from '../../team/perks'
 import { MAX_LEVEL, MAX_STARS } from '../../team/stats'
@@ -36,11 +37,11 @@ function parseMember(v: unknown): MemberState | null {
   if (!isInt(v.level, 1, MAX_LEVEL) || !isInt(v.stars, 0, MAX_STARS)) return null
   if (typeof v.hpFraction !== 'number' || !(v.hpFraction > 0 && v.hpFraction <= 1)) return null
   const speciesId = v.speciesId as number
-  if (!mayKnow(speciesId, v.level, v.moveId)) return null
+  if (!mayKnowCombatMove(speciesId, v.level, v.moveId)) return null
   const perks = parsePerks(v.perks)
   if (!perks) return null
   const nature = isNature(v.nature) ? v.nature : undefined
-  const fresh = freshMember({ id: v.id, speciesId, level: v.level, stars: v.stars, nature, shiny: v.shiny === true || undefined, perks, moveId: v.moveId })
+  const fresh = freshMember({ id: v.id, speciesId, level: v.level, stars: v.stars, nature, shiny: v.shiny === true || undefined, perks, moveId: v.moveId, book: MoveBook.Combat })
   return { ...fresh, hpFraction: v.hpFraction }
 }
 

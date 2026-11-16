@@ -1,14 +1,14 @@
-import { EffectKind, effectOf, hasArea, hitsAllies, MoveClass, moveClass, STAT_NAME, type IncursionMove, type StatChange } from '../../data/incursionMoves'
+import { EffectKind, effectOf, hasArea, hitsAllies, MoveClass, moveClass, type IncursionMove, type StatChange } from '../../data/incursionMoves'
 import type { MissReason } from '../battle/battle'
 import type { Rng } from '../core/random'
-import { damage, TAP_CRIT_MULT } from '../battle/attack'
+import { AREA_DAMAGE_MULT, damage, TAP_CRIT_MULT } from '../battle/attack'
 import { allies, enemies, hurt, restore, type Battlefield } from './battlefield'
 import { EventKind, on } from './events'
 import { damageSide, isUp, type GroupFighter } from './fighter'
 import { inflict } from './groupStatus'
 import { healAmount } from './healing'
 import { cappedHit, koHealAmount } from '../battle/combatBonus'
-import { addStages, MAX_STAGES } from '../battle/statStages'
+import { addStages, MAX_STAGES, stageText } from '../battle/statStages'
 import { tapMult } from './tapWindow'
 import { debuffTarget, healTarget, inflictTarget, strikeTarget } from './targeting'
 
@@ -16,9 +16,6 @@ import { debuffTarget, healTarget, inflictTarget, strikeTarget } from './targeti
 // sus efectos al golpeado (los de área, a todos los rivales y, como Terremoto, también a sus compañeros), los de cura
 // convierten su potencia en PS y los de estado aplican sus efectos. `bossArea`: el golpe de un jefe que da a todo el
 // grupo (bossMechanics.ts).
-
-/** Fracción del daño normal que hace a cada uno un golpe en área */
-export const AREA_DAMAGE_MULT = 0.6
 
 const MISS_TEXT: Record<MissReason, string> = { miss: '¡Pero falló!', dodge: '¡Lo esquivó!', immune: 'No afecta…' }
 
@@ -58,13 +55,6 @@ function strike(bf: Battlefield, actor: GroupFighter, target: GroupFighter, mv: 
   if (!isUp(target)) restore(bf, actor, koHealAmount(actor.bonus, actor.maxHp))
   else for (const { status, chance } of actor.bonus.inflicts) if (rng() < chance) inflict(bf, target, status)
   return taken
-}
-
-/** Cómo lo cuentan los juegos: cuántas etapas se aplicaron de las que pedía */
-function stageText(name: string, c: StatChange, applied: number): string {
-  const stat = `${STAT_NAME[c.stat]} de ${name}`
-  if (applied === 0) return c.stages > 0 ? `¡${stat} no puede subir más!` : `¡${stat} no puede bajar más!`
-  return `¡${stat} ${applied > 0 ? 'subió' : 'bajó'}${Math.abs(applied) > 1 ? ' mucho' : ''}!`
 }
 
 /** Suma (o resta) etapas de stats, sin pasar del tope: si ya está al tope, no hace nada */

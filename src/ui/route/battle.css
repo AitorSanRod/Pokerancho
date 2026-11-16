@@ -91,12 +91,16 @@
 .reward-exp {
   color: #6cc4ff;
 }
-/* Curas (regeneración, robo de vida) en verde y estados alterados en violeta */
+/* Curas (regeneración, robo de vida) en verde, estados alterados en violeta y cambios de stats en azul */
 .battle-pop.heal {
   color: var(--hp-ok);
 }
 .battle-pop.status {
   color: #e8a0ff;
+}
+.battle-pop.stat {
+  color: #8fd3ff;
+  font-size: 15px;
 }
 /* El rival entra desde la derecha; usa `translate` para no pisar el `transform` que lo centra */
 @keyframes enemy-enter {

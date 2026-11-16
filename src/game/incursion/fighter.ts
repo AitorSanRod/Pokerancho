@@ -1,5 +1,6 @@
 import type { BossMechanics, IncursionFoe } from '../../data/incursions'
-import { incursionMove, type IncursionMove } from '../../data/incursionMoves'
+import { bookMove, MoveBook } from '../../data/combatMoves'
+import type { IncursionMove } from '../../data/incursionMoves'
 import type { Nature } from '../../data/natures'
 import { STATUS_INFO, type StatusId } from '../../data/passives'
 import { species } from '../../data/species'
@@ -48,6 +49,8 @@ export interface GroupFighter {
   move: IncursionMove
   /** Los que lleva: el del grupo, uno; un rival, los suyos, entre los que elige cada turno */
   moves: IncursionMove[]
+  /** De qué lista salen sus ataques: la de combate, los de los jugadores en las raids; si no, la de incursión */
+  book: MoveBook
   /** Pasivas: las del grupo (se recalculan cada turno) o las escritas en el rival */
   bonus: CombatBonus
   /** Hitos y colección de los del grupo (las stats ya van en `base`); los rivales, ninguno */
@@ -81,6 +84,8 @@ export interface MemberState {
   /** Hitos y colección (team/perks.ts); sin ellos (bots y clientes de antes), ninguno */
   perks?: MonPerks
   moveId: string
+  /** De qué lista sale su ataque: la de combate (jugadores en las raids); sin ella (bots e incursiones), la de incursión */
+  book?: MoveBook
   /** PS como fracción de los máximos */
   hpFraction: number
   status: StatusId | null
@@ -89,12 +94,12 @@ export interface MemberState {
   out: boolean
 }
 
-function fighter(id: string, team: Team, speciesId: number, level: number, base: Stats, moveIds: string[]): GroupFighter {
+function fighter(id: string, team: Team, speciesId: number, level: number, base: Stats, moveIds: string[], book: MoveBook = MoveBook.Incursion): GroupFighter {
   const sp = species(speciesId)
-  const moves = moveIds.map(incursionMove)
+  const moves = moveIds.map((moveId) => bookMove(book, moveId))
   return {
     id, team, speciesId, name: sp.name, level, types: sp.types, base, hp: base.hp, maxHp: base.hp,
-    move: moves[0], moves, bonus: combineBonus([]), perks: noPerks(), statuses: [], stages: noStages(), taunt: null,
+    move: moves[0], moves, book, bonus: combineBonus([]), perks: noPerks(), statuses: [], stages: noStages(), taunt: null,
     out: false, fellAt: null, boss: null, target: null, statusHpMult: 1,
   }
 }
@@ -112,7 +117,7 @@ const withPerks = (base: Stats, perks: MonPerks): Stats => scaled(base, 1 + perk
 /** Un Pokémon del grupo, con su nivel */
 export function partyFighter(m: MemberState): GroupFighter {
   const perks = m.perks ?? noPerks()
-  const f = { ...fighter(m.id, Team.Party, m.speciesId, m.level, withPerks(calcStats(m.speciesId, m.level, m.stars, m.nature), perks), [m.moveId]), perks }
+  const f = { ...fighter(m.id, Team.Party, m.speciesId, m.level, withPerks(calcStats(m.speciesId, m.level, m.stars, m.nature), perks), [m.moveId], m.book), perks }
   f.hp = m.out ? 0 : Math.round(m.hpFraction * f.maxHp)
   // El estado que trae del tramo anterior se le pasa al acabar el primer turno
   const statuses = m.status ? [{ status: m.status, turns: 1, heldTurns: m.heldTurns ?? 0 }] : []

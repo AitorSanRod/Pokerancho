@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { signatureMove } from '../../../data/moves'
+import { combatMove } from '../../../data/combatMoves'
 import { RARITY_INFO, rarityOf, species } from '../../../data/species'
 import { isCaughtByLine, isSeen } from '../../../game/collection/dex'
+import { combatLearnTimeline } from '../../../game/combat/combatRepertoire'
 import { MonPlace, monPlace, type GameState, type OwnedMon } from '../../../game/core/state'
+import { defaultRouteMove } from '../../../game/run/runMove'
 import { REGEN_PER_MIN } from '../../../game/team/ranch'
 import { calcStats, maxHp, stepsPerMinute } from '../../../game/team/stats'
 import { MoveChip, TypeBadge } from '../common'
@@ -28,7 +30,8 @@ function statLine(mon: OwnedMon, level: number): StatLine {
  * Sección «Datos», igual en el rancho y en la Pokédex: tipos, rareza, dónde está, stats y ataque.
  * Sin `mon` (especie que aún no tienes) solo se ve lo que se sabe de la especie y, si cuenta como capturada por tener
  * una evolución suya, el aviso de que lo es. Con `previewLevel` (el nivel al que llegaría con el entrenamiento elegido)
- * las stats dicen cuánto subirían. Junto al ataque, la «i» abre el resumen de todos sus ataques (MovesInfo).
+ * las stats dicen cuánto subirían. El ataque es el de combate con el que sale (el más fuerte; sin `mon`, el primero que
+ * aprende) y, junto a él, la «i» abre el resumen de todos sus ataques (MovesInfo).
  */
 export function MonOverview({ game, speciesId, mon, previewLevel = null }: { game: GameState; speciesId: number; mon?: OwnedMon; previewLevel?: number | null }) {
   // Con una forma (Rotom Calor), sus tipos y su ataque; lo de la Pokédex, de su especie
@@ -62,7 +65,7 @@ export function MonOverview({ game, speciesId, mon, previewLevel = null }: { gam
       {!mon && isCaughtByLine(game, speciesId) && <p className="notice small center">Capturado como línea evolutiva</p>}
       {seen && (
         <div className="move-with-info">
-          <MoveChip id={signatureMove(sp.id).id} />
+          <MoveChip move={mon ? combatMove(defaultRouteMove(mon)) : combatLearnTimeline(sp.id)[0].move} />
           <button className="move-info-btn" onClick={() => setMovesOpen(true)} aria-label="Todos sus ataques">
             i
           </button>

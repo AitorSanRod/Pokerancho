@@ -1,4 +1,5 @@
-import { incursionMove, isIncursionMove, type IncursionMove } from '../../data/incursionMoves'
+import { bookMove } from '../../data/combatMoves'
+import { isIncursionMove, type IncursionMove } from '../../data/incursionMoves'
 import { EffectKind, effectOf, hasArea, MoveClass, moveClass } from '../../data/incursionMoves'
 import type { Battlefield } from './battlefield'
 import type { GroupFighter } from './fighter'
@@ -12,7 +13,7 @@ export function applyPicks(bf: Battlefield, picks: Record<string, MovePick>) {
   for (const [id, pick] of Object.entries(picks)) {
     const f = bf.party.find((p) => p.id === id)
     if (!f || !isIncursionMove(pick.moveId)) continue
-    f.move = incursionMove(pick.moveId)
+    f.move = bookMove(f.book, pick.moveId)
     f.moves = [f.move]
     f.target = pick.target
   }

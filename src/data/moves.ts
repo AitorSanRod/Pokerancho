@@ -1,4 +1,5 @@
 import { rarityOf, species, type Rarity } from './species'
+import type { MoveEffect } from './incursionMoves/effects'
 import type { PokeType } from './types'
 
 /** Todos los movimientos son de daño: usan el ataque del Pokémon contra la defensa del rival */
@@ -8,6 +9,10 @@ export interface Move {
   type: PokeType
   power: number
   accuracy: number
+  /** Los de combate del jugador (ver tower/towerMoves.ts): actúan antes los de más prioridad; sin ella, 0 */
+  priority?: number
+  /** Los de combate del jugador: los mismos efectos que en las incursiones (ver battle/moveEffects.ts) */
+  effects?: MoveEffect[]
 }
 
 const m = (id: string, name: string, type: PokeType, power: number, accuracy = 100): Move => ({
@@ -19,7 +24,8 @@ const m = (id: string, name: string, type: PokeType, power: number, accuracy = 1
 })
 
 /**
- * Cada Pokémon tiene un único ataque: el de su primer tipo y el escalón de su rareza. La potencia crece con la rareza
+ * Cada rival salvaje o jefe de ruta tiene un único ataque: el de su primer tipo y el escalón de su rareza (los Pokémon
+ * del jugador llevan los de combate, ver data/combatMoves). La potencia crece con la rareza
  * (≈40 común, ≈85 raro, ≈105 épico, 120 legendario), así que los raros pegan bastante más que los comunes.
  */
 const BY_TYPE: Record<PokeType, Record<Rarity, Move>> = {
@@ -137,12 +143,6 @@ export const MOVES: Record<string, Move> = Object.fromEntries(
   Object.values(BY_TYPE).flatMap((tiers) => Object.values(tiers).map((mv) => [mv.id, mv])),
 )
 
-export function move(id: string): Move {
-  const mv = MOVES[id]
-  if (!mv) throw new Error(`Movimiento desconocido: ${id}`)
-  return mv
-}
-
 /** Daño fijo de Forcejeo: no depende de stats, tipos, críticos ni pasivas */
 export const STRUGGLE_DAMAGE = 40
 /** Fracción de sus PS máximos que se quita a sí mismo quien usa Forcejeo (al menos 1 PS) */
@@ -154,7 +154,10 @@ export const STRUGGLE: Move = m('struggle', 'Forcejeo', 'normal', STRUGGLE_DAMAG
 /** El ataque de daño de un tipo en el escalón de una rareza (las incursiones los usan como repertorio común) */
 export const typeMove = (type: PokeType, rarity: Rarity): Move => BY_TYPE[type][rarity]
 
-/** El único ataque de una especie en rutas y raids: el de su primer tipo y su rareza. No se elige ni cambia con el nivel. */
+/**
+ * El único ataque de un rival salvaje o jefe de ruta: el de su primer tipo y su rareza. No se elige ni cambia con el
+ * nivel. El Pokémon del jugador solo lo usa si ya no sabe el ataque elegido (ver tower/towerMoves.ts)
+ */
 export function signatureMove(speciesId: number): Move {
   const sp = species(speciesId)
   return typeMove(sp.types[0], rarityOf(sp))

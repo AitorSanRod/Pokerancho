@@ -68,6 +68,7 @@ export function AcceptDialog({ game, listing, onClose, onNotice }: { game: GameS
         <>
           <p className="small muted">Elige cuál de tus Pokémon entregas:</p>
           <MonPicker
+            game={game}
             mons={payOptions(game, ask)}
             selectedUid={uid}
             onSelect={setUid}

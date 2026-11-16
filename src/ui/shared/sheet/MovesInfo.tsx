@@ -1,16 +1,16 @@
-import { incursionMove, moveClass, type IncursionMove } from '../../../data/incursionMoves'
-import { signatureMove } from '../../../data/moves'
+import { combatMove } from '../../../data/combatMoves'
+import { incursionMove, moveClass, MoveClass, type IncursionMove } from '../../../data/incursionMoves'
 import type { Tm } from '../../../data/tms'
 import { TYPE_INFO } from '../../../data/types'
+import { combatLearnTimeline, ROUTE_MOVE_SLOTS, routeMoveChoices } from '../../../game/combat/combatRepertoire'
 import { learnTimeline, type LearnStep } from '../../../game/incursion/repertoire'
-import { MoveChip } from '../common'
 import { CLASS_LABEL, moveText } from '../moveText'
 import { Modal } from '../Modal'
 import './moves-info.css'
 
 interface Props {
   speciesId: number
-  /** Nivel del Pokémon, si lo tienes: marca lo que ya lleva */
+  /** Nivel del Pokémon, si lo tienes: marca lo que ya lleva (en combate, los que caben en rutas y torre) */
   level: number | null
   /** Lo que ha aprendido con MTs, si lo tienes */
   tmMoves?: Tm[]
@@ -18,19 +18,27 @@ interface Props {
 }
 
 /**
- * Todos los ataques de una especie y para qué sirve cada uno: el de rutas y jefes comunitarios (siempre el mismo) y el
- * repertorio de las incursiones, nivel a nivel, más lo aprendido con MTs
+ * Todos los ataques de una especie y para qué sirve cada uno: los de combate (rutas, torre y raids) y el repertorio de
+ * las incursiones, nivel a nivel, más lo aprendido con MTs
  */
 export function MovesInfo({ speciesId, level, tmMoves = [], onClose }: Props) {
-  const signature = signatureMove(speciesId)
+  const strikeTms = tmMoves.filter((id) => moveClass(combatMove(id)) === MoveClass.Damage)
+  const carried = level === null ? [] : routeMoveChoices({ speciesId, level, tmMoves }).map((mv) => mv.id)
   return (
     <Modal className="moves-info" label="Sus ataques" onClose={onClose}>
       <h3>Sus ataques</h3>
       <div className="moves-info-body">
         <section>
-          <h4>Rutas y jefes comunitarios</h4>
-          <p className="small">Lo usa solo en cada combate de ruta y contra los jefes comunitarios. Es el de su primer tipo y su rareza, y no cambia con el nivel.</p>
-          <MoveChip id={signature.id} />
+          <h4>Rutas, torre y raids</h4>
+          <p className="small">Antes de salir eliges uno de estos, y puedes cambiarlo cuando quieras. Al subir de nivel aprende otros más fuertes; los más fuertes piden más rareza. En rutas y torre lleva solo {ROUTE_MOVE_SLOTS}: primero los propios de su especie, luego los de MT y luego los últimos que aprendió; contra los jefes de Raids, cualquiera de los que sabe. Sus efectos son los mismos que en las incursiones.</p>
+          <ul className="moves-info-list">
+            {combatLearnTimeline(speciesId).map((step) => (
+              <MoveRow key={step.move.id} move={step.move} when={`Desde Nv. ${step.from}`} held={carried.includes(step.move.id)} />
+            ))}
+            {strikeTms.map((id) => (
+              <MoveRow key={id} move={combatMove(id)} when="Con MT" held={carried.includes(id)} />
+            ))}
+          </ul>
         </section>
         <section>
           <h4>Incursiones</h4>

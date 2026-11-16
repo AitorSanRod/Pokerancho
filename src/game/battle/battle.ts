@@ -1,5 +1,6 @@
 import { signatureMove, type Move } from '../../data/moves'
 import type { Nature } from '../../data/natures'
+import type { BoostStat } from '../../data/incursionMoves'
 import type { PassiveRef, StatusId } from '../../data/passives'
 import { species } from '../../data/species'
 import type { PokeType } from '../../data/types'
@@ -9,7 +10,7 @@ import { calcStats, type Stats } from '../team/stats'
 import { attack } from './attack'
 import { combineBonus, type CombatBonus } from './combatBonus'
 import { endOfTurn } from './status'
-import { stageMult } from './statStages'
+import { noStages, stageMult, type Stages } from './statStages'
 
 export type Side = 'player' | 'enemy'
 
@@ -37,8 +38,8 @@ export interface Fighter {
   status: StatusId | null
   /** Turnos que le quedan sin poder moverse por la congelación */
   frozenTurns: number
-  /** Etapas de Velocidad que lleva subidas en el combate (pasiva de Bicho, ver statStages.ts) */
-  speStages: number
+  /** Etapas de stats que lleva subidas o bajadas en el combate (ataques de combate y pasiva de Bicho, ver statStages.ts) */
+  stages: Stages
   /** Ataques que ha hecho en el combate (cuenta el que está haciendo) */
   attacks: number
   /** Ataques (1 = el primero) que van con el toque crítico del jugador (ver run/tapCrit.ts) */
@@ -52,8 +53,8 @@ export interface MoveSwitch {
 }
 
 export interface BattleEvent {
-  /** status: recibe un estado o no puede moverse por él; heal: recupera PS */
-  kind: 'info' | 'attack' | 'hit' | 'miss' | 'faint' | 'status' | 'heal'
+  /** status: recibe un estado o no puede moverse por él; heal: recupera PS; stat: le suben o bajan stats */
+  kind: 'info' | 'attack' | 'hit' | 'miss' | 'faint' | 'status' | 'heal' | 'stat'
   text: string
   /** Quién actúa (attack) o a quién le pasa (el resto) */
   side?: Side
@@ -69,6 +70,8 @@ export interface BattleEvent {
   move?: Move
   /** attack: usa Forcejeo; hit: su golpe al rival o su retroceso (sobre quien lo usa, con el texto «Retroceso») */
   struggle?: boolean
+  /** stat: cuántas etapas de cada stat cambiaron de verdad (0: ya estaba al tope) */
+  stages?: { stat: BoostStat; applied: number }[]
   /** miss: por qué no le hizo nada */
   miss?: MissReason
   playerHp: number
@@ -141,7 +144,7 @@ export function makeFighter(
     perks,
     status: null,
     frozenTurns: 0,
-    speStages: 0,
+    stages: noStages(),
     attacks: 0,
     tapCrits: [],
   }
@@ -158,10 +161,13 @@ export type Push = (e: Omit<BattleEvent, 'playerHp' | 'enemyHp' | 'playerStatus'
 
 export const label = (f: Fighter) => (f.side !== 'enemy' ? f.name : f.trainer ? `${f.name} de ${f.trainer}` : `${f.name} salvaje`)
 
-/** Velocidad con sus etapas: decide quién actúa primero */
-const speedOf = (f: Fighter): number => f.stats.spe * stageMult(f.speStages)
+/** Velocidad con sus etapas */
+const speedOf = (f: Fighter): number => f.stats.spe * stageMult(f.stages.spe)
 
-/** Combate automático por turnos: actúa primero el más rápido; al final de cada turno pesan los estados */
+/** Quién va antes: el ataque de más prioridad y, a igual prioridad, el más rápido (>0: `a`; 0: empate) */
+const firstOf = (a: Fighter, b: Fighter): number => (a.move.priority ?? 0) - (b.move.priority ?? 0) || speedOf(a) - speedOf(b)
+
+/** Combate automático por turnos: actúa primero el ataque de más prioridad o el más rápido; al final de cada turno pesan los estados */
 export function simulateBattle(player: Fighter, enemy: Fighter, rng: Rng = Math.random): BattleResult {
   const events: BattleEvent[] = []
   const push: Push = (e) =>
@@ -171,8 +177,8 @@ export function simulateBattle(player: Fighter, enemy: Fighter, rng: Rng = Math.
   push({ kind: 'info', text: `¡Un ${enemy.name} salvaje de Nv. ${enemy.level} apareció!` })
 
   for (let turn = 1; turn <= MAX_TURNS; turn++) {
-    const [mine, theirs] = [speedOf(player), speedOf(enemy)]
-    const playerFirst = mine > theirs || (mine === theirs && rng() < 0.5)
+    const order = firstOf(player, enemy)
+    const playerFirst = order > 0 || (order === 0 && rng() < 0.5)
     for (const [atk, def] of playerFirst ? [[player, enemy], [enemy, player]] : [[enemy, player], [player, enemy]]) {
       attack(atk, def, push, rng)
       const ended = outcome()

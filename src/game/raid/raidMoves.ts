@@ -1,10 +1,13 @@
-import { hitsAllies, incursionMove, moveClass, MoveClass, type IncursionMove } from '../../data/incursionMoves'
+import { combatMove } from '../../data/combatMoves'
+import { hitsAllies, moveClass, MoveClass, type IncursionMove } from '../../data/incursionMoves'
+import { combatMoveChoices } from '../combat/combatRepertoire'
 import type { OwnedMon } from '../core/state'
 import { botMove } from '../incursion/party'
-import { monRepertoire, repertoire } from '../incursion/repertoire'
+import { repertoire } from '../incursion/repertoire'
 
-// Los ataques de la pelea de la pestaña Raids. Por ahora el jugador solo lleva de daño, como en las rutas y la torre
-// (RAID_DAMAGE_ONLY a false le abre los de cura y estado); los bots, su golpe más fuerte y, unos pocos, uno de cura.
+// Los ataques de la pelea de la pestaña Raids. El jugador lleva los de combate, como en las rutas y la torre
+// (combat/combatRepertoire.ts), y solo de daño (RAID_DAMAGE_ONLY a false le abre los de cura y estado); los bots, de su
+// repertorio de incursión, su golpe más fuerte y, unos pocos, uno de cura.
 
 /** En la pelea del jefe el jugador solo lleva ataques de daño: al entrar y en plena pelea */
 export const RAID_DAMAGE_ONLY = true
@@ -15,10 +18,10 @@ const allowed = (mv: IncursionMove) => !RAID_DAMAGE_ONLY || moveClass(mv) === Mo
 const heals = (mv: IncursionMove) => moveClass(mv) === MoveClass.Heal
 
 /** Los ataques que puede llevar ese Pokémon contra el jefe */
-export const raidMoveChoices = (mon: Pick<OwnedMon, 'speciesId' | 'level' | 'tmMoves'>): IncursionMove[] => monRepertoire(mon).filter(allowed)
+export const raidMoveChoices = (mon: Pick<OwnedMon, 'speciesId' | 'level' | 'tmMoves'>): IncursionMove[] => combatMoveChoices(mon).filter(allowed)
 
 /** Ese ataque vale en la pelea del jefe (que lo conozca se mira aparte) */
-export const raidMoveAllowed = (moveId: string): boolean => allowed(incursionMove(moveId))
+export const raidMoveAllowed = (moveId: string): boolean => allowed(combatMove(moveId))
 
 /**
  * El ataque de un bot, viendo lo que llevan los que llegaron antes (`taken`): uno de cura si su especie lo tiene y aún

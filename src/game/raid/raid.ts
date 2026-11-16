@@ -1,9 +1,10 @@
+import { MoveBook } from '../../data/combatMoves'
 import { species } from '../../data/species'
 import type { Rng } from '../core/random'
 import { findMon, MonPlace, monPlace, type GameState } from '../core/state'
 import type { MovePick } from '../incursion/tapWindow'
 import { freshMember } from '../incursion/party'
-import { monKnows } from '../incursion/repertoire'
+import { knowsCombatMove } from '../combat/combatRepertoire'
 import { monPerks } from '../team/perks'
 import { maxHp } from '../team/stats'
 import { RAID_ROTATIONS, RaidRotation } from './online/protocol'
@@ -71,7 +72,7 @@ export function raidBlocker(s: GameState, rotation: RaidRotation, uid: string, m
   const minLevel = cycleBoss(rotation, cycleAt(now)).minLevel ?? 0
   if (mon.level < minLevel) return `Hace falta Nv. ${minLevel} para luchar contra este jefe.`
   if (mon.hp < 1) return `${species(mon.speciesId).name} está debilitado.`
-  if (!monKnows(mon, moveId)) return 'No conoce ese ataque.'
+  if (!knowsCombatMove(mon, moveId)) return 'No conoce ese ataque.'
   if (!raidMoveAllowed(moveId)) return 'Contra el jefe solo valen ataques de daño.'
   return null
 }
@@ -79,7 +80,7 @@ export function raidBlocker(s: GameState, rotation: RaidRotation, uid: string, m
 /** El Pokémon tal y como entra en la sala: con sus PS de ahora, su ataque y el entrenador `trainer` */
 export function raidEntrant(s: GameState, uid: string, moveId: string, trainer = PLAYER_TRAINER): RaidEntrant {
   const mon = findMon(s, uid)!
-  const fresh = freshMember({ id: uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, shiny: mon.shiny, perks: monPerks(s, mon), moveId })
+  const fresh = freshMember({ id: uid, speciesId: mon.speciesId, level: mon.level, stars: mon.stars, nature: mon.nature, shiny: mon.shiny, perks: monPerks(s, mon), moveId, book: MoveBook.Combat })
   return { member: { ...fresh, hpFraction: mon.hp / maxHp(mon) }, trainer }
 }
 

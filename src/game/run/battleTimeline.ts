@@ -15,6 +15,7 @@ export const BATTLE_EVENT_MS: Record<BattleEvent['kind'], number> = {
   faint: 800,
   status: 700,
   heal: 550,
+  stat: 700,
 }
 /** Milisegundos reales tras el último evento (el rival cae o huye y se ve el premio) antes de seguir caminando */
 export const BATTLE_END_MS = 1200

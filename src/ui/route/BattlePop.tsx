@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { STAT_NAME } from '../../data/incursionMoves'
 import { STATUS_INFO } from '../../data/passives'
 import type { BattleEvent, BattleRecord, MissReason, Side } from '../../game/battle/battle'
 import { ICON } from '../shared/icons'
@@ -71,6 +72,7 @@ function shortPop(event: BattleEvent): string {
   if (event.kind === 'miss') return MISS_POP[event.miss ?? 'miss']
   if (event.kind === 'heal') return event.text
   if (event.kind === 'status') return `¡${STATUS_INFO[event.status!].name}!`
+  if (event.kind === 'stat') return stagesPop(event.stages ?? [])
   return ''
 }
 
@@ -78,4 +80,11 @@ function shortPop(event: BattleEvent): string {
 function popTone(event: BattleEvent): string {
   if (isHeavyHit(event)) return 'heavy'
   return event.kind === 'hit' && (event.eff ?? 1) < 1 ? 'weak' : ''
+}
+
+/** Las stats que le suben o bajan, con una flecha por etapa (como mucho dos): «Ataque ↑↑ Defensa ↓» */
+function stagesPop(stages: NonNullable<BattleEvent['stages']>): string {
+  const moved = stages.filter((c) => c.applied !== 0)
+  if (moved.length === 0) return 'Sin efecto'
+  return moved.map((c) => `${STAT_NAME[c.stat]} ${(c.applied > 0 ? '↑' : '↓').repeat(Math.min(2, Math.abs(c.applied)))}`).join(' ')
 }

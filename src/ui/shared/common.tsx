@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from 'react'
-import { move } from '../../data/moves'
+import type { Move } from '../../data/moves'
 import { hasAnimatedSprite, sprite } from '../../data/species'
 import { TYPE_INFO, type PokeType } from '../../data/types'
 import { useSpriteBounds, type SpriteBounds } from './spriteBounds'
@@ -122,8 +122,7 @@ export function TypeBadge({ type }: { type: PokeType }) {
 }
 
 /** Ficha de un movimiento (solo informativa: cada Pokémon tiene un único ataque fijo) */
-export function MoveChip({ id }: { id: string }) {
-  const mv = move(id)
+export function MoveChip({ move: mv }: { move: Move }) {
   return (
     <div className="move-chip" style={{ ['--type-color' as string]: TYPE_INFO[mv.type].color }}>
       <span className="move-name">{mv.name}</span>

@@ -1,14 +1,17 @@
 import { species } from '../../data/species'
-import type { OwnedMon } from '../../game/core/state'
+import { isFavorite } from '../../game/collection/dex'
+import type { GameState, OwnedMon } from '../../game/core/state'
+import { byPickOrder } from '../../game/team/pickOrder'
 import { maxHp } from '../../game/team/stats'
 import { Bar, Sprite } from './common'
 import { HeartIcon } from './HeartIcon'
 import './mon-picker.css'
 
-/** Por qué un Pokémon sale desactivado: es favorito (lleva el corazón) o por otra razón */
+/** Por qué un Pokémon sale desactivado: es favorito (no se puede dar) o por otra razón */
 export type MonLock = 'favorite' | 'other'
 
 interface Props {
+  game: GameState
   mons: OwnedMon[]
   selectedUid?: string
   onSelect: (uid: string) => void
@@ -16,26 +19,26 @@ interface Props {
   lockOf?: (m: OwnedMon) => MonLock | null
 }
 
-/** Fila deslizable de tarjetas para elegir un Pokémon (expediciones, jefes, intercambios): sprite, nombre, nivel y PS */
-export function MonPicker({ mons, selectedUid, onSelect, lockOf = () => null }: Props) {
+/** Cuadrícula para elegir un Pokémon (expediciones, jefes, incursiones, intercambios), favoritos primero y por nivel: sprite, nombre, nivel y PS */
+export function MonPicker({ game, mons, selectedUid, onSelect, lockOf = () => null }: Props) {
   return (
     <div className="mon-picker" role="listbox">
-      {mons.map((m) => {
+      {byPickOrder(game, mons).map((m) => {
         const name = species(m.speciesId).name
         const selected = m.uid === selectedUid
-        const lock = lockOf(m)
+        const favorite = isFavorite(game, m.speciesId)
         return (
           <button
             key={m.uid}
             role="option"
             aria-selected={selected}
             className={`mon-pick ${selected ? 'selected' : ''}`}
-            disabled={lock !== null}
+            disabled={lockOf(m) !== null}
             onClick={() => onSelect(m.uid)}
-            aria-label={`${name} Nv. ${m.level}${lock === 'favorite' ? ', favorito' : ''}`}
+            aria-label={`${name} Nv. ${m.level}${favorite ? ', favorito' : ''}`}
           >
-            {lock === 'favorite' && <HeartIcon className="mon-pick-heart" />}
-            <Sprite id={m.speciesId} size={64} animated={false} shiny={m.shiny} />
+            {favorite && <HeartIcon size={12} className="mon-pick-heart" />}
+            <Sprite id={m.speciesId} size={48} animated={false} shiny={m.shiny} />
             <span className="mon-pick-name tiny">{name}</span>
             <span className="mon-pick-level tiny">Nv. {m.level}</span>
             <Bar value={m.hp} max={maxHp(m)} kind="hp" />

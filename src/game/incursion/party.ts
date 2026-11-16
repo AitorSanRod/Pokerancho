@@ -24,7 +24,7 @@ export const botId = (i: number): string => `${BOT_PREFIX}${i}`
 export const isBot = (id: string): boolean => id.startsWith(BOT_PREFIX)
 
 /** Un Pokémon entra en la incursión con todos sus PS y sin estado */
-export const freshMember = (m: Pick<MemberState, 'id' | 'speciesId' | 'level' | 'stars' | 'nature' | 'shiny' | 'perks' | 'moveId'>): MemberState => ({
+export const freshMember = (m: Pick<MemberState, 'id' | 'speciesId' | 'level' | 'stars' | 'nature' | 'shiny' | 'perks' | 'moveId' | 'book'>): MemberState => ({
   ...m,
   hpFraction: 1,
   status: null,
