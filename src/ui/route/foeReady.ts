@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { hasAnimatedSprite, sprite } from '../../data/species'
+import { sprite } from '../../data/species'
 import type { BattleHold } from '../../game/core/tick'
+import { preloadAnimated } from '../shared/animatedSprite'
 import { measureBounds } from '../shared/spriteBounds'
 
 // El rival de un combate de ruta o de la torre no sale hasta tener sus imágenes: mientras, tu Pokémon sigue andando y
@@ -13,30 +14,14 @@ const MAX_WAIT_MS = 5000
 /** Combates que esperan a que se vea el rival; lo lee el bucle de juego (App.tsx) */
 export const battleHold: BattleHold = { run: false, tower: false }
 
-const images = new Map<string, Promise<void>>()
 /** Rivales con todo cargado: así un rival ya visto sale sin esperar ni un instante */
 const ready = new Set<string>()
 
 const foeKey = (speciesId: number, shiny: boolean) => `${speciesId}:${shiny}`
 
-function loadImage(src: string): Promise<void> {
-  let pending = images.get(src)
-  if (!pending) {
-    pending = new Promise((resolve) => {
-      const img = new Image()
-      img.onload = () => resolve()
-      img.onerror = () => resolve()
-      img.src = src
-    })
-    images.set(src, pending)
-  }
-  return pending
-}
-
 /** Pide las imágenes con las que se pinta un rival en combate (ver Sprite en common.tsx): la que se ve y su contorno */
 export function preloadFoe(speciesId: number, shiny = false): Promise<void> {
-  const shown = hasAnimatedSprite(speciesId, shiny) ? sprite.animated(speciesId, shiny) : sprite.front(speciesId, shiny)
-  return Promise.all([loadImage(shown), measureBounds(sprite.front(speciesId, shiny))]).then(() => {
+  return Promise.all([preloadAnimated(speciesId, shiny), measureBounds(sprite.front(speciesId, shiny))]).then(() => {
     ready.add(foeKey(speciesId, shiny))
   })
 }

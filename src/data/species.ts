@@ -93,25 +93,35 @@ export function rarityOf(s: Species): Rarity {
 
 const SPRITES = `${POKEAPI_SPRITES}/pokemon`
 
+/** GIF de Blanco y Negro: en el lienzo de 96 de los PNG, pero faltan muchos de la generación VI en adelante */
 const ANIMATED = `${SPRITES}/versions/generation-v/black-white/animated`
+/** GIF de Showdown: casi todas las especies, pero cada uno a su tamaño (se escalan por el contorno del PNG) */
+const SHOWDOWN = `${SPRITES}/other/showdown`
 /** Iconos de la caja: los de GBA (generación III) llegan hasta este número de la Pokédex; los demás, de la VII */
 const GBA_ICON_LAST = 386
 const iconDir = (id: number) => `${SPRITES}/versions/${id <= GBA_ICON_LAST ? 'generation-iii' : 'generation-vii'}/icons`
 /** Carpeta extra de los sprites shiny dentro de cada carpeta de PokeAPI */
 const shinyDir = (shiny: boolean) => (shiny ? 'shiny/' : '')
-/** Especies cuyo GIF shiny de PokeAPI es el normal (Pangoro, de frente y de espaldas): shiny, solo con el sprite fijo */
+const backDir = (back: boolean) => (back ? 'back/' : '')
+/** Especies cuyo GIF shiny de Blanco y Negro es el normal (Pangoro, de frente y de espaldas): shiny, el de Showdown */
 const NORMAL_SHINY_GIFS: ReadonlySet<number> = new Set([675])
-
-/** Si el GIF animado de la especie se ve con sus colores (shiny o no) */
-export const hasAnimatedSprite = (id: number, shiny: boolean) => !shiny || !NORMAL_SHINY_GIFS.has(id)
 
 export const sprite = {
   front: (id: number, shiny = false) => `${SPRITES}/${shinyDir(shiny)}${id}.png`,
   back: (id: number, shiny = false) => `${SPRITES}/back/${shinyDir(shiny)}${id}.png`,
-  animated: (id: number, shiny = false) => `${ANIMATED}/${shinyDir(shiny)}${id}.gif`,
-  animatedBack: (id: number, shiny = false) => `${ANIMATED}/back/${shinyDir(shiny)}${id}.gif`,
+  animated: (id: number, shiny = false, back = false) => `${ANIMATED}/${backDir(back)}${shinyDir(shiny)}${id}.gif`,
+  showdown: (id: number, shiny = false, back = false) => `${SHOWDOWN}/${backDir(back)}${shinyDir(shiny)}${id}.gif`,
   /** Icono pequeño de la caja (no hay versión shiny) */
   icon: (id: number) => `${iconDir(id)}/${id}.png`,
+}
+
+/** Si el GIF es de Showdown (no está en el lienzo de 96: hay que escalarlo) */
+export const isShowdownGif = (src: string) => src.startsWith(SHOWDOWN)
+
+/** GIF animados que se prueban, en orden: el de Blanco y Negro y, si no existe, el de Showdown */
+export function animatedSources(id: number, shiny = false, back = false): string[] {
+  const showdown = sprite.showdown(id, shiny, back)
+  return shiny && NORMAL_SHINY_GIFS.has(id) ? [showdown] : [sprite.animated(id, shiny, back), showdown]
 }
 
 export const STARTERS: number[] = [POKEMON.Bulbasaur, POKEMON.Charmander, POKEMON.Squirtle]

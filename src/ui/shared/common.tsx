@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import type { Move } from '../../data/moves'
-import { hasAnimatedSprite, sprite } from '../../data/species'
+import { isShowdownGif, sprite } from '../../data/species'
+import { animatedSrc, markMissing } from './animatedSprite'
 import { TYPE_INFO, type PokeType } from '../../data/types'
 import { useSpriteBounds, type SpriteBounds } from './spriteBounds'
 
@@ -34,6 +35,16 @@ function imageStyle(natural: Natural, size: number, fit: number | undefined, bod
     left: (natural.w / 2 - (b.x + b.w / 2)) * scale,
     top: (natural.h - (b.y + b.h)) * scale,
   }
+}
+
+/**
+ * Un GIF de Showdown pasado a la escala del lienzo de 96: su lado mayor mide lo que el del cuerpo en el PNG (sin
+ * contorno, cabe en el lienzo).
+ */
+function toCanvas(natural: Natural, body: SpriteBounds | null): Natural {
+  const side = Math.max(natural.w, natural.h)
+  const scale = body ? Math.max(body.w, body.h) / side : Math.min(1, SPRITE_CANVAS / side)
+  return { src: natural.src, w: natural.w * scale, h: natural.h * scale }
 }
 
 /**
@@ -74,18 +85,23 @@ export function Sprite({
   /** Sin `fit`: el GIF apoya los pies donde los tiene el PNG estático (para alternar entre los dos sin saltos) */
   grounded?: boolean
 }) {
-  // Si el GIF animado no existe o falla, se usa el sprite estático
-  const [failed, setFailed] = useState(false)
-  const fallback = failed || !animated || !hasAnimatedSprite(id, shiny)
+  // Si un GIF animado no existe o falla, se prueba el siguiente y, si no queda ninguno, el sprite estático
+  const [, setMisses] = useState(0)
+  const gif = animated ? animatedSrc(id, shiny, back) : null
   // Tamaño real de la imagen cargada; hasta saberlo no se muestra, para que no salte de tamaño
   const [natural, setNatural] = useState<Natural | null>(null)
-  const src = fallback
-    ? back ? sprite.back(id, shiny) : sprite.front(id, shiny)
-    : back ? sprite.animatedBack(id, shiny) : sprite.animated(id, shiny)
-  // El cuerpo se mide siempre en el PNG estático (misma escala que el GIF, pero sin el margen de la animación)
   const staticSrc = back ? sprite.back(id, shiny) : sprite.front(id, shiny)
-  const body = useSpriteBounds(staticSrc, fit !== undefined || grounded)
+  const src = gif ?? staticSrc
+  const showdown = gif !== null && isShowdownGif(gif)
+  // El cuerpo se mide siempre en el PNG estático (misma escala que el GIF, pero sin el margen de la animación)
+  const layout = fit !== undefined || grounded
+  const body = useSpriteBounds(staticSrc, layout || showdown)
   const loaded = natural?.src === src && body !== undefined ? natural : null
+  const fail = () => {
+    if (!gif) return
+    markMissing(gif)
+    setMisses((n) => n + 1)
+  }
 
   return (
     <span className={`sprite ${silhouette ? 'silhouette' : ''} ${className}`} style={{ width: size, height: size }}>
@@ -93,9 +109,13 @@ export function Sprite({
         src={src}
         alt=""
         draggable={false}
-        onError={() => setFailed(true)}
+        onError={fail}
         onLoad={(e) => setNatural({ src, w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
-        style={loaded ? imageStyle(loaded, size, fit, body ?? null, !fallback) : { visibility: 'hidden' }}
+        style={
+          loaded
+            ? imageStyle(showdown ? toCanvas(loaded, body ?? null) : loaded, size, fit, layout ? (body ?? null) : null, gif !== null)
+            : { visibility: 'hidden' }
+        }
       />
     </span>
   )

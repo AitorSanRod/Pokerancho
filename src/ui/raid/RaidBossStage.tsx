@@ -9,7 +9,7 @@ import './raid-scene.css'
 /** El jefe en su paisaje, quieto (con la sala abierta) o en silueta (el de la próxima sala) */
 export function RaidBossStage({ speciesId, silhouette = false }: { speciesId: number; silhouette?: boolean }) {
   return (
-    <div className="raid-stage">
+    <div className="raid-stage raid-boss-stage">
       <WalkScene biome={raidBiome(speciesId)} moving={false} speed={1}>
         <div className="route-battle">
           <div className="route-fighter enemy boss raid-boss-fighter">

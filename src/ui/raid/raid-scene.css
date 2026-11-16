@@ -18,3 +18,11 @@
   display: flex;
   filter: drop-shadow(0 3px 0 #0003);
 }
+/* El jefe de la sala abierta (RaidBossStage): más bajo en pantallas cortas, para que los botones de entrar se vean
+   sin bajar, y deja deslizar la pantalla aunque el dedo empiece sobre el paisaje */
+.raid-boss-stage {
+  height: clamp(200px, 38dvh, 340px);
+}
+.raid-boss-stage .scene {
+  touch-action: pan-y;
+}
