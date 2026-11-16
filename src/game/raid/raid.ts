@@ -4,13 +4,12 @@ import type { Rng } from '../core/random'
 import { findMon, MonPlace, monPlace, type GameState } from '../core/state'
 import type { MovePick } from '../incursion/tapWindow'
 import { freshMember } from '../incursion/party'
-import { knowsCombatMove } from '../combat/combatRepertoire'
 import { monPerks } from '../team/perks'
 import { maxHp } from '../team/stats'
 import { RAID_ROTATIONS, RaidRotation } from './online/protocol'
 import { cycleBoss } from './rotationBosses'
 import { lateJoinBlocker, lateLocalRoom, seatLate } from './raidLateJoin'
-import { raidMoveAllowed } from './raidMoves'
+import { carriesRaidMove, raidMoveAllowed } from './raidMoves'
 import { newRoom, seatEntrant, unseat, type RaidEntrant, type RaidRoom } from './raidRoom'
 import { cycleAt, RaidStage, stageAt } from './raidSchedule'
 
@@ -72,8 +71,8 @@ export function raidBlocker(s: GameState, rotation: RaidRotation, uid: string, m
   const minLevel = cycleBoss(rotation, cycleAt(now)).minLevel ?? 0
   if (mon.level < minLevel) return `Hace falta Nv. ${minLevel} para luchar contra este jefe.`
   if (mon.hp < 1) return `${species(mon.speciesId).name} está debilitado.`
-  if (!knowsCombatMove(mon, moveId)) return 'No conoce ese ataque.'
   if (!raidMoveAllowed(moveId)) return 'Contra el jefe solo valen ataques de daño.'
+  if (!carriesRaidMove(mon, moveId)) return 'No lleva ese ataque.'
   return null
 }
 

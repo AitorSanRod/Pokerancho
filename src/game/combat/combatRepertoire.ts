@@ -41,26 +41,29 @@ export function combatMoveChoices(mon: Mon): IncursionMove[] {
   return [...own, ...taught]
 }
 
-/** Ataques que lleva como mucho en las rutas y la torre */
+/** Ataques que lleva como mucho en las rutas, la torre y la pelea de la pestaña Raids */
 export const ROUTE_MOVE_SLOTS = 2
 
 /** Los puestos a mano de su especie (COMBAT_MOVESETS o COMBAT_SPECIES_MOVES) */
 const overridesOf = (speciesId: number): string[] =>
   (COMBAT_MOVESETS[speciesId] ?? COMBAT_SPECIES_MOVES[speciesId] ?? []).map((m) => m.move.id)
 
+/** El más potente antes; a igual potencia, el más preciso */
+const byPower = (a: IncursionMove, b: IncursionMove) => b.power - a.power || b.accuracy - a.accuracy
+
 /**
- * Los que lleva a las rutas y la torre: como mucho ROUTE_MOVE_SLOTS de los que sabe. Primero los puestos a mano para su
- * especie, luego los de sus MTs y luego los de su escalera; en cada grupo, el aprendido más tarde (el más fuerte) antes
+ * Los que lleva a las rutas, la torre y las raids: como mucho ROUTE_MOVE_SLOTS de los que sabe. Primero los puestos a
+ * mano para su especie; luego, con dos tipos, el más potente de cada uno; y si queda sitio, los más potentes del resto
  */
 export function routeMoveChoices(mon: Mon): IncursionMove[] {
   const overrides = overridesOf(mon.speciesId)
-  const levelOf = new Map(learnset(mon.speciesId).map((m) => [m.move.id, m.level]))
-  const rank = (mv: IncursionMove) => (overrides.includes(mv.id) ? 0 : levelOf.has(mv.id) ? 2 : 1)
-  const later = (mv: IncursionMove) => -(levelOf.get(mv.id) ?? 0)
-  return [...combatMoveChoices(mon)].sort((a, b) => rank(a) - rank(b) || later(a) - later(b)).slice(0, ROUTE_MOVE_SLOTS)
+  const known = [...combatMoveChoices(mon)].sort(byPower)
+  const own = known.filter((mv) => overrides.includes(mv.id))
+  const types = species(mon.speciesId).types
+  const bestOfType = types.length > 1 ? types.map((t) => known.find((mv) => mv.type === t && !own.includes(mv))) : []
+  const picks = [...own, ...bestOfType.filter((mv) => mv !== undefined), ...known]
+  return picks.filter((mv, i) => picks.indexOf(mv) === i).slice(0, ROUTE_MOVE_SLOTS)
 }
-
-export const knowsCombatMove =(mon: Mon, moveId: string): boolean => combatMoveChoices(mon).some((mv) => mv.id === moveId)
 
 /**
  * Si un Pokémon de esa especie y nivel puede llevar ese ataque a un combate: de su repertorio o de una MT de daño que

@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { COMBAT_LADDERS, COMBAT_MOVESETS, COMBAT_SPECIES_MOVES, COMBAT_TUNING, combatMove } from '../../data/combatMoves'
-import { incursionMove, moveClass, MoveClass } from '../../data/incursionMoves'
+import { incursionMove, moveClass, MoveClass, type IncursionMove } from '../../data/incursionMoves'
 import { Rarity, rarityOf, species, SPECIES } from '../../data/species'
 import { TM_IDS, TMS, type Tm } from '../../data/tms'
 import { speciesOfRarity } from '../core/test-utils'
 import { repertoire } from '../incursion/repertoire'
 import { MAX_LEVEL } from '../team/stats'
-import { combatLearnTimeline, combatMoveChoices, combatRepertoire, knowsCombatMove, mayKnowCombatMove, ROUTE_MOVE_SLOTS, routeMoveChoices } from './combatRepertoire'
+import { combatLearnTimeline, combatMoveChoices, combatRepertoire, mayKnowCombatMove, ROUTE_MOVE_SLOTS, routeMoveChoices } from './combatRepertoire'
 
 const RARITY_ORDER = Object.values(Rarity)
 const ids = (moves: { id: string }[]) => moves.map((mv) => mv.id).sort()
@@ -90,26 +90,35 @@ describe('ajustes de combate', () => {
   })
 })
 
-describe('ataques de ruta y torre', () => {
-  /** Una especie de escalera que sabe más de los que caben, y ataques de daño de otros tipos para ponerle a mano */
-  const crowded = () => {
-    const sp = ladderSpecies.find((s) => combatRepertoire(s.id, MAX_LEVEL).length > ROUTE_MOVE_SLOTS)!
-    const [extra, other] = Object.values(COMBAT_LADDERS).flat().filter((s) => !sp.types.includes(s.move.type))
-    return { mon: { speciesId: sp.id, level: MAX_LEVEL, tmMoves: [] as Tm[] }, extra: extra.move.id, other: other.move.id }
-  }
+describe('ataques de ruta, torre y raids', () => {
+  const atMax = (speciesId: number) => ({ speciesId, level: MAX_LEVEL, tmMoves: [] as Tm[] })
+  /** Una especie de escalera con esos tipos que sabe más de los que caben */
+  const crowded = (typeCount: number) =>
+    ladderSpecies.find((s) => s.types.length === typeCount && combatRepertoire(s.id, MAX_LEVEL).length > ROUTE_MOVE_SLOTS)!
+  const strongest = (moves: IncursionMove[]) => Math.max(...moves.map((mv) => mv.power))
 
-  it('lleva como mucho los que caben: de su escalera, los aprendidos más tarde', () => {
-    const { mon } = crowded()
-    const byLevel = [...combatLearnTimeline(mon.speciesId)].sort((a, b) => b.from - a.from)
-    expect(ids(routeMoveChoices(mon))).toEqual(ids(byLevel.slice(0, ROUTE_MOVE_SLOTS).map((step) => step.move)))
+  it('con un tipo, lleva los más potentes que sabe', () => {
+    const mon = atMax(crowded(1).id)
+    const powers = combatMoveChoices(mon).map((mv) => mv.power).sort((a, b) => b - a)
+    expect(routeMoveChoices(mon).map((mv) => mv.power)).toEqual(powers.slice(0, ROUTE_MOVE_SLOTS))
   })
 
-  it('los puestos a mano para su especie van primero, aunque se aprendan antes; luego los de MT', () => {
-    const { mon, extra, other } = crowded()
-    COMBAT_SPECIES_MOVES[mon.speciesId] = [{ move: incursionMove(extra), level: 1 }]
-    const taught = { ...mon, tmMoves: [other as Tm] }
-    expect(routeMoveChoices(taught).map((mv) => mv.id)).toEqual([extra, other].slice(0, ROUTE_MOVE_SLOTS))
-    expect(routeMoveChoices(mon)[0].id).toBe(extra)
+  it('con dos tipos, el más potente de cada uno', () => {
+    const sp = crowded(2)
+    const known = combatMoveChoices(atMax(sp.id))
+    const carried = routeMoveChoices(atMax(sp.id))
+    for (const type of sp.types.slice(0, ROUTE_MOVE_SLOTS)) {
+      const ofType = known.filter((mv) => mv.type === type)
+      const mine = carried.find((mv) => mv.type === type)!
+      expect(mine.power).toBe(strongest(ofType))
+    }
+  })
+
+  it('los puestos a mano para su especie van primero, aunque sean más flojos', () => {
+    const sp = crowded(1)
+    const weakest = Object.values(COMBAT_LADDERS).flat().filter((s) => !sp.types.includes(s.move.type)).sort((a, b) => a.move.power - b.move.power)[0]
+    COMBAT_SPECIES_MOVES[sp.id] = [{ move: weakest.move, level: 1 }]
+    expect(routeMoveChoices(atMax(sp.id))[0].id).toBe(weakest.move.id)
   })
 })
 
@@ -119,10 +128,9 @@ describe('MTs en combate', () => {
       const sp = SPECIES.find((s) => s.types.some((t) => TMS[tm].types.includes(t)) && !combatRepertoire(s.id, MAX_LEVEL).some((mv) => mv.id === tm))!
       const mon = { speciesId: sp.id, level: MAX_LEVEL, tmMoves: [tm] }
       const strike = moveClass(combatMove(tm)) === MoveClass.Damage
-      expect(knowsCombatMove(mon, tm)).toBe(strike)
       expect(mayKnowCombatMove(mon.speciesId, mon.level, tm)).toBe(strike)
       expect(ids(combatMoveChoices(mon)).includes(tm)).toBe(strike)
-      expect(knowsCombatMove({ ...mon, tmMoves: [] }, tm)).toBe(false)
+      expect(ids(combatMoveChoices({ ...mon, tmMoves: [] }))).not.toContain(tm)
     }
   })
 })

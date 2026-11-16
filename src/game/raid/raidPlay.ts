@@ -1,7 +1,6 @@
 import type { Rng } from '../core/random'
 import { findMon, type GameState } from '../core/state'
 import { finalHpFraction, IncursionPhase, type IncursionProgress } from '../incursion/activeIncursion'
-import { knowsCombatMove } from '../combat/combatRepertoire'
 import { settleGroupTaps } from '../incursion/tapSettle'
 import type { MovePick, TurnOrders } from '../incursion/tapWindow'
 import { maxHp } from '../team/stats'
@@ -9,7 +8,7 @@ import { RAID_ROTATIONS, type RaidRotation } from './online/protocol'
 import { RaidLink, type TabRaid } from './raid'
 import { bossHpAtJoin, bossShareTaken, fightProgress, raidSource } from './raidFight'
 import { fightDue, startFight } from './raidLobby'
-import { raidMoveAllowed } from './raidMoves'
+import { carriesRaidMove } from './raidMoves'
 import { applyPrize, fightPrize } from './raidPrizes'
 import { roomBoss, type RaidPrize } from './raidRoom'
 import { cycleEnd } from './raidSchedule'
@@ -92,7 +91,7 @@ function liveFight(s: GameState, rotation: RaidRotation, now: number): TabRaid |
 export function setRaidPick(s: GameState, rotation: RaidRotation, pick: MovePick, now: number): boolean {
   const tr = liveFight(s, rotation, now)
   const mon = tr && findMon(s, tr.uid)
-  if (!tr || !mon || !knowsCombatMove(mon, pick.moveId) || !raidMoveAllowed(pick.moveId)) return false
+  if (!tr || !mon || !carriesRaidMove(mon, pick.moveId)) return false
   tr.pendingPick = { moveId: pick.moveId, target: pick.target }
   return true
 }

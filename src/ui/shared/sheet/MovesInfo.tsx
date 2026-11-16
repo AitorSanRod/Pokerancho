@@ -1,8 +1,8 @@
-import { combatMove } from '../../../data/combatMoves'
-import { incursionMove, moveClass, MoveClass, type IncursionMove } from '../../../data/incursionMoves'
+import { incursionMove, moveClass, type IncursionMove } from '../../../data/incursionMoves'
 import type { Tm } from '../../../data/tms'
 import { TYPE_INFO } from '../../../data/types'
 import { combatLearnTimeline, ROUTE_MOVE_SLOTS, routeMoveChoices } from '../../../game/combat/combatRepertoire'
+import { MAX_LEVEL } from '../../../game/team/stats'
 import { learnTimeline, type LearnStep } from '../../../game/incursion/repertoire'
 import { CLASS_LABEL, moveText } from '../moveText'
 import { Modal } from '../Modal'
@@ -10,7 +10,7 @@ import './moves-info.css'
 
 interface Props {
   speciesId: number
-  /** Nivel del Pokémon, si lo tienes: marca lo que ya lleva (en combate, los que caben en rutas y torre) */
+  /** Nivel del Pokémon, si lo tienes: marca lo que ya lleva (en combate, solo salen los que lleva; sin él, los de nivel máximo) */
   level: number | null
   /** Lo que ha aprendido con MTs, si lo tienes */
   tmMoves?: Tm[]
@@ -18,26 +18,24 @@ interface Props {
 }
 
 /**
- * Todos los ataques de una especie y para qué sirve cada uno: los de combate (rutas, torre y raids) y el repertorio de
- * las incursiones, nivel a nivel, más lo aprendido con MTs
+ * Los ataques de una especie y para qué sirve cada uno: los que lleva en combate (rutas, torre y raids) y el repertorio
+ * de las incursiones, nivel a nivel, más lo aprendido con MTs
  */
 export function MovesInfo({ speciesId, level, tmMoves = [], onClose }: Props) {
-  const strikeTms = tmMoves.filter((id) => moveClass(combatMove(id)) === MoveClass.Damage)
-  const carried = level === null ? [] : routeMoveChoices({ speciesId, level, tmMoves }).map((mv) => mv.id)
+  const carried = routeMoveChoices({ speciesId, level: level ?? MAX_LEVEL, tmMoves })
+  const learnedAt = (id: string) => combatLearnTimeline(speciesId).find((step) => step.move.id === id)?.from
   return (
     <Modal className="moves-info" label="Sus ataques" onClose={onClose}>
       <h3>Sus ataques</h3>
       <div className="moves-info-body">
         <section>
           <h4>Rutas, torre y raids</h4>
-          <p className="small">Antes de salir eliges uno de estos, y puedes cambiarlo cuando quieras. Al subir de nivel aprende otros más fuertes; los más fuertes piden más rareza. En rutas y torre lleva solo {ROUTE_MOVE_SLOTS}: primero los propios de su especie, luego los de MT y luego los últimos que aprendió; contra los jefes de Raids, cualquiera de los que sabe. Sus efectos son los mismos que en las incursiones.</p>
+          <p className="small">{level === null ? 'A nivel máximo lleva estos.' : 'Lleva estos.'} Antes de salir eliges uno, y puedes cambiarlo cuando quieras. Lleva {ROUTE_MOVE_SLOTS}: los más potentes que sabe (con dos tipos, el más potente de cada uno); al subir de nivel aprende otros más fuertes, y los más fuertes piden más rareza. Sus efectos son los mismos que en las incursiones.</p>
           <ul className="moves-info-list">
-            {combatLearnTimeline(speciesId).map((step) => (
-              <MoveRow key={step.move.id} move={step.move} when={`Desde Nv. ${step.from}`} held={carried.includes(step.move.id)} />
-            ))}
-            {strikeTms.map((id) => (
-              <MoveRow key={id} move={combatMove(id)} when="Con MT" held={carried.includes(id)} />
-            ))}
+            {carried.map((move) => {
+              const from = learnedAt(move.id)
+              return <MoveRow key={move.id} move={move} when={from === undefined ? 'Con MT' : `Desde Nv. ${from}`} held={level !== null} />
+            })}
           </ul>
         </section>
         <section>
