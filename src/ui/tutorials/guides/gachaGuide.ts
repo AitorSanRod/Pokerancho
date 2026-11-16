@@ -26,7 +26,7 @@ export const GACHA_GUIDE: Guide = {
     {
       image: shot('gacha-shiny'),
       title: 'Shiny',
-      text: `Cada Pokémon que creas tiene un ${Math.round(SHINY_CHANCE * 100)} % de salir shiny. Si aún no lo tienes, con ${SHINY_COMBINE_PIECES} tickets suyos lo creas shiny seguro. Y si ya lo tienes, «Volver a crear» lo cambia por uno nuevo (naturaleza y shiny al azar).`,
+      text: `Cada Pokémon que creas tiene un ${Math.round(SHINY_CHANCE * 100)}% de salir shiny. Si aún no lo tienes, con ${SHINY_COMBINE_PIECES} tickets suyos lo creas shiny seguro. Y si ya lo tienes, «Volver a crear» lo cambia por uno nuevo (naturaleza y shiny al azar).`,
     },
   ],
 }

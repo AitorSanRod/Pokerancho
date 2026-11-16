@@ -57,7 +57,7 @@ export function RouteBattle({ record, frame, enemyOverlay, trainer }: { record: 
         </div>
       </div>
       <div className="battle-hud-slot player">
-        <BattleHud fighter={record.player} hp={event.playerHp} statuses={event.playerStatus ? [event.playerStatus] : []} struck={struck('player')} />
+        <BattleHud showHp fighter={record.player} hp={event.playerHp} statuses={event.playerStatus ? [event.playerStatus] : []} struck={struck('player')} />
       </div>
       <div className={`battle-hud-slot enemy ${record.boss ? 'boss' : ''}`}>
         <BattleHud fighter={record.enemy} hp={event.enemyHp} statuses={event.enemyStatus ? [event.enemyStatus] : []} struck={struck('enemy')} boss={record.boss} />

@@ -13,9 +13,9 @@ export interface IconTab<T extends string> {
 /** Pestañas de arriba de una pantalla: solo el icono; la activa se ensancha y despliega su nombre */
 export function IconTabs<T extends string>({ tabs, active, onChange }: { tabs: IconTab<T>[]; active: T; onChange: (id: T) => void }) {
   return (
-    <div className="segmented icon-tabs tabbed-bar">
+    <div className="segmented icon-tabs tabbed-bar" role="tablist">
       {tabs.map(({ id, icon, label, count = 0 }) => (
-        <button key={id} className={active === id ? 'active' : ''} onClick={() => onChange(id)} aria-label={label} aria-pressed={active === id}>
+        <button key={id} className={active === id ? 'active' : ''} onClick={() => onChange(id)} role="tab" aria-label={label} aria-selected={active === id}>
           <span className="icon-tab-icon">
             <ItemIcon item={icon} size={26} />
             {count > 0 && <span className="count-badge">{count}</span>}

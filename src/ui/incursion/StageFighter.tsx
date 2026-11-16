@@ -4,11 +4,12 @@ import { EventKind } from '../../game/incursion/events'
 import { HitEffect } from '../route/HitEffect'
 import { statusClass } from '../route/battleFrame'
 import { battleFit, BOSS_SPRITE_SIZE, ENEMY_SPRITE_SIZE } from '../route/spriteSizes'
-import { roundClass } from '../raid/roundClass'
+import { roundClass } from '../shared/roundClass'
 import { Sprite } from '../shared/common'
 import type { SceneMon, SceneState } from './sceneState'
 import { StagePop } from './StagePop'
 import type { Spot } from './stageSpots'
+import '../shared/stage-motion.css'
 
 interface Props {
   m: SceneMon
@@ -50,10 +51,10 @@ export function StageFighter({ m, spot, side, mine, scene, idleDelay, target }: 
       {target?.chosen && <span className="incursion-aim" />}
       {mineEvent && <StagePop e={mineEvent} seq={seq} />}
       {fxType && <HitEffect key={`fx-${seq}`} type={fxType} />}
-      {mine && <span className="raid-mine-tag">Tú</span>}
-      <div className={acting ? roundClass(seq, side === 'party' ? 'raid-lunge' : 'raid-boss-lunge') : ''}>
-        <div className={struck ? roundClass(seq, 'raid-shake') : ''}>
-          <div className={down ? '' : 'raid-idle'}>
+      {mine && <span className="stage-mine-tag">Tú</span>}
+      <div className={acting ? roundClass(seq, side === 'party' ? 'stage-lunge' : 'stage-boss-lunge') : ''}>
+        <div className={struck ? roundClass(seq, 'stage-shake') : ''}>
+          <div className={down ? '' : 'stage-idle'}>
             <div className={statusClass(down ? null : (m.statuses.at(-1) ?? null))}>
               <div className="scene-shadow" />
               <Sprite id={m.speciesId} size={size} fit={battleFit(m.speciesId)} shiny={m.shiny} />

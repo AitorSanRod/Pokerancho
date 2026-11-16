@@ -3,6 +3,7 @@ import { incursionMove } from '../../data/incursionMoves'
 import { memberNote } from './memberNote'
 import { Bar, Sprite } from '../shared/common'
 import type { SceneMon } from './sceneState'
+import './incursion-fold.css'
 
 /** Los del grupo y los rivales de la sala, cada uno en una línea con sus PS (y, los del grupo, su movimiento) */
 interface Props {

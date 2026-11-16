@@ -81,10 +81,6 @@
   position: absolute;
   top: 0;
   right: -6px;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--red);
 }
 .nav-label {
   font-size: 11px;
@@ -92,6 +88,13 @@
 }
 .screen {
   height: 100%;
+}
+/* Pantalla que aún se está cargando: aparece con retraso para no parpadear cuando la carga es rápida */
+.screen-loading {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  animation: fade-in 0.2s ease-out 0.3s both;
 }
 .scroll {
   overflow-y: auto;

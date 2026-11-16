@@ -34,7 +34,7 @@
   rotate: 14deg;
   translate: 0 6px;
 }
-.incursion-fighter .raid-mine-tag {
+.incursion-fighter .stage-mine-tag {
   bottom: -14px;
 }
 /* El marcador del jefe, algo más a la derecha que en la ruta para no tocar el de tu Pokémon */

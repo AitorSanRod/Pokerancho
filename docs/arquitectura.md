@@ -226,7 +226,9 @@ En los tests se pasa un rng determinista. Una función nueva con azar **debe** s
 
 ## Bucle de tiempo
 
-`App.tsx` llama a `tick(s, Date.now())` (`core/tick.ts`) cada 250 ms. `tick` calcula el tiempo transcurrido (máx. 12 h para el
+`App.tsx` llama a `tick(s, Date.now(), battleHold)` (`core/tick.ts`) cada 250 ms. `battleHold` (`ui/route/foeReady.ts`) dice qué
+combate (de la ruta o de la torre) espera porque su pantalla aún no tiene la imagen del rival: mientras, su tiempo no
+corre y tu Pokémon sigue andando en la escena (como mucho 5 s; con la app cerrada no espera nadie). `tick` calcula el tiempo transcurrido (máx. 12 h para el
 progreso offline), lo multiplica por `timeScale` (x1 en producción; el botón ⏱ para cambiarlo solo existe en `npm run dev`) y:
 
 1. avanza la run en curso (`advanceRun`) con el tiempo real: si hay combate lo gasta en él y si no lo convierte

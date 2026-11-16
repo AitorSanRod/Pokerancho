@@ -102,7 +102,7 @@ export const GUIDE_SHOTS = [
       await openRanchMon(p, 'Rattata')
       await showSection(p, 'Mover a')
     },
-    focus: '::-p-text(Caja)',
+    focus: '.move-options ::-p-text(Caja)',
   },
   { name: 'mon-favorite', steps: (p) => openRanchMon(p, 'Eevee'), focus: '.favorite-button' },
   // Cuenta, perfil y avisos

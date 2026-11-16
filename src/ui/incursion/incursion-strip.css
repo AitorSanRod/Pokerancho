@@ -1,0 +1,51 @@
+/* Franja bajo la escena: el grupo a la izquierda y los rivales a la derecha, cada uno con su icono y sus PS */
+.incursion-strip {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px;
+  border-radius: 12px;
+  background: var(--card);
+}
+.incursion-strip-side {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+.incursion-strip-side.foes {
+  padding-left: 8px;
+  border-left: 2px solid var(--line);
+}
+.incursion-strip-mon {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 38px;
+}
+.incursion-strip-mon .bar {
+  width: 100%;
+  height: 5px;
+}
+.incursion-strip-mon.mine {
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+.incursion-strip-mon.boss {
+  width: 44px;
+}
+.incursion-strip-mon.gone {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+.incursion-strip-status {
+  position: absolute;
+  top: 0;
+  right: -2px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: var(--red-dark);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+}

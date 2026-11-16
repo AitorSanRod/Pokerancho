@@ -1,6 +1,7 @@
 import { STATUS_INFO } from '../../data/passives'
 import { Bar, Sprite } from '../shared/common'
 import type { SceneMon } from './sceneState'
+import './incursion-strip.css'
 
 /** Franja compacta bajo la escena: cada Pokémon del grupo y cada rival con su icono y sus PS; el detalle va desplegado aparte */
 export function IncursionStrip({ party, foes, uid }: { party: SceneMon[]; foes: SceneMon[]; uid: string }) {
@@ -27,7 +28,7 @@ function StripMon({ m, mine }: { m: SceneMon; mine: boolean }) {
   // En la franja no caben todos: el más reciente
   const newest = m.statuses.at(-1)
   return (
-    <div className={`incursion-strip-mon ${gone ? 'gone' : ''} ${mine ? 'mine' : ''} ${m.boss ? 'boss' : ''}`} title={m.name}>
+    <div className={`incursion-strip-mon ${gone ? 'gone' : ''} ${mine ? 'mine' : ''} ${m.boss ? 'boss' : ''}`} aria-label={m.name}>
       <Sprite id={m.speciesId} size={36} animated={false} shiny={m.shiny} />
       {newest && !gone && <span className="incursion-strip-status">{STATUS_INFO[newest].short}</span>}
       <Bar value={m.out ? 0 : m.hp} max={m.maxHp} kind="hp" />

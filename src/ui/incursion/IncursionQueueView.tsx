@@ -5,6 +5,7 @@ import { QUEUE_MAX_MS } from '../../game/incursion/online/protocol'
 import { PARTY_SIZE } from '../../game/incursion/party'
 import { leaveIncursionQueue, useIncursionQueue } from '../../net/incursionSync'
 import { Sprite } from '../shared/common'
+import './incursion-finale.css'
 
 /** Buscando grupo: cuántos esperan, cuánto llevas y cancelar (la llave aún no se ha gastado) */
 export function IncursionQueueView({ game, q }: { game: GameState; q: IncursionQueue }) {

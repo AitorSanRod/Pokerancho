@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import type { Incursion } from '../../data/incursions'
 import { species } from '../../data/species'
 import { TYPE_INFO } from '../../data/types'
@@ -17,7 +16,7 @@ import { MonPicker } from '../shared/MonPicker'
 import { HeroLayout } from '../shared/sheet/HeroLayout'
 import { BIOME_SCENERY } from '../shared/sheet/scenery'
 import { MovePicker } from './MovePicker'
-import '../shared/overlays.css'
+import { Modal } from '../shared/Modal'
 import '../route/route-start.css'
 
 const usable = (inc: Incursion, m: OwnedMon) => canEnter(inc, m.level) && m.hp >= 1
@@ -38,39 +37,36 @@ export function IncursionPrep({ game, inc, onClose }: { game: GameState; inc: In
     onClose()
   }
 
-  return createPortal(
-    <div className="confirm-overlay" onClick={onClose}>
-      <div className="card route-start" role="dialog" aria-modal="true" aria-label={`Entrar en ${inc.name}`} onClick={(e) => e.stopPropagation()}>
-        <HeroLayout compact scenery={BIOME_SCENERY[inc.biome]} name={inc.name} subtitle={`Nv. ${inc.minLevel}–${inc.maxLevel}`}>
-          {mon && <Sprite key={mon.uid} id={mon.speciesId} size={96} className="mon-hero-sprite idle-bounce" shiny={mon.shiny} />}
-        </HeroLayout>
-        <div className="route-start-body">
-          <div className="label">¿Quién va?</div>
-          <MonPicker mons={mons} selectedUid={mon?.uid} onSelect={setUid} lockOf={(m) => (usable(inc, m) ? null : 'other')} />
-          {mon && <PassiveShare mon={mon} />}
-          {move && (
-            <>
-              <div className="label">Movimiento</div>
-              <MovePicker moves={moves} selectedId={move.id} onSelect={setMoveId} />
-            </>
-          )}
-          <p className="tiny muted">
-            {needsKey(inc.id) ? `Llaves: ${keysOf(game, inc.id)}. Se gasta una al formarse el grupo: ` : `${entryNote(game, inc)} `}
-            se busca a otros entrenadores durante un minuto y, si no llegan a cinco, se completa con bots.
-          </p>
-          {blocker && <p className="notice small">{blocker}</p>}
-          <div className="row gap confirm-actions">
-            <button className="btn grow" onClick={onClose}>
-              Cancelar
-            </button>
-            <button className="btn primary grow" disabled={!!blocker} onClick={enter}>
-              Buscar grupo
-            </button>
-          </div>
+  return (
+    <Modal className="route-start" label={`Entrar en ${inc.name}`} onClose={onClose}>
+      <HeroLayout compact scenery={BIOME_SCENERY[inc.biome]} name={inc.name} subtitle={`Nv. ${inc.minLevel}–${inc.maxLevel}`}>
+        {mon && <Sprite key={mon.uid} id={mon.speciesId} size={96} className="mon-hero-sprite idle-bounce" shiny={mon.shiny} />}
+      </HeroLayout>
+      <div className="route-start-body">
+        <div className="label">¿Quién va?</div>
+        <MonPicker mons={mons} selectedUid={mon?.uid} onSelect={setUid} lockOf={(m) => (usable(inc, m) ? null : 'other')} />
+        {mon && <PassiveShare mon={mon} />}
+        {move && (
+          <>
+            <div className="label">Movimiento</div>
+            <MovePicker moves={moves} selectedId={move.id} onSelect={setMoveId} />
+          </>
+        )}
+        <p className="tiny muted">
+          {needsKey(inc.id) ? `Llaves: ${keysOf(game, inc.id)}. Se gasta una al formarse el grupo: ` : `${entryNote(game, inc)} `}
+          se busca a otros entrenadores durante un minuto y, si no llegan a cinco, se completa con bots.
+        </p>
+        {blocker && <p className="notice small">{blocker}</p>}
+        <div className="row gap confirm-actions">
+          <button className="btn grow" onClick={onClose}>
+            Cancelar
+          </button>
+          <button className="btn primary grow" disabled={!!blocker} onClick={enter}>
+            Buscar grupo
+          </button>
         </div>
       </div>
-    </div>,
-    document.body,
+    </Modal>
   )
 }
 

@@ -39,7 +39,7 @@ function opaqueBounds(img: HTMLImageElement): SpriteBounds | null {
  * Contorno del Pokémon en una imagen estática (los PNG traen margen transparente). Se pide aparte con CORS, y con
  * otra dirección para que la caché del service worker no devuelva la copia sin CORS; si falla, null (sin recortar).
  */
-function measureBounds(src: string): Promise<SpriteBounds | null> {
+export function measureBounds(src: string): Promise<SpriteBounds | null> {
   let pending = cache.get(src)
   if (!pending) {
     pending = new Promise((resolve) => {

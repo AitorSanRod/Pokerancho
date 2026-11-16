@@ -128,8 +128,30 @@
   background: transparent;
 }
 .btn.small {
+  position: relative;
   padding: 6px 10px;
   font-size: 12px;
+}
+/* Zona de toque de 44 px de alto en los botones que se ven más pequeños (sin cambiar cómo se ven) */
+.btn.small::after,
+.link-btn::after {
+  content: '';
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 44px;
+  transform: translateY(-50%);
+}
+/* Botón con aspecto de enlace (volver al Menú, opciones de la cuenta) */
+.link-btn {
+  position: relative;
+  border: 0;
+  padding: 4px 0;
+  background: none;
+  color: var(--exp);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
 }
 .btn.wide {
   width: 100%;
@@ -332,6 +354,15 @@
 .text-input:focus {
   outline: none;
   border-color: var(--accent);
+}
+/* Punto rojo de aviso (algo nuevo); cada sitio lo coloca */
+.dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--red);
 }
 /* Contador rojo (pestañas, avisos) */
 .count-badge {

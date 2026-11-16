@@ -36,7 +36,7 @@ export function RaidFightHud({ boss, scene, revives, msLeft, menuOpen, onMenu, c
           <strong>{species(boss.speciesId).name}</strong> Nv. {boss.level}
         </span>
         <span className="small raid-fight-clock">{formatClock(msLeft)}</span>
-        <span className="incursion-revives" title="Revivires de tu Pokémon">
+        <span className="incursion-revives" aria-label={`Revivires de tu Pokémon: ${revives}`}>
           <ItemIcon item={ICON.Revive} size={22} off={revives === 0} /> ×{revives}
         </span>
         <IncursionMenu open={menuOpen} onToggle={onMenu} />

@@ -1,6 +1,7 @@
 import { PASSIVE_THRESHOLDS } from '../../../data/passives'
 import { species } from '../../../data/species'
 import { passiveWeightOf } from '../../../game/team/ranchPassives'
+import './hero-buttons.css'
 
 /** Círculo de la esquina inferior derecha de la cabecera: cuánto suma a su tipo para las pasivas */
 export function PassiveWeightBadge({ speciesId }: { speciesId: number }) {

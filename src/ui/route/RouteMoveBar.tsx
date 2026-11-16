@@ -4,7 +4,7 @@ import { towerMoveChoices } from '../../game/tower/towerMoves'
 import { MoveBarMoves } from '../incursion/MoveBarMoves'
 
 /** En las rutas, la torre y la raid solo cuenta el golpe: tipo (en la etiqueta), potencia y precisión */
-const strikeText = (mv: IncursionMove) => `Pot. ${mv.power} · Prec. ${mv.accuracy} %`
+const strikeText = (mv: IncursionMove) => `Pot. ${mv.power} · Prec. ${mv.accuracy}%`
 
 interface Props {
   mon: OwnedMon

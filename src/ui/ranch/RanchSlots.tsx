@@ -16,6 +16,7 @@ import { PassiveList } from './PassiveList'
 import { RanchMonList } from './RanchMonList'
 import { RanchBackdropPicker } from './RanchBackdropPicker'
 import { RanchRenameDialog } from './RanchRenameDialog'
+import { RanchSheet } from './RanchSheet'
 import { RanchTypeSection } from './RanchTypeSection'
 import './ranch-info.css'
 
@@ -51,51 +52,46 @@ export function RanchSlots({ game, ranch }: { game: GameState; ranch: number }) 
         </button>
       </div>
       {open && (
-        <div className="ranch-sheet-backdrop" onClick={() => setOpen(false)}>
-          <div className="ranch-sheet" role="dialog" aria-modal="true" aria-label={name} onClick={(e) => e.stopPropagation()}>
-            <h2 className="with-icon">
-              <ItemIcon item={ICON.Ranch} size={32} /> {name}
-            </h2>
-            <div className="row between">
-              <span className="small muted">
-                {usedSlots(game, ranch)}/{capacity} espacios
-              </span>
-              <button className="btn small" onClick={() => setRenaming(true)}>
-                Cambiar nombre
-              </button>
-            </div>
-            <FoldSection title="Pokémon" aside={usedSlots(game, ranch)}>
-              <RanchMonList game={game} ranch={ranch} />
-            </FoldSection>
-            <FoldSection title="Fondo" aside={RANCH_BACKDROPS[ranchBackdrop(game, ranch)].name}>
-              <RanchBackdropPicker game={game} ranch={ranch} />
-            </FoldSection>
-            <FoldSection title="Tipo de rancho" aside={placed ? RANCH_TYPES[placed].name : 'Normal'}>
-              <RanchTypeSection game={game} ranch={ranch} />
-            </FoldSection>
-            <FoldSection title="Pasivas" aside={passives === 1 ? '1 activa' : `${passives} activas`}>
-              <p className="tiny muted">Las llevan los Pokémon de este rancho a rutas, gimnasios, raids y torre.</p>
-              <PassiveList game={game} ranch={ranch} />
-            </FoldSection>
-            {away.length > 0 && (
-              <FoldSection title="Fuera, guardando su hueco" aside={away.length}>
-                {away.map((m) => (
-                  <div key={m.uid} className="row gap small">
-                    <Sprite id={m.speciesId} size={32} animated={false} shiny={m.shiny} />
-                    <span className="grow">{species(m.speciesId).name}</span>
-                    <span className="tiny muted with-icon">
-                      <ItemIcon item={OUT_LABEL[monPlace(game, m.uid)]!.icon} size={16} /> {OUT_LABEL[monPlace(game, m.uid)]!.text}
-                    </span>
-                  </div>
-                ))}
-              </FoldSection>
-            )}
-            <button className="btn primary wide" onClick={() => setOpen(false)}>
-              Aceptar
+        <RanchSheet label={name} onClose={() => setOpen(false)}>
+          <h2 className="with-icon">
+            <ItemIcon item={ICON.Ranch} size={32} /> {name}
+          </h2>
+          <div className="row between">
+            <span className="small muted">
+              {usedSlots(game, ranch)}/{capacity} espacios
+            </span>
+            <button className="btn small" onClick={() => setRenaming(true)}>
+              Cambiar nombre
             </button>
-            {renaming && <RanchRenameDialog game={game} ranch={ranch} onClose={() => setRenaming(false)} />}
           </div>
-        </div>
+          <FoldSection title="Pokémon" aside={usedSlots(game, ranch)}>
+            <RanchMonList game={game} ranch={ranch} />
+          </FoldSection>
+          <FoldSection title="Fondo" aside={RANCH_BACKDROPS[ranchBackdrop(game, ranch)].name}>
+            <RanchBackdropPicker game={game} ranch={ranch} />
+          </FoldSection>
+          <FoldSection title="Tipo de rancho" aside={placed ? RANCH_TYPES[placed].name : 'Normal'}>
+            <RanchTypeSection game={game} ranch={ranch} />
+          </FoldSection>
+          <FoldSection title="Pasivas" aside={passives === 1 ? '1 activa' : `${passives} activas`}>
+            <p className="tiny muted">Las llevan los Pokémon de este rancho a rutas, gimnasios, raids y torre.</p>
+            <PassiveList game={game} ranch={ranch} />
+          </FoldSection>
+          {away.length > 0 && (
+            <FoldSection title="Fuera, guardando su hueco" aside={away.length}>
+              {away.map((m) => (
+                <div key={m.uid} className="row gap small">
+                  <Sprite id={m.speciesId} size={32} animated={false} shiny={m.shiny} />
+                  <span className="grow">{species(m.speciesId).name}</span>
+                  <span className="tiny muted with-icon">
+                    <ItemIcon item={OUT_LABEL[monPlace(game, m.uid)]!.icon} size={16} /> {OUT_LABEL[monPlace(game, m.uid)]!.text}
+                  </span>
+                </div>
+              ))}
+            </FoldSection>
+          )}
+          {renaming && <RanchRenameDialog game={game} ranch={ranch} onClose={() => setRenaming(false)} />}
+        </RanchSheet>
       )}
     </>
   )

@@ -2,8 +2,9 @@ import { STAR_ITEMS, type StarItem } from '../../../data/starItems'
 import { starItemsOf } from '../../../game/collection/starItems'
 import type { GameState } from '../../../game/core/state'
 import { ItemIcon } from '../ItemIcon'
+import './sheet-panels.css'
 
-/** Aviso destacado del objeto estelar que gasta crear o evolucionar: icono, nombre y cuántos tienes (rojo si no hay) */
+/** Aviso destacado del objeto estelar que gasta crear o evolucionar: icono, nombre y cuántos tienes (la cuenta, en rojo si no hay) */
 export function StarItemNeed({ game, item, action }: { game: GameState; item: StarItem; action: string }) {
   const held = starItemsOf(game, item)
   return (

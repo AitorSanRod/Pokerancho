@@ -1,4 +1,3 @@
-import { createPortal } from 'react-dom'
 import { PASSIVE_THRESHOLDS } from '../../data/passives'
 import { MAX_KEYS } from '../../data/incursions'
 import { RARITY_INFO, Rarity } from '../../data/species'
@@ -6,7 +5,7 @@ import { REGROUP_MS } from '../../game/incursion/activeIncursion'
 import { PARTY_SIZE } from '../../game/incursion/party'
 import { STATUS_MAX_TURNS } from '../../game/incursion/groupStatus'
 import { INCURSION_REVIVES, REVIVE_HP } from '../../game/incursion/revives'
-import '../shared/overlays.css'
+import { Modal } from '../shared/Modal'
 
 const pct = (n: number) => `${Math.round(n * 100)}%`
 const weights = Object.values(Rarity).map((r) => `${RARITY_INFO[r].name.toLowerCase()} ${RARITY_INFO[r].passiveWeight}`).join(', ')
@@ -52,23 +51,20 @@ const SECTIONS: { title: string; text: string }[] = [
 
 /** Información de las incursiones: cómo funciona todo, con los números del juego */
 export function IncursionInfo({ onClose }: { onClose: () => void }) {
-  return createPortal(
-    <div className="confirm-overlay" onClick={onClose}>
-      <div className="card incursion-info" role="dialog" aria-modal="true" aria-label="Cómo funcionan las incursiones" onClick={(e) => e.stopPropagation()}>
-        <h3>Cómo funcionan las incursiones</h3>
-        <div className="incursion-info-body">
-          {SECTIONS.map((s) => (
-            <section key={s.title}>
-              <h4>{s.title}</h4>
-              <p className="small">{s.text}</p>
-            </section>
-          ))}
-        </div>
-        <button className="btn primary" onClick={onClose}>
-          Entendido
-        </button>
+  return (
+    <Modal className="incursion-info" label="Cómo funcionan las incursiones" onClose={onClose}>
+      <h3>Cómo funcionan las incursiones</h3>
+      <div className="incursion-info-body">
+        {SECTIONS.map((s) => (
+          <section key={s.title}>
+            <h4>{s.title}</h4>
+            <p className="small">{s.text}</p>
+          </section>
+        ))}
       </div>
-    </div>,
-    document.body,
+      <button className="btn primary" onClick={onClose}>
+        Entendido
+      </button>
+    </Modal>
   )
 }

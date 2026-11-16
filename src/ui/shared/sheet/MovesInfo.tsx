@@ -1,4 +1,3 @@
-import { createPortal } from 'react-dom'
 import { incursionMove, moveClass, type IncursionMove } from '../../../data/incursionMoves'
 import { signatureMove } from '../../../data/moves'
 import type { Tm } from '../../../data/tms'
@@ -6,7 +5,7 @@ import { TYPE_INFO } from '../../../data/types'
 import { learnTimeline, type LearnStep } from '../../../game/incursion/repertoire'
 import { MoveChip } from '../common'
 import { CLASS_LABEL, moveText } from '../moveText'
-import '../overlays.css'
+import { Modal } from '../Modal'
 import './moves-info.css'
 
 interface Props {
@@ -24,35 +23,32 @@ interface Props {
  */
 export function MovesInfo({ speciesId, level, tmMoves = [], onClose }: Props) {
   const signature = signatureMove(speciesId)
-  return createPortal(
-    <div className="confirm-overlay" onClick={onClose}>
-      <div className="card moves-info" role="dialog" aria-modal="true" aria-label="Sus ataques" onClick={(e) => e.stopPropagation()}>
-        <h3>Sus ataques</h3>
-        <div className="moves-info-body">
-          <section>
-            <h4>Rutas y jefes comunitarios</h4>
-            <p className="small">Lo usa solo en cada combate de ruta y contra los jefes comunitarios. Es el de su primer tipo y su rareza, y no cambia con el nivel.</p>
-            <MoveChip id={signature.id} />
-          </section>
-          <section>
-            <h4>Incursiones</h4>
-            <p className="small">Antes de entrar eliges uno de estos, y en plena pelea puedes cambiarlo. Los de daño golpean, los de cura dan PS al grupo y los de estado ponen estados alterados o suben y bajan etapas de stats. Los que tienen prioridad actúan antes en el turno. Al subir de nivel, el de daño de cada tipo mejora.</p>
-            <ul className="moves-info-list">
-              {learnTimeline(speciesId).map((step) => (
-                <LearnRow key={step.move.id} step={step} level={level} />
-              ))}
-              {tmMoves.map((id) => (
-                <MoveRow key={id} move={incursionMove(id)} when="Con MT" held />
-              ))}
-            </ul>
-          </section>
-        </div>
-        <button className="btn primary" onClick={onClose}>
-          Entendido
-        </button>
+  return (
+    <Modal className="moves-info" label="Sus ataques" onClose={onClose}>
+      <h3>Sus ataques</h3>
+      <div className="moves-info-body">
+        <section>
+          <h4>Rutas y jefes comunitarios</h4>
+          <p className="small">Lo usa solo en cada combate de ruta y contra los jefes comunitarios. Es el de su primer tipo y su rareza, y no cambia con el nivel.</p>
+          <MoveChip id={signature.id} />
+        </section>
+        <section>
+          <h4>Incursiones</h4>
+          <p className="small">Antes de entrar eliges uno de estos, y en plena pelea puedes cambiarlo. Los de daño golpean, los de cura dan PS al grupo y los de estado ponen estados alterados o suben y bajan etapas de stats. Los que tienen prioridad actúan antes en el turno. Al subir de nivel, el de daño de cada tipo mejora.</p>
+          <ul className="moves-info-list">
+            {learnTimeline(speciesId).map((step) => (
+              <LearnRow key={step.move.id} step={step} level={level} />
+            ))}
+            {tmMoves.map((id) => (
+              <MoveRow key={id} move={incursionMove(id)} when="Con MT" held />
+            ))}
+          </ul>
+        </section>
       </div>
-    </div>,
-    document.body,
+      <button className="btn primary" onClick={onClose}>
+        Entendido
+      </button>
+    </Modal>
   )
 }
 

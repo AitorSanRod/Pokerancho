@@ -5,6 +5,7 @@ import { act } from '../../../store/store'
 import { changeForm, changeFormBlocker, formChoices, hasFormItem } from '../../../game/team/forms'
 import { Sprite } from '../common'
 import { MonSection } from './MonSheet'
+import './sheet-panels.css'
 
 /** Cambio de forma (Rotom): una fila por forma, gratis y sin confirmar porque se puede deshacer. No se pinta si no tiene formas */
 export function FormPanel({ game, mon }: { game: GameState; mon: OwnedMon }) {

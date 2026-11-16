@@ -5,7 +5,7 @@ import { canClaimGift, giftAvailableAt, giftIndex, giftStarItems } from '../../g
 import { AccountStatus, useAccount } from '../../net/account'
 import { claimDailyGift, giftNow, useDailyGift } from '../../net/dailyGift'
 import { AccountDialog } from '../account/AccountDialog'
-import { formatClock } from '../shared/format'
+import { formatClock, formatMoney } from '../shared/format'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { giftRewards } from '../shared/rewardItems'
@@ -48,7 +48,7 @@ export function DailyGiftSheet({ onBack }: { onBack: () => void }) {
         <h2 className="with-icon">
           <ItemIcon item={ICON.Gift} size={32} /> Obsequio diario
         </h2>
-        <button className="account-link" onClick={onBack}>
+        <button className="link-btn" onClick={onBack}>
           Menú
         </button>
       </div>
@@ -80,7 +80,7 @@ function GiftDay({ day, gift, state }: { day: number; gift: DailyGift; state: Da
     <div className={`gift-day ${state} ${gift.big ? 'big' : ''}`}>
       <strong className="small">{gift.big ? `Día ${day} · Día grande` : `Día ${day}`}</strong>
       <div className="gift-contents">
-        {gift.money > 0 && <span className="small">₽ {gift.money}</span>}
+        {gift.money > 0 && <span className="small">{formatMoney(gift.money)}</span>}
         {gift.missingnoShards > 0 && (
           <span className="small with-icon">
             <ItemIcon item={ICON.Shard} size={22} /> ×{gift.missingnoShards}

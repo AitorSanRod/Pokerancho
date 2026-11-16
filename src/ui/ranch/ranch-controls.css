@@ -5,7 +5,7 @@
   position: absolute;
   top: 8px;
   left: 8px;
-  z-index: 100;
+  z-index: var(--z-controls);
   max-width: calc(100% - 72px);
 }
 .ranch-slots-button {
@@ -21,7 +21,7 @@
 .ranch-arrow {
   position: absolute;
   top: 45%;
-  z-index: 90;
+  z-index: calc(var(--z-controls) - 1);
   width: 44px;
   height: 44px;
   padding: 0;
@@ -60,7 +60,7 @@
 .ranch-menu-button {
   position: absolute;
   bottom: 8px;
-  z-index: 100;
+  z-index: var(--z-controls);
   width: 60px;
   height: 60px;
   border: none;
@@ -82,14 +82,6 @@
   right: 8px;
 }
 /* Aviso de que hay algo que recoger en el menú */
-.ranch-menu-button .dot,
-.ranch-menu-tile .dot,
-.ranch-menu-item .dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--red);
-}
 .ranch-menu-button .dot {
   position: absolute;
   top: 6px;
@@ -146,7 +138,7 @@
   position: absolute;
   left: 50%;
   bottom: 80px;
-  z-index: 100;
+  z-index: var(--z-controls);
   max-width: 80%;
   transform: translateX(-50%);
   padding: 8px 14px;

@@ -11,7 +11,9 @@ import { Sprite } from '../shared/common'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { RewardOverlay, type RewardItem } from '../shared/RewardOverlay'
-import { discoveryReward } from '../shared/rewardItems'
+import { REWARD_COLOR, discoveryReward } from '../shared/rewardItems'
+import { formatMoney } from '../shared/format'
+import './incursion-finale.css'
 
 const TITLE: Partial<Record<IncursionOutcome, string>> = {
   [IncursionOutcome.Win]: '¡Incursión superada!',
@@ -23,11 +25,11 @@ const TITLE: Partial<Record<IncursionOutcome, string>> = {
 function rewardItems(earned: Earned): RewardItem[] {
   const items: RewardItem[] = []
   const money = boostedMoney(earned.money)
-  if (earned.exp > 0) items.push({ key: 'exp', icon: <ItemIcon item={ICON.Exp} size={96} />, title: `+${earned.exp} EXP`, color: '#3a8fd8' })
-  if (money > 0) items.push({ key: 'money', icon: <ItemIcon item={ICON.Money} size={96} />, title: `+₽ ${money}`, color: '#d8a020' })
-  if (earned.tickets > 0) items.push({ key: 'tickets', icon: <ItemIcon item={ICON.Ticket} size={96} />, title: `+${earned.tickets} tickets de gacha`, color: '#c04040' })
+  if (earned.exp > 0) items.push({ key: 'exp', icon: <ItemIcon item={ICON.Exp} size={96} />, title: `+${earned.exp} EXP`, color: REWARD_COLOR.exp })
+  if (money > 0) items.push({ key: 'money', icon: <ItemIcon item={ICON.Money} size={96} />, title: `+${formatMoney(money)}`, color: REWARD_COLOR.money })
+  if (earned.tickets > 0) items.push({ key: 'tickets', icon: <ItemIcon item={ICON.Ticket} size={96} />, title: `+${earned.tickets} tickets de gacha`, color: REWARD_COLOR.tickets })
   for (const [id, n] of Object.entries(earned.pieces)) {
-    items.push({ key: `piece-${id}`, icon: <Sprite id={Number(id)} size={160} />, title: `Ticket de ${species(Number(id)).name} ×${n}`, color: '#8a5ab0' })
+    items.push({ key: `piece-${id}`, icon: <Sprite id={Number(id)} size={160} />, title: `Ticket de ${species(Number(id)).name} ×${n}`, color: REWARD_COLOR.pieces })
   }
   for (const [item, n] of Object.entries(earned.starItems) as [StarItem, number][]) {
     const info = STAR_ITEMS[item]

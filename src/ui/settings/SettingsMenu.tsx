@@ -12,10 +12,12 @@ import { NotificationsDialog } from './NotificationsDialog'
 import './settings.css'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
+import { useBackToClose } from '../shared/useBackToClose'
 
 /** Botón de engranaje con el menú de ajustes; tocar fuera del menú lo cierra */
 export function SettingsMenu() {
   const [open, setOpen] = useState(false)
+  useBackToClose(open ? () => setOpen(false) : undefined)
   const [confirmingReset, setConfirmingReset] = useState(false)
   const push = usePush()
   const [notifying, setNotifying] = useState(false)

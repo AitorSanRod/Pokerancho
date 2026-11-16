@@ -13,6 +13,7 @@
   display: flex;
   flex-direction: row;
   text-align: left;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
   min-height: 72px;
@@ -32,12 +33,15 @@
   inset: 0;
   background: linear-gradient(90deg, color-mix(in srgb, var(--card) 80%, transparent) 0 25%, transparent 70%);
 }
+/* Nombres largos («Gimnasio de Ciudad Plateada»): hasta dos líneas antes de cortarse */
 .route-row strong {
+  display: -webkit-box;
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
   font-size: 17px;
-  white-space: nowrap;
+  line-height: 1.2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 /* Los niveles van sobre la imagen: en una píldora para que se lean */
 .route-row .route-levels {
@@ -102,6 +106,17 @@
   background: var(--hp-ok);
   color: #fff;
   font-weight: 800;
+}
+/* Por qué está bloqueada, a lo ancho bajo el nombre al tocar la línea */
+.route-lock-reason {
+  flex-basis: 100%;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+  color: var(--text);
+}
+.route-row.locked:has(.route-lock-reason) {
+  opacity: 1;
 }
 .route-lock {
   display: grid;

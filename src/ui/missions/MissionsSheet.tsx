@@ -27,7 +27,7 @@ export function MissionsSheet({ game, onBack }: { game: GameState; onBack: () =>
         <h2 className="with-icon">
           <ItemIcon item={ICON.Missions} size={32} /> Misiones
         </h2>
-        <button className="account-link" onClick={onBack}>
+        <button className="link-btn" onClick={onBack}>
           Menú
         </button>
       </div>

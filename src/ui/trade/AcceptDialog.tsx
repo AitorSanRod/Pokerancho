@@ -12,6 +12,7 @@ import { refreshTradeBoard } from '../../net/tradeBoard'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { MonPicker } from '../shared/MonPicker'
 import { AskBadge, GoodBadge } from './GoodBadge'
+import { formatMoney } from '../shared/format'
 
 type Step = 'pay' | 'duplicate'
 
@@ -43,7 +44,7 @@ export function AcceptDialog({ game, listing, onClose, onNotice }: { game: GameS
     return (
       <ConfirmDialog title="¿Seguro?" confirmLabel={busy ? 'Aceptando…' : 'Sí, aceptar'} confirmDisabled={busy} onConfirm={accept} onCancel={onClose}>
         <p className="small">
-          No tendrás un segundo {name}: al recogerlo recibirás {refund.pieces} tickets de {name} y {refund.money.toLocaleString('es-ES')} ₽.
+          No tendrás un segundo {name}: al recogerlo recibirás {refund.pieces} tickets de {name} y {formatMoney(refund.money)}.
         </p>
         {error && <p className="small account-error">{error}</p>}
       </ConfirmDialog>
@@ -77,7 +78,7 @@ export function AcceptDialog({ game, listing, onClose, onNotice }: { game: GameS
       {refund && (
         <p className="small trade-warning">
           Ya tienes a {species(refund.speciesId).name}. Si aceptas, al recogerlo se cambiará por {refund.pieces} tickets de su especie y{' '}
-          {refund.money.toLocaleString('es-ES')} ₽.
+          {formatMoney(refund.money)}.
         </p>
       )}
       {error && <p className="small account-error">{error}</p>}

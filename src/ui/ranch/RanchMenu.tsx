@@ -16,6 +16,7 @@ import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { useUnseen } from '../shared/useUnseen'
 import { TutorialsSheet } from '../tutorials/TutorialsSheet'
+import { RanchSheet } from './RanchSheet'
 import { useMenuPending } from './useMenuPending'
 
 type Panel = 'menu' | 'profile' | 'board' | 'gift' | 'missions' | 'bag' | 'tutorials' | 'inbox' | 'ranking'
@@ -46,54 +47,52 @@ export function RanchMenu({ game }: { game: GameState }) {
         {menuDot && <span className="dot" />}
       </button>
       {panel && (
-        <div className="ranch-sheet-backdrop" onClick={close}>
-          <div className="ranch-sheet" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            {panel === 'profile' ? (
-              <ProfileSheet game={game} onBack={back} />
-            ) : panel === 'gift' ? (
-              <DailyGiftSheet onBack={back} />
-            ) : panel === 'missions' ? (
-              <MissionsSheet game={game} onBack={back} />
-            ) : panel === 'bag' ? (
-              <BagSheet game={game} onBack={back} />
-            ) : panel === 'inbox' ? (
-              <InboxSheet game={game} onBack={back} />
-            ) : panel === 'ranking' ? (
-              <RankingSheet onBack={back} />
-            ) : panel === 'board' ? (
-              <BoardSheet onBack={back} />
-            ) : panel === 'tutorials' ? (
-              <TutorialsSheet onBack={back} />
-            ) : (
-              <>
-                <h2 className="with-icon">
-                  <ItemIcon item={ICON.Menu} size={32} /> Menú
-                </h2>
-                <div className="ranch-menu-grid">
-                  <MenuTile icon={ICON.Profile} title="Perfil" onClick={() => setPanel('profile')} />
-                  <MenuTile icon={ICON.Board} title="Tablón" dot={boardDot} onClick={() => setPanel('board')} />
-                  <MenuTile icon={ICON.Inbox} title="Notificaciones" count={inboxCount} onClick={() => setPanel('inbox')} />
-                  <MenuTile icon={ICON.Gift} title="Obsequio diario" dot={giftDot} onClick={() => setPanel('gift')} />
-                  <MenuTile
-                    icon={ICON.Missions}
-                    title="Misiones"
-                    count={missionsReady}
-                    onClick={() => setPanel('missions')}
-                  />
-                  <MenuTile icon={ICON.Bag} title="Mochila" onClick={() => setPanel('bag')} />
-                  <MenuTile icon={ICON.Ranking} title="Ranking" onClick={() => setPanel('ranking')} />
-                  <MenuTile icon={ICON.Tutorials} title="Tutoriales" onClick={() => setPanel('tutorials')} />
-                </div>
-              </>
-            )}
-            <button className="btn primary wide" onClick={close}>
-              Cerrar
-            </button>
-          </div>
-        </div>
+        <RanchSheet label="Menú" step={panel} onClose={close} onBack={panel === 'menu' ? close : back}>
+          {panel === 'menu' ? (
+            <>
+              <h2 className="with-icon">
+                <ItemIcon item={ICON.Menu} size={32} /> Menú
+              </h2>
+              <div className="ranch-menu-grid">
+                <MenuTile icon={ICON.Profile} title="Perfil" onClick={() => setPanel('profile')} />
+                <MenuTile icon={ICON.Board} title="Tablón" dot={boardDot} onClick={() => setPanel('board')} />
+                <MenuTile icon={ICON.Inbox} title="Notificaciones" count={inboxCount} onClick={() => setPanel('inbox')} />
+                <MenuTile icon={ICON.Gift} title="Obsequio diario" dot={giftDot} onClick={() => setPanel('gift')} />
+                <MenuTile icon={ICON.Missions} title="Misiones" count={missionsReady} onClick={() => setPanel('missions')} />
+                <MenuTile icon={ICON.Bag} title="Mochila" onClick={() => setPanel('bag')} />
+                <MenuTile icon={ICON.Ranking} title="Ranking" onClick={() => setPanel('ranking')} />
+                <MenuTile icon={ICON.Tutorials} title="Tutoriales" onClick={() => setPanel('tutorials')} />
+              </div>
+            </>
+          ) : (
+            <MenuPanel panel={panel} game={game} onBack={back} />
+          )}
+        </RanchSheet>
       )}
     </>
   )
+}
+
+/** Lo que abre cada casilla del menú; todos vuelven al menú con onBack */
+function MenuPanel({ panel, game, onBack }: { panel: Exclude<Panel, 'menu'>; game: GameState; onBack: () => void }) {
+  switch (panel) {
+    case 'profile':
+      return <ProfileSheet game={game} onBack={onBack} />
+    case 'gift':
+      return <DailyGiftSheet onBack={onBack} />
+    case 'missions':
+      return <MissionsSheet game={game} onBack={onBack} />
+    case 'bag':
+      return <BagSheet game={game} onBack={onBack} />
+    case 'inbox':
+      return <InboxSheet game={game} onBack={onBack} />
+    case 'ranking':
+      return <RankingSheet onBack={onBack} />
+    case 'board':
+      return <BoardSheet onBack={onBack} />
+    case 'tutorials':
+      return <TutorialsSheet onBack={onBack} />
+  }
 }
 
 interface MenuTileProps {

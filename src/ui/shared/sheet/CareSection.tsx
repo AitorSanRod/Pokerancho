@@ -2,6 +2,7 @@ import type { GameState, OwnedMon } from '../../../game/core/state'
 import { expToNext, MAX_LEVEL } from '../../../game/team/stats'
 import { MonSection } from './MonSheet'
 import { TrainControl } from './TrainControl'
+import { formatCount } from '../format'
 
 interface Props {
   game: GameState
@@ -11,12 +12,11 @@ interface Props {
   onSessionsChange: (sessions: number) => void
 }
 
-const amount = (n: number) => n.toLocaleString('es-ES')
 
 /** EXP que lleva y la que necesita para el siguiente nivel */
 function expText(mon: OwnedMon): string {
   if (mon.level >= MAX_LEVEL) return 'EXP: nivel máximo'
-  return `EXP: ${amount(mon.exp)} / ${amount(expToNext(mon.level))}`
+  return `EXP: ${formatCount(mon.exp)} / ${formatCount(expToNext(mon.level))}`
 }
 
 /** Sección «Cuidados»: EXP y entrenar (solo si está en el rancho); curar es la poción de la cabecera (HealButton) */

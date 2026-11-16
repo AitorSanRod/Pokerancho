@@ -3,7 +3,7 @@ import { KANTO, type Route } from '../../data/maps'
 import { activeMon, TutorialStep, type GameState } from '../../game/core/state'
 import { runBlocker } from '../../game/run/run'
 import { TutorialHint } from '../shared/TutorialHint'
-import { RouteLock, RouteRow, RouteRowTitle } from './RouteRow'
+import { PREVIOUS_ROUTE_REASON, RouteRow, RouteRowTitle } from './RouteRow'
 import { RouteStartDialog } from './RouteStartDialog'
 
 /**
@@ -31,18 +31,17 @@ export function RouteMap({ game }: { game: GameState }) {
               {guided && <TutorialHint arrowX="50%">Toca la ruta para salir por primera vez.</TutorialHint>}
               <RouteRow
                 route={r}
-                locked={!unlocked}
+                lockReason={unlocked ? undefined : PREVIOUS_ROUTE_REASON}
                 className={guided ? 'tutorial-target' : ''}
                 disabled={!!blocker}
                 onClick={() => setStarting(r)}
               >
                 <RouteRowTitle route={r} />
                 {done && (
-                  <span className="route-done" title="Completada" aria-label="Completada">
+                  <span className="route-done" aria-label="Completada">
                     ✓
                   </span>
                 )}
-                {!unlocked && <RouteLock />}
               </RouteRow>
             </Fragment>
           )

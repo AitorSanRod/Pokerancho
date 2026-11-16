@@ -5,7 +5,8 @@ import { GoodKind, type TradeAsk, type TradeGood } from './tradeGoods'
 
 // Lo que cambia de manos, en palabras del jugador (anuncios, Notificaciones y avisos push)
 
-const amount = (n: number) => n.toLocaleString('es-ES')
+/** Con punto de miles también con cuatro cifras («2.500»), como en el resto del juego (ui/shared/format.ts) */
+const amount = (n: number) => n.toLocaleString('es-ES', { useGrouping: 'always' })
 
 const plural = (n: number, one: string, many: string) => `${amount(n)} ${n === 1 ? one : many}`
 

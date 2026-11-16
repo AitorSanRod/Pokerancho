@@ -13,6 +13,7 @@ import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { ShopSection, ShopTile } from '../shop/ShopTile'
 import { SellCountDialog, type CountSale } from './SellCountDialog'
+import { formatMoney } from '../shared/format'
 import './sell.css'
 
 /** Tienda › Venta: vender al servidor Pokémon, tickets y trozos de MissingNo a precio fijo */
@@ -32,7 +33,7 @@ export function SellScreen({ game }: { game: GameState }) {
             name={`${species(m.speciesId).name} Nv. ${m.level}`}
             action={
               <button className="btn primary small" disabled={giveMonBlocker(game, m.uid) !== null} onClick={() => setSelling(m)}>
-                ₽ {monSalePrice(m.speciesId)}
+                {formatMoney(monSalePrice(m.speciesId))}
               </button>
             }
           >
@@ -58,7 +59,7 @@ export function SellScreen({ game }: { game: GameState }) {
             }
           >
             <span className="tiny">Tienes {piecesOf(game, id)}</span>
-            <span className="tiny muted">₽ {pieceSalePrice(id)} cada uno</span>
+            <span className="tiny muted">{formatMoney(pieceSalePrice(id))} cada uno</span>
           </ShopTile>
         ))}
         {withPieces.length === 0 && <p className="small muted">No tienes tickets de ningún Pokémon.</p>}
@@ -78,13 +79,13 @@ export function SellScreen({ game }: { game: GameState }) {
           }
         >
           <span className="tiny">Tienes {game.missingnoShards}</span>
-          <span className="tiny muted">₽ {SHARD_SALE_PRICE} cada uno</span>
+          <span className="tiny muted">{formatMoney(SHARD_SALE_PRICE)} cada uno</span>
         </ShopTile>
       </ShopSection>
       {selling && (
         <ConfirmDialog
           title={`¿Vender a ${species(selling.speciesId).name}?`}
-          confirmLabel={`Vender por ₽ ${monSalePrice(selling.speciesId)}`}
+          confirmLabel={`Vender por ${formatMoney(monSalePrice(selling.speciesId))}`}
           onConfirm={() => (act((s) => sellMon(s, selling.uid)), setSelling(null))}
           onCancel={() => setSelling(null)}
         >

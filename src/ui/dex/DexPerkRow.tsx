@@ -3,6 +3,8 @@ import type { TypeCollection } from '../../game/collection/typeCollection'
 import { STAR_TYPE_BONUS_MAX } from '../../game/team/milestones'
 import { formatBonus } from '../shared/format'
 import { TypeBadge } from '../shared/common'
+import '../shared/sheet/milestones.css'
+import './dex-perks.css'
 
 export interface PerkRowData extends TypeCollection {
   /** Bono de stats de los Pokémon de este tipo por sus especies con 5 ★ */

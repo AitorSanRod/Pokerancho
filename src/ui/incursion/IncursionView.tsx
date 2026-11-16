@@ -51,7 +51,7 @@ export function IncursionView({ game, a }: { game: GameState; a: ActiveIncursion
             <strong>{inc.name}</strong> · Sala {Math.min(scene.room + 1, inc.rooms.length)}/{inc.rooms.length}
             {room ? ` · ${room.name}` : ''}
           </span>
-          <span className="incursion-revives" title="Revivires del grupo">
+          <span className="incursion-revives" aria-label={`Revivires del grupo: ${scene.revives}`}>
             <ItemIcon item={ICON.Revive} size={22} off={scene.revives === 0} /> ×{scene.revives}
           </span>
           <IncursionMenu open={menuOpen} onToggle={() => setMenuOpen((o) => !o)} />

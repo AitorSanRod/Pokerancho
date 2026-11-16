@@ -31,7 +31,7 @@ export function ShinyCombineAction({ game, speciesId, onCombined }: { game: Game
         disabled={!!blocker}
         onClick={() => setConfirming(true)}
       />
-      <p className="tiny muted center">Al crearlo hay un {Math.round(SHINY_CHANCE * 100)} % de que salga shiny; con {SHINY_COMBINE_PIECES} tickets sale seguro.</p>
+      <p className="tiny muted center">Al crearlo hay un {Math.round(SHINY_CHANCE * 100)}% de que salga shiny; con {SHINY_COMBINE_PIECES} tickets sale seguro.</p>
       {confirming && (
         <ConfirmDialog
           title="¿Crear shiny?"

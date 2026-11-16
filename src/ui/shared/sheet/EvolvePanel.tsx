@@ -13,6 +13,8 @@ import { ICON } from '../icons'
 import { ItemIcon } from '../ItemIcon'
 import { MonSection } from './MonSheet'
 import { StarItemNeed } from './StarItemNeed'
+import { formatMoney } from '../format'
+import './sheet-panels.css'
 
 /** Botón de evolucionar (uno por opción: Eevee tiene tres), con su aviso si aún no puede. No se pinta si la especie no evoluciona. */
 export function EvolvePanel({ game, mon, onEvolved }: { game: GameState; mon: OwnedMon; onEvolved: (result: EvolveResult) => void }) {
@@ -56,7 +58,7 @@ function EvolveOption({ game, mon, evo, onPick }: { game: GameState; mon: OwnedM
             {stone ? `${stone.name} · tienes ${stonesOf(game, evo.stone!)}` : `A partir de Nv. ${evo.level}`}
           </span>
         </span>
-        <span className="big-action-price">₽ {evolvePrice(evo.into)}</span>
+        <span className="big-action-price">{formatMoney(evolvePrice(evo.into))}</span>
       </button>
       {starItem && <StarItemNeed game={game} item={starItem} action="Evolucionar" />}
       {blocker && <p className="tiny muted">{blocker}</p>}

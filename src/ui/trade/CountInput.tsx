@@ -1,5 +1,6 @@
 import { useEffect, useState, type FocusEvent } from 'react'
 import { useCorrectionGuard } from './correctionGuard'
+import { formatCount } from '../shared/format'
 
 interface Props {
   value: number
@@ -46,7 +47,7 @@ export function CountInput({ value, max, onChange, onInvalid, onCorrected, label
     setDraft(null)
     onInvalid?.(false)
     if (draft === '' || n < 1) setNotice('Como mínimo 1.')
-    else if (n > max) setNotice(`Como máximo ${max.toLocaleString('es-ES')}.`)
+    else if (n > max) setNotice(`Como máximo ${formatCount(max)}.`)
     if (draft === '' || n < 1 || n > max) {
       onChange(clamp(n))
       correction.onCorrected()

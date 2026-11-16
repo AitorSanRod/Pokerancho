@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
+import { formatMoney } from '../shared/format'
 
 interface Props {
   /** Nombre del artículo, tal como sale en la casilla */
@@ -15,7 +16,6 @@ interface Props {
   onBuy: () => void
 }
 
-const formatPrice = (n: number) => `₽ ${n.toLocaleString('es-ES')}`
 
 /** Botón de precio de la Tienda: pide confirmación antes de comprar, para que nadie compre sin querer ni dude de si compró */
 export function BuyButton({ name, icon, price, money, disabled = false, title, onBuy }: Props) {
@@ -28,14 +28,14 @@ export function BuyButton({ name, icon, price, money, disabled = false, title, o
   return (
     <>
       <button className="btn primary small" disabled={disabled} title={title} onClick={() => setConfirming(true)}>
-        {formatPrice(price)}
+        {formatMoney(price)}
       </button>
       {confirming && (
-        <ConfirmDialog title={`¿Comprar ${name}?`} confirmLabel={`Comprar por ${formatPrice(price)}`} onConfirm={buy} onCancel={() => setConfirming(false)}>
+        <ConfirmDialog title={`¿Comprar ${name}?`} confirmLabel={`Comprar por ${formatMoney(price)}`} onConfirm={buy} onCancel={() => setConfirming(false)}>
           <div className="row gap buy-confirm">
             {icon}
             <p className="small confirm-text">
-              Pagarás {formatPrice(price)} y te quedarán {formatPrice(money - price)}.
+              Pagarás {formatMoney(price)} y te quedarán {formatMoney(money - price)}.
             </p>
           </div>
         </ConfirmDialog>

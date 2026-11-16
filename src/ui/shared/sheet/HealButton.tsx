@@ -7,6 +7,8 @@ import { maxHp } from '../../../game/team/stats'
 import { ConfirmDialog } from '../ConfirmDialog'
 import { ICON } from '../icons'
 import { ItemIcon } from '../ItemIcon'
+import { formatMoney } from '../format'
+import './hero-buttons.css'
 
 /** Poción de la esquina inferior izquierda de la cabecera: pregunta el precio y, al aceptar, cura todos sus PS */
 export function HealButton({ game, mon }: { game: GameState; mon: OwnedMon }) {
@@ -40,7 +42,7 @@ export function HealButton({ game, mon }: { game: GameState; mon: OwnedMon }) {
           onCancel={() => setAsking(false)}
         >
           <p className="small">
-            Recupera todos sus PS ({Math.floor(mon.hp)} / {hpMax}) por <strong>₽ {cost}</strong>. Tienes ₽ {game.money}.
+            Recupera todos sus PS ({Math.floor(mon.hp)} / {hpMax}) por <strong>{formatMoney(cost)}</strong>. Tienes {formatMoney(game.money)}.
           </p>
         </ConfirmDialog>
       )}

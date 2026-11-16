@@ -16,8 +16,9 @@ import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { ShopTile } from './ShopTile'
+import { formatMoney } from '../shared/format'
 
-const PRICE_TEXT = `₽ ${RANCH_EXPANSION_PRICE.toLocaleString('es-ES')}`
+const PRICE_TEXT = formatMoney(RANCH_EXPANSION_PRICE)
 
 /** Ampliación de rancho: al comprarla se elige qué rancho gana los espacios, hasta `RANCH_EXPANSION_MAX` por rancho */
 export function RanchExpansionTile({ game }: { game: GameState }) {

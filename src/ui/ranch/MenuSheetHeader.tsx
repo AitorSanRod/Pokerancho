@@ -8,7 +8,7 @@ export function MenuSheetHeader({ icon, title, onBack }: { icon: Item; title: st
       <h2 className="with-icon">
         <ItemIcon item={icon} size={32} /> {title}
       </h2>
-      <button className="account-link" onClick={onBack}>
+      <button className="link-btn" onClick={onBack}>
         Menú
       </button>
     </div>

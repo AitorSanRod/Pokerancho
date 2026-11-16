@@ -10,10 +10,12 @@ import { startServerGifts } from './net/serverGifts'
 import { startRaidSync } from './net/raidSync'
 import { startTradeBoard } from './net/tradeBoard'
 import { AccountHost } from './ui/account/AccountHost'
+import { ScreenLoading } from './ui/shared/ScreenLoading'
 import { UpdatePrompt } from './ui/shared/UpdatePrompt'
 import { act, useGame } from './store/store'
 import { tick } from './game/core/tick'
 import { isExpeditionDone } from './game/team/expedition'
+import { battleHold } from './ui/route/foeReady'
 import { TopBar } from './ui/shared/TopBar'
 import { TutorialNavHint } from './ui/shared/TutorialHint'
 import { ICON } from './ui/shared/icons'
@@ -39,7 +41,8 @@ export default function App() {
   // Bucle de juego: el primer tick también aplica el progreso hecho con la app cerrada
   useEffect(() => {
     act((s) => tick(s, Date.now()))
-    const id = setInterval(() => act((s) => tick(s, Date.now())), TICK_MS)
+    // El combate que va a empezar espera mientras su pantalla no tiene aún la imagen del rival (foeReady.ts)
+    const id = setInterval(() => act((s) => tick(s, Date.now(), battleHold)), TICK_MS)
     return () => clearInterval(id)
   }, [])
   useEffect(preloadScreens, [])
@@ -74,7 +77,7 @@ export default function App() {
   if (game.tutorial === TutorialStep.Starter) {
     return (
       <div className="app">
-        <Suspense fallback={null}>
+        <Suspense fallback={<ScreenLoading />}>
           <StarterScreen />
         </Suspense>
         <AccountHost game={game} />
@@ -90,7 +93,7 @@ export default function App() {
       <UpdatePrompt />
 
       <main className="content">
-        <Suspense fallback={null}>
+        <Suspense fallback={<ScreenLoading />}>
           {tab === 'route' && <RouteScreen game={game} />}
           {tab === 'ranch' && <RanchScreen game={game} />}
           {tab === 'shop' && <ShopScreen game={game} />}
@@ -102,7 +105,13 @@ export default function App() {
 
       <nav className="bottom-nav">
         {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'active' : ''} onClick={() => setTab(t.id)}>
+          <button
+            key={t.id}
+            className={tab === t.id ? 'active' : ''}
+            aria-current={tab === t.id ? 'page' : undefined}
+            aria-label={badges[t.id] ? `${t.label} (hay novedades)` : undefined}
+            onClick={() => setTab(t.id)}
+          >
             <span className="nav-icon">
               <ItemIcon item={t.icon} size={30} off={tab !== t.id} />
               {badges[t.id] && <span className="dot" />}

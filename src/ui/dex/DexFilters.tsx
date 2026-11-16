@@ -1,4 +1,5 @@
 import { DexFilter, DexSort, type DexQuery } from '../../game/collection/dexQuery'
+import './dex-toolbar.css'
 
 const SORT_LABEL: Record<DexSort, string> = {
   [DexSort.Number]: 'Número',

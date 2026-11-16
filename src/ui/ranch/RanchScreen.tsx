@@ -9,6 +9,7 @@ import { BoxSheet } from './BoxSheet'
 import { RanchMenu } from './RanchMenu'
 import type { RanchDrop } from './RanchMon'
 import { RanchPage } from './RanchPage'
+import { RanchSheet } from './RanchSheet'
 import { RanchSlots } from './RanchSlots'
 import './ranch.css'
 import './ranch-controls.css'
@@ -79,14 +80,9 @@ export function RanchScreen({ game }: { game: GameState }) {
 
       {sheetSpeciesId !== null && <PokemonSheet key={sheetSpeciesId} game={game} speciesId={sheetSpeciesId} onClose={close} />}
       {boxOpen && (
-        <div className="ranch-sheet-backdrop" onClick={close}>
-          <div className="ranch-sheet" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-            <BoxSheet game={game} />
-            <button className="btn primary wide" onClick={close}>
-              Aceptar
-            </button>
-          </div>
-        </div>
+        <RanchSheet label="Caja" onClose={close}>
+          <BoxSheet game={game} />
+        </RanchSheet>
       )}
     </div>
   )

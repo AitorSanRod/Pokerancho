@@ -12,6 +12,7 @@ import { towerWeekBest } from '../../game/tower/towerWeek'
 import { giftText } from '../gift/giftText'
 import { battleFrame, fighterClass, statusClass } from '../route/battleFrame'
 import { ExpBoostBadge, ExpBoostSpawn } from '../route/ExpBoost'
+import { useFoeShown } from '../route/foeReady'
 import { RouteBattle } from '../route/RouteBattle'
 import { WalkScene } from '../route/WalkScene'
 import '../route/run.css'
@@ -28,10 +29,13 @@ import { TowerSummary } from './TowerSummary'
 export function TowerClimb({ game }: { game: GameState }) {
   const t = game.tower!
   const mon = towerMon(game)
-  const walking = towerBetweenFloors(game)
+  const current = t.battleMsLeft > 0 && t.lastBattle ? t.lastBattle : null
+  // Si la imagen del rival aún no ha llegado, sigue paseando y el combate espera (foeReady.ts)
+  const foeShown = useFoeShown(current?.enemy ?? null, 'tower')
+  const walking = towerBetweenFloors(game) || !foeShown
   const [abandoning, setAbandoning] = useState(false)
   const ended = t.end !== null
-  const battle = t.battleMsLeft > 0 && t.lastBattle ? t.lastBattle : null
+  const battle = foeShown ? current : null
   const frame = battle && battleFrame(battle, t.battleMsLeft)
   const weekBest = towerWeekBest(game, game.lastTick)
   const prizeFloor = nextPrizeFloor(weekBest)

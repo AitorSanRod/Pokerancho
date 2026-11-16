@@ -1,4 +1,5 @@
-import { legSteps, node, route } from '../../data/maps'
+import { useEffect } from 'react'
+import { legSteps, node, pathSpecies, route } from '../../data/maps'
 import type { GameState, OwnedMon, Run } from '../../game/core/state'
 import { act } from '../../store/store'
 import { tapRun } from '../../game/run/run'
@@ -11,6 +12,7 @@ import { useLeveledTo } from '../shared/useLeveledTo'
 import { formatMinutes } from '../shared/format'
 import { battleFrame, fighterClass, statusClass } from './battleFrame'
 import { CritRing } from './CritRing'
+import { preloadFoe, useFoeShown } from './foeReady'
 import { RouteBattle } from './RouteBattle'
 import { HealStop } from './HealStop'
 import { StopTrack } from './StopTrack'
@@ -30,11 +32,16 @@ function tapInBattle(): boolean {
   return false
 }
 
-/** La ruta avanza sola: el Pokémon camina, se para a combatir (o a curarse) en cada parada y sigue hasta el final */
+/**
+ * La ruta avanza sola: el Pokémon camina, se para a combatir (o a curarse) en cada parada y sigue hasta el final. Si la
+ * imagen del rival aún no ha llegado, sigue andando y el combate espera (foeReady.ts)
+ */
 export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: OwnedMon }) {
   const r = route(run.routeId)
   const spm = stepsPerMinute(mon)
-  const battle = run.battleMsLeft > 0 && run.lastBattle ? run.lastBattle : null
+  const current = run.battleMsLeft > 0 && run.lastBattle ? run.lastBattle : null
+  const foeShown = useFoeShown(current?.enemy ?? null, 'run')
+  const battle = foeShown ? current : null
   const frame = battle && battleFrame(battle, run.battleMsLeft)
   const walking = run.phase === 'walking' && !battle && !run.heal
   const boosted = boostActive(run)
@@ -48,6 +55,8 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
   const moveBar = run.phase === 'walking'
   const trainer = battle ? trainerScene(run) : null
   const leveledTo = useLeveledTo(mon.level)
+  // Los rivales que pueden salir, pedidos ya: así al llegar a la parada casi nunca hay que esperar su imagen
+  useEffect(() => pathSpecies(route(run.routeId), run.path).forEach((id) => void preloadFoe(id)), [run.routeId, run.path])
 
   return (
     <div

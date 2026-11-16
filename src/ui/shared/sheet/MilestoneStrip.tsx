@@ -2,6 +2,7 @@ import type { GameState, OwnedMon } from '../../../game/core/state'
 import { LEVEL_MILESTONES, levelMilestoneBonus } from '../../../game/team/milestones'
 import { starBonusFor } from '../../../game/team/perks'
 import { formatBonus } from '../format'
+import './milestones.css'
 
 /**
  * Hitos del Pokémon en la ficha (Datos): los niveles que suben sus stats, marcados los que ya tiene, y lo que suma en

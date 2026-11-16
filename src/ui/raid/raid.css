@@ -49,12 +49,6 @@
 .raid-entry {
   margin-bottom: 8px;
 }
-.raid-tabs .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--accent);
-}
 
 /* La pelea (RaidFightView) bajo las pestañas de las rotaciones: ocupa lo que queda de pantalla */
 .raid-fighting {

@@ -9,6 +9,7 @@ import { monRepertoire } from '../../game/incursion/repertoire'
 import { sendIncursionMove, sendIncursionReady } from '../../net/incursionSync'
 import { MovePicker } from './MovePicker'
 import { CLASS_LABEL } from '../shared/moveText'
+import './incursion-finale.css'
 
 /**
  * Sala de reorganizar: lo que lleva cada uno (y lo que van eligiendo los demás) y, para el tuyo, elegir otro movimiento

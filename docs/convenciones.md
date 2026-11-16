@@ -55,12 +55,20 @@
 - Componentes de función, un componente principal por fichero; subcomponentes privados en el mismo fichero
   mientras sea corto. Cada pantalla en su carpeta de `src/ui` (ver `docs/arquitectura.md`).
 - Reutiliza `ui/shared/` (`Sprite`, `Bar`, `TypeBadge`, `MoveChip`, `RewardOverlay`, `RevealOverlay`,
-  `ConfirmDialog`) antes de crear piezas nuevas.
+  `ConfirmDialog`, `Modal`) antes de crear piezas nuevas. Todo diálogo nuevo va sobre `Modal`, y todo lo que se
+  abra encima de una pantalla y se pueda cerrar usa `useBackToClose`: el «Atrás» del móvil lo cierra en vez de
+  salir de la app.
 - Estilos de cada pantalla en un CSS en su carpeta, importado por su componente; lo común en `src/styles/`. Usa
   las variables de `:root` (`styles/tokens.css`): nada de colores sueltos si hay variable; para transparencias
   `color-mix(in srgb, var(--x) N%, transparent)`.
 - Las pantallas superpuestas (premios, confirmaciones) se pintan en `<body>` con `createPortal`, para no heredar
-  `pointer-events`, `z-index` ni filtros del sitio donde se usan.
+  `pointer-events`, `z-index` ni filtros del sitio donde se usan. Las capas usan las variables `--z-*` de
+  `tokens.css`, no números sueltos (salvo 1–9 dentro de un mismo componente).
+- Dinero y cantidades con `formatMoney` / `formatCount` (`ui/shared/format.ts`): «₽ 2.500», con punto de miles
+  también en cuatro cifras. Porcentajes sin espacio: «10%».
+- Nada de información solo en `title` (en el móvil no se ve): lo importante, visible o al tocar; para lectores de
+  pantalla, `aria-label`. Letra de 10 px como mínimo y zona de toque de 44 px (`.btn.small` y `.link-btn` la
+  amplían sin cambiar cómo se ven).
 - Paleta de los juegos de GBA: fondo crema (`--bg`), tarjetas blancas (`--card`), texto casi negro y rojo
   Pokédex (`--red`, que también es `--accent`) para la cabecera, el botón principal y la selección. El
   amarillo (`--yellow`) se reserva para el logo y los textos flotantes.

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { createPortal } from 'react-dom'
 import type { Route } from '../../data/maps'
 import { species } from '../../data/species'
 import { EXP_LEVEL_GAP } from '../../game/battle/rewards'
@@ -20,7 +19,7 @@ import { MonPicker } from '../shared/MonPicker'
 import { HeroLayout } from '../shared/sheet/HeroLayout'
 import { BIOME_SCENERY } from '../shared/sheet/scenery'
 import { FOCUS_INFO } from './focusText'
-import '../shared/overlays.css'
+import { Modal } from '../shared/Modal'
 import '../route/route-start.css'
 
 interface Props {
@@ -45,52 +44,49 @@ export function ExpeditionStartDialog({ game, route: r, mons, onClose }: Props) 
     onClose()
   }
 
-  return createPortal(
-    <div className="confirm-overlay" onClick={onClose}>
-      <div className="card route-start" role="dialog" aria-modal="true" aria-label={`Expedición a ${r.name}`} onClick={(e) => e.stopPropagation()}>
-        <HeroLayout compact scenery={BIOME_SCENERY[r.biome]} name={r.name} subtitle={`Nv. ${r.levels[0]}–${r.levels[1]}`}>
-          <Sprite key={mon.uid} id={mon.speciesId} size={96} className="mon-hero-sprite idle-bounce" shiny={mon.shiny} />
-        </HeroLayout>
-        <div className="route-start-body">
-          <div className="label">¿Quién va?</div>
-          <MonPicker mons={mons} selectedUid={mon.uid} onSelect={setUid} />
-          <div className="label">Duración</div>
-          <div className="segmented">
-            {EXPEDITION_DURATIONS.map((d) => (
-              <button key={d} className={duration === d ? 'active' : ''} onClick={() => setDuration(d)}>
-                {formatMinutes(d)}
-              </button>
-            ))}
-          </div>
-          <div className="label">¿Qué busca?</div>
-          <div className="segmented">
-            {EXPEDITION_FOCUSES.map((f) => (
-              <button key={f} className={focus === f ? 'active' : ''} onClick={() => setFocus(f)}>
-                {FOCUS_INFO[f].label}
-              </button>
-            ))}
-          </div>
-          <p className="tiny center">{FOCUS_INFO[focus].note}</p>
-          <p className="small center">
-            <strong>{species(mon.speciesId).name}</strong> (Nv. {mon.level}): ~{expeditionBattles(duration)} combates · {winPct}% de victorias ·
-            EXP y ₽ ×{expeditionRewardMult(duration).toLocaleString('es')}
-          </p>
-          <p className="tiny muted">
-            Cada victoria da EXP, ₽ y a veces tickets y piezas (sin EXP si los rivales tienen más de {EXP_LEVEL_GAP} niveles menos), sin riesgo. Las expediciones largas multiplican la EXP y los ₽, no el botín. Puede
-            descubrir Pokémon nuevos. Se puede cancelar, pero entonces no gana nada.
-          </p>
-          {blocker && <p className="notice small">{blocker}</p>}
-          <div className="row gap confirm-actions">
-            <button className="btn grow" onClick={onClose}>
-              Cancelar
+  return (
+    <Modal className="route-start" label={`Expedición a ${r.name}`} onClose={onClose}>
+      <HeroLayout compact scenery={BIOME_SCENERY[r.biome]} name={r.name} subtitle={`Nv. ${r.levels[0]}–${r.levels[1]}`}>
+        <Sprite key={mon.uid} id={mon.speciesId} size={96} className="mon-hero-sprite idle-bounce" shiny={mon.shiny} />
+      </HeroLayout>
+      <div className="route-start-body">
+        <div className="label">¿Quién va?</div>
+        <MonPicker mons={mons} selectedUid={mon.uid} onSelect={setUid} />
+        <div className="label">Duración</div>
+        <div className="segmented">
+          {EXPEDITION_DURATIONS.map((d) => (
+            <button key={d} className={duration === d ? 'active' : ''} onClick={() => setDuration(d)}>
+              {formatMinutes(d)}
             </button>
-            <button className="btn primary grow" disabled={!!blocker} onClick={send}>
-              ¡A explorar!
+          ))}
+        </div>
+        <div className="label">¿Qué busca?</div>
+        <div className="segmented">
+          {EXPEDITION_FOCUSES.map((f) => (
+            <button key={f} className={focus === f ? 'active' : ''} onClick={() => setFocus(f)}>
+              {FOCUS_INFO[f].label}
             </button>
-          </div>
+          ))}
+        </div>
+        <p className="tiny center">{FOCUS_INFO[focus].note}</p>
+        <p className="small center">
+          <strong>{species(mon.speciesId).name}</strong> (Nv. {mon.level}): ~{expeditionBattles(duration)} combates · {winPct}% de victorias ·
+          EXP y ₽ ×{expeditionRewardMult(duration).toLocaleString('es')}
+        </p>
+        <p className="tiny muted">
+          Cada victoria da EXP, ₽ y a veces tickets y piezas (sin EXP si los rivales tienen más de {EXP_LEVEL_GAP} niveles menos), sin riesgo. Las expediciones largas multiplican la EXP y los ₽, no el botín. Puede
+          descubrir Pokémon nuevos. Se puede cancelar, pero entonces no gana nada.
+        </p>
+        {blocker && <p className="notice small">{blocker}</p>}
+        <div className="row gap confirm-actions">
+          <button className="btn grow" onClick={onClose}>
+            Cancelar
+          </button>
+          <button className="btn primary grow" disabled={!!blocker} onClick={send}>
+            ¡A explorar!
+          </button>
         </div>
       </div>
-    </div>,
-    document.body,
+    </Modal>
   )
 }

@@ -13,6 +13,8 @@ import { ItemIcon } from '../shared/ItemIcon'
 import { BigAction } from '../shared/sheet/MonSheet'
 import { StepperAction } from '../shared/sheet/StepperAction'
 import { GachaRates } from './GachaRates'
+import { formatMoney } from '../shared/format'
+import { REWARD_COLOR } from '../shared/rewardItems'
 
 type Phase = 'idle' | 'capturing' | 'rewards'
 
@@ -71,7 +73,6 @@ export function GachaMachine({ game }: { game: GameState }) {
           price={MULTI_PULL}
           priceIcon={ICON.Ticket}
           disabled={phase !== 'idle' || game.tickets < MULTI_PULL}
-          className="primary"
           onClick={() => roll(MULTI_PULL)}
         />
         {/* Gasta de una vez todos los tickets que haya */}
@@ -81,7 +82,6 @@ export function GachaMachine({ game }: { game: GameState }) {
           price={Math.max(1, game.tickets)}
           priceIcon={ICON.Ticket}
           disabled={!canPullOne}
-          className="primary"
           onClick={() => roll(game.tickets)}
         />
         <StepperAction
@@ -125,8 +125,8 @@ function moneyRewards(money: number[]): RewardItem[] {
   return [...counts].map(([amount, count]) => ({
     key: `money-${amount}`,
     icon: <ItemIcon item={ICON.Money} size={96} />,
-    title: count > 1 ? `+₽ ${amount} ×${count}` : `+₽ ${amount}`,
-    color: '#d8a020',
+    title: count > 1 ? `+${formatMoney(amount)} ×${count}` : `+${formatMoney(amount)}`,
+    color: REWARD_COLOR.money,
   }))
 }
 

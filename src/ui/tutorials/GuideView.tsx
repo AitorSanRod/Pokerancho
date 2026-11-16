@@ -14,7 +14,7 @@ export function GuideView({ guide, onBack }: { guide: Guide; onBack: () => void 
         <h2 className="with-icon">
           <ItemIcon item={guide.icon} size={32} /> {guide.title}
         </h2>
-        <button className="account-link" onClick={onBack}>
+        <button className="link-btn" onClick={onBack}>
           Tutoriales
         </button>
       </div>

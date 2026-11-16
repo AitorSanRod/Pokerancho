@@ -10,6 +10,15 @@ import { Sprite } from './common'
 import type { RewardItem } from './RewardOverlay'
 import { ICON } from './icons'
 import { ItemIcon } from './ItemIcon'
+import { formatMoney } from './format'
+
+/** Color del halo de cada premio que sale en varias pantallas (RewardOverlay) */
+export const REWARD_COLOR = {
+  money: '#d8a020',
+  exp: '#3a8fd8',
+  tickets: '#c04040',
+  pieces: '#8a5ab0',
+}
 
 interface Earnings {
   wins: number
@@ -23,8 +32,8 @@ interface Earnings {
 /** ₽ y tickets de gacha ganados; se omiten los que valen 0 */
 function moneyAndTickets(money: number, tickets: number): RewardItem[] {
   const items: RewardItem[] = []
-  if (money > 0) items.push({ key: 'money', icon: <ItemIcon item={ICON.Money} size={96} />, title: `+₽ ${money}`, color: '#d8a020' })
-  if (tickets > 0) items.push({ key: 'tickets', icon: <ItemIcon item={ICON.Ticket} size={96} />, title: `+${tickets} ticket${tickets > 1 ? 's' : ''} de gacha`, color: '#c04040' })
+  if (money > 0) items.push({ key: 'money', icon: <ItemIcon item={ICON.Money} size={96} />, title: `+${formatMoney(money)}`, color: REWARD_COLOR.money })
+  if (tickets > 0) items.push({ key: 'tickets', icon: <ItemIcon item={ICON.Ticket} size={96} />, title: `+${tickets} ticket${tickets > 1 ? 's' : ''} de gacha`, color: REWARD_COLOR.tickets })
   return items
 }
 
@@ -36,7 +45,7 @@ export function earningsRewards({ wins, battles, exp, money, tickets, pieces }: 
   const items: RewardItem[] = [
     { key: 'wins', icon: <ItemIcon item={ICON.Wins} size={96} />, title: battles ? `${wins}/${battles} victorias` : `${wins} victorias` },
   ]
-  if (exp > 0) items.push({ key: 'exp', icon: <ItemIcon item={ICON.Exp} size={96} />, title: `+${exp} EXP`, color: '#3a8fd8' })
+  if (exp > 0) items.push({ key: 'exp', icon: <ItemIcon item={ICON.Exp} size={96} />, title: `+${exp} EXP`, color: REWARD_COLOR.exp })
   items.push(...moneyAndTickets(money, tickets))
   for (const id of new Set(pieces)) {
     const count = pieces.filter((p) => p === id).length
@@ -46,7 +55,7 @@ export function earningsRewards({ wins, battles, exp, money, tickets, pieces }: 
       icon: <Sprite id={id} size={160} silhouette={!known} />,
       title: `Ticket de ${known ? species(id).name : '???'} ×${count}`,
       detail: 'Soltado en combate',
-      color: '#8a5ab0',
+      color: REWARD_COLOR.pieces,
     })
   }
   return items
@@ -79,7 +88,7 @@ export function raidBossReward(speciesId: number, count = 1): RewardItem {
     icon: <Sprite id={speciesId} size={160} />,
     title: `¡${species(speciesId).name} derrotado${count > 1 ? ` ×${count}` : ''}!`,
     detail: 'Jefe comunitario',
-    color: '#c04040',
+    color: REWARD_COLOR.tickets,
   }
 }
 
@@ -126,11 +135,11 @@ export function raidPrizeRewards(prizes: RaidPrize[]): RewardItem[] {
   const sum = (list: RaidPrize[], field: 'money' | 'tickets' | 'pieces' | 'exp') => list.reduce((a, p) => a + p[field], 0)
   const items = bosses.map((id) => raidBossReward(id, ofBoss(id).length))
   const exp = sum(prizes, 'exp')
-  if (exp > 0) items.push({ key: 'exp', icon: <ItemIcon item={ICON.Exp} size={96} />, title: `+${exp} EXP`, color: '#3a8fd8' })
+  if (exp > 0) items.push({ key: 'exp', icon: <ItemIcon item={ICON.Exp} size={96} />, title: `+${exp} EXP`, color: REWARD_COLOR.exp })
   items.push(...moneyAndTickets(sum(prizes, 'money'), sum(prizes, 'tickets')))
   for (const id of bosses) {
     const pieces = sum(ofBoss(id), 'pieces')
-    if (pieces > 0) items.push({ key: `piece-${id}`, icon: <Sprite id={id} size={160} />, title: `Ticket de ${species(id).name} ×${pieces}`, color: '#8a5ab0' })
+    if (pieces > 0) items.push({ key: `piece-${id}`, icon: <Sprite id={id} size={160} />, title: `Ticket de ${species(id).name} ×${pieces}`, color: REWARD_COLOR.pieces })
   }
   return items
 }

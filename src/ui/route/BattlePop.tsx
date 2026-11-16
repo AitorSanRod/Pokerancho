@@ -4,6 +4,7 @@ import type { BattleEvent, BattleRecord, MissReason, Side } from '../../game/bat
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { isHeavyHit, type BattleFrame } from './battleFrame'
+import { formatMoney } from '../shared/format'
 
 const MISS_POP: Record<MissReason, string> = { miss: '¡Fallo!', dodge: '¡Esquivado!', immune: 'No afecta' }
 
@@ -33,7 +34,7 @@ function RewardLine({ record }: { record: BattleRecord }) {
   return (
     <>
       <span className="reward-money">
-        +₽ {money}
+        +{formatMoney(money)}
         {tickets > 0 && <ItemIcon item={ICON.Ticket} size={20} />}
         {piece && <ItemIcon item={ICON.Piece} size={20} />}
       </span>

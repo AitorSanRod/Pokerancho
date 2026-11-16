@@ -19,13 +19,15 @@ interface BattleHudProps {
   boss?: boolean
   /** Lo acaban de golpear: el marcador da un respingo */
   struck?: boolean
+  /** Los PS en número junto a la barra (el tuyo; el del rival, solo la barra, como en los juegos) */
+  showHp?: boolean
 }
 
 /**
  * Marcador de un combatiente, igual para los dos lados: tipos, nombre y nivel; debajo, la barra de PS con su etiqueta
  * y, si los tiene, los estados alterados (o «DEB» si se ha debilitado). Con pocos PS el marco de la barra se pone rojo.
  */
-export function BattleHud({ fighter, hp, statuses, boss = false, struck = false }: BattleHudProps) {
+export function BattleHud({ fighter, hp, statuses, boss = false, struck = false, showHp = false }: BattleHudProps) {
   const { types } = species(fighter.speciesId)
   const low = hp > 0 && hp / fighter.maxHp <= LOW_HP
   const classes = ['battle-hud', boss && 'boss', low && 'low', hp === 0 && 'down', struck && 'struck'].filter(Boolean)
@@ -33,13 +35,13 @@ export function BattleHud({ fighter, hp, statuses, boss = false, struck = false 
   return (
     <div className={classes.join(' ')} style={typeColor(types[0])}>
       <div className="hud-title">
-        <span className="hud-types">
+        <span className="hud-types" role="img" aria-label={types.map((t) => TYPE_INFO[t].name).join(' / ')}>
           {types.map((t) => (
-            <i key={t} style={typeColor(t)} title={TYPE_INFO[t].name} />
+            <i key={t} style={typeColor(t)} />
           ))}
         </span>
         {boss && <span className="hud-boss">JEFE</span>}
-        {fighter.shiny && <span className="hud-shiny" title="Shiny">★</span>}
+        {fighter.shiny && <span className="hud-shiny" aria-label="Shiny">★</span>}
         <strong className="hud-name">{fighter.name}</strong>
         <span className="hud-level">
           <small>Nv.</small>
@@ -49,6 +51,11 @@ export function BattleHud({ fighter, hp, statuses, boss = false, struck = false 
       <div className="hud-bar">
         <span className="hud-ps">PS</span>
         <Bar value={hp} max={fighter.maxHp} kind="hp" />
+        {showHp && (
+          <span className="hud-hp">
+            {Math.ceil(hp)}/{fighter.maxHp}
+          </span>
+        )}
       </div>
       {(statuses.length > 0 || hp === 0) && (
         <div className="hud-foot">
@@ -62,7 +69,7 @@ export function BattleHud({ fighter, hp, statuses, boss = false, struck = false 
 function StatusBadge({ status }: { status: StatusId }) {
   const info = STATUS_INFO[status]
   return (
-    <span className="hud-status" style={typeColor(info.type)} title={info.name}>
+    <span className="hud-status" style={typeColor(info.type)} aria-label={info.name}>
       {info.short}
     </span>
   )

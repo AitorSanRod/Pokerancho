@@ -5,7 +5,7 @@ import { TowerEnd, type TowerRun } from '../../game/tower/towerRun'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { RewardOverlay, type RewardItem } from '../shared/RewardOverlay'
-import { earningsRewards, giftRewards, levelUpReward } from '../shared/rewardItems'
+import { REWARD_COLOR, earningsRewards, giftRewards, levelUpReward } from '../shared/rewardItems'
 
 /** Al acabar la subida, sus premios pasan de uno en uno, como al final de una ruta; ya estaban sumados en el estado */
 export function TowerSummary({ tower, mon }: { tower: TowerRun; mon: OwnedMon | null }) {
@@ -36,7 +36,7 @@ function floorReward(tower: TowerRun, won: number): RewardItem {
     icon: <ItemIcon item={ICON.Tower} size={96} />,
     title: `${won} ${won === 1 ? 'piso superado' : 'pisos superados'}`,
     detail: record ? '¡Nuevo récord!' : tower.end === TowerEnd.Left ? `Abandonaste antes del piso ${tower.floor}` : `Cayó en el piso ${tower.floor}`,
-    color: record ? '#d8a020' : '#6a6a80',
+    color: record ? REWARD_COLOR.money : '#6a6a80',
   }
 }
 
@@ -47,6 +47,6 @@ function eggReward(count: number): RewardItem {
     icon: <ItemIcon item={ICON.ExpBoost} size={96} />,
     title: `+${count} ${count === 1 ? 'Huevo Suerte' : 'Huevos Suerte'}`,
     detail: 'En la Mochila',
-    color: '#d8a020',
+    color: REWARD_COLOR.money,
   }
 }

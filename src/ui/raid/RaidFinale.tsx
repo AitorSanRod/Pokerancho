@@ -8,6 +8,7 @@ import { collectRaid } from '../../game/raid/raidPlay'
 import { roomBoss, type RaidPrize } from '../../game/raid/raidRoom'
 import { formatPercent } from '../shared/format'
 import type { SceneMon } from '../incursion/sceneState'
+import '../incursion/incursion-finale.css'
 
 interface Props {
   rotation: RaidRotation

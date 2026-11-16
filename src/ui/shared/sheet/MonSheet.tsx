@@ -3,6 +3,8 @@ import type { Item } from '../../../data/items'
 import { NATURES, type Nature, type NatureStat } from '../../../data/natures'
 import type { Stats } from '../../../game/team/stats'
 import { ItemIcon } from '../ItemIcon'
+import { useBackToClose } from '../useBackToClose'
+import { formatCount } from '../format'
 import './mon-sheet.css'
 
 interface HeroCorners {
@@ -23,9 +25,10 @@ interface MonSheetProps {
 
 /**
  * Ficha a pantalla completa (rancho y Pokédex): la cabecera arriba, el contenido debajo y un botón redondo ✕ abajo
- * en el centro, siempre a la vista. Cubre la zona de contenido; el menú inferior sigue visible.
+ * en el centro, siempre a la vista. Cubre la zona de contenido; el menú inferior sigue visible. «Atrás» también la cierra.
  */
 export function MonSheet({ label, hero, corners = {}, children, onClose }: MonSheetProps) {
+  useBackToClose(onClose)
   return (
     <div className="mon-screen" role="dialog" aria-modal="true" aria-label={label}>
       <div className="mon-screen-top">
@@ -114,7 +117,7 @@ export function BigAction({ icon, label, price, priceIcon, disabled = false, ico
       <span className="grow">{label}</span>
       {price !== undefined && (
         <span className="big-action-price with-icon">
-          {priceIcon ? <ItemIcon item={priceIcon} size={18} /> : '₽'} {price}
+          {priceIcon ? <ItemIcon item={priceIcon} size={18} /> : '₽'} {formatCount(price)}
         </span>
       )}
     </button>

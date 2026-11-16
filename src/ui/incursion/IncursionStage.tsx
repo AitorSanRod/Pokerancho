@@ -62,7 +62,7 @@ export function IncursionStage({ biome, scene, uid, overlay, targeting }: Props)
           {bossWarning && <div className="boss-warning">¡Un jefe os corta el paso!</div>}
           {mine && (
             <div className="battle-hud-slot player">
-              <BattleHud fighter={mine} hp={mine.out ? 0 : mine.hp} statuses={mine.statuses} struck={struck(mine.id)} />
+              <BattleHud showHp fighter={mine} hp={mine.out ? 0 : mine.hp} statuses={mine.statuses} struck={struck(mine.id)} />
             </div>
           )}
           {foe && (

@@ -27,16 +27,6 @@
   justify-content: center;
   gap: 4px 14px;
 }
-.account-link {
-  border: 0;
-  padding: 4px 0;
-  background: none;
-  color: var(--exp);
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-decoration: underline;
-}
 
 /* Elegir entre la partida de la nube y la de este dispositivo */
 .cloud-choice {

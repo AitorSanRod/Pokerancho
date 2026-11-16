@@ -4,7 +4,7 @@
 .mon-screen {
   position: absolute;
   inset: 0;
-  z-index: 200;
+  z-index: var(--z-sheet);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -33,89 +33,6 @@
 .mon-hero-corner.bottom-right {
   bottom: 36px;
   right: 14px;
-}
-/* Cuánto cuenta para las pasivas del rancho: círculo pequeño con borde y número en blanco */
-.passive-weight-badge {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: rgb(0 0 0 / 0.25);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
-  text-shadow: 0 1px 2px #000a;
-  box-shadow: 0 2px 6px #0004;
-}
-.passive-weight-badge.maxed {
-  font-size: 9px;
-}
-/* Botones redondos de las esquinas de la cabecera: corazón de favorito, Poké Ball de compañero y poción de curar */
-.favorite-button,
-.companion-button,
-.heal-button {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  border: 2px solid #fff6;
-  border-radius: 50%;
-  background: rgb(0 0 0 / 0.35);
-  box-shadow: 0 2px 6px #0004;
-}
-.favorite-button path {
-  fill: none;
-  stroke: #fff;
-  stroke-width: 2;
-  stroke-linejoin: round;
-}
-.favorite-button.on {
-  border-color: #fff;
-  background: rgb(255 255 255 / 0.9);
-}
-.favorite-button.on path {
-  fill: var(--favorite);
-  stroke: var(--favorite);
-}
-.favorite-button.on svg,
-.companion-button.on svg {
-  animation: favorite-beat 0.35s ease-out;
-}
-/* Poké Ball de compañero: solo el contorno si no lo es; roja y blanca si lo es */
-.companion-button path,
-.companion-button circle {
-  fill: none;
-  stroke: #fff;
-  stroke-width: 1.8;
-}
-.companion-button.on {
-  border-color: #fff;
-  background: rgb(255 255 255 / 0.9);
-  opacity: 1;
-}
-.companion-button.on path,
-.companion-button.on circle {
-  stroke: #222;
-}
-.companion-button.on .ball-top {
-  fill: var(--red);
-}
-.companion-button.on .ball-bottom,
-.companion-button.on .ball-button {
-  fill: #fff;
-}
-.companion-button:disabled:not(.on),
-.heal-button:disabled {
-  opacity: 0.5;
-}
-@keyframes favorite-beat {
-  50% {
-    transform: scale(1.35);
-  }
 }
 .mon-card {
   flex: 1 0 auto;
@@ -227,89 +144,4 @@
   font-size: 24px;
   font-weight: 800;
   box-shadow: 0 3px 8px #0003;
-}
-/* Opciones de evolución: una por fila (Eevee tiene tres) */
-.evolve-options {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.evolve-option {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.evolve-option > .tiny {
-  padding: 0 14px;
-}
-/* Lo que pide la evolución (nivel o piedra), debajo del nombre */
-.evolve-requirement {
-  display: block;
-  font-weight: 600;
-}
-/* Objeto estelar que gasta crear o evolucionar: tarjeta con su icono y cuántos tienes */
-.star-item-need {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 12px;
-  border: 2px solid var(--yellow-dark);
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--yellow) 22%, var(--card));
-}
-.star-item-need .grow {
-  display: flex;
-  flex-direction: column;
-}
-.star-item-need-held {
-  padding: 2px 10px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 800;
-  color: #fff;
-  background: var(--hp-ok);
-  white-space: nowrap;
-}
-.star-item-need.missing {
-  border-color: var(--red);
-  background: color-mix(in srgb, var(--red) 10%, var(--card));
-}
-.star-item-need.missing .star-item-need-held {
-  background: var(--red);
-}
-/* Mover a otro rancho o a la Caja */
-.move-options {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-  gap: 8px;
-}
-.move-options .btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-/* Hitos de nivel (MilestoneStrip) */
-.milestones {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.milestone-pills {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-}
-.milestone-pill {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  color: var(--muted);
-}
-.milestone-pill.reached {
-  border-color: var(--yellow-dark);
-  background: var(--yellow);
-  color: var(--text);
 }

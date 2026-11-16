@@ -1,0 +1,44 @@
+/* Secciones plegadas bajo la escena */
+.incursion-fold {
+  border-radius: 12px;
+  background: var(--card);
+}
+.incursion-fold-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 12px;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+.incursion-fold-title::-webkit-details-marker {
+  display: none;
+}
+.incursion-fold-title::after {
+  content: '▾';
+  color: var(--muted);
+  transition: rotate 0.2s;
+}
+.incursion-fold[open] > .incursion-fold-title::after {
+  rotate: 180deg;
+}
+.incursion-fold-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px 8px;
+}
+.incursion-line.mine {
+  outline: 2px solid var(--accent);
+}
+.incursion-damage-rank {
+  min-width: 1.4em;
+  font-weight: 900;
+  color: var(--muted);
+}
+.incursion-damage-total {
+  min-width: 3em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

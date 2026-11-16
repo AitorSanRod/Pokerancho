@@ -23,7 +23,10 @@ export function AbandonButton({ game }: { game: GameState }) {
           onConfirm={() => act(endRun)}
           onCancel={() => setConfirming(false)}
           extraAction={
-            <button className="btn grow" disabled={!!restartBlocked} title={restartBlocked ?? undefined} onClick={() => {
+            <button
+              className="btn grow"
+              disabled={!!restartBlocked}
+              onClick={() => {
                 act(restartRun)
                 setConfirming(false)
               }}
@@ -36,6 +39,7 @@ export function AbandonButton({ game }: { game: GameState }) {
             Tu Pokémon volverá al rancho. Conservas lo ganado hasta ahora, pero no recibirás el premio de completarla. Si la
             reinicias, vuelve a salir desde el principio con otros Pokémon por el camino.
           </p>
+          {restartBlocked && <p className="tiny muted">{restartBlocked}</p>}
         </ConfirmDialog>
       )}
     </>

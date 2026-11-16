@@ -7,9 +7,9 @@ import { Bar, Sprite } from '../shared/common'
 import { ICON } from '../shared/icons'
 import { BadgeCase } from './BadgeCase'
 import { ProfileRankings } from './ProfileRankings'
+import { formatMoney, formatCount } from '../shared/format'
 import './profile.css'
 
-const n = (v: number) => v.toLocaleString('es-ES')
 
 /** Perfil del menú del rancho: el entrenador con su compañero, medallas, Pokédex, lo que tiene, récords y rankings */
 export function ProfileSheet({ game, onBack }: { game: GameState; onBack: () => void }) {
@@ -57,11 +57,11 @@ export function ProfileSheet({ game, onBack }: { game: GameState; onBack: () => 
       <h3 className="section-title">Datos</h3>
       <dl className="profile-stats">
         <dt>Dinero</dt>
-        <dd>₽ {n(p.money)}</dd>
+        <dd>{formatMoney(p.money)}</dd>
         <dt>Tickets de gacha</dt>
-        <dd>{n(p.tickets)}</dd>
+        <dd>{formatCount(p.tickets)}</dd>
         <dt>Trozos de MissingNo</dt>
-        <dd>{n(p.shards)}</dd>
+        <dd>{formatCount(p.shards)}</dd>
         <dt>Pokémon</dt>
         <dd>
           {p.owned}

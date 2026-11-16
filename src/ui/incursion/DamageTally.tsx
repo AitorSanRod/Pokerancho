@@ -3,6 +3,7 @@ import { partyDamage } from '../../game/incursion/damageTally'
 import { Bar, Sprite } from '../shared/common'
 import { memberNote } from './memberNote'
 import type { SceneMon } from './sceneState'
+import './incursion-fold.css'
 
 interface Props {
   p: IncursionProgress

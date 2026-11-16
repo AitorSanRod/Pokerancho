@@ -1,18 +1,14 @@
 import type { ReactNode } from 'react'
-import { createPortal } from 'react-dom'
-import '../shared/overlays.css'
+import { Modal } from '../shared/Modal'
 import './account.css'
 
 /** Ventana de las pantallas de cuenta: como ConfirmDialog, pero con los botones que ponga cada una; tocar fuera la cierra */
 export function AccountModal({ title, children, onClose }: { title: string; children: ReactNode; onClose?: () => void }) {
-  return createPortal(
-    <div className="confirm-overlay" onClick={onClose}>
-      <div className="card confirm-dialog account-modal" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
-        <h3>{title}</h3>
-        {children}
-      </div>
-    </div>,
-    document.body,
+  return (
+    <Modal className="confirm-dialog account-modal" onClose={onClose}>
+      <h3>{title}</h3>
+      {children}
+    </Modal>
   )
 }
 

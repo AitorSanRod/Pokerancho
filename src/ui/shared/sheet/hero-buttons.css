@@ -1,0 +1,85 @@
+/* Botones de las esquinas de la cabecera de la ficha */
+
+/* Cuánto cuenta para las pasivas del rancho: círculo pequeño con borde y número en blanco */
+.passive-weight-badge {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.25);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 1px 2px #000a;
+  box-shadow: 0 2px 6px #0004;
+}
+.passive-weight-badge.maxed {
+  font-size: 10px;
+}
+/* Botones redondos de las esquinas de la cabecera: corazón de favorito, Poké Ball de compañero y poción de curar */
+.favorite-button,
+.companion-button,
+.heal-button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 2px solid #fff6;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.35);
+  box-shadow: 0 2px 6px #0004;
+}
+.favorite-button path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.favorite-button.on {
+  border-color: #fff;
+  background: rgb(255 255 255 / 0.9);
+}
+.favorite-button.on path {
+  fill: var(--favorite);
+  stroke: var(--favorite);
+}
+.favorite-button.on svg,
+.companion-button.on svg {
+  animation: favorite-beat 0.35s ease-out;
+}
+/* Poké Ball de compañero: solo el contorno si no lo es; roja y blanca si lo es */
+.companion-button path,
+.companion-button circle {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.8;
+}
+.companion-button.on {
+  border-color: #fff;
+  background: rgb(255 255 255 / 0.9);
+  opacity: 1;
+}
+.companion-button.on path,
+.companion-button.on circle {
+  stroke: #222;
+}
+.companion-button.on .ball-top {
+  fill: var(--red);
+}
+.companion-button.on .ball-bottom,
+.companion-button.on .ball-button {
+  fill: #fff;
+}
+.companion-button:disabled:not(.on),
+.heal-button:disabled {
+  opacity: 0.5;
+}
+@keyframes favorite-beat {
+  50% {
+    transform: scale(1.35);
+  }
+}

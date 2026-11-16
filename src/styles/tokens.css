@@ -23,6 +23,15 @@
   --hp-low: #e3350d;
   --exp: #1a6fbf;
   --radius: 14px;
+  /* Capas (z-index), de abajo arriba. Dentro de la app: */
+  --z-float: 40; /* sobre el contenido de una pantalla: aviso del tutorial, penumbra de la captura */
+  --z-controls: 100; /* botones flotantes de una pantalla (rancho, ajustes) */
+  --z-popover: 150; /* desplegable de ajustes */
+  --z-sheet: 200; /* ficha y paneles que suben desde abajo */
+  /* En <body>, por encima de toda la app: */
+  --z-reward: 300; /* premios y aparición de un Pokémon */
+  --z-dialog: 400; /* diálogos (Modal) */
+  --z-evolution: 500; /* animación de crear y evolucionar */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   color-scheme: light;
@@ -56,6 +65,18 @@ body {
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
+}
+/* Con «reducir movimiento» en el sistema, las animaciones y transiciones se acaban al momento (siguen avisando al
+   terminar, como hace falta en la captura del Gacha). Salvo el anillo del crítico: su animación es la que dice cuándo
+   tocar */
+@media (prefers-reduced-motion: reduce) {
+  *:not(.tap-ring-closing),
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 button {
   font: inherit;

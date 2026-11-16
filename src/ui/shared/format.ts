@@ -14,9 +14,17 @@ export function formatClock(ms: number): string {
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`
 }
 
+const COUNT_FORMAT = new Intl.NumberFormat('es-ES', { useGrouping: 'always' })
+
+/** Cantidad con punto de miles, también con cuatro cifras ("2.500"; es-ES por defecto deja "2500" y "25.000") */
+export const formatCount = (n: number): string => COUNT_FORMAT.format(n)
+
+/** Dinero: "₽ 12.500" */
+export const formatMoney = (n: number): string => `₽ ${formatCount(n)}`
+
 /** Fracción como porcentaje entero, hacia abajo: 0.1 → "10%" */
 export const formatPercent = (fraction: number): string => `${Math.floor(fraction * 100)}%`
 
-/** Bono como porcentaje con un decimal si hace falta: 0.025 → "+2,5 %" */
+/** Bono como porcentaje con un decimal si hace falta: 0.025 → "+2,5%" */
 export const formatBonus = (fraction: number): string =>
-  `+${(fraction * 100).toLocaleString('es-ES', { maximumFractionDigits: 1 })} %`
+  `+${(fraction * 100).toLocaleString('es-ES', { maximumFractionDigits: 1 })}%`

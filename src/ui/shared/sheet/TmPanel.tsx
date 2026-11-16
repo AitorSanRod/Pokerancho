@@ -8,6 +8,7 @@ import { ConfirmDialog } from '../ConfirmDialog'
 import { ItemIcon } from '../ItemIcon'
 import { moveText } from '../moveText'
 import { MonSection } from './MonSheet'
+import './sheet-panels.css'
 
 /** Enseñar MTs: una fila por cada MT que tiene el jugador y que este Pokémon puede aprender. Sin ninguna, no se pinta */
 export function TmPanel({ game, mon }: { game: GameState; mon: OwnedMon }) {

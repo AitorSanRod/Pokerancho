@@ -1,6 +1,8 @@
 import { COLLECTION_TIERS } from '../../game/collection/typeCollection'
 import { LEVEL_MILESTONES, MILESTONE_STAT_BONUS, STAR_TYPE_BONUS, STAR_TYPE_BONUS_MAX } from '../../game/team/milestones'
 import { formatBonus } from '../shared/format'
+import '../shared/sheet/milestones.css'
+import './dex-perks.css'
 
 interface Rule {
   title: string
@@ -9,7 +11,7 @@ interface Rule {
   how: string
 }
 
-const percent = (share: number) => `${Math.round(share * 100)} %`
+const percent = (share: number) => `${Math.round(share * 100)}%`
 
 const RULES: Rule[] = [
   {

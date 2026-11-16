@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { KANTO, onlyTrainerFights, type Route } from '../../data/maps'
 import { MonPlace, monPlace, type GameState } from '../../game/core/state'
 import { expeditionRouteBlocker, expeditionSlots, expeditionsBlocker } from '../../game/team/expedition'
-import { RouteLock, RouteRow, RouteRowTitle } from '../route/RouteRow'
+import { RouteRow, RouteRowTitle } from '../route/RouteRow'
 import { ExpeditionList } from './ExpeditionList'
 import { ExpeditionStartDialog } from './ExpeditionStartDialog'
 import './expeditions.css'
@@ -30,9 +30,8 @@ export function ExpeditionScreen({ game }: { game: GameState }) {
         {KANTO.routes.filter((r) => !onlyTrainerFights(r)).map((r) => {
           const routeBlocker = expeditionRouteBlocker(game, r.id)
           return (
-            <RouteRow key={r.id} route={r} locked={!!routeBlocker} disabled={!!blocker} onClick={() => setSending(r)}>
+            <RouteRow key={r.id} route={r} lockReason={routeBlocker ?? undefined} disabled={!!blocker} onClick={() => setSending(r)}>
               <RouteRowTitle route={r} />
-              {routeBlocker && <RouteLock reason={routeBlocker} />}
             </RouteRow>
           )
         })}

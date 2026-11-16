@@ -6,7 +6,7 @@ import { ItemIcon } from '../shared/ItemIcon'
 import { RARITIES, RARITY_TITLE } from './rarityTitles'
 
 /** «0,25 %»: las probabilidades de los objetos son pequeñas y necesitan decimales */
-const percent = (chance: number) => `${(chance * 100).toLocaleString('es-ES', { maximumFractionDigits: 2 })} %`
+const percent = (chance: number) => `${(chance * 100).toLocaleString('es-ES', { maximumFractionDigits: 2 })}%`
 
 /** Probabilidad de cada rareza por ticket y de cada objeto estelar por tirada, en un desplegable cerrado bajo la máquina */
 export function GachaRates() {

@@ -1,0 +1,82 @@
+/* Mejoras (DexPerks): colección por tipo, 5 ★ e hitos */
+.foldout.dex-perks .foldout-head {
+  background: linear-gradient(135deg, var(--exp) 0%, #0f3f6e 100%);
+}
+.dex-perks-art {
+  position: absolute;
+  right: 120px;
+  opacity: 0.35;
+  transform: rotate(-12deg);
+}
+.dex-perk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+.dex-perk-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border-left: 4px solid var(--type-color);
+  background: var(--card);
+}
+.dex-perk-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dex-perk-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dex-perk-line .grow {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.dex-perk-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0;
+}
+.dex-perk-rule {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--card);
+}
+.dex-perk-rule p {
+  margin: 0;
+}
+.dex-perk-rule-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dex-perk-gives {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--hp-ok);
+  white-space: nowrap;
+}
+.dex-perk-title {
+  margin: 12px 0 0;
+}
+.dex-perk-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.dex-perk-value.on {
+  color: var(--hp-ok);
+}

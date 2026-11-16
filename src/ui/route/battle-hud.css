@@ -28,7 +28,7 @@
   border: 2px solid #2b2820;
   border-radius: 10px 4px 10px 4px;
   background: linear-gradient(#fdfcf4, #ecead9);
-  color: #1a1814;
+  color: var(--text);
   box-shadow:
     inset 0 -2px 0 #0000001a,
     0 3px 0 #0004;
@@ -92,7 +92,7 @@
   border-radius: 3px;
   background: var(--red);
   color: #fff;
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
   line-height: 14px;
 }
@@ -111,9 +111,9 @@
   font-variant-numeric: tabular-nums;
 }
 .hud-level small {
-  font-size: 9px;
+  font-size: 10px;
   margin-right: 1px;
-  color: #6e675b;
+  color: var(--muted);
 }
 
 /* Barra de PS en su marco oscuro, con la etiqueta «PS» delante */
@@ -130,9 +130,18 @@
   border-radius: 99px;
   background: var(--yellow);
   color: #6a4b00;
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 900;
-  line-height: 10px;
+  line-height: 12px;
+}
+/* PS en número (solo el tuyo) */
+.hud-hp {
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 12px;
 }
 .hud-bar .bar {
   flex: 1;
@@ -169,7 +178,7 @@
   animation: status-in 0.35s ease-out;
 }
 .hud-status.down {
-  background: #6e675b;
+  background: var(--muted);
 }
 
 @keyframes hud-struck {

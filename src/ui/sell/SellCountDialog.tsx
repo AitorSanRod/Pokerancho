@@ -4,6 +4,7 @@ import { act } from '../../store/store'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { useCorrectionGuard } from '../trade/correctionGuard'
 import { CountInput } from '../trade/CountInput'
+import { formatMoney } from '../shared/format'
 
 /** Una venta por cantidad (tickets de una especie o trozos) */
 export interface CountSale {
@@ -25,7 +26,7 @@ export function SellCountDialog({ sale, onClose }: { sale: CountSale; onClose: (
   return (
     <ConfirmDialog
       title={`Vender ${sale.name}`}
-      confirmLabel={`Vender por ₽ ${(count * sale.price).toLocaleString('es-ES')}`}
+      confirmLabel={`Vender por ${formatMoney(count * sale.price)}`}
       onConfirm={correction.guard(() => (act((s) => sale.sell(s, count)), onClose()))}
       confirmDisabled={invalid}
       onCancel={onClose}

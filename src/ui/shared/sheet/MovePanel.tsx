@@ -5,6 +5,7 @@ import { BOX_SLOTS, boxedMons, moveBlocker, moveMon, ranchCapacity, ranchCount, 
 import { ICON } from '../icons'
 import { ItemIcon } from '../ItemIcon'
 import { MonSection } from './MonSheet'
+import './sheet-panels.css'
 
 /** Botones para llevar el Pokémon a otro rancho o a la Caja (o sacarlo de ella); los imposibles salen desactivados */
 export function MovePanel({ game, mon, onMoved }: { game: GameState; mon: OwnedMon; onMoved?: () => void }) {

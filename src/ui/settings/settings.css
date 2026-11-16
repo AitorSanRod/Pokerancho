@@ -5,7 +5,7 @@
   position: absolute;
   top: 8px;
   right: 8px;
-  z-index: 100;
+  z-index: var(--z-controls);
   width: 44px;
   height: 44px;
   border: none;
@@ -17,7 +17,7 @@
 .settings-backdrop {
   position: absolute;
   inset: 0;
-  z-index: 150;
+  z-index: var(--z-popover);
 }
 .settings-menu {
   position: absolute;

@@ -55,7 +55,7 @@
   font-weight: 800;
 }
 .ranking-rank.gold {
-  background: #f7d02c;
+  background: var(--yellow);
 }
 .ranking-rank.silver {
   background: #c9ccd1;

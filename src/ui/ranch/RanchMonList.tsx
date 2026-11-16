@@ -25,7 +25,7 @@ export function RanchMonList({ game, ranch }: { game: GameState; ranch: number }
                   <TypeBadge key={t} type={t} />
                 ))}
               </span>
-              <strong className="ranch-mon-weight" title="Lo que suma a cada uno de sus tipos para las pasivas">
+              <strong className="ranch-mon-weight" aria-label={`Suma ${passiveWeightOf(m.speciesId)} a las pasivas de sus tipos`}>
                 +{passiveWeightOf(m.speciesId)}
               </strong>
             </li>

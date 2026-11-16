@@ -6,6 +6,8 @@ import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { DexPerkRow } from './DexPerkRow'
 import { DexPerkRules } from './DexPerkRules'
+import '../shared/sheet/milestones.css'
+import './dex-perks.css'
 
 /**
  * Desplegable «Mejoras» de la Pokédex: arriba, las tres mejoras explicadas (qué dan, a quién y cómo); debajo, por cada

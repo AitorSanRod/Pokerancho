@@ -69,7 +69,7 @@ function GuestForms({ onClose }: { onClose: () => void }) {
 }
 
 const LinkButton = ({ label, onClick }: { label: string; onClick: () => void }) => (
-  <button className="account-link" type="button" onClick={onClick}>
+  <button className="link-btn" type="button" onClick={onClick}>
     {label}
   </button>
 )

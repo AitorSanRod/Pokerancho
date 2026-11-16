@@ -1,5 +1,5 @@
 import type { Route } from '../../../src/data/maps'
-import { RouteLock, RouteRow, RouteRowTitle } from '../../../src/ui/route/RouteRow'
+import { PREVIOUS_ROUTE_REASON, RouteRow, RouteRowTitle } from '../../../src/ui/route/RouteRow'
 
 /** La línea de la ruta en la lista del juego, en sus tres estados: por hacer, completada y bloqueada */
 export function RouteCards({ route }: { route: Route }) {
@@ -14,9 +14,8 @@ export function RouteCards({ route }: { route: Route }) {
           ✓
         </span>
       </RouteRow>
-      <RouteRow route={route} locked>
+      <RouteRow route={route} lockReason={PREVIOUS_ROUTE_REASON}>
         <RouteRowTitle route={route} />
-        <RouteLock />
       </RouteRow>
     </div>
   )

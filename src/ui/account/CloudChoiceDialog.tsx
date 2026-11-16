@@ -2,6 +2,7 @@ import { saveSummary, stateFromSaved, type CloudSave, type SaveSummary } from '.
 import type { GameState } from '../../game/core/state'
 import { chooseSave } from '../../net/cloudSync'
 import { AccountModal } from './AccountModal'
+import { formatMoney } from '../shared/format'
 
 const day = (ms: number) => new Date(ms).toLocaleString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
@@ -29,7 +30,7 @@ function SummaryCard({ title, summary, onPick }: { title: string; summary: SaveS
     <div className="cloud-choice-card">
       <strong>{title}</strong>
       <span className="tiny">{summary.mons} Pokémon · Nv. máx. {summary.topLevel}</span>
-      <span className="tiny">₽ {summary.money} · {summary.completedRoutes} rutas</span>
+      <span className="tiny">{formatMoney(summary.money)} · {summary.completedRoutes} rutas</span>
       <span className="tiny muted">Jugada el {day(summary.playedAt)}</span>
       <button className="btn primary small" onClick={onPick}>
         Usar esta

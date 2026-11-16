@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { DEFAULT_DEX_QUERY, DexFilter, DexSort, plainText, type DexQuery } from '../../game/collection/dexQuery'
 import { DexFilters } from './DexFilters'
+import './dex-toolbar.css'
 
 const Panel = { Search: 'search', Filters: 'filters' } as const
 type Panel = (typeof Panel)[keyof typeof Panel]

@@ -2,6 +2,7 @@ import { isFavorite, isSeen, toggleFavorite } from '../../../game/collection/dex
 import type { GameState } from '../../../game/core/state'
 import { act } from '../../../store/store'
 import { HeartIcon } from '../HeartIcon'
+import './hero-buttons.css'
 
 /** Corazón de la esquina de la cabecera: marca la especie como favorita (sus tickets no se trituran) */
 export function FavoriteButton({ game, speciesId }: { game: GameState; speciesId: number }) {

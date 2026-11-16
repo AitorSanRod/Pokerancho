@@ -44,7 +44,7 @@
 .capture-dim {
   position: fixed;
   inset: 0;
-  z-index: 40;
+  z-index: var(--z-float);
   pointer-events: none;
   background: rgb(10 8 6 / 0.78);
   opacity: 0;
@@ -53,7 +53,7 @@
 /* La Pokéball y el aviso quedan por encima de la penumbra */
 .capture-ball,
 .capture-hint {
-  z-index: 41;
+  z-index: calc(var(--z-float) + 1);
 }
 .capture-hint {
   position: relative;

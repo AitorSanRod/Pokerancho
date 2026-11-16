@@ -11,6 +11,7 @@ import { tradeOp } from '../../net/tradeApi'
 import { refreshTradeBoard } from '../../net/tradeBoard'
 import { giftRewards, raidPrizeRewards, serverGiftRewards } from '../shared/rewardItems'
 import { RewardOverlay, type RewardItem } from '../shared/RewardOverlay'
+import { formatMoney } from '../shared/format'
 
 // Recoger lo de Notificaciones: el obsequio diario, cada regalo del servidor, cada premio de raid, cada cosa de los
 // intercambios o todo a la vez. Obsequio, regalos y premios se enseñan en la pantalla de premios; lo de los intercambios, en un aviso de texto.
@@ -26,7 +27,7 @@ async function claimTrade(entry: InboxEntry): Promise<string> {
   if ('error' in outcome) return outcome.error
   const refund = outcome.result.duplicate
   if (!refund) return `Recogido: ${goodText(entry.good)}.`
-  return `Ya tenías a ${species(refund.speciesId).name}: recibes ${refund.pieces} tickets suyos y ${refund.money.toLocaleString('es-ES')} ₽.`
+  return `Ya tenías a ${species(refund.speciesId).name}: recibes ${refund.pieces} tickets suyos y ${formatMoney(refund.money)}.`
 }
 
 export function useInboxCollect() {

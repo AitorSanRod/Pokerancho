@@ -42,7 +42,7 @@
 .ranch-sheet-backdrop {
   position: absolute;
   inset: 0;
-  z-index: 200;
+  z-index: var(--z-sheet);
   display: flex;
   align-items: flex-end;
   background: #0006;
@@ -61,6 +61,15 @@
   background: var(--bg);
   box-shadow: 0 -6px 20px #0004;
   animation: sheet-up 0.25s ease-out;
+}
+/* Botón de cerrar del panel (RanchSheet): siempre a la vista abajo, aunque el contenido sea largo */
+.ranch-sheet-footer {
+  position: sticky;
+  bottom: -12px;
+  margin: auto -12px -12px;
+  padding: 8px 12px 12px;
+  background: var(--bg);
+  box-shadow: 0 -8px 10px -8px #0003;
 }
 .ranch-empty {
   position: absolute;
