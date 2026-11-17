@@ -10,6 +10,7 @@
 import { mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import puppeteer from 'puppeteer-core'
+import { buildDemoBoard } from './demoBoard.mjs'
 import { buildDemoSave } from './demoSave.mjs'
 import { SHOTS } from './shots.mjs'
 
@@ -35,7 +36,9 @@ for (const shot of SHOTS.filter((s) => s.name.startsWith(filter))) {
   await page.setViewport(VIEWPORT)
   if (shot.hold) await holdRequests(page, shot.hold)
   await page.goto(APP_URL)
-  const save = await page.evaluate(buildDemoSave, shot.scenario ?? {})
+  const demo = shot.respond ? await page.evaluate(buildDemoBoard, shot.respond) : null
+  if (demo) await answerSchedules(page, demo)
+  const save = await page.evaluate(buildDemoSave, { ...shot.scenario, checkinStart: shot.respond === 'room' ? demo.start : undefined })
   // El anuncio más nuevo del tablón, ya visto: si no, su ventana taparía la captura
   const announcement = await page.evaluate(async () => (await import('/src/data/announcements.ts')).LATEST_ANNOUNCEMENT?.id ?? null)
   await page.evaluateOnNewDocument(
@@ -72,6 +75,19 @@ async function holdRequests(page, path) {
   await page.setRequestInterception(true)
   page.on('request', (request) => {
     if (!request.url().includes(path)) void request.continue()
+  })
+}
+
+/**
+ * Responde a las peticiones de incursiones programadas con las de muestra (demoBoard.mjs): sin servidor, la pestaña de
+ * Incursiones solo enseñaría «Jugar ya»
+ */
+async function answerSchedules(page, demo) {
+  await page.setRequestInterception(true)
+  page.on('request', (request) => {
+    if (!request.url().includes('/api/incursion-schedule')) return void request.continue()
+    const body = JSON.parse(request.postData() ?? '{}')
+    void request.respond({ status: 200, contentType: 'application/json', body: JSON.stringify(body.action === 'board' ? demo.board : demo.other) })
   })
 }
 

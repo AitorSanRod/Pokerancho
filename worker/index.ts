@@ -6,6 +6,7 @@ import type { Env } from './env'
 import { errorReportRoute } from './errorReport'
 import { json } from './http'
 import { incursionRoute } from './incursion'
+import { incursionScheduleRoute } from './incursionSchedule'
 import { raidRoute } from './raid'
 import { rankingRoute } from './ranking'
 import { saveRoute } from './save'
@@ -23,6 +24,7 @@ export default {
     const { pathname } = new URL(request.url)
     if (pathname === '/api/raid') return raidRoute(request, env)
     if (pathname === '/api/incursion') return incursionRoute(request, env)
+    if (pathname === '/api/incursion-schedule') return incursionScheduleRoute(request, env)
     if (pathname === '/api/save') return saveRoute(request, env)
     if (pathname === '/api/gift') return giftRoute(request, env)
     if (pathname === '/api/server-gifts') return serverGiftsRoute(request, env)

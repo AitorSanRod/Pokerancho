@@ -1,10 +1,11 @@
 import { MAX_KEYS } from '../../../data/incursions'
 import { REGROUP_MS } from '../../../game/incursion/activeIncursion'
-import { QUEUE_MAX_MS } from '../../../game/incursion/online/protocol'
+import { BOND_FRACTION, CHECKIN_OPEN_MS } from '../../../game/incursion/schedule/scheduleRules'
 import { PARTY_SIZE } from '../../../game/incursion/party'
 import { INCURSION_REVIVES } from '../../../game/incursion/revives'
 import { DEFAULT_TAP_BONUS, DEFAULT_TAP_GOAL } from '../../../data/incursionMoves'
 import { TAP_WINDOW_MS } from '../../../game/incursion/tapWindow'
+import { formatMinutes, formatPercent } from '../../shared/format'
 import { ICON } from '../../shared/icons'
 import { shot, type Guide } from './guide'
 
@@ -24,7 +25,7 @@ export const INCURSION_GUIDE: Guide = {
     {
       image: shot('inc-keys'),
       title: 'Compra una llave',
-      text: `Cada incursión pide su llave. Se compran en la Tienda, en «Llaves de incursión», y puedes tener hasta ${MAX_KEYS} de cada una. Se gasta una cuando se forma el grupo.`,
+      text: `Cada incursión pide su llave. Se compran en la Tienda, en «Llaves de incursión», y puedes tener hasta ${MAX_KEYS} de cada una. Se gasta una cuando empieza la incursión.`,
     },
     {
       image: shot('inc-info'),
@@ -32,14 +33,19 @@ export const INCURSION_GUIDE: Guide = {
       text: 'Este botón lo explica todo: nivel, pasivas de grupo, revivires, retirada y premios. Échale un vistazo la primera vez.',
     },
     {
-      image: shot('inc-prep'),
-      title: 'Prepara a tu Pokémon',
-      text: 'Elige un Pokémon del rancho con el nivel de la incursión y un movimiento de su repertorio. Ese movimiento decide su papel en el grupo: golpear, curar, provocar para llevarse los golpes, subir stats (al grupo o a sí mismo), bajarlas a los rivales o poner estados.',
+      image: shot('inc-board'),
+      title: 'Apúntate en el tablón',
+      text: `Con otros entrenadores se juega a una hora fija. En el Tablón están las incursiones que han programado, con sus huecos y sus premios. Al aceptar una se retiene una fianza (el ${formatPercent(BOND_FRACTION)} de tu dinero) que recuperas al presentarte. Las tuyas, en «Mis incursiones».`,
     },
     {
-      image: shot('inc-queue'),
-      title: 'Busca grupo',
-      text: `Se busca a otros entrenadores durante ${seconds(QUEUE_MAX_MS)}; si no llegáis a ${PARTY_SIZE}, el grupo se completa con bots. Si cancelas antes, no pierdes la llave.`,
+      image: shot('inc-schedule'),
+      title: 'O prográmala tú',
+      text: 'En «Programar», elige la incursión, el día y la hora. Ocupas el primer hueco (con tu fianza) y se avisa a quien tenga activadas las notificaciones de incursiones. Hasta una hora antes de abrir la sala, quien se apunta puede darse de baja y recuperar su fianza.',
+    },
+    {
+      image: shot('inc-room'),
+      title: 'Haz el checkin',
+      text: `La sala abre ${formatMinutes(CHECKIN_OPEN_MS / 60_000)} antes. Al entrar recuperas la fianza y se marca tu primer Pokémon disponible: puedes cambiarlo, y su ataque, hasta la hora, o «Fijar» para no tocarlo más. Hace falta la llave. A la hora empieza con quien esté; los huecos libres, con bots, y la fianza de los que no vinieron se reparte entre los que sí.`,
     },
     {
       image: shot('inc-battle'),

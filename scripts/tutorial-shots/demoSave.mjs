@@ -81,10 +81,14 @@ export async function buildDemoSave(scenario) {
     s.raidPrizes.push({ bossSpeciesId: P.Snorlax, uid: uidOf(P.Pikachu), money: 1500, tickets: 2, pieces: 1, exp: 250 })
   }
   s.incursionKeys.prueba = 2
-  if (scenario.incursionQueue) {
+  // En la sala del checkin de la incursión programada de muestra (demoBoard.mjs), con la llave y la fianza ya devuelta
+  if (scenario.checkinStart) {
     const { repertoire } = await import('/src/game/incursion/repertoire.ts')
+    const incursionId = 'bosque-verde'
     const uid = uidOf(P.Charmander)
-    s.incursionQueue = { incursionId: 'prueba', uid, moveId: repertoire(P.Charmander, 16)[0].id, since: Date.now() - 12_000 }
+    s.incursionKeys[incursionId] = 1
+    s.incursionBonds = [{ scheduleId: 'a1b2c3d4', incursionId, startAt: scenario.checkinStart, amount: 1250, refunded: true }]
+    s.incursionCheckin = { scheduleId: 'a1b2c3d4', incursionId, startAt: scenario.checkinStart, uid, moveId: repertoire(P.Charmander, 16)[0].id, locked: false }
   }
   if (scenario.incursion) await setUpIncursion(s, uidOf(P.Charmander), scenario.incursion)
   s.lastTick = Date.now()

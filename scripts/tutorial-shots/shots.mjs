@@ -77,15 +77,18 @@ export const SHOTS = [
     focus: '.shop-fold-keys .shop-grid',
   },
   { name: 'inc-info', steps: (p) => toRouteTab(p, 'Incursiones'), focus: '::-p-text(Cómo funcionan las incursiones)' },
+  { name: 'inc-board', respond: 'board', steps: (p) => toRouteTab(p, 'Incursiones'), focus: '.schedule-card' },
   {
-    name: 'inc-prep',
+    name: 'inc-schedule',
+    respond: 'board',
     steps: async (p) => {
       await toRouteTab(p, 'Incursiones')
-      await tap(p, '.btn.go', 900)
+      await tap(p, '::-p-aria(Programar)')
+      await tap(p, '.incursion-card .btn.go::-p-text(Programar)', 900)
     },
-    focus: '.incursion-moves',
+    focus: '.schedule-dialog',
   },
-  { name: 'inc-queue', scenario: { incursionQueue: true }, hold: '/api/incursion', steps: (p) => toRouteTab(p, 'Incursiones'), focus: '.incursion-queue-count' },
+  { name: 'inc-room', respond: 'room', steps: (p) => toRouteTab(p, 'Incursiones', 1200), focus: '.schedule-room-you' },
   { name: 'inc-tap', scenario: { incursion: 'tap' }, steps: (p) => toRouteTab(p, 'Incursiones', 1200), focus: '.incursion-tap-pad' },
   { name: 'inc-battle', scenario: { incursion: 'battle' }, steps: (p) => toRouteTab(p, 'Incursiones', 1500), focus: '.incursion-revives' },
   { name: 'inc-regroup', scenario: { incursion: 'regroup' }, steps: (p) => toRouteTab(p, 'Incursiones', 1500), focus: '.incursion-regroup' },

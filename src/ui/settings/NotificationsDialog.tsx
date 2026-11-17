@@ -9,6 +9,7 @@ const TOPIC_TEXT: Record<PushTopic, { title: string; detail: string }> = {
   [PushTopic.Gift]: { title: 'Obsequio diario listo', detail: 'Cuando vuelve a poderse recoger (con cuenta)' },
   [PushTopic.Raid]: { title: 'Jefes de Raids', detail: 'Cuando cae un jefe contigo dentro, se escapa o aparece el siguiente' },
   [PushTopic.Trade]: { title: 'Intercambios', detail: 'Cuando alguien acepta tu anuncio o se resuelve una retirada (con cuenta)' },
+  [PushTopic.Incursion]: { title: 'Incursiones programadas', detail: 'Cuando alguien programa una, cuando abre la sala de las tuyas o si se cancela' },
 }
 
 const STATUS_TEXT: Partial<Record<PushStatus, string>> = {

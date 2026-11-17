@@ -1,10 +1,11 @@
 import { giftAt, giftAvailableAt, giftIndex, type DailyGiftState } from '../../src/game/collection/dailyGift'
 import { PushTopic } from '../../src/game/core/push'
+import type { SchedulePush } from '../../src/game/incursion/schedule/schedulePushes'
 import type { RaidPush } from '../../src/game/raid/online/raidPushes'
-import { enqueue } from './store'
+import { cancelJobs, enqueue } from './store'
 
-// Programar los avisos que decide el servidor: los de las raids (al ver qué ha pasado en las salas), el del obsequio
-// y los de los intercambios
+// Programar los avisos que decide el servidor: los de las raids (al ver qué ha pasado en las salas), el del obsequio,
+// los de los intercambios y los de las incursiones programadas
 
 /** Programa los avisos de las raids; al jugador que ha hecho la petición no se le avisa (tiene la app delante) */
 export async function notifyRaid(db: D1Database, pushes: RaidPush[], exceptPlayerId: string | null = null) {
@@ -26,3 +27,11 @@ export async function notifyNextGift(db: D1Database, userId: string, state: Dail
 export async function notifyTrade(db: D1Database, userId: string, key: string, title: string, body: string, now: number) {
   await enqueue(db, { userId }, { topic: PushTopic.Trade, key, dueAt: now, title, body })
 }
+
+/** Programa los avisos de las incursiones programadas */
+export async function notifySchedule(db: D1Database, pushes: SchedulePush[]) {
+  for (const p of pushes) await enqueue(db, p.to, p.job, p.except)
+}
+
+/** Quita un aviso de incursión programada aún sin mandar (baja o cancelación) */
+export const unnotifySchedule = (db: D1Database, playerIds: string[], key: string) => cancelJobs(db, playerIds, PushTopic.Incursion, key)

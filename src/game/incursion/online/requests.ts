@@ -8,11 +8,12 @@ import { canEnter } from '../entry'
 import type { MemberState } from '../fighter'
 import { freshMember } from '../party'
 import { mayKnow } from '../tms'
-import { IncursionAction, type IncursionRequest } from './protocol'
+import { IncursionAction, type GroupRequest } from './protocol'
 
-// Lo que llega al servidor de incursiones viene de cualquiera: se comprueba todo y se descarta lo que no encaje.
+// Lo que llega al servidor de incursiones viene de cualquiera: se comprueba todo y se descarta lo que no encaje. Las
+// piezas comunes (jugador, Pokémon) las usan también las incursiones programadas (schedule/scheduleRequests.ts).
 
-const PLAYER_ID = /^[A-Za-z0-9-]{8,64}$/
+export const PLAYER_ID = /^[A-Za-z0-9-]{8,64}$/
 const MON_UID = /^[A-Za-z0-9_-]{1,32}$/
 export const GROUP_ID = /^[a-f0-9]{8,32}$/
 const MOVE_ID = /^[a-z0-9-]{1,40}$/
@@ -23,13 +24,13 @@ const MAX_TURNS = 5000
 
 type Json = Record<string, unknown>
 
-const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v)
-const isInt = (v: unknown, min: number, max: number): v is number => Number.isInteger(v) && (v as number) >= min && (v as number) <= max
-const matches = (v: unknown, re: RegExp): v is string => typeof v === 'string' && re.test(v)
-const isIncursion = (v: unknown): v is IncursionId => INCURSIONS.some((i) => i.id === v)
+export const isObject = (v: unknown): v is Json => typeof v === 'object' && v !== null && !Array.isArray(v)
+export const isInt = (v: unknown, min: number, max: number): v is number => Number.isInteger(v) && (v as number) >= min && (v as number) <= max
+export const matches = (v: unknown, re: RegExp): v is string => typeof v === 'string' && re.test(v)
+export const isIncursion = (v: unknown): v is IncursionId => INCURSIONS.some((i) => i.id === v)
 
 /** El Pokémon con el que se entra: que exista, tenga el nivel de la incursión, conozca el movimiento y no esté debilitado */
-function parseMember(incursionId: IncursionId, v: unknown): MemberState | null {
+export function parseMember(incursionId: IncursionId, v: unknown): MemberState | null {
   if (!isObject(v) || !matches(v.id, MON_UID) || !isKnownSpecies(v.speciesId) || !matches(v.moveId, MOVE_ID)) return null
   const inc = INCURSIONS.find((i) => i.id === incursionId)!
   if (!isInt(v.level, 1, inc.maxLevel) || !canEnter(inc, v.level) || !isInt(v.stars, 0, MAX_STARS)) return null
@@ -43,15 +44,9 @@ function parseMember(incursionId: IncursionId, v: unknown): MemberState | null {
 }
 
 /** La petición si es válida; null si falta o sobra algo */
-export function parseIncursionRequest(body: unknown): IncursionRequest | null {
+export function parseIncursionRequest(body: unknown): GroupRequest | null {
   if (!isObject(body) || !matches(body.playerId, PLAYER_ID)) return null
   const who = { playerId: body.playerId, nickname: cleanNickname(body.nickname) }
-  if (body.action === IncursionAction.Leave) return { action: IncursionAction.Leave, ...who }
-  if (body.action === IncursionAction.Queue) {
-    if (!isIncursion(body.incursionId)) return null
-    const member = parseMember(body.incursionId, body.member)
-    return member && { action: IncursionAction.Queue, ...who, incursionId: body.incursionId, member }
-  }
   if (!matches(body.groupId, GROUP_ID)) return null
   const group = { ...who, groupId: body.groupId }
   if (body.action === IncursionAction.Sync) return { action: IncursionAction.Sync, ...group }

@@ -8,6 +8,7 @@ import { baseSpeciesOf, isKnownSpecies, SPECIES } from '../../data/species'
 import { isStarItem, STAR_ITEMS } from '../../data/starItems'
 import { Stone } from '../../data/stones'
 import { isTm } from '../../data/tms'
+import { refundLostBonds, salvageBonds } from '../incursion/schedule/scheduleSalvage'
 import { ExpeditionFocus } from '../team/expeditionFocus'
 import { repairExpeditions } from '../team/expeditionSalvage'
 import { legacyTrainerWho } from '../run/runTrainer'
@@ -97,10 +98,10 @@ function refundIncursionKey(save: Save) {
 
 /**
  * Lo que estaba a medias: sigue solo si su forma no ha cambiado (progressCarry.ts). Si no, la ruta se pierde (lo ganado
- * en ella ya se sumó al ganarlo), igual que la sala de raid y la incursión en curso (se devuelve su llave) o en cola, y
- * el Pokémon vuelve al rancho. El multiplicador de tiempo (solo de desarrollo) vuelve siempre a x1
+ * en ella ya se sumó al ganarlo), igual que la sala de raid, la incursión en curso (se devuelve su llave) y el checkin
+ * de una incursión programada, y el Pokémon vuelve al rancho. El multiplicador de tiempo (solo de desarrollo) vuelve siempre a x1
  */
-const IN_PROGRESS: (keyof GameState)[] = ['run', 'raids', 'incursion', 'incursionQueue', 'tower', 'timeScale']
+const IN_PROGRESS: (keyof GameState)[] = ['run', 'raids', 'incursion', 'incursionCheckin', 'tower', 'timeScale']
 /** Ranchos que puede llegar a tener el jugador: el primero más todos los de la tienda */
 const MAX_RANCHES = 1 + UPGRADES.ranches.prices.length
 
@@ -179,6 +180,7 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   gachaPity: (v) => countsOf(v, (k) => isStarItem(k) && STAR_ITEMS[k].pity !== null),
   incursionKeys: (v) => countsOf(v, isIncursionId, MAX_KEYS),
   freeIncursionsPlayed: (v) => listOf(v, isIncursionId),
+  incursionBonds: (v) => salvageBonds(v),
   tutorial: (v) => (v === null || (Object.values(TutorialStep) as unknown[]).includes(v) ? v : undefined),
   unlockedRoutes: (v) => listOf(v, isRoute),
   completedRoutes: (v) => listOf(v, isRoute),
@@ -222,6 +224,7 @@ export function migrateSave(saved: unknown): GameState | null {
   for (let v = save.version as number; v < SAVE_VERSION; v++) SAVE_MIGRATIONS[v]?.(save)
   const carried = carriedProgress(save, saved.version)
   if (!carried.incursion) refundIncursionKey(save)
+  refundLostBonds(save)
   const s = initialState()
   const fields = s as unknown as Save
   for (const key of Object.keys(s) as (keyof GameState)[]) {

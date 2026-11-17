@@ -3,11 +3,12 @@ import { POKEMON } from '../../../data/pokemon'
 import { seqRng } from '../../core/test-utils'
 import { initialState, MonPlace, monPlace, type GameState } from '../../core/state'
 import { createMon } from '../../team/mons'
-import { advanceIncursion } from '../incursionGame'
+import { advanceIncursion, incursionBlocker } from '../incursionGame'
 import { TEST_INCURSION } from '../incursion-test-mock'
 import { keysOf } from '../keys'
 import { repertoire } from '../repertoire'
-import { applyGroupView, dropGroup, enterQueue, leaveQueue, playQueueLocally, queueRequest } from './linkedIncursion'
+import { checkinMember } from '../schedule/scheduleCheckin'
+import { applyGroupView, dropGroup } from './linkedIncursion'
 import { formGroup, groupView } from './sharedIncursion'
 
 vi.mock('../../../data/incursions', () => import('../incursion-test-mock'))
@@ -26,55 +27,45 @@ beforeEach(() => {
   uid = mon.uid
   move = repertoire(mon.speciesId, mon.level)[0].id
   s.incursionKeys[ID] = 1
+  s.incursionCheckin = { scheduleId: 'abcdef12', incursionId: ID, startAt: NOW, uid, moveId: move, locked: false }
 })
 
 /** Lo que diría el servidor de un grupo con este jugador dentro */
 function serverView() {
-  const member = queueRequest(s)!.member
-  const g = formGroup('abcdef12', ID, [{ playerId: 'yo-mismo', nickname: 'Yo', member, joinedAt: SERVER_NOW }], SERVER_NOW, seqRng(0.5))
+  const member = checkinMember(s)!
+  const g = formGroup('abcdef12', ID, [{ playerId: 'yo-mismo', nickname: 'Yo', member }], SERVER_NOW, seqRng(0.5))
   return groupView(g, 'yo-mismo', SERVER_NOW)!
 }
 
 describe('incursión con servidor', () => {
-  it('al buscar grupo el Pokémon queda apartado, pero la llave no se gasta', () => {
-    enterQueue(s, ID, uid, move, NOW)
+  it('con el checkin hecho el Pokémon queda apartado, pero la llave no se gasta', () => {
     expect(monPlace(s, uid)).toBe(MonPlace.Incursion)
     expect(keysOf(s, ID)).toBe(1)
-    expect(queueRequest(s)?.member).toMatchObject({ id: uid, moveId: move })
+    expect(checkinMember(s)).toMatchObject({ id: uid, moveId: move })
+    expect(incursionBlocker(s, ID, uid, move)).not.toBeNull()
   })
 
-  it('al formarse el grupo gasta la llave, entra y pasa las horas al reloj del móvil', () => {
-    enterQueue(s, ID, uid, move, NOW)
+  it('al empezar gasta la llave, entra y pasa las horas al reloj del móvil', () => {
     expect(applyGroupView(s, serverView(), NOW)).toBe(true)
     expect(keysOf(s, ID)).toBe(0)
-    expect(s.incursionQueue).toBeNull()
+    expect(s.incursionCheckin).toBeNull()
     expect(s.incursion?.legStarts).toEqual([NOW])
     expect(s.incursion?.online?.groupId).toBe('abcdef12')
   })
 
   it('no hace caso de un grupo que no es el suyo', () => {
-    enterQueue(s, ID, uid, move, NOW)
     const view = serverView()
-    leaveQueue(s)
+    s.incursionCheckin = null
     expect(applyGroupView(s, view, NOW)).toBe(false)
     expect(s.incursion).toBeNull()
   })
 
   it('con grupo, los tramos los decide el servidor; si lo olvida, sigue en local', () => {
-    enterQueue(s, ID, uid, move, NOW)
     applyGroupView(s, serverView(), NOW)
     advanceIncursion(s, NOW + 60 * 60 * 1000)
     expect(s.incursion?.orders).toHaveLength(1)
     dropGroup(s, 'abcdef12')
     advanceIncursion(s, NOW + 60 * 60 * 1000)
     expect(s.incursion?.orders.length).toBeGreaterThan(1)
-  })
-
-  it('sin servidor, la cola se juega en local con bots', () => {
-    enterQueue(s, ID, uid, move, NOW)
-    playQueueLocally(s, NOW)
-    expect(s.incursionQueue).toBeNull()
-    expect(s.incursion?.online).toBeNull()
-    expect(keysOf(s, ID)).toBe(0)
   })
 })

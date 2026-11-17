@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { activeMon, type GameState } from '../../game/core/state'
 import { isExpeditionDone } from '../../game/team/expedition'
 import { ExpeditionScreen } from '../expeditions/ExpeditionScreen'
@@ -7,6 +7,7 @@ import { RaidScreen } from '../raid/RaidScreen'
 import { TowerScreen } from '../tower/TowerScreen'
 import { IconTabs } from '../shared/IconTabs'
 import { ICON } from '../shared/icons'
+import { incursionSpotPending, listenIncursionRequests } from '../shared/navigation'
 import { pendingKey, useUnseen } from '../shared/useUnseen'
 import { RouteMap } from './RouteMap'
 import { RunView } from './RunView'
@@ -17,7 +18,8 @@ type RouteTab = 'route' | 'expeditions' | 'raid' | 'incursion' | 'tower'
 
 /** Pestaña Ruta: la ruta del Pokémon activo (mapa o ruta en curso), las expediciones del resto, el jefe comunitario, las incursiones y la torre */
 export function RouteScreen({ game }: { game: GameState }) {
-  const [tab, setTab] = useState<RouteTab>('route')
+  const [tab, setTab] = useState<RouteTab>(() => (incursionSpotPending() ? 'incursion' : 'route'))
+  useEffect(() => listenIncursionRequests(() => setTab('incursion')), [])
   const mon = activeMon(game)
   const returned = game.expeditions.filter(isExpeditionDone)
   const prizes = game.raidPrizes

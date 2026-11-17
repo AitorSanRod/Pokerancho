@@ -1,3 +1,4 @@
+import { pushGoOf } from '../../src/game/incursion/schedule/schedulePushes'
 import type { Env } from '../env'
 import { deleteJob, deleteSubscriber, dueJobs } from './store'
 import { parseVapidKey, sendPush } from './webPush'
@@ -19,7 +20,7 @@ export async function sendDuePushes(env: Env, now: number) {
   const vapid = parseVapidKey(env.VAPID_KEY)
   if (!vapid) return
   for (const job of await dueJobs(env.DB, now, SENDS_PER_RUN)) {
-    const payload = JSON.stringify({ title: job.title, body: job.body, tag: `${job.topic}:${job.key}` })
+    const payload = JSON.stringify({ title: job.title, body: job.body, tag: `${job.topic}:${job.key}`, go: pushGoOf(job.topic, job.key) })
     const status = await sendPush(job.target, payload, vapid, subjectOf(env), now).catch(() => 0)
     if (GONE.includes(status)) await deleteSubscriber(env.DB, job.target.endpoint)
     else if ((status >= 200 && status < 300) || now - job.dueAt > RETRY_FOR_MS) await deleteJob(env.DB, job)

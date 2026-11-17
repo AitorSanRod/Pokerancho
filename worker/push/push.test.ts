@@ -5,7 +5,10 @@ import { toBase64Url } from '../base64url'
 import worker from '../index'
 import { MailKind, sendMail } from '../mail'
 import { testWorker } from '../test/api'
+import { ScheduleAction } from '../../src/game/incursion/schedule/scheduleProtocol'
+import { call, create, NOW } from '../test/schedules'
 
+vi.mock('../../src/data/incursions', () => import('../../src/game/incursion/incursion-test-mock'))
 vi.mock('../mail', async (original) => ({ ...(await original<typeof import('../mail')>()), sendMail: vi.fn() }))
 
 const ENDPOINT = 'https://push.example.com/send/abc123'
@@ -68,6 +71,22 @@ describe('notificaciones push', () => {
     await api.call('/api/push/jobs', { body: { endpoint: ENDPOINT, jobs: [job(Date.now())] } })
     await tick()
     expect(pushService).not.toHaveBeenCalled()
+  })
+
+  it('una incursión programada avisa a los suscritos y la baja quita el aviso de la sala', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(NOW)
+    const { api, subscribe, tick } = await pushWorker()
+    await subscribe([PushTopic.Incursion])
+    const id = (await create(api)).data.schedule.id
+    await tick()
+    expect(pushService).toHaveBeenCalledTimes(1)
+    const me = { playerId: PLAYER, nickname: 'Yo', scheduleId: id }
+    await call(api, { action: ScheduleAction.Join, ...me, bond: 0 })
+    const pending = () => api.env.DB.prepare('SELECT COUNT(*) AS n FROM push_jobs').first<number>('n')
+    expect(await pending()).toBe(1)
+    await call(api, { action: ScheduleAction.Leave, ...me })
+    expect(await pending()).toBe(0)
   })
 
   it('si el navegador ya no tiene la suscripción, se borra', async () => {

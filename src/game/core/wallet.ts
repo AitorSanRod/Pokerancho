@@ -7,3 +7,15 @@ export function spendMoney(s: GameState, amount: number) {
   s.money -= amount
   advanceMission(s, MissionKind.SpendMoney, amount)
 }
+
+/** Retiene `amount` ₽ (una fianza; como mucho, lo que tenga): sale del dinero, pero no cuenta como gastado para las misiones. Devuelve lo retenido */
+export function holdMoney(s: GameState, amount: number): number {
+  const held = Math.max(0, Math.min(amount, s.money))
+  s.money -= held
+  return held
+}
+
+/** Devuelve ₽ retenidos (o los de un reparto de fianzas) */
+export function releaseMoney(s: GameState, amount: number) {
+  s.money += amount
+}

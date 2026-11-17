@@ -9,8 +9,7 @@ import { TAP_WINDOW_MS } from '../tapWindow'
 import { PARTY_SIZE, freshMember } from '../party'
 import { repertoire } from '../repertoire'
 import { votesNeeded } from '../retreatVote'
-import { QUEUE_MAX_MS } from './protocol'
-import { advanceShared, chooseShared, formGroup, groupView, pickGroup, pickShared, readyShared, TAP_CLOSE_DELAY_MS, tapShared, voteShared, type Queued } from './sharedIncursion'
+import { advanceShared, chooseShared, formGroup, groupView, pickShared, readyShared, TAP_CLOSE_DELAY_MS, tapShared, voteShared, type GroupPlayer } from './sharedIncursion'
 
 vi.mock('../../../data/incursions', () => import('../incursion-test-mock'))
 
@@ -18,13 +17,12 @@ const NOW = 1_000_000
 const LEVEL = 20
 const MOVES = repertoire(POKEMON.Snorlax, LEVEL)
 
-const queued = (n: number, joinedAt = NOW): Queued => ({
+const player = (n: number): GroupPlayer => ({
   playerId: `jugador-${n}`,
   nickname: `J${n}`,
   member: freshMember({ id: `mon${n}`, speciesId: POKEMON.Snorlax, level: LEVEL, stars: 0, moveId: MOVES[0].id }),
-  joinedAt,
 })
-const group = (players = 2) => formGroup('abcdef12', TEST_INCURSION.id, Array.from({ length: players }, (_, i) => queued(i)), NOW, seqRng(0.5))
+const group = (players = 2) => formGroup('abcdef12', TEST_INCURSION.id, Array.from({ length: players }, (_, i) => player(i)), NOW, seqRng(0.5))
 /** Cierra sin toques las ventanas del primer tramo y dice cuándo acaba (llega la sala de reorganizar) */
 function regroupAt(g: ReturnType<typeof group>): number {
   for (;;) {
@@ -41,28 +39,16 @@ function windowEndAt(g: ReturnType<typeof group>): number {
   return g.legStarts[0] + eventStartMs(played, played.events.length - 1) + TAP_WINDOW_MS
 }
 
-describe('cola de incursión', () => {
-  it('con cinco esperando se forma el grupo con los cinco primeros', () => {
-    const waiting = Array.from({ length: PARTY_SIZE + 1 }, (_, i) => queued(i))
-    expect(pickGroup(waiting, NOW)?.map((q) => q.playerId)).toEqual(waiting.slice(0, PARTY_SIZE).map((q) => q.playerId))
-  })
-
-  it('con menos, espera hasta que el primero lleva el tiempo máximo', () => {
-    const waiting = [queued(0), queued(1)]
-    expect(pickGroup(waiting, NOW + QUEUE_MAX_MS - 1)).toBeNull()
-    expect(pickGroup(waiting, NOW + QUEUE_MAX_MS)).toHaveLength(2)
-  })
-
-  it('un Pokémon repetido no entra dos veces en el mismo grupo', () => {
-    const twin = { ...queued(1), member: queued(0).member }
-    expect(pickGroup([queued(0), twin], NOW + QUEUE_MAX_MS)).toHaveLength(1)
-  })
-
+describe('formar el grupo', () => {
   it('el grupo se completa con bots y cada jugador tiene su sitio', () => {
     const g = group(2)
     expect(g.members).toHaveLength(PARTY_SIZE)
     expect(groupView(g, 'jugador-1', NOW)?.you).toBe('mon1')
     expect(groupView(g, 'otro', NOW)).toBeNull()
+  })
+
+  it('el primer tramo empieza a la hora indicada', () => {
+    expect(group(1).legStarts).toEqual([NOW])
   })
 })
 

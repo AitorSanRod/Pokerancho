@@ -2,12 +2,12 @@ import { incursion, type IncursionId } from '../../../data/incursions'
 import type { Rng } from '../../core/random'
 import { incursionProgress, IncursionPhase, regroupEnd, startNextLeg, type IncursionPlan } from '../activeIncursion'
 import type { MemberState } from '../fighter'
-import { fillWithBots, PARTY_SIZE } from '../party'
+import { fillWithBots } from '../party'
 import { mayKnow } from '../tms'
 import { retreatPasses } from '../retreatVote'
 import { settleTaps } from '../tapSettle'
 import { TAP_SETTLE_MS, type MovePick } from '../tapWindow'
-import { QUEUE_MAX_MS, type GroupView } from './protocol'
+import type { GroupView } from './protocol'
 
 // Un grupo de incursión tal y como lo guarda el servidor: la incursión (como en la partida) más quién es cada jugador,
 // sus votos, quién está listo y lo que ha elegido cada uno al reorganizar. El servidor no simula combates salvo para
@@ -44,31 +44,21 @@ export interface SharedIncursion extends IncursionPlan {
  */
 export const TAP_CLOSE_DELAY_MS = Math.round(TAP_SETTLE_MS / 2)
 
-/** Uno en la cola */
-export interface Queued {
+/** Un jugador que entra en el grupo con su Pokémon (ver schedule/scheduleStart.ts) */
+export interface GroupPlayer {
   playerId: string
   nickname: string
   member: MemberState
-  joinedAt: number
 }
 
-/**
- * Quiénes forman grupo ya, de los que esperan esa incursión (por orden de llegada): los cinco primeros si los hay; si
- * no, todos si el primero lleva esperando QUEUE_MAX_MS (se completa con bots). Un Pokémon repetido espera al siguiente
- */
-export function pickGroup(waiting: Queued[], now: number): Queued[] | null {
-  const unique = waiting.filter((q, i) => waiting.findIndex((o) => o.member.id === q.member.id) === i).slice(0, PARTY_SIZE)
-  if (unique.length === PARTY_SIZE) return unique
-  return unique.length > 0 && now - unique[0].joinedAt >= QUEUE_MAX_MS ? unique : null
-}
-
-export function formGroup(id: string, incursionId: IncursionId, players: Queued[], now: number, rng: Rng): SharedIncursion {
+/** El grupo de esos jugadores, completado con bots; el primer tramo empieza a la hora `startAt` */
+export function formGroup(id: string, incursionId: IncursionId, players: GroupPlayer[], startAt: number, rng: Rng): SharedIncursion {
   return {
     id,
     incursionId,
     members: fillWithBots(incursion(incursionId), players.map((p) => p.member), rng),
     orders: [{ seed: Math.floor(rng() * 2 ** 31), moves: {}, turns: [] }],
-    legStarts: [now],
+    legStarts: [startAt],
     retreat: null,
     seats: players.map((p) => ({ playerId: p.playerId, nickname: p.nickname, memberId: p.member.id })),
     votes: [],
@@ -77,7 +67,7 @@ export function formGroup(id: string, incursionId: IncursionId, players: Queued[
     tapPending: [],
     pickPending: {},
     damagePending: true,
-    updatedAt: now,
+    updatedAt: startAt,
   }
 }
 

@@ -10,7 +10,7 @@ import type { Tm } from '../../data/tms'
 import type { Stone } from '../../data/stones'
 import type { DailyMissions } from '../collection/missions'
 import type { ActiveIncursion } from '../incursion/activeIncursion'
-import type { IncursionQueue } from '../incursion/online/linkedIncursion'
+import type { HeldBond, ScheduleCheckin } from '../incursion/schedule/linkedSchedule'
 import type { TowerRun } from '../tower/towerRun'
 import { noTabRaids, type TabRaids } from '../raid/raid'
 import type { RaidPrize } from '../raid/raidRoom'
@@ -87,8 +87,10 @@ export interface GameState {
   towerWeek: { week: number; best: number }
   /** Medallas de gimnasio ganadas, en el orden en que se ganaron (ver data/badges.ts) */
   badges: Badge[]
-  /** Buscando grupo para una incursión con otros jugadores (ver incursion/online/linkedIncursion.ts); null si no */
-  incursionQueue: IncursionQueue | null
+  /** Fianzas retenidas por incursiones programadas creadas o aceptadas y aún sin liquidar (ver incursion/schedule/linkedSchedule.ts) */
+  incursionBonds: HeldBond[]
+  /** Checkin hecho en la sala de una incursión programada, con el Pokémon marcado; null si no */
+  incursionCheckin: ScheduleCheckin | null
   tutorial: TutorialStep | null
   unlockedRoutes: string[]
   completedRoutes: string[]
@@ -115,7 +117,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 64
+export const SAVE_VERSION = 65
 
 export function initialState(): GameState {
   return {
@@ -146,7 +148,8 @@ export function initialState(): GameState {
     incursionKeys: {},
     freeIncursionsPlayed: [],
     incursion: null,
-    incursionQueue: null,
+    incursionBonds: [],
+    incursionCheckin: null,
     claimedServerGifts: [],
     missions: null,
     tower: null,
@@ -191,7 +194,7 @@ export function monPlace(s: GameState, uid: string): MonPlace {
   if (s.expeditions.some((e) => e.uid === uid)) return MonPlace.Expedition
   if (Object.values(s.raids).some((r) => r?.uid === uid)) return MonPlace.Raid
   if (s.tower?.end === null && s.tower.uid === uid) return MonPlace.Tower
-  if (s.incursion?.uid === uid || s.incursionQueue?.uid === uid) return MonPlace.Incursion
+  if (s.incursion?.uid === uid || s.incursionCheckin?.uid === uid) return MonPlace.Incursion
   if (findMon(s, uid)?.ranch === null) return MonPlace.Box
   return MonPlace.Ranch
 }
