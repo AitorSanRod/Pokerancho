@@ -44,6 +44,16 @@
   background: var(--card-2);
 }
 /* Los botones, abajo y a la misma altura aunque un título ocupe dos líneas */
+.cloud-choice-card.recommended {
+  border-color: var(--accent);
+}
+.cloud-choice-badge {
+  align-self: flex-start;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
 .cloud-choice-card .btn {
   margin-top: auto;
 }

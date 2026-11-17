@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GYMS } from '../gyms'
 import { incursionMove, moveClass, MoveClass } from '../incursionMoves'
-import { isValidPath, KANTO, node, NodeKind, onlyTrainerFights, pathFrom, pathSpecies, type Route } from './index'
+import { isValidPath, KANTO, node, NodeKind, onlyTrainerFights, pathFrom, pathSpecies, pathStopCount, type Route } from './index'
 
 function reachableIds(r: Route): Set<string> {
   const byId = new Map(r.nodes.map((n) => [n.id, n]))
@@ -103,6 +103,11 @@ describe('caminos con bifurcación', () => {
 
   it('por defecto toma la primera opción', () => {
     expect(pathFrom(forked)).toEqual(['s', 'a', 'z'])
+  })
+
+  it('las paradas de un camino son sus nodos menos el de salida', () => {
+    expect(pathStopCount(pathFrom(forked))).toBe(pathFrom(forked).length - 1)
+    expect(pathStopCount([])).toBe(0)
   })
 
   it('se puede continuar desde la rama elegida', () => {

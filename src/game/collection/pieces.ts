@@ -1,7 +1,6 @@
 import type { Nature } from '../../data/natures'
 import { RARITY_INFO, rarityOf, species } from '../../data/species'
 import type { StarItem } from '../../data/starItems'
-import { boostedMoney } from '../battle/rewards'
 import { ownedOfSpecies, TutorialStep, type GameState } from '../core/state'
 import type { Rng } from '../core/random'
 import { createMon, NEW_MON_LEVEL } from '../team/mons'
@@ -55,8 +54,8 @@ export function combineKind(s: GameState, speciesId: number): CombineKind {
   return owned.stars < MAX_STARS ? CombineKind.Star : CombineKind.Money
 }
 
-/** ₽ por combinar tickets de un Pokémon que ya tiene las ★ al máximo */
-export const surplusMoney = (speciesId: number): number => boostedMoney(RARITY_INFO[rarityOf(species(speciesId))].surplusMoney)
+/** ₽ por combinar tickets de un Pokémon que ya tiene las ★ al máximo: lo mismo que venderlos en Tienda › Venta */
+export const surplusMoney = (speciesId: number): number => PIECES_PER_COMBINE * RARITY_INFO[rarityOf(species(speciesId))].ticketSalePrice
 
 /** Objeto estelar que gasta combinar: solo al crear un Pokémon que no es común (fuera del tutorial); null si ninguno */
 export function combineStarItem(s: GameState, speciesId: number): StarItem | null {

@@ -21,6 +21,12 @@ export interface Announcement {
 /** Anuncios del tablón, del más nuevo al más viejo; el primero sale en una ventana al entrar hasta que se ve */
 export const ANNOUNCEMENTS: Announcement[] = [
   {
+    id: 'ajustes-2026-11',
+    date: '2026-11-18',
+    title: 'Menta neutra, favoritos y más',
+    text: 'En Tienda › Mentas tienes la nueva Menta neutra (10.000 ₽): pone la naturaleza Seria, que no sube ni baja nada. En la Trituradora ahora escribes cuántos tickets triturar, como en la Venta, y las dos tienen una sección de Favoritos para vender o triturar lo de tus favoritos sin quitarles el corazón. Cambiar tickets con 5 ★ en la ficha da lo mismo que venderlos en la Tienda. Al elegir una ruta completada verás cuántas paradas tiene. En la Torre, la EXP baja algo con los Pokémon de nivel alto (desde el 50). Y actualizar la app ya no pide hacerlo dos veces.',
+  },
+  {
     id: 'incursiones-programadas-2026-11',
     date: '2026-11-17',
     title: 'Incursiones programadas',

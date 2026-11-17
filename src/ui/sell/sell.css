@@ -6,6 +6,9 @@
 .shop-fold-sell-pieces {
   --fold-bg: linear-gradient(135deg, #4aa3df 0%, #1f5f99 100%);
 }
+.shop-fold-sell-favorites {
+  --fold-bg: linear-gradient(135deg, var(--favorite) 0%, color-mix(in srgb, var(--favorite) 55%, #000) 100%);
+}
 .shop-fold-sell-shards {
   --fold-bg: linear-gradient(135deg, #9b6bd6 0%, #5a2f99 100%);
 }

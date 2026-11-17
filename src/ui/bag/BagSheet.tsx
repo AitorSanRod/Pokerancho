@@ -46,9 +46,10 @@ export function BagSheet({ game, onBack }: { game: GameState; onBack: () => void
               ))}
             </BagGroup>
           )}
-          {bag.mints > 0 && (
-            <BagGroup title="Mentas" hint="Se gasta al usarla en la ficha de un Pokémon, en Naturaleza: le da otra naturaleza al azar.">
-              <BagTile icon={<ItemIcon item={ICON.Mint} size={44} />} name="Menta aleatoria" count={bag.mints} />
+          {(bag.mints > 0 || bag.neutralMints > 0) && (
+            <BagGroup title="Mentas" hint="Se gastan al usarlas en la ficha de un Pokémon, en Naturaleza: la aleatoria le da otra al azar y la neutra, la neutra.">
+              {bag.mints > 0 && <BagTile icon={<ItemIcon item={ICON.Mint} size={44} />} name="Menta aleatoria" count={bag.mints} />}
+              {bag.neutralMints > 0 && <BagTile icon={<ItemIcon item={ICON.NeutralMint} size={44} />} name="Menta neutra" count={bag.neutralMints} />}
             </BagGroup>
           )}
           {(bag.luckyEggs > 0 || game.luckyEggArmed) && <LuckyEggGroup game={game} />}

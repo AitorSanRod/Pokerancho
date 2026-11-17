@@ -15,6 +15,15 @@ import { floorsPastCap, pastLevelCap, TOWER_STAT_GROWTH, towerLevel } from './to
 
 /** EXP por victoria por cada nivel del rival, antes de crecer con el nivel (en las rutas, battle/rewards.ts › EXP_PER_LEVEL y expForLevel) */
 export const TOWER_EXP_PER_LEVEL = 4
+/**
+ * Recorte de la EXP que gana en la torre el Pokémon que sube, según su nivel al ganar el piso: desde `fromLevel`, la EXP
+ * del piso × `mult` (de mayor a menor nivel; por debajo del último, sin recorte). Solo la EXP: el ₽ y los premios, no
+ */
+export const TOWER_EXP_LEVEL_CUTS: readonly { fromLevel: number; mult: number }[] = [
+  { fromLevel: 90, mult: 0.75 },
+  { fromLevel: 75, mult: 0.8 },
+  { fromLevel: 50, mult: 0.9 },
+]
 /** Pasos de ruta a los que equivale cada piso para el ₽ (se paga como un combate de ruta tras tantos pasos) */
 export const TOWER_MONEY_STEPS = 20
 /** Probabilidad (0–1) de que, al ganar un piso, salga un Huevo Suerte en la escena (hay que tocarlo: towerEgg.ts) */
@@ -36,6 +45,9 @@ export const noTowerEarned = (): TowerEarned => ({ money: 0, exp: 0, levelsGaine
 const pastCapMult = (floor: number): number => 1 + floorsPastCap(floor) * TOWER_STAT_GROWTH
 
 export const floorExp = (floor: number): number => Math.round(expForLevel(towerLevel(floor), TOWER_EXP_PER_LEVEL) * pastCapMult(floor))
+
+/** Multiplicador de la EXP de la torre para un Pokémon de ese nivel (TOWER_EXP_LEVEL_CUTS) */
+export const towerExpMult = (level: number): number => TOWER_EXP_LEVEL_CUTS.find((cut) => level >= cut.fromLevel)?.mult ?? 1
 
 export const floorMoney = (floor: number): number => Math.max(1, boostedMoney(moneyPerStep(towerLevel(floor)) * TOWER_MONEY_STEPS * pastCapMult(floor)))
 
@@ -69,10 +81,11 @@ export const floorPrize = (floor: number, best: number, rng: Rng = Math.random):
   prize: floor > best ? towerPrize(floor) : null,
 })
 
-/** Cobra lo de ganar un piso a `foeId` con `mon` y lo apunta en lo ganado en la subida */
+/** Cobra lo de ganar un piso a `foeId` con `mon` (la EXP, recortada según su nivel) y lo apunta en lo ganado en la subida */
 export function rewardFloor(s: GameState, mon: OwnedMon, earned: TowerEarned, foeId: number, got: FloorPrize) {
-  earned.exp += got.exp
-  earned.levelsGained += gainExp(mon, got.exp).levelsGained
+  const exp = Math.round(got.exp * towerExpMult(mon.level))
+  earned.exp += exp
+  earned.levelsGained += gainExp(mon, exp).levelsGained
   s.money += got.money
   earned.money += got.money
   if (got.prize) {

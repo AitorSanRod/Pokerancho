@@ -1,6 +1,7 @@
 import { rarityOf, species, type Rarity } from '../../data/species'
 import type { GameState } from '../core/state'
 import { isFavorite } from './dex'
+import { FavoritePolicy } from '../trade/tradeGive'
 import { addPieces, piecesOf } from './pieces'
 
 /** Trozos de MissingNo que da cada pieza triturada, según la rareza del Pokémon */
@@ -21,9 +22,17 @@ export function shreddableStock(s: GameState): { speciesId: number; count: numbe
     .sort((a, b) => a.speciesId - b.speciesId)
 }
 
-/** Tritura `count` piezas de una especie (o las que tenga) y devuelve los trozos obtenidos. Las favoritas, no. */
-export function shred(s: GameState, speciesId: number, count: number): number {
-  if (isFavorite(s, speciesId)) return 0
+/** Especies favoritas con piezas, para su sección de la trituradora, ordenadas por número */
+export function favoriteStock(s: GameState): { speciesId: number; count: number }[] {
+  return s.favorites
+    .map((speciesId) => ({ speciesId, count: piecesOf(s, speciesId) }))
+    .filter((p) => p.count > 0)
+    .sort((a, b) => a.speciesId - b.speciesId)
+}
+
+/** Tritura `count` piezas de una especie (o las que tenga) y devuelve los trozos obtenidos. Las favoritas, solo desde su sección */
+export function shred(s: GameState, speciesId: number, count: number, policy: FavoritePolicy = FavoritePolicy.Protect): number {
+  if (policy === FavoritePolicy.Protect && isFavorite(s, speciesId)) return 0
   const amount = Math.min(count, piecesOf(s, speciesId))
   if (amount <= 0) return 0
   s.pieces[speciesId] -= amount

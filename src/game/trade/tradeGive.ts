@@ -7,16 +7,23 @@ import { findMon, MonPlace, monPlace, type GameState, type OwnedMon } from '../c
 import { GoodKind, type OfferRequest, type TradeAsk, type TradedMon, type TradeGood } from './tradeGoods'
 
 // Lo que sale de la partida al anunciar, al pagar un anuncio o al vender al servidor: solo Pokémon que están en el
-// rancho o en la Caja, que no son el compañero ni de una especie favorita, y cantidades que el jugador tiene.
+// rancho o en la Caja, que no son el compañero ni (salvo desde la sección de favoritos de la Venta y la Trituradora) de
+// una especie favorita, y cantidades que el jugador tiene.
+
+/** Si los favoritos quedan protegidos (siempre, salvo en la sección de favoritos de la Venta y la Trituradora) */
+export const FavoritePolicy = { Protect: 'protect', Allow: 'allow' } as const
+export type FavoritePolicy = (typeof FavoritePolicy)[keyof typeof FavoritePolicy]
+
+const protects = (s: GameState, speciesId: number, policy: FavoritePolicy) => policy === FavoritePolicy.Protect && isFavorite(s, speciesId)
 
 /** Por qué no se puede dar ese Pokémon (anunciarlo, entregarlo o venderlo); null si se puede */
-export function giveMonBlocker(s: GameState, uid: string): string | null {
+export function giveMonBlocker(s: GameState, uid: string, policy: FavoritePolicy = FavoritePolicy.Protect): string | null {
   const mon = findMon(s, uid)
   if (!mon) return 'Ese Pokémon no existe.'
   const place = monPlace(s, uid)
   if (place !== MonPlace.Ranch && place !== MonPlace.Box) return 'Está fuera del rancho.'
   if (uid === s.activeUid) return 'Es tu compañero.'
-  if (isFavorite(s, mon.speciesId)) return 'Es favorito: quítale el corazón para darlo.'
+  if (protects(s, mon.speciesId, policy)) return 'Es favorito: quítale el corazón para darlo.'
   return null
 }
 
@@ -30,16 +37,16 @@ export function givableMons(s: GameState): OwnedMon[] {
 export const tradedMon = (m: OwnedMon): TradedMon => ({ speciesId: baseSpeciesOf(m.speciesId), level: m.level, exp: m.exp, stars: m.stars, nature: m.nature, tmMoves: [...m.tmMoves], shiny: m.shiny })
 
 /** Quita el Pokémon de la partida si se puede dar y devuelve cómo viaja */
-export function takeMon(s: GameState, uid: string): TradedMon | null {
-  if (giveMonBlocker(s, uid)) return null
+export function takeMon(s: GameState, uid: string, policy: FavoritePolicy = FavoritePolicy.Protect): TradedMon | null {
+  if (giveMonBlocker(s, uid, policy)) return null
   const mon = findMon(s, uid)!
   s.owned = s.owned.filter((m) => m.uid !== uid)
   return tradedMon(mon)
 }
 
 /** Por qué no se pueden dar esos tickets de la especie (los de las favoritas quedan protegidos, como al triturar) */
-export function givePiecesBlocker(s: GameState, speciesId: number, count: number): string | null {
-  if (isFavorite(s, speciesId)) return 'Es favorito: quítale el corazón para darlos.'
+export function givePiecesBlocker(s: GameState, speciesId: number, count: number, policy: FavoritePolicy = FavoritePolicy.Protect): string | null {
+  if (protects(s, speciesId, policy)) return 'Es favorito: quítale el corazón para darlos.'
   return count >= 1 && piecesOf(s, speciesId) >= count ? null : 'No tienes tantos tickets.'
 }
 

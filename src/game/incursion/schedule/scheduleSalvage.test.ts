@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { IncursionId } from '../../../data/incursions'
 import { POKEMON } from '../../../data/pokemon'
 import { migrateSave } from '../../core/saveMigration'
+import { CARRIED_SINCE } from '../../core/progressCarry'
 import { initialState, SAVE_VERSION } from '../../core/state'
 import { createMon } from '../../team/mons'
 import type { HeldBond } from './linkedSchedule'
@@ -45,8 +46,9 @@ describe('fianzas y checkin al actualizar', () => {
     expect(s.money).toBe(1000)
   })
 
-  it('el checkin de una versión anterior no sigue (cambia con esta versión)', () => {
+  it('el checkin de una versión anterior a su último cambio no sigue', () => {
     const checkin = { scheduleId: 'abcdef12', incursionId: IncursionId.CuevaHelada, startAt: 1000, uid: null, moveId: null, locked: false }
-    expect(migrateSave(oldSave({ incursionCheckin: checkin }))!.incursionCheckin).toBeNull()
+    const save = oldSave({ incursionCheckin: checkin, version: CARRIED_SINCE.incursionCheckin - 1 })
+    expect(migrateSave(save)!.incursionCheckin).toBeNull()
   })
 })

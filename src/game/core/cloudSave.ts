@@ -2,6 +2,7 @@ import { markEvolutionLines } from '../collection/dex'
 import { unlockReachedRoutes } from '../run/routeUnlocks'
 import { repairExpeditions } from '../team/expeditionSalvage'
 import { rehomeOverflow } from '../team/ranches'
+import { progressSince, type SyncSnapshot } from './cloudChoice'
 import { migrateSave } from './saveMigration'
 import { backupTeam, parseTeamBackup, restoreTeam, type TeamBackup } from './teamBackup'
 import { initialState, restoreState, SAVE_VERSION, TutorialStep, type GameState } from './state'
@@ -27,6 +28,8 @@ export interface CloudSave {
 export interface CloudLink {
   userId: string
   revision: number
+  /** Lo que había aquí la última vez que se subió o se bajó; sin ella (enlaces de antes), regla de siempre */
+  snapshot?: SyncSnapshot
 }
 
 export const CloudAction = { Upload: 'upload', Download: 'download', Ask: 'ask' } as const
@@ -67,14 +70,15 @@ export function hasUnsavedProgress(local: GameState, cloud: CloudSave): boolean 
 
 /**
  * Qué hacer al conectar con la cuenta `userId`: sin copia en la nube, subir la de aquí; si la de aquí ya es de esa
- * cuenta, bajar la de la nube si otro dispositivo ha subido después (o preguntar si aquí hay progreso que la nube no
- * tiene) y, si no, subir; si no, preguntar (salvo que la de aquí esté sin empezar)
+ * cuenta, bajar la de la nube si otro dispositivo ha subido después (o preguntar si aquí se ha jugado algo desde la
+ * última sincronización que la nube no tiene) y, si no, subir; si no, preguntar (salvo que la de aquí esté sin empezar)
  */
 export function cloudAction(link: CloudLink | null, userId: string, cloud: CloudSave | null, local: GameState): CloudAction {
   if (!cloud) return CloudAction.Upload
   if (link?.userId !== userId) return isFreshGame(local) ? CloudAction.Download : CloudAction.Ask
   if (cloud.revision <= link.revision) return CloudAction.Upload
-  return hasUnsavedProgress(local, cloud) ? CloudAction.Ask : CloudAction.Download
+  const playedHere = !link.snapshot || progressSince(local, link.snapshot)
+  return playedHere && hasUnsavedProgress(local, cloud) ? CloudAction.Ask : CloudAction.Download
 }
 
 /** Lo que se sube: la partida y la copia del equipo */

@@ -20,7 +20,7 @@ export function AccountHost({ game }: { game: GameState }) {
   const announcement = useAnnouncementPrompt()
   if (account.recovering) return <NewPasswordDialog />
   if (cloud.outdated && !cloud.outdatedDismissed) return <OutdatedAppDialog />
-  if (cloud.choice) return <CloudChoiceDialog cloud={cloud.choice} local={game} />
+  if (cloud.choice) return <CloudChoiceDialog cloud={cloud.choice} local={game} recommended={cloud.recommended} localPlayedAt={cloud.localPlayedAt} />
   if (account.notice) return <NoticeDialog text={account.notice} onClose={dismissNotice} />
   if (cloud.notice) return <NoticeDialog text={cloud.notice} onClose={dismissCloudNotice} />
   if (announcement.show && game.tutorial === null) return <AnnouncementPrompt onClose={announcement.dismiss} />

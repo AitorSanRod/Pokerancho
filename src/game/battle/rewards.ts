@@ -7,7 +7,7 @@ export const TICKET_DROP_CHANCE: Record<Rarity, number> = { common: 0.05, rare: 
 /** Probabilidad de que un salvaje derrotado suelte 1 pieza de su especie, según su rareza */
 export const PIECE_DROP_CHANCE: Record<Rarity, number> = { common: 0.05, rare: 0.05, epic: 0.05, legendary: 0.5 }
 
-/** Multiplicador de todo el dinero que se gana (combates, expediciones, premios de ruta y de jefes, tickets sobrantes) */
+/** Multiplicador de todo el dinero que se gana (combates, expediciones, premios de ruta y de jefes; no los tickets sobrantes, que van a precio de venta) */
 export const MONEY_GAIN_MULT = 1.15
 
 /** Aplica MONEY_GAIN_MULT a una cantidad de pokécuartos ganada, redondeando al entero más cercano */

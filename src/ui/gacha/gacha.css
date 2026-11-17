@@ -89,38 +89,7 @@
   opacity: 0.5;
 }
 
-/* Trituradora: casilla de la Pokédex con una esquina para marcar todos o desmarcar */
-.shred-cell {
-  position: relative;
-  display: grid;
-}
-.shred-cell.marked .dex-cell {
-  outline: 3px solid var(--accent);
-  outline-offset: 1px;
-}
-.shred-cell.marked .dex-pieces {
-  color: var(--accent);
-  font-weight: 700;
-}
-.shred-cell-corner {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 6px;
-  border: none;
-  border-radius: 14px;
-  background: var(--accent);
-  color: #fff;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 700;
-}
-.shred-cell-corner.all {
-  background: var(--card-2);
-  color: var(--text);
-}
+/* Trituradora: botón de triturar toda una rareza y sección de favoritos */
 .btn.shred-all {
   width: 100%;
   margin-top: 10px;
@@ -128,18 +97,8 @@
   color: var(--rarity);
   font-weight: 700;
 }
-/* Confirmación de la trituradora: se queda pegada abajo mientras haya tickets marcados */
-.shred-confirm {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  align-items: stretch;
-  gap: 8px;
-  border: 2px solid var(--accent);
-  box-shadow: 0 -6px 20px #0002;
-}
-.shred-confirm > .btn.small {
-  align-self: center;
+.shred-favorites {
+  --fold-bg: linear-gradient(135deg, var(--favorite) 0%, color-mix(in srgb, var(--favorite) 55%, #000) 100%);
 }
 
 /* Objetos estelares: tres casillas en fila */

@@ -27,7 +27,7 @@ export const MON_GUIDE: Guide = {
     {
       image: shot('mon-favorite'),
       title: 'Favoritos',
-      text: 'El corazón de arriba lo marca como favorito: sus tickets quedan protegidos en la trituradora y en la Pokédex se pueden filtrar.',
+      text: 'El corazón de arriba lo marca como favorito: sus tickets y él quedan protegidos en la trituradora, la venta y los intercambios (salvo en la sección Favoritos de las dos primeras) y en la Pokédex se pueden filtrar.',
     },
     {
       image: shot('mon-box'),

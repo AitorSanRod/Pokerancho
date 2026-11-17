@@ -59,6 +59,8 @@ export interface GameState {
   formItems: FormItem[]
   /** Mentas aleatorias compradas y aún sin usar (ver team/mints.ts) */
   mints: number
+  /** Mentas neutras compradas y aún sin usar: ponen la naturaleza neutra (ver team/mints.ts) */
+  neutralMints: number
   /** Huevos Suerte cogidos en ruta y aún sin usar (ver run/expBoost.ts) */
   luckyEggs: number
   /** Se ha usado un Huevo Suerte: la próxima ruta que se empiece irá con su bonificación */
@@ -117,7 +119,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 65
+export const SAVE_VERSION = 66
 
 export function initialState(): GameState {
   return {
@@ -140,6 +142,7 @@ export function initialState(): GameState {
     stones: {},
     formItems: [],
     mints: 0,
+    neutralMints: 0,
     luckyEggs: 0,
     luckyEggArmed: false,
     starItems: {},

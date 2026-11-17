@@ -8,7 +8,7 @@ import { toggleFavorite, markSeen } from '../collection/dex'
 import { initialState, type GameState } from '../core/state'
 import { chooseStarter, speciesOfRarity } from '../core/test-utils'
 import { createMon } from '../team/mons'
-import { canPay, givableMons, giveMonBlocker, payAsk, payBlocker, payOptions, takeOffer } from './tradeGive'
+import { canPay, FavoritePolicy, givableMons, giveMonBlocker, givePiecesBlocker, payAsk, payBlocker, payOptions, takeOffer } from './tradeGive'
 import { GoodKind, type TradeAsk } from './tradeGoods'
 
 const [A, B, C] = STARTERS
@@ -44,6 +44,21 @@ describe('dar Pokémon', () => {
     const good = takeOffer(s, { kind: GoodKind.Mon, uid: uidOf(s, B) })
     expect(good).toMatchObject({ kind: GoodKind.Mon, mon: { speciesId: B, level: 12, exp: 7, stars: 2, tmMoves: [] } })
     expect(s.owned.some((m) => m.speciesId === B)).toBe(false)
+  })
+})
+
+describe('favoritos', () => {
+  it('sin decir nada siguen protegidos; solo se dejan dar si se permite expresamente', () => {
+    const s = game()
+    const mon = s.owned[1]
+    s.pieces[mon.speciesId] = 3
+    markSeen(s, mon.speciesId)
+    toggleFavorite(s, mon.speciesId)
+    expect(giveMonBlocker(s, mon.uid)).not.toBeNull()
+    expect(givePiecesBlocker(s, mon.speciesId, 1)).not.toBeNull()
+    expect(takeOffer(s, { kind: GoodKind.Pieces, speciesId: mon.speciesId, count: 1 })).toBeNull()
+    expect(giveMonBlocker(s, mon.uid, FavoritePolicy.Allow)).toBeNull()
+    expect(givePiecesBlocker(s, mon.speciesId, 1, FavoritePolicy.Allow)).toBeNull()
   })
 })
 

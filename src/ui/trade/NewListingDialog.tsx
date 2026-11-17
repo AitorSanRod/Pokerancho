@@ -7,7 +7,7 @@ import { tradeOp } from '../../net/tradeApi'
 import { refreshTradeBoard } from '../../net/tradeBoard'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { AskPicker } from './AskPicker'
-import { useCorrectionGuard } from './correctionGuard'
+import { useCorrectionGuard } from '../shared/correctionGuard'
 import { OfferPicker } from './OfferPicker'
 
 /** Poner un anuncio: qué se ofrece y qué se pide; al publicarlo, lo ofrecido sale de la partida */

@@ -10,7 +10,7 @@ import { GoodKind, MAX_TRADE_COUNT, type OfferRequest } from '../../game/trade/t
 import { Sprite } from '../shared/common'
 import { HeartIcon } from '../shared/HeartIcon'
 import { MonPicker } from '../shared/MonPicker'
-import { CountInput } from './CountInput'
+import { CountInput } from '../shared/CountInput'
 import { StarItemChoice } from './StarItemChoice'
 import { TmChoice } from './TmChoice'
 

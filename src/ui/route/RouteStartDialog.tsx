@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { pathFrom, pathSpecies, type Route } from '../../data/maps'
+import { pathFrom, pathSpecies, pathStopCount, type Route } from '../../data/maps'
 import { species } from '../../data/species'
 import { TutorialStep, type GameState, type OwnedMon } from '../../game/core/state'
 import { act } from '../../store/store'
@@ -33,6 +33,7 @@ export function RouteStartDialog({ game, route: r, mon, onClose }: { game: GameS
   const raidMoney = pathRaidMoneyMult(game, r, path, game.lastTick)
   const gym = routeGym(r)
   const tooStrong = gymLevelBlocker(game, r)
+  const stops = game.completedRoutes.includes(r.id) ? pathStopCount(path) : null
   const [moveId, setMoveId] = useState(() => defaultRouteMove(mon))
   const start = () =>
     act((s) => {
@@ -76,6 +77,7 @@ export function RouteStartDialog({ game, route: r, mon, onClose }: { game: GameS
             </>
           )}
         </p>
+        {stops !== null && <p className="small center muted">{stops} {stops === 1 ? 'parada' : 'paradas'}</p>}
         {tooStrong && <p className="notice small">{tooStrong}</p>}
         {!tooStrong && <RouteMoveBar mon={mon} moveId={moveId} inline onPick={setMoveId} />}
         <div className="label">Pueden aparecer</div>
