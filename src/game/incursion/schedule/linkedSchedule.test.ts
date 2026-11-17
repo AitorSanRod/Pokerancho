@@ -59,6 +59,23 @@ describe('fianza en la partida', () => {
     expect(s.incursionBonds).toEqual([])
   })
 
+  it('si el creador la cancela, cada apuntado (y el creador) recupera su fianza en su partida', () => {
+    const players = ['jugador-0', ME, 'jugador-2']
+    joinSchedule(sched, joiner(2, bondFor(MONEY)), [], NOW)
+    sched.seats[0].bond = bondFor(MONEY)
+    const games = players.map(() => {
+      const g = initialState()
+      g.money = MONEY
+      return g
+    })
+    players.forEach((id, i) => applyScheduleView(games[i], scheduleView(sched, id, NOW), NOW))
+    expect(games.map((g) => g.money)).toEqual(players.map(() => MONEY - bondFor(MONEY)))
+    cancelSchedule(sched, 'jugador-0', NOW)
+    players.forEach((id, i) => applyScheduleView(games[i], scheduleView(sched, id, NOW), NOW))
+    expect(games.map((g) => g.money)).toEqual(players.map(() => MONEY))
+    expect(games.every((g) => g.incursionBonds.length === 0)).toBe(true)
+  })
+
   it('si el servidor la ha olvidado, se devuelve lo no devuelto', () => {
     see(NOW)
     scheduleGone(s, sched.id)

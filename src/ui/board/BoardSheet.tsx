@@ -2,13 +2,15 @@ import { ANNOUNCEMENTS } from '../../data/announcements'
 import { MenuSheetHeader } from '../ranch/MenuSheetHeader'
 import { ICON } from '../shared/icons'
 import { AnnouncementCard } from './AnnouncementCard'
+import { ScheduledAnnouncements } from './ScheduledAnnouncements'
 
-/** Tablón de anuncios (menú del rancho): las novedades del juego, de la más nueva a la más vieja */
+/** Tablón de anuncios (menú del rancho): las incursiones programadas que vienen y las novedades del juego, de la más nueva a la más vieja */
 export function BoardSheet({ onBack }: { onBack: () => void }) {
   return (
     <>
       <MenuSheetHeader icon={ICON.Board} title="Tablón" onBack={onBack} />
       <div className="board-list">
+        <ScheduledAnnouncements />
         {ANNOUNCEMENTS.length ? (
           ANNOUNCEMENTS.map((a) => <AnnouncementCard key={a.id} announcement={a} />)
         ) : (

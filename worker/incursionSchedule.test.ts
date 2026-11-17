@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PARTY_SIZE } from '../src/game/incursion/party'
 import { ScheduleRefusal } from '../src/game/incursion/schedule/scheduledIncursion'
 import { ScheduleAction } from '../src/game/incursion/schedule/scheduleProtocol'
-import { checkInOpensAt, ScheduleCancel, SLOT_MS } from '../src/game/incursion/schedule/scheduleRules'
+import { checkInOpensAt, leaveDeadline, ScheduleCancel, SLOT_MS } from '../src/game/incursion/schedule/scheduleRules'
 import { testWorker } from './test/api'
 import { call, checkIn, create, NOW, START, who } from './test/schedules'
 
@@ -53,6 +53,27 @@ describe('incursiones programadas en el servidor', () => {
     expect((await call(api, { action: ScheduleAction.Leave, ...who(1), scheduleId: id })).data.schedule.you).toBeNull()
     expect((await call(api, { action: ScheduleAction.Cancel, ...who(1), scheduleId: id })).data.refused).toBe(ScheduleRefusal.NotCreator)
     expect((await call(api, { action: ScheduleAction.Cancel, ...who(0), scheduleId: id })).data.schedule.cancelledBy).toBe(ScheduleCancel.Creator)
+  })
+
+  it('si el creador la cancela, a cada apuntado le llega la cancelación (para devolverle la fianza)', async () => {
+    const api = testWorker()
+    const id = (await create(api)).data.schedule.id
+    await join(api, id, 1)
+    await join(api, id, 2)
+    await call(api, { action: ScheduleAction.Cancel, ...who(0), scheduleId: id })
+    for (const n of [0, 1, 2]) {
+      const [mine] = (await call(api, { action: ScheduleAction.Board, ...who(n) })).data.board.mine
+      expect(mine).toMatchObject({ id, cancelledBy: ScheduleCancel.Creator, you: { bond: n === 0 ? 100 : 50 } })
+    }
+  })
+
+  it('pasado el plazo ya no se puede cancelar ni darse de baja', async () => {
+    const api = testWorker()
+    const id = (await create(api)).data.schedule.id
+    await join(api, id, 1)
+    vi.setSystemTime(leaveDeadline(START))
+    expect((await call(api, { action: ScheduleAction.Cancel, ...who(0), scheduleId: id })).data.refused).toBe(ScheduleRefusal.WrongPhase)
+    expect((await call(api, { action: ScheduleAction.Leave, ...who(1), scheduleId: id })).data.refused).toBe(ScheduleRefusal.WrongPhase)
   })
 
   it('el checkin fuera de la sala se rechaza', async () => {

@@ -13,8 +13,11 @@ export const MIN_LEAD_MS = 15 * MINUTE_MS
 export const MAX_LEAD_MS = 7 * 24 * 60 * MINUTE_MS
 /** La sala del checkin abre esto antes del comienzo */
 export const CHECKIN_OPEN_MS = 10 * MINUTE_MS
-/** Hasta esto antes de abrir la sala, un apuntado puede darse de baja y recuperar la fianza */
-export const LEAVE_DEADLINE_MS = 60 * MINUTE_MS
+/**
+ * Hasta esto antes del comienzo, un apuntado puede darse de baja y el creador cancelarla, con la fianza devuelta (al
+ * cancelar, la de todos); después, ya no
+ */
+export const CANCEL_DEADLINE_MS = 3 * 60 * MINUTE_MS
 /** Incursiones programadas creadas y aún sin empezar que puede tener un jugador a la vez */
 export const MAX_CREATED = 3
 /** Incursiones programadas aceptadas (sin contar las creadas) y aún sin empezar que puede tener un jugador a la vez */
@@ -26,9 +29,9 @@ export const SCHEDULE_TTL_MS = 7 * 24 * 60 * MINUTE_MS
 
 /** En qué momento está una incursión programada */
 export const SchedulePhase = {
-  /** Se puede aceptar y darse de baja */
+  /** Se puede aceptar, darse de baja y cancelarla */
   Open: 'open',
-  /** Se puede aceptar, pero ya no darse de baja */
+  /** Se puede aceptar, pero ya no darse de baja ni cancelarla */
   Committed: 'committed',
   /** Sala abierta: checkin, elegir Pokémon y fijarlo */
   CheckIn: 'checkin',
@@ -45,8 +48,8 @@ export type ScheduleCancel = (typeof ScheduleCancel)[keyof typeof ScheduleCancel
 export const bondFor = (money: number): number => Math.max(0, Math.floor(money * BOND_FRACTION))
 
 export const checkInOpensAt = (startAt: number): number => startAt - CHECKIN_OPEN_MS
-/** Hasta cuándo se puede dar de baja con la fianza devuelta */
-export const leaveDeadline = (startAt: number): number => checkInOpensAt(startAt) - LEAVE_DEADLINE_MS
+/** Hasta cuándo se puede dar de baja o cancelarla con la fianza devuelta */
+export const leaveDeadline = (startAt: number): number => startAt - CANCEL_DEADLINE_MS
 
 /** Si `startAt` es una franja válida para programar ahora */
 export const isValidSlot = (startAt: number, now: number): boolean =>

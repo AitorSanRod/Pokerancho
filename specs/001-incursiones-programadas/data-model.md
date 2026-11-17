@@ -11,7 +11,7 @@ Tipos en `src/game/incursion/schedule/` salvo que se diga otra cosa. Constantes 
 | `MIN_LEAD_MS` | 15 min | Antelación mínima al programar |
 | `MAX_LEAD_MS` | 7 días | Antelación máxima |
 | `CHECKIN_OPEN_MS` | 10 min | La sala abre esto antes del comienzo |
-| `LEAVE_DEADLINE_MS` | 1 h | Hasta esto antes de abrir la sala se puede dar de baja con devolución |
+| `CANCEL_DEADLINE_MS` | 3 h | Hasta esto antes del comienzo se puede dar de baja, y el creador cancelarla, con devolución |
 | `MAX_CREATED` | 3 | Programadas creadas pendientes por jugador |
 | `MAX_JOINED` | 5 | Aceptadas pendientes por jugador (sin contar las creadas) |
 | `SCHEDULE_GAP_MS` | 45 min | Separación mínima entre los comienzos de dos incursiones de un jugador |
@@ -26,7 +26,7 @@ Tipos en `src/game/incursion/schedule/` salvo que se diga otra cosa. Constantes 
 | `startAt` | number (ms) | Múltiplo de `SLOT_MS` |
 | `creatorId` | string | `playerId` del creador; ocupa `seats[0]` |
 | `seats` | `ScheduleSeat[]` | 1–5, por orden de aceptación |
-| `cancelledBy` | `ScheduleCancel` \| null | `creator` (antes de abrir la sala) o `nobody` (nadie con Pokémon marcado a la hora); null si no se canceló |
+| `cancelledBy` | `ScheduleCancel` \| null | `creator` (hasta `CANCEL_DEADLINE_MS` antes del comienzo) o `nobody` (nadie con Pokémon marcado a la hora); null si no se canceló |
 | `groupId` | string \| null | Grupo formado al empezar (`incursion_groups`) |
 | `updatedAt` | number | Para la limpieza |
 
@@ -44,9 +44,9 @@ Tipos en `src/game/incursion/schedule/` salvo que se diga otra cosa. Constantes 
 ### Fases (`schedulePhase(sched, now)`)
 
 ```
-Open ──(startAt − CHECKIN_OPEN_MS − LEAVE_DEADLINE_MS)──► Committed ──(startAt − CHECKIN_OPEN_MS)──► CheckIn ──(startAt)──► Started
+Open ──(startAt − CANCEL_DEADLINE_MS)──► Committed ──(startAt − CHECKIN_OPEN_MS)──► CheckIn ──(startAt)──► Started
   │                                                         │
-  └── cancelar (creador) ──► Cancelled ◄────────────────────┘ (cancelar solo hasta CheckIn)
+  └── cancelar (creador, solo en Open) ──► Cancelled
                                          CheckIn ──(startAt, nadie con checkin y Pokémon)──► Cancelled
 ```
 
@@ -55,7 +55,7 @@ Open ──(startAt − CHECKIN_OPEN_MS − LEAVE_DEADLINE_MS)──► Committe
 | Crear | — | Franja válida y en plazo; topes; separación; incursión con llave; el móvil comprueba Pokémon apto (FR-009b) |
 | Aceptar | Open, Committed | Hueco libre; no está ya; topes; separación |
 | Darse de baja | Open | No es el creador |
-| Cancelar | Open, Committed | Es el creador |
+| Cancelar | Open | Es el creador |
 | Checkin | CheckIn | Está apuntado (sin llave también: recupera la fianza, pero no puede marcar) |
 | Marcar Pokémon/ataque | CheckIn | Checkin hecho, no fijado; `mayKnow` del ataque; nivel dentro de la entrada; el móvil comprueba la llave |
 | Fijar | CheckIn | Checkin hecho y Pokémon marcado |

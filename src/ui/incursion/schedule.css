@@ -9,35 +9,6 @@
 .schedule-card-key {
   align-items: center;
 }
-.schedule-card-prizes summary {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 800;
-  cursor: pointer;
-}
-.schedule-card-prizes summary::after {
-  content: '▸';
-  color: var(--muted);
-}
-.schedule-card-prizes[open] summary::after {
-  content: '▾';
-}
-.incursion-prizes ul {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 4px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.incursion-prizes li {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 /* Programar */
 .schedule-dialog {
   display: flex;

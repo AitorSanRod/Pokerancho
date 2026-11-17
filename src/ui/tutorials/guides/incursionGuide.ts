@@ -40,7 +40,7 @@ export const INCURSION_GUIDE: Guide = {
     {
       image: shot('inc-schedule'),
       title: 'O prográmala tú',
-      text: 'En «Programar», elige la incursión, el día y la hora. Ocupas el primer hueco (con tu fianza) y se avisa a quien tenga activadas las notificaciones de incursiones. Hasta una hora antes de abrir la sala, quien se apunta puede darse de baja y recuperar su fianza.',
+      text: 'En «Programar», elige la incursión, el día y la hora. Ocupas el primer hueco (con tu fianza) y se avisa a quien tenga activadas las notificaciones de incursiones. Hasta 3 h antes del comienzo, quien se apunta puede darse de baja y recuperar su fianza, y tú puedes cancelarla: entonces todos recuperan la suya.',
     },
     {
       image: shot('inc-room'),
