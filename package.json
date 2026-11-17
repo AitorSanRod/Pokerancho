@@ -13,7 +13,7 @@
     "lint": "oxlint",
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm run test",
-    "preview": "npm run build && wrangler dev",
+    "preview": "npm run build && wrangler dev --ip 0.0.0.0",
     "deploy": "npm run build && npm run db:migrate && wrangler deploy",
     "ci:build": "npm run check && npm run build",
     "ci:deploy": "npm run db:migrate && wrangler deploy",
