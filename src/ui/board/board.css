@@ -28,3 +28,9 @@
   flex-direction: column;
   gap: 10px;
 }
+/* Incursiones programadas que vienen, encima de las novedades */
+.board-scheduled {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

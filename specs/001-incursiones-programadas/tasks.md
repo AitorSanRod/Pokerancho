@@ -168,3 +168,11 @@ Dentro de cada historia: tests → reglas puras → partida → Worker → clien
 - [X] T058 Que el checkin no caduque mientras el servidor pueda tener el grupo: en `src/game/incursion/schedule/linkedSchedule.ts › expireSchedules`, quitar `incursionCheckin` solo cuando el servidor diga que se decidió sin grupo para él o que ya no existe, o pasado `SCHEDULE_TTL_MS` (no `CHECKIN_STALE_MS`, 1 h, que deja fuera del grupo a quien vuelve más tarde con la app cerrada); ajustar su test, data-model.md y `docs/incursiones.md` per spec Edge Cases «La app cerrada a la hora de comienzo» (contradicts)
 - [X] T059 Sustituir las claves sueltas `'incursions/board'` y `'incursions/mine'` de `PUSH_SPOTS` en `src/ui/shared/navigation.ts` por el diccionario `PushGo` de `game/incursion/schedule/schedulePushes.ts` per Constitution VI (contradicts)
 - [X] T060 Proponer con `/speckit-constitution` la enmienda (PATCH) que cambia `IncursionQueue` por `ScheduleCheckin` en la lista de lo que va a medias del Principio IV de `.specify/memory/constitution.md` per Constitution VIII (partial)
+
+## Phase 9: Anuncio en el Tablón del menú (FR-034)
+
+- [X] T061 [US4] Mostrar las incursiones programadas que vienen como anuncios en el Tablón de anuncios del menú, con premios plegados y botón para ir a apuntarse, en `src/ui/board/ScheduledAnnouncements.tsx` + `src/ui/board/BoardSheet.tsx` (plegable común `IncursionPrizesFold` en `src/ui/incursion/IncursionPrizes.tsx`, estilos en `incursion-prizes.css`) per FR-034
+
+## Phase 10: Bajas y cancelación hasta 3 h antes
+
+- [X] T062 Plazo de baja y de cancelación del creador hasta 3 h antes del comienzo (`CANCEL_DEADLINE_MS` en `src/game/incursion/schedule/scheduleRules.ts`; `cancelSchedule` solo en `Open`; textos de `src/ui/incursion/MySchedules.tsx` y de la guía), con tests de que, al cancelar el creador, cada apuntado y él mismo recuperan su fianza (`linkedSchedule.test.ts`, `worker/incursionSchedule.test.ts`) per FR-004, FR-008b

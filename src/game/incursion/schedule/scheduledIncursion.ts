@@ -116,11 +116,10 @@ export function leaveSchedule(sched: ScheduledIncursion, playerId: string, now: 
   return null
 }
 
-/** El creador la cancela antes de abrir la sala: se devuelven todas las fianzas */
+/** El creador la cancela mientras aún se puede (CANCEL_DEADLINE_MS antes del comienzo): se devuelven todas las fianzas */
 export function cancelSchedule(sched: ScheduledIncursion, playerId: string, now: number): ScheduleRefusal | null {
   if (playerId !== sched.creatorId) return ScheduleRefusal.NotCreator
-  const phase = schedulePhase(sched, now)
-  if (phase !== SchedulePhase.Open && phase !== SchedulePhase.Committed) return ScheduleRefusal.WrongPhase
+  if (schedulePhase(sched, now) !== SchedulePhase.Open) return ScheduleRefusal.WrongPhase
   sched.cancelledBy = ScheduleCancel.Creator
   return null
 }

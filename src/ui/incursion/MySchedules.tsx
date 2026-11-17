@@ -40,7 +40,7 @@ function MineActions({ view, now }: { view: ScheduleView; now: number }) {
   }
   const roomOpen = view.phase === SchedulePhase.CheckIn
   const canLeave = view.phase === SchedulePhase.Open
-  const canCancel = view.yoursToCancel && !roomOpen
+  const canCancel = view.yoursToCancel && canLeave
 
   return (
     <>
@@ -48,9 +48,7 @@ function MineActions({ view, now }: { view: ScheduleView; now: number }) {
         {roomOpen ? `¡Sala abierta! Empieza en ${formatClock(view.startAt - now)}` : `La sala abre en ${formatClock(checkInOpensAt(view.startAt) - now)}`}
         {view.you && ` · Fianza: ${formatMoney(view.you.bond)}`}
       </p>
-      {!view.yoursToCancel && (
-        <p className="tiny muted">{canLeave ? `Puedes darte de baja con la fianza devuelta hasta ${formatWhen(leaveDeadline(view.startAt))}.` : 'Ya no puedes darte de baja.'}</p>
-      )}
+      <p className="tiny muted">{deadlineText(view)}</p>
       {error && <p className="notice small">{error}</p>}
       <div className="row gap">
         {roomOpen && (
@@ -82,4 +80,11 @@ function MineActions({ view, now }: { view: ScheduleView; now: number }) {
       )}
     </>
   )
+}
+
+/** Hasta cuándo se puede dar de baja (o cancelarla, si es suya) con la fianza devuelta */
+function deadlineText(view: ScheduleView): string {
+  const until = formatWhen(leaveDeadline(view.startAt))
+  if (view.phase !== SchedulePhase.Open) return view.yoursToCancel ? 'Ya no se puede cancelar.' : 'Ya no puedes darte de baja.'
+  return view.yoursToCancel ? `Puedes cancelarla (todos recuperan su fianza) hasta ${until}.` : `Puedes darte de baja con la fianza devuelta hasta ${until}.`
 }

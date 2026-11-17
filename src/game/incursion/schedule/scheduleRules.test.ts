@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   bondFor,
   BOND_FRACTION,
+  CANCEL_DEADLINE_MS,
   CHECKIN_OPEN_MS,
   isValidSlot,
   leaveDeadline,
@@ -40,7 +41,8 @@ describe('fases', () => {
   const start = slotAfter(MAX_LEAD_MS / 2)
   const sched = { startAt: start, cancelledBy: null }
 
-  it('abierta, sin bajas, sala, empezada', () => {
+  it('abierta, sin bajas, sala, empezada; el plazo de bajas cuenta desde el comienzo', () => {
+    expect(leaveDeadline(start)).toBe(start - CANCEL_DEADLINE_MS)
     expect(schedulePhase(sched, leaveDeadline(start) - 1)).toBe(SchedulePhase.Open)
     expect(schedulePhase(sched, leaveDeadline(start))).toBe(SchedulePhase.Committed)
     expect(schedulePhase(sched, start - CHECKIN_OPEN_MS)).toBe(SchedulePhase.CheckIn)

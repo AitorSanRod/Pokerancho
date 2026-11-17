@@ -6,6 +6,7 @@ import { tmName, TMS } from '../../data/tms'
 import { formatCount, formatMoney, formatPercent } from '../shared/format'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
+import './incursion-prizes.css'
 
 /** Icono y texto de una línea del premio final */
 function prizeLine(p: IncursionPrize): { icon: Item; text: string } {
@@ -48,5 +49,15 @@ export function IncursionPrizes({ inc }: { inc: Incursion }) {
         })}
       </ul>
     </div>
+  )
+}
+
+/** Los premios plegados en «Premios» (tarjeta del tablón de incursiones y anuncio del menú) */
+export function IncursionPrizesFold({ inc }: { inc: Incursion }) {
+  return (
+    <details className="schedule-card-prizes">
+      <summary className="small">Premios</summary>
+      <IncursionPrizes inc={inc} />
+    </details>
   )
 }

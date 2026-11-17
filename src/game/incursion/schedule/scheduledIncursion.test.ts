@@ -67,13 +67,14 @@ describe('bajas y cancelación', () => {
     expect(sched.seats).toHaveLength(1)
   })
 
-  it('el creador no se da de baja: la cancela, solo él y antes de abrir la sala', () => {
+  it('el creador no se da de baja: la cancela, solo él y hasta el plazo', () => {
     const sched = newSchedule()
     joinSchedule(sched, joiner(1), [], NOW)
     expect(leaveSchedule(sched, 'jugador-0', NOW)).toBe(ScheduleRefusal.NotCreator)
     expect(cancelSchedule(sched, 'jugador-1', NOW)).toBe(ScheduleRefusal.NotCreator)
+    expect(cancelSchedule(sched, 'jugador-0', leaveDeadline(sched.startAt))).toBe(ScheduleRefusal.WrongPhase)
     expect(cancelSchedule(sched, 'jugador-0', checkInOpensAt(sched.startAt))).toBe(ScheduleRefusal.WrongPhase)
-    expect(cancelSchedule(sched, 'jugador-0', NOW)).toBeNull()
+    expect(cancelSchedule(sched, 'jugador-0', leaveDeadline(sched.startAt) - 1)).toBeNull()
     expect(sched.cancelledBy).toBe(ScheduleCancel.Creator)
   })
 })

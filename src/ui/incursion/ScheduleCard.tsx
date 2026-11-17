@@ -8,7 +8,7 @@ import { formatWhen } from '../shared/format'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { BIOME_SCENERY } from '../shared/sheet/scenery'
-import { IncursionPrizes } from './IncursionPrizes'
+import { IncursionPrizesFold } from './IncursionPrizes'
 
 /** Una incursión programada: hora, huecos, nivel, llaves y premios; abajo, lo que se puede hacer con ella */
 export function ScheduleCard({ game, view, children }: { game: GameState; view: ScheduleView; children?: ReactNode }) {
@@ -34,10 +34,7 @@ export function ScheduleCard({ game, view, children }: { game: GameState; view: 
           <ItemIcon item={ICON.Incursion} size={24} off={keys === 0} />
           {keys > 0 ? `Tienes ${keys} llave${keys === 1 ? '' : 's'}` : 'No tienes llave: sin ella no podrás entrar'}
         </div>
-        <details className="schedule-card-prizes">
-          <summary className="small">Premios</summary>
-          <IncursionPrizes inc={inc} />
-        </details>
+        <IncursionPrizesFold inc={inc} />
         {children}
       </div>
     </article>

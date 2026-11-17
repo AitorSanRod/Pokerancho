@@ -3,13 +3,13 @@ import { TEST_INCURSION } from '../incursion-test-mock'
 import { freshMember } from '../party'
 import { repertoire } from '../repertoire'
 import { createSchedule, type ScheduledIncursion, type ScheduleJoiner } from './scheduledIncursion'
-import { MIN_LEAD_MS, SLOT_MS } from './scheduleRules'
+import { MAX_LEAD_MS, SLOT_MS } from './scheduleRules'
 
 // Piezas comunes de los tests de incursiones programadas (con la incursión de prueba de incursion-test-mock.ts).
 
 export const NOW = 2000 * SLOT_MS
-/** Una franja válida a partir de ahora, `lead` ms después */
-export const slotIn = (lead: number = MIN_LEAD_MS * 10) => Math.ceil((NOW + lead) / SLOT_MS) * SLOT_MS
+/** Una franja válida a partir de ahora, `lead` ms después (por defecto, con tiempo de sobra para darse de baja) */
+export const slotIn = (lead: number = MAX_LEAD_MS / 2) => Math.ceil((NOW + lead) / SLOT_MS) * SLOT_MS
 
 export const joiner = (n: number, bond = 100): ScheduleJoiner => ({ playerId: `jugador-${n}`, nickname: `J${n}`, bond })
 

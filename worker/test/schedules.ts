@@ -4,15 +4,15 @@ import { TEST_INCURSION } from '../../src/game/incursion/incursion-test-mock'
 import { freshMember } from '../../src/game/incursion/party'
 import { repertoire } from '../../src/game/incursion/repertoire'
 import { ScheduleAction } from '../../src/game/incursion/schedule/scheduleProtocol'
-import { checkInOpensAt, MIN_LEAD_MS, SLOT_MS } from '../../src/game/incursion/schedule/scheduleRules'
+import { checkInOpensAt, MAX_LEAD_MS, SLOT_MS } from '../../src/game/incursion/schedule/scheduleRules'
 import type { testWorker } from './api'
 
 // Incursiones programadas en los tests del Worker (con la incursión de prueba de incursion-test-mock.ts): crear,
 // apuntarse, hacer el checkin y llegar a la hora de comienzo.
 
 export const NOW = 1_700_000_000_000
-/** Una franja válida desde NOW */
-export const START = Math.ceil((NOW + MIN_LEAD_MS * 10) / SLOT_MS) * SLOT_MS
+/** Una franja válida desde NOW, con tiempo de sobra para darse de baja o cancelarla */
+export const START = Math.ceil((NOW + MAX_LEAD_MS / 2) / SLOT_MS) * SLOT_MS
 const LEVEL = TEST_INCURSION.minLevel
 
 type Api = ReturnType<typeof testWorker>

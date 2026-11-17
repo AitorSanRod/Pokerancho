@@ -27,6 +27,8 @@
 - Q: ¿Cómo se organiza la pestaña de Incursiones: una pantalla con secciones o subpestañas? → A: Subpestañas: Tablón / Mis incursiones / Programar.
 - Q: ¿Se reservan el Pokémon marcado y una llave desde que se marca en la sala hasta el comienzo? → A: Sí (marcar exige la llave; el checkin no).
 - Q: Si hay checkins pero nadie con Pokémon marcado y se cancela, ¿se reparten las fianzas de los ausentes? → A: Sí, igual que si empieza.
+- Q: ¿Hasta cuándo se puede cancelar o darse de baja con la fianza devuelta? → A: Hasta 3 h antes del comienzo (sustituye a «1 h antes de abrir la sala»); el creador cancela en el mismo plazo y todos recuperan su fianza.
+- Q: ¿En qué tablón se publica una incursión programada? → A: También en el Tablón de anuncios del Menú del rancho (FR-034), además de en Ruta › Incursiones › Tablón.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -146,8 +148,8 @@ información.
 - **Hay checkins pero nadie con Pokémon marcado**: la incursión se cancela sin gastar llaves y las fianzas de los
   ausentes se reparten igual entre quienes hicieron el checkin (FR-012).
 - **El creador cancela la incursión**: ver FR-004.
-- **Se da de baja** de una incursión aceptada: hasta 1 h antes de que abra la sala (1 h 10 min antes del comienzo)
-  recupera la fianza entera y libera su hueco. Después ya no puede darse de baja: si no se presenta, cuenta como
+- **Se da de baja** de una incursión aceptada: hasta 3 h antes del comienzo recupera la fianza entera y libera su
+  hueco. Después ya no puede darse de baja: si no se presenta, cuenta como
   quien no hace el checkin.
 - **No hace el checkin** dentro de los 10 min: pierde la fianza, que se reparte a partes iguales entre quienes sí
   hicieron el checkin (redondeado hacia abajo; el resto se pierde). Si nadie hizo el checkin, todas las fianzas se
@@ -177,8 +179,8 @@ información.
 - **FR-002b**: Un jugador MUST poder tener como mucho 3 incursiones programadas creadas y 5 aceptadas (sin contar las
   creadas) pendientes a la vez; al llegar al tope, el juego MUST impedir crear o aceptar más y decir por qué.
 - **FR-003**: Al programarla, el creador MUST ocupar directamente uno de los 5 huecos y depositar su fianza.
-- **FR-004**: El creador MUST poder cancelarla antes de que abra la sala; al cancelarla se devuelven todas las fianzas
-  y se avisa a los apuntados.
+- **FR-004**: El creador MUST poder cancelarla hasta 3 h antes del comienzo; al cancelarla se devuelven todas las
+  fianzas (la suya incluida) y se avisa a los apuntados. Después ya no se puede cancelar.
 
 **Tablón y aceptar**
 
@@ -188,8 +190,8 @@ información.
   fianza del 10% de su dinero en ese momento (redondeado hacia abajo).
 - **FR-007**: Los huecos MUST asignarse por orden de aceptación; con 5/5 no se admiten más.
 - **FR-008**: El jugador MUST ver sus incursiones aceptadas con la cuenta atrás hasta que abra la sala.
-- **FR-008b**: Un apuntado (no el creador) MUST poder darse de baja con devolución íntegra de la fianza hasta 1 h
-  antes de que abra la sala; pasado ese momento, la baja MUST NOT estar disponible y el juego MUST mostrar hasta
+- **FR-008b**: Un apuntado (no el creador) MUST poder darse de baja con devolución íntegra de la fianza hasta 3 h
+  antes del comienzo; pasado ese momento, la baja MUST NOT estar disponible y el juego MUST mostrar hasta
   cuándo se puede.
 - **FR-009**: Aceptar MUST NOT exigir tener la llave, pero el anuncio MUST indicar si el jugador la tiene.
 - **FR-009b**: Crear o aceptar una incursión MUST exigir tener al menos un Pokémon cuyo nivel esté dentro del nivel de
@@ -262,6 +264,10 @@ información.
   comienzo, los 5 huecos (apodo, Pokémon, si ha fijado) y, abajo, el Pokémon y el ataque marcados del jugador con
   «Cambiar» y «Fijar». Desde la hora de comienzo, la incursión se ve como hoy.
 
+- **FR-034**: Cada incursión programada aún no empezada MUST salir también como anuncio en el Tablón de anuncios del
+  Menú del rancho, encima de las novedades: quién la programó, cuándo empieza, huecos, nivel de entrada y premios, con
+  un botón que lleva al tablón de incursiones (o a «Mis incursiones» si ya está apuntado). Sin servidor no sale.
+
 **Convivencia**
 
 - **FR-029**: Sin servidor, la incursión MUST seguir jugándose en local con bots y al momento, como hoy.
@@ -328,7 +334,7 @@ Aprobados por el usuario el 2026-11-17 (respuestas a las preguntas de `/speckit-
 - El ataque marcado al hacer el checkin es el que la preparación actual propone para ese Pokémon.
 - Las incursiones gratuitas (la de prueba) no se programan: se siguen jugando al momento.
 - El nivel de entrada, los bots, las salas, el combate y los premios no cambian.
-- Los números (10%, 10 min, 1 h de plazo para darse de baja, 15 min de antelación mínima, 7 días máximo, límites por
+- Los números (10%, 10 min, 3 h de plazo para darse de baja o cancelar, 15 min de antelación mínima, 7 días máximo, límites por
   jugador) son constantes de balance con nombre, para ajustarlos a mano.
-- Una incursión programada con menos de 1 h 10 min de antelación no admite bajas desde el primer momento; el anuncio
-  lo indica.
+- Una incursión programada con menos de 3 h de antelación no admite bajas ni cancelación desde el primer momento;
+  «Mis incursiones» lo indica.

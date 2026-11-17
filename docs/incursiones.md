@@ -399,7 +399,7 @@ completar.
 | Llaves | 5.000 / 10.000 / 30.000 / 50.000 ₽, máx. 10 | `data/incursions.ts › KEY_PRICE, MAX_KEYS` |
 
 | Reorganizar | 90 s | `activeIncursion.ts › REGROUP_MS` |
-| Incursiones programadas | franjas de 15 min, de 15 min a 7 días de antelación; fianza 10%; sala 10 min antes; baja con devolución hasta 1 h antes de abrir la sala; como mucho 3 creadas y 5 aceptadas a la vez, separadas 45 min; el servidor las guarda 7 días tras empezar; sin noticias del servidor, el checkin y la fianza caducan entonces (quien vuelve tarde aún entra en su grupo) | `schedule/scheduleRules.ts › SLOT_MS, MIN_LEAD_MS, MAX_LEAD_MS, BOND_FRACTION, CHECKIN_OPEN_MS, LEAVE_DEADLINE_MS, MAX_CREATED, MAX_JOINED, SCHEDULE_GAP_MS, SCHEDULE_TTL_MS` |
+| Incursiones programadas | franjas de 15 min, de 15 min a 7 días de antelación; fianza 10%; sala 10 min antes; baja (o cancelarla el creador) con devolución hasta 3 h antes del comienzo; como mucho 3 creadas y 5 aceptadas a la vez, separadas 45 min; el servidor las guarda 7 días tras empezar; sin noticias del servidor, el checkin y la fianza caducan entonces (quien vuelve tarde aún entra en su grupo) | `schedule/scheduleRules.ts › SLOT_MS, MIN_LEAD_MS, MAX_LEAD_MS, BOND_FRACTION, CHECKIN_OPEN_MS, CANCEL_DEADLINE_MS, MAX_CREATED, MAX_JOINED, SCHEDULE_GAP_MS, SCHEDULE_TTL_MS` |
 | Grupos en el servidor | se borran tras 24 h sin consultas | `online/protocol.ts › GROUP_TTL_MS` |
 | Consultas | cada 3 s en la sala del checkin y al reorganizar; cada 10 s jugando un tramo; el tablón cada 30 s mientras se mira, al cambiar de subpestaña y al volver a la app (y cada 60 s con fianzas retenidas) | `net/incursionSync.ts › QUICK_SYNC_MS, PLAY_SYNC_MS`, `net/scheduleSync.ts › ROOM_SYNC_MS, BONDS_SYNC_MS`, `net/incursionBoard.ts › REFRESH_EVERY_MS` |
 
@@ -517,8 +517,12 @@ Desde el 2026-11-17 sustituyen a la cola automática (decisión del usuario, `sp
   creador cancela. La de quien no hace el checkin se reparte a partes iguales (hacia abajo) entre los que sí, a la hora
   de comienzo, también si se cancela por no haber nadie con Pokémon; si nadie hizo el checkin, se pierde. Cada móvil la
   liquida al leer al servidor; si el servidor ya no la tiene, se devuelve.
-- **Bajas y cancelación**: un apuntado puede darse de baja con devolución hasta 1 h antes de abrir la sala; después,
-  no. El creador no se da de baja: cancela, hasta que abre la sala.
+- **Bajas y cancelación**: hasta 3 h antes del comienzo, un apuntado puede darse de baja con su fianza devuelta y el
+  creador puede cancelarla: todos (también él) recuperan la suya. Después, ninguna de las dos cosas. El creador no se
+  da de baja: cancela. Una programada con menos de 3 h de antelación no admite bajas ni cancelación desde el principio.
+- **Anuncio en el menú**: las que aún no han empezado salen también, encima de las novedades, en el Tablón de
+  anuncios del Menú del rancho (quién, cuándo, huecos, nivel y premios), con un botón para ir a apuntarse
+  (`ui/board/ScheduledAnnouncements.tsx`; mismos datos que el tablón de incursiones).
 - **Topes**: 3 creadas y 5 aceptadas sin empezar a la vez, con 45 min entre los comienzos de las de un jugador.
 - **Sala del checkin**: abre 10 min antes y avisa por push a cada apuntado. Al entrar se devuelve la fianza y se marca
   el primer Pokémon disponible (orden del selector: favoritos y nivel) con su primer ataque; se puede cambiar hasta la

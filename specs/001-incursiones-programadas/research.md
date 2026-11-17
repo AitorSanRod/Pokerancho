@@ -14,8 +14,8 @@ Decisiones técnicas para cumplir [spec.md](spec.md) sobre lo que ya hay (cola y
 
 ## R2. Cuándo pasa de fase y cuándo arranca (sin cron)
 
-- **Decision**: las fases se calculan con la hora (`schedulePhase(sched, now)`): Abierta → Sin bajas (desde 1 h antes de
-  abrir la sala) → Sala (10 min antes) → Empezada / Cancelada. El grupo se forma **perezosamente** en la primera petición
+- **Decision**: las fases se calculan con la hora (`schedulePhase(sched, now)`): Abierta → Sin bajas ni cancelación (desde
+  3 h antes del comienzo) → Sala (10 min antes) → Empezada / Cancelada. El grupo se forma **perezosamente** en la primera petición
   de cualquier apuntado después de la hora de comienzo, con `legStarts = [startAt]` (no la hora de la petición), así que
   todos ven la misma línea de tiempo aunque nadie consulte justo a la hora. Igual que las raids («cada consulta cierra lo
   pasado»).
