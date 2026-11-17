@@ -1,8 +1,8 @@
 // Notificaciones push (worker/push): lo que comparten la web y el servidor. Cada aviso es de un tema, que el jugador
 // activa o no en Ajustes; los de expediciones y ruta los programa el móvil (solo él sabe cuándo acaban) y los del
-// obsequio, las raids y los intercambios, el servidor.
+// obsequio, las raids, las incursiones programadas y los intercambios, el servidor.
 
-export const PushTopic = { Expedition: 'expedition', Gift: 'gift', Raid: 'raid', Run: 'run', Trade: 'trade' } as const
+export const PushTopic = { Expedition: 'expedition', Gift: 'gift', Raid: 'raid', Run: 'run', Trade: 'trade', Incursion: 'incursion' } as const
 export type PushTopic = (typeof PushTopic)[keyof typeof PushTopic]
 
 export const PUSH_TOPICS: PushTopic[] = Object.values(PushTopic)

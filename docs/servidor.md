@@ -20,7 +20,7 @@ Cómo funciona por dentro: [arquitectura.md › Salas con servidor](arquitectura
 | Esquema de la base de datos (cuentas, sesiones, partidas, salas) | `migrations/0001_init.sql` |
 | Entrada del Worker y rutas de la API | `worker/index.ts` |
 | Salas de la pestaña Raids: `POST /api/raid` (cuántos esperan, entrar, salir, ponerse al día, toques, ataque y crítico). Una consulta sin cambios no escribe en D1; las salas de ciclos ya jugados las borra la tarea programada. Las tablas, en `migrations/0018_raid_schedule.sql` | `worker/raid.ts` + `worker/db/rooms.ts` |
-| Incursiones con otros jugadores: `POST /api/incursion` (cola, grupo, reorganizar, votos). Una consulta sin cambios no escribe en D1; los grupos sin consultas en 24 h los borra la tarea programada | `worker/incursion.ts` + `worker/db/incursions.ts`; tablas en `migrations/0010_incursions.sql` |
+| Incursiones con otros jugadores: `POST /api/incursion-schedule` (incursiones programadas: tablón, crear, aceptar, baja, cancelar, sala del checkin; a la hora, la primera consulta forma el grupo; avisos push del tema `incursion`) y `POST /api/incursion` (el grupo: reorganizar, votos, toques). Una consulta sin cambios no escribe en D1; la tarea programada borra los grupos sin consultas en 24 h y las programadas 7 días después de su hora | `worker/incursionSchedule.ts` + `worker/db/schedules.ts`, `worker/incursion.ts` + `worker/db/incursions.ts`; tablas en `migrations/0010_incursions.sql` y `0019_incursion_schedules.sql` (la cola ya no existe) |
 | Partida en la nube: `GET` / `POST /api/save` (solo con sesión) | `worker/save.ts` + `worker/db/saves.ts` |
 | Cuentas: `/api/auth/*` (crear, confirmar, entrar, salir, recuperar, apodo) | `worker/auth/` + `worker/db/users.ts` |
 | Regalos para todos o para un jugador: `GET /api/server-gifts` (los de todos, sin cuenta; los de un jugador, con su sesión; cada partida apunta los que ya recogió). Se ponen y caducan con una migración en la tabla `server_gifts` (ver `migrations/0011_server_gifts.sql` y `0013_save_safety.sql`) | `worker/serverGifts.ts`, `src/game/collection/serverGifts.ts` |
@@ -117,7 +117,7 @@ cada navegador tendría que volver a activar los avisos. Sin ellas, Ajustes › 
 
 - `npm run dev`: solo la app, en <http://localhost:5173>. Sin servidor: raids con bots locales y sin cuentas.
 - Con servidor: `npm run db:migrate:local` (una vez, crea la base de datos local en `.wrangler/`) y luego
-  `npm run preview`, que compila y arranca el Worker en <http://localhost:8787> con el mismo runtime que Cloudflare.
+  `npm run preview`, que compila y arranca el Worker en <http://localhost:8787> con el mismo runtime que Cloudflare (escucha en `0.0.0.0`: desde el móvil, `http://<IP del PC>:8787`).
   Los correos no salen: el enlace aparece en la terminal.
 
 ## Cambiar la base de datos
@@ -150,7 +150,8 @@ Lo que consulta cada jugador (solo con la app delante; cerrada, las ventanas de 
 | Mirando la pestaña Raids sin estar en una sala (cada 20 s) | ≈ 180 |
 | Con cuenta: subir la partida (cada 2 min) | ≈ 30 |
 | Con cuenta: tablón de intercambios y Notificaciones (cada 60 s, `REFRESH_EVERY_MS` en `src/net/tradeBoard.ts`) | ≈ 60 |
-| Buscando grupo de incursión (cada 3 s, como mucho ≈ 1 min) o en su sala de reorganizar (cada 3 s, como mucho 90 s) | ≈ 1200 mientras dura |
+| En la sala del checkin de una incursión programada (cada 3 s, como mucho 10 min) o en su sala de reorganizar (cada 3 s, como mucho 90 s) | ≈ 1200 mientras dura |
+| Mirando el tablón de incursiones (cada 30 s, `REFRESH_EVERY_MS` en `src/net/incursionBoard.ts`; solo lee) o con fianzas retenidas (cada 60 s, `BONDS_SYNC_MS` en `src/net/scheduleSync.ts`) | ≈ 120 / ≈ 60 |
 | Jugando un tramo de incursión (cada 10 s, `PLAY_SYNC_MS` en `src/net/incursionSync.ts`) | ≈ 360 |
 | Sin Pokémon en salas y sin cuenta | 0 |
 

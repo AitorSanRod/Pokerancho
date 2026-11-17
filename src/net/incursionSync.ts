@@ -1,18 +1,17 @@
-import { useSyncExternalStore } from 'react'
 import { act, getState } from '../store/store'
 import { incursionProgress, IncursionPhase } from '../game/incursion/activeIncursion'
 import { IncursionOutcome } from '../game/incursion/incursionRun'
-import { applyGroupView, dropGroup, leaveQueue, playQueueLocally, queueRequest } from '../game/incursion/online/linkedIncursion'
-import { IncursionAction, type IncursionResponse, type QueueView } from '../game/incursion/online/protocol'
+import { applyGroupView, dropGroup } from '../game/incursion/online/linkedIncursion'
+import { IncursionAction, type IncursionResponse } from '../game/incursion/online/protocol'
 import { DEFAULT_NICKNAME } from '../game/raid/online/protocol'
 import { IncursionApiError, postIncursion } from './incursionApi'
 import { nickname, playerId } from './identity'
 
-// Mantiene la incursión de la partida al día con el servidor: sigue en la cola hasta que se forma el grupo y, dentro,
-// consulta lo que han decidido los demás. Solo con la app delante. Sin servidor, la cola se juega en local con bots.
+// Mantiene la incursión de la partida al día con el servidor: dentro del grupo (formado a la hora de una incursión
+// programada, ver scheduleSync.ts), consulta lo que han decidido los demás. Solo con la app delante.
 // Cada consulta gasta cuota del plan de Cloudflare: ver docs/servidor.md.
 
-/** Milisegundos reales entre consultas en la cola y en la sala de reorganizar */
+/** Milisegundos reales entre consultas en la sala de reorganizar y en la ventana de toques */
 const QUICK_SYNC_MS = 3_000
 /** Milisegundos reales entre consultas mientras se juega un tramo sin ventana de toques pendiente */
 const PLAY_SYNC_MS = 10_000
@@ -26,33 +25,13 @@ const LOOP_MS = 1_000
 
 let busy = false
 let lastSync = 0
-let queue: QueueView | null = null
-const listeners = new Set<() => void>()
 
 const who = () => ({ playerId: playerId(), nickname: nickname() ?? DEFAULT_NICKNAME })
 
-function setQueue(view: QueueView | null) {
-  queue = view
-  listeners.forEach((l) => l())
-}
-
 /** Aplica la respuesta del servidor a la partida */
-function apply(res: IncursionResponse, groupId: string | null) {
+function apply(res: IncursionResponse, groupId: string) {
   if ('group' in res) act((s) => applyGroupView(s, res.group, Date.now()))
-  else if ('queue' in res) setQueue(res.queue)
-  else if (groupId) act((s) => dropGroup(s, groupId))
-}
-
-async function syncQueue() {
-  const req = queueRequest(getState())
-  if (!req) return
-  try {
-    apply(await postIncursion({ ...req, ...who() }), null)
-  } catch (e) {
-    if (!(e instanceof IncursionApiError)) throw e
-    act((s) => playQueueLocally(s, Date.now()))
-  }
-  if (!getState().incursionQueue) setQueue(null)
+  else act((s) => dropGroup(s, groupId))
 }
 
 function syncEvery(): number {
@@ -66,14 +45,12 @@ function syncEvery(): number {
 async function step() {
   const s = getState()
   const groupId = s.incursion?.online?.groupId ?? null
-  if (busy || document.hidden || (!s.incursionQueue && !groupId)) return
-  const every = s.incursionQueue ? QUICK_SYNC_MS : syncEvery()
-  if (Date.now() - lastSync < every) return
+  if (busy || document.hidden || !groupId) return
+  if (Date.now() - lastSync < syncEvery()) return
   busy = true
   lastSync = Date.now()
   try {
-    if (s.incursionQueue) await syncQueue()
-    else if (groupId) apply(await postIncursion({ action: IncursionAction.Sync, groupId, ...who() }), groupId)
+    apply(await postIncursion({ action: IncursionAction.Sync, groupId, ...who() }), groupId)
   } catch (e) {
     if (!(e instanceof IncursionApiError)) throw e
   } finally {
@@ -107,18 +84,6 @@ export const sendIncursionPick = (moveId: string, target: string | null) => send
 /** Ha llegado a los toques en la ventana `turn` del tramo `leg` */
 export const sendIncursionTap = (leg: number, turn: number) => sendToGroup({ action: IncursionAction.Tap, leg, turn })
 
-/** Sale de la cola; si el grupo ya se había formado, entra en él */
-export async function leaveIncursionQueue() {
-  try {
-    const res = await postIncursion({ action: IncursionAction.Leave, ...who() })
-    if ('group' in res) return apply(res, null)
-  } catch (e) {
-    if (!(e instanceof IncursionApiError)) throw e
-  }
-  act(leaveQueue)
-  setQueue(null)
-}
-
 /** Arranca el bucle (una vez, en App); devuelve cómo pararlo */
 export function startIncursionSync(): () => void {
   const id = setInterval(step, LOOP_MS)
@@ -131,15 +96,4 @@ export function startIncursionSync(): () => void {
     clearInterval(id)
     document.removeEventListener('visibilitychange', onVisible)
   }
-}
-
-/** Lo último que dijo el servidor de la cola (null hasta la primera respuesta) */
-export function useIncursionQueue(): QueueView | null {
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l)
-      return () => listeners.delete(l)
-    },
-    () => queue,
-  )
 }

@@ -47,7 +47,7 @@ src/
                       incursionLeg (un tramo: salas hasta reorganizar o el final), groupBattle (combate N contra M),
                       moveEffects + targeting (qué hace cada movimiento y a quién), groupStatus, bossMechanics, revives,
                       groupPassives, movePicks + incursionPicks (cambiar ataque y objetivo en plena pelea), repertoire, party (bots),
-                      incursionRewards, incursionTimeline, retreatVote, entry (nivel mínimo y máximo para entrar), keys, activeIncursion (lo guardado y por dónde va) e incursionGame (en la partida, sin servidor); online/ (protocolo, validar, el grupo en el servidor y la partida enlazada)
+                      incursionRewards, incursionTimeline, retreatVote, entry (nivel mínimo y máximo para entrar), keys, activeIncursion (lo guardado y por dónde va) e incursionGame (en la partida, sin servidor); online/ (protocolo, validar, el grupo en el servidor y la partida enlazada); schedule/ (incursiones programadas: reglas, sala, comienzo, fianzas y avisos)
     trade/            Intercambios: tradeGoods (qué se ofrece y pide, límites, validar), tradeGive (lo que sale de la
                       partida), tradeReceive (lo que entra; repetidos), tradeOps (operaciones que aplican servidor y móvil),
                       tradeProtocol (tablón y peticiones), goodText (textos), serverSale (venta al servidor)
@@ -78,7 +78,8 @@ src/
                       salir), la pelea (RaidFightView bajo las pestañas, con la escena de la incursión, cabecera
                       como la de ruta en RaidFightHud y la barra de ataques de las rutas), el anillo crítico, el
                       final y el apodo (NicknameDialog)
-    incursion/        Pestaña Ruta › Incursiones: lista con información, preparación (Pokémon y movimiento), la
+    incursion/        Pestaña Ruta › Incursiones: subpestañas Tablón, Mis incursiones y Programar (incursiones
+                      programadas), sala del checkin, lista con información, preparación para jugar ya con bots, la
                       incursión en curso (IncursionStage sobre la escena de ruta; sceneState rehace cada momento desde
                       los eventos), sala de reorganizar, retirada y final
     gacha/            Tiradas, apertura de la Pokéball, trituradora y tienda de MissingNo
@@ -87,7 +88,8 @@ src/
 worker/
   index.ts            Entrada: /api/raid, /api/save y /api/auth/* (la web la sirve Cloudflare sin pasar por aquí)
   raid.ts             POST /api/raid: las salas de la pestaña Raids (lee de D1, llama a game/raid/online y guarda)
-  incursion.ts        POST /api/incursion: cola y grupos de incursión (lee de D1, llama a game/incursion/online y guarda)
+  incursion.ts        POST /api/incursion: grupos de incursión (lee de D1, llama a game/incursion/online y guarda)
+  incursionSchedule.ts POST /api/incursion-schedule: incursiones programadas (game/incursion/schedule; avisos push)
   save.ts             GET / POST /api/save: la partida de la cuenta con sesión
   gift.ts             GET / POST /api/gift: el obsequio diario de la cuenta con sesión
   push/               Notificaciones: routes (/api/push/*), webPush (VAPID y cifrado), store (D1), notify, send
@@ -203,7 +205,7 @@ En los tests se pasa un rng determinista. Una función nueva con azar **debe** s
   ya no existe se descarta); los demás se conservan si tienen la misma forma que el inicial, y los nuevos toman su
   valor inicial. Al final se arreglan las relaciones (`linkUp`: Pokémon sin repetir, activo y expediciones de
   Pokémon que existen, capturados como vistos, rutas completadas como desbloqueadas, ranchos comprados). Lo que
-  está a medias (`IN_PROGRESS`: la ruta, las salas de raid, la incursión en curso o en cola y la torre) sigue si su forma
+  está a medias (`IN_PROGRESS`: la ruta, las salas de raid, la incursión en curso, el checkin de una programada y la torre) sigue si su forma
   no ha cambiado desde la versión guardada (`core/progressCarry.ts › CARRIED_SINCE`, y lo que nombra sigue existiendo);
   si no, se descarta y el Pokémon vuelve al rancho. Lo ganado en la ruta ya está sumado y la llave de la incursión se devuelve, así que jugar sin conexión con
   la versión anterior y actualizar después no quita nada.

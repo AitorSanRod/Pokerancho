@@ -103,3 +103,15 @@ export async function dueJobs(db: D1Database, now: number, limit: number): Promi
 
 export const deleteJob = (db: D1Database, j: DueJob) =>
   db.prepare('DELETE FROM push_jobs WHERE endpoint = ? AND topic = ? AND key = ?').bind(j.target.endpoint, j.topic, j.key).run()
+
+/** Borra los avisos aún sin mandar de ese tema y clave a los navegadores de esos jugadores (p. ej. se dio de baja) */
+export async function cancelJobs(db: D1Database, playerIds: string[], topic: PushTopic, key: string) {
+  if (playerIds.length === 0) return
+  await db
+    .prepare(
+      `DELETE FROM push_jobs WHERE topic = ? AND key = ?
+       AND endpoint IN (SELECT endpoint FROM push_subscriptions WHERE player_id IN (${playerIds.map(() => '?').join(', ')}))`,
+    )
+    .bind(topic, key, ...playerIds)
+    .run()
+}

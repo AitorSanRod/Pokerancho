@@ -28,13 +28,18 @@ import { addStarItems } from '../collection/starItems'
 
 /** Por qué no puede entrar ese Pokémon con ese movimiento (null si puede) */
 export function incursionBlocker(s: GameState, id: IncursionId, uid: string, moveId: string): string | null {
+  if (s.incursion) return 'Ya estás en una incursión.'
+  if (s.incursionCheckin) return 'Estás en la sala de una incursión programada.'
+  if (findMon(s, uid) && monPlace(s, uid) !== MonPlace.Ranch) return 'Tiene que estar en el rancho.'
+  return monEntryBlocker(s, id, uid, moveId)
+}
+
+/** Lo que pide la incursión al Pokémon y al jugador, esté donde esté el Pokémon: llave, nivel, PS y movimiento */
+export function monEntryBlocker(s: GameState, id: IncursionId, uid: string, moveId: string): string | null {
   const mon = findMon(s, uid)
   if (!mon) return 'Ese Pokémon no existe.'
   const inc = incursion(id)
-  if (s.incursion) return 'Ya estás en una incursión.'
-  if (s.incursionQueue) return 'Ya estás buscando grupo.'
   if (!canAffordEntry(s, id)) return 'Necesitas una llave de esta incursión. Se compran en la Tienda.'
-  if (monPlace(s, uid) !== MonPlace.Ranch) return 'Tiene que estar en el rancho.'
   const block = entryBlock(inc, mon.level)
   if (block === EntryBlock.TooLow) return `Hace falta Nv. ${inc.minLevel} para entrar.`
   if (block === EntryBlock.TooHigh) return `No pueden entrar Pokémon de más de Nv. ${inc.maxLevel}.`

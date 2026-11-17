@@ -6,6 +6,7 @@ import { startAccount } from './net/account'
 import { startCloudSync } from './net/cloudSync'
 import { startPush } from './net/push'
 import { startIncursionSync } from './net/incursionSync'
+import { startScheduleSync } from './net/scheduleSync'
 import { startServerGifts } from './net/serverGifts'
 import { startRaidSync } from './net/raidSync'
 import { startTradeBoard } from './net/tradeBoard'
@@ -20,7 +21,7 @@ import { TopBar } from './ui/shared/TopBar'
 import { TutorialNavHint } from './ui/shared/TutorialHint'
 import { ICON } from './ui/shared/icons'
 import { ItemIcon } from './ui/shared/ItemIcon'
-import { listenTabRequests, type AppTab } from './ui/shared/navigation'
+import { listenPushNavigation, listenTabRequests, type AppTab } from './ui/shared/navigation'
 import { pendingKey, useUnseen } from './ui/shared/useUnseen'
 import { useMenuPending } from './ui/ranch/useMenuPending'
 import { DexScreen, GachaScreen, preloadScreens, RanchScreen, RouteScreen, ShopScreen, StarterScreen } from './ui/lazyScreens'
@@ -48,9 +49,11 @@ export default function App() {
   useEffect(preloadScreens, [])
   // Otras pantallas pueden llevar a una pestaña (p. ej. comprar una llave en la Tienda)
   useEffect(() => listenTabRequests(setTab), [])
+  useEffect(listenPushNavigation, [])
   // Salas de los jefes de la pestaña Raids: entrar, ponerse al día y avisar al salir
   useEffect(startRaidSync, [])
   useEffect(startIncursionSync, [])
+  useEffect(startScheduleSync, [])
   // Regalos del servidor, para todos o para este jugador (en Notificaciones)
   useEffect(startServerGifts, [])
   // Notificaciones push: el plan de avisos al ocultarse la app y la suscripción al día con la cuenta

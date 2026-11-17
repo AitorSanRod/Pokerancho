@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { STARTERS } from '../src/data/species'
 import { cloudUpload } from '../src/game/core/cloudSave'
 import { RANKING_ACTIVE_MS, RANKING_REFRESH_MS, RANKING_SIZE, RankingCode, rankingWeek } from '../src/game/core/ranking'
-import { initialState } from '../src/game/core/state'
+import { IncursionId } from '../src/data/incursions'
+import { initialState, type GameState } from '../src/game/core/state'
 import { chooseStarter } from '../src/game/core/test-utils'
 import { refreshRanking } from './ranking'
 import { player, type Api } from './test/accounts'
@@ -13,8 +14,9 @@ vi.mock('../src/data/maps/kantoMaps', () => import('../src/game/core/test-map'))
 vi.mock('../src/data/rankingCuts', () => ({ RANKING_EXTRA_CUTS: [] }))
 
 /** Sube una partida con ese dinero y, en la torre, ese piso como el mejor de la semana `week` (por defecto, esta) */
-async function upload(api: Api, money: number, towerFloor = 0, week = rankingWeek(Date.now())) {
+async function upload(api: Api, money: number, towerFloor = 0, week = rankingWeek(Date.now()), bonds: GameState['incursionBonds'] = []) {
   const s = initialState()
+  s.incursionBonds = bonds
   chooseStarter(s, STARTERS[0])
   s.money = money
   s.towerBest = towerFloor
@@ -27,6 +29,14 @@ const refresh = (api: Api) => refreshRanking(api.env.DB, Date.now())
 afterEach(() => vi.useRealTimers())
 
 describe('ranking de dinero', () => {
+  it('cuenta las fianzas de incursiones aún retenidas', async () => {
+    const ash = await player('ash@paleta.es', 'Ash')
+    const bond = (amount: number, refunded: boolean) => ({ scheduleId: `s${amount}`, incursionId: IncursionId.CuevaHelada, startAt: 0, amount, refunded })
+    await upload(ash, 100, 0, rankingWeek(Date.now()), [bond(40, false), bond(7, true)])
+    await refresh(ash)
+    expect((await ash.call('/api/ranking')).data.ranking.mine).toEqual({ rank: 1, money: 140 })
+  })
+
   it('ordena por dinero y marca tu puesto', async () => {
     const ash = await player('ash@paleta.es', 'Ash')
     const gary = await player('gary@paleta.es', 'Gary', ash.env)

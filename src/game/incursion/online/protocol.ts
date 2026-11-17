@@ -3,21 +3,14 @@ import type { MemberState } from '../fighter'
 import type { LegOrders, Retreat } from '../incursionRun'
 import type { MovePick } from '../tapWindow'
 
-// Lo que se dicen el juego y el servidor de incursiones (worker/incursion.ts). El jugador va por su id (el mismo de los
-// raids, ver net/identity.ts) y su apodo.
+// Lo que se dicen el juego y el servidor sobre un grupo de incursión ya formado (worker/incursion.ts). El jugador va
+// por su id (el mismo de los raids, ver net/identity.ts) y su apodo. Los grupos se forman a la hora de una incursión
+// programada (ver schedule/scheduleProtocol.ts).
 
-/** Milisegundos que se espera en la cola como mucho: luego el grupo se completa con bots */
-export const QUEUE_MAX_MS = 60_000
-/** Sin consultar en este tiempo, el jugador sale de la cola (cerró la app) */
-export const QUEUE_STALE_MS = 20_000
 /** Un grupo sin consultas en este tiempo se borra */
 export const GROUP_TTL_MS = 24 * 60 * 60 * 1000
 
 export const IncursionAction = {
-  /** Ponerse (o seguir) en la cola; si ya se ha formado el grupo, lo devuelve */
-  Queue: 'queue',
-  /** Salir de la cola */
-  Leave: 'leave',
   /** Ponerse al día con el grupo */
   Sync: 'sync',
   /** Elegir movimiento en la sala de reorganizar */
@@ -38,15 +31,6 @@ interface PlayerRequest {
   nickname: string
 }
 
-export interface QueueRequest extends PlayerRequest {
-  action: typeof IncursionAction.Queue
-  incursionId: IncursionId
-  /** Su Pokémon, con el uid como id */
-  member: MemberState
-}
-export interface LeaveRequest extends PlayerRequest {
-  action: typeof IncursionAction.Leave
-}
 interface GroupRequestBase extends PlayerRequest {
   groupId: string
 }
@@ -76,13 +60,6 @@ export interface PickRequest extends GroupRequestBase {
   target: string | null
 }
 export type GroupRequest = SyncRequest | MoveRequest | ReadyRequest | VoteRequest | TapRequest | PickRequest
-export type IncursionRequest = QueueRequest | LeaveRequest | GroupRequest
-
-/** En la cola: cuántos esperan esa incursión (con él) y desde cuándo espera él */
-export interface QueueView {
-  waiting: number
-  since: number
-}
 
 /** El grupo visto por un jugador; las horas, en el reloj del servidor (`serverNow`) */
 export interface GroupView {
@@ -105,5 +82,5 @@ export interface GroupView {
   serverNow: number
 }
 
-/** Respuesta: el grupo, la cola, o `gone` (ese grupo ya no existe o no está en él) */
-export type IncursionResponse = { group: GroupView } | { queue: QueueView } | { gone: true }
+/** Respuesta: el grupo, o `gone` (ese grupo ya no existe o no está en él) */
+export type IncursionResponse = { group: GroupView } | { gone: true }

@@ -15,7 +15,7 @@ const NOW = 1_000_000
 const FAR = NOW + 24 * 60 * 60 * 1000
 const member = (id: string) => freshMember({ id, speciesId: POKEMON.Snorlax, level: 20, stars: 0, moveId: repertoire(POKEMON.Snorlax, 20)[0].id })
 const boosting = { boosted: ['mon0'], picks: {} }
-const plan = () => formGroup('abcdef12', TEST_INCURSION.id, [{ playerId: 'jugador-0', nickname: 'J', member: member('mon0'), joinedAt: NOW }], NOW, seqRng(0.5))
+const plan = () => formGroup('abcdef12', TEST_INCURSION.id, [{ playerId: 'jugador-0', nickname: 'J', member: member('mon0') }], NOW, seqRng(0.5))
 
 describe('cerrar ventanas de toques', () => {
   it('antes de su hora no cierra nada', () => {

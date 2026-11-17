@@ -10,18 +10,18 @@ import type { GameState } from './state'
 type Save = Record<string, unknown>
 
 /** Lo que puede seguir a medias de una versión a otra */
-export type CarriedKey = 'run' | 'raids' | 'incursion' | 'incursionQueue' | 'tower'
+export type CarriedKey = 'run' | 'raids' | 'incursion' | 'incursionCheckin' | 'tower'
 
 /**
  * SAVE_VERSION en la que cambió por última vez la forma o las reglas de cada cosa a medias: una partida guardada con
  * esa versión o una posterior la conserva. Se cambia (a la SAVE_VERSION nueva) al tocar Run, Raid, ActiveIncursion,
- * IncursionQueue o TowerRun, o algo que haga que lo guardado ya no se juegue igual
+ * ScheduleCheckin o TowerRun, o algo que haga que lo guardado ya no se juegue igual
  */
 export const CARRIED_SINCE: Record<CarriedKey, number> = {
   run: 64,
   raids: 64,
   incursion: 58,
-  incursionQueue: 58,
+  incursionCheckin: 65,
   tower: 64,
 }
 
@@ -50,8 +50,9 @@ function stillFits(key: CarriedKey, v: unknown, save: Save, uids: Set<unknown>):
     case 'tower':
       return uids.has(v.uid)
     case 'incursion':
-    case 'incursionQueue':
       return uids.has(v.uid) && isIncursionId(v.incursionId)
+    case 'incursionCheckin':
+      return (v.uid === null || uids.has(v.uid)) && isIncursionId(v.incursionId)
   }
 }
 

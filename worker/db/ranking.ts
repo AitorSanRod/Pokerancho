@@ -4,7 +4,7 @@ import { rebuildTowerStatements } from './towerRanking'
 import { RANKED_USERS } from './users'
 
 // El ranking de dinero en D1 (tablas ranking y ranking_meta, migrations/0008_ranking.sql). La foto sale del dinero de
-// la partida en la nube de cada cuenta; al leerla se vuelve a mirar el apodo y si la cuenta sigue queriendo salir.
+// la partida en la nube de cada cuenta, con las fianzas de incursiones programadas aún retenidas; al leerla se vuelve a mirar el apodo y si la cuenta sigue queriendo salir.
 
 /**
  * Rehace las fotos del dinero, del daño (damageRanking.ts) y de la torre (towerRanking.ts). La del dinero, con las cuentas visibles que han subido la
@@ -17,7 +17,10 @@ export async function rebuildRanking(db: D1Database, now: number) {
       .prepare(
         `INSERT INTO ranking (user_id, rank, money)
          SELECT user_id, RANK() OVER (ORDER BY money DESC), money FROM (
-           SELECT saves.user_id, CAST(json_extract(saves.data, '$.save.money') AS INTEGER) AS money
+           SELECT saves.user_id, CAST(json_extract(saves.data, '$.save.money') AS INTEGER) + COALESCE((
+             SELECT SUM(json_extract(b.value, '$.amount')) FROM json_each(saves.data, '$.save.incursionBonds') b
+             WHERE json_extract(b.value, '$.refunded') = 0
+           ), 0) AS money
            FROM saves JOIN users ON users.id = saves.user_id
            WHERE ${RANKED_USERS} AND saves.updated_at >= ?
          ) WHERE money IS NOT NULL`,

@@ -1,5 +1,6 @@
 import { refreshMissions } from '../collection/missionPicks'
 import { advanceIncursion } from '../incursion/incursionGame'
+import { expireSchedules } from '../incursion/schedule/linkedSchedule'
 import { advanceRaids } from '../raid/raidPlay'
 import { advanceRun } from '../run/run'
 import { advanceExpeditions } from '../team/expedition'
@@ -31,6 +32,7 @@ export function tick(s: GameState, now: number, hold: BattleHold = NO_HOLD) {
   advanceExpeditions(s, minutes)
   advanceRaids(s, now)
   advanceIncursion(s, now)
+  expireSchedules(s, now)
   if (!(hold.tower && s.tower && s.tower.battleMsLeft > 0)) advanceTower(s, dt)
   restInRanch(s, minutes)
   refreshMissions(s, now)

@@ -56,7 +56,7 @@ Razón: permite testear todo el juego sin navegador y compartirlo con el Worker.
   campo (`core/saveMigration.ts`): paso en `SAVE_MIGRATIONS` con su test si un campo cambia de nombre o
   de significado, regla en `RULES` si el campo valida ids.
 - Si cambian la forma o las reglas de algo que va a medias (`Run`, `Raid`, `ActiveIncursion`,
-  `IncursionQueue`, `TowerRun`), se actualiza su entrada en `CARRIED_SINCE`.
+  `ScheduleCheckin`, `TowerRun`), se actualiza su entrada en `CARRIED_SINCE`.
 - Lo conseguido no se pierde al actualizar, evolucionar, vender o intercambiar: las expediciones en
   curso terminan con sus condiciones, la Pokédex conserva lo capturado y la nube guarda copias.
 - Los valores de los diccionarios (`as const`) son lo que se guarda: cambiarlos es un cambio de
@@ -168,4 +168,4 @@ sección o se amplía materialmente, PATCH para aclaraciones y redacción.
 justifica por escrito o se elimina. `revision-limpia` sirve de checklist antes de cerrar una tarea
 grande.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-17 | **Last Amended**: 2026-11-17
+**Version**: 1.0.1 | **Ratified**: 2026-11-17 | **Last Amended**: 2026-11-17

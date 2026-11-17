@@ -1,6 +1,7 @@
 # Incursiones
 
-> Estado: **se puede jugar**, con otros jugadores por el servidor (cola de 1 min y, si no llegan a cinco, bots) o, sin
+> Estado: **se puede jugar**, con otros jugadores por el servidor (incursiones **programadas** a una hora fija y, en los
+> huecos que queden, bots) o, sin
 > servidor, en local con bots. Hay guía en Tutoriales (menú del rancho). Falta el fondo de la Cueva Helada. Los números están en la tabla
 > [Números](#números) y son un punto de partida para ajustar a mano.
 
@@ -16,7 +17,7 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
 | Ritmo | Por turnos y automático. Lo que se decide (movimiento) se elige antes de entrar o en las salas de reorganizar |
 | Ataques | Uno por Pokémon (más adelante, varios con condiciones). Cada Pokémon tiene su **repertorio**: como mucho dos por tipo (su mejor ataque de daño y el de apoyo del tipo) más los propios de la especie y lo aprendido con **MTs** |
 | Roles | Libres: el papel lo da el movimiento elegido (daño, curar, provocar, apoyo) |
-| Grupo | Cola automática de 5. Si en **1 min** no se llena, se completa con bots |
+| Grupo | **Incursiones programadas** (desde 2026-11-17; sustituyen a la cola automática): un jugador elige incursión y franja de 15 min, ocupa un hueco y deja una **fianza** (10% de su dinero); el resto se apunta desde el tablón. A la hora, los huecos de quien no hizo el checkin, con bots. Ver [Incursiones programadas](#incursiones-programadas) |
 | Salas | Escritas a mano en cada incursión: combate, curar, revivir, reorganizar ataques, jefe. PS y estados se arrastran entre salas |
 | Rivales | Escritos a mano, sala por sala |
 | Revivires | 3 para el grupo, automáticos al caer: vuelve al turno siguiente con la mitad de sus PS |
@@ -30,7 +31,7 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
 | Estados alterados | Duran como mucho 5 turnos (volver a ponerlo reinicia la cuenta) y se quitan al acabar cada sala. Uno a la vez; los jefes, hasta 3 distintos. **Sueño** (solo en incursiones): el 1.er turno no se despierta, el 2.º con un 25%, el 3.º con un 75% y el 4.º seguro; al despertarse ataca ese mismo turno. **Congelación**: pierde de 1 a 3 turnos al azar (en las rutas, 1) |
 | Duración | 15–25 min, según los niveles del grupo (cuanto más fuerte, antes caen los rivales) |
 | Pokémon dentro | Sale del rancho como en una expedición; vuelve al terminar con los PS que le queden |
-| Acceso | Con una **llave** de esa incursión, comprada en la Tienda (muy fácil 5.000 ₽, fácil 10.000 ₽, media 30.000 ₽, difícil 50.000 ₽; como mucho 10 de cada una); se gasta al formarse el grupo |
+| Acceso | Con una **llave** de esa incursión, comprada en la Tienda (muy fácil 5.000 ₽, fácil 10.000 ₽, media 30.000 ₽, difícil 50.000 ₽; como mucho 10 de cada una); hace falta para marcar Pokémon en la sala y se gasta al empezar |
 | Información | Un apartado en la pestaña que explica cómo funciona todo (grupo, movimientos, pasivas, revivires, nivel, retirada, llaves) |
 | Premios | Escritos a mano: ₽ y EXP en cada sala de combate superada; al terminar, ₽, EXP, tickets y **tickets de cualquier Pokémon** que elijamos |
 | Dónde | Nueva pestaña **Incursiones** arriba en Ruta, junto a Rutas y Raids |
@@ -47,15 +48,16 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
  │  incursiones       │   premios posibles, salas que tiene
  └─────────┬──────────┘
            ▼
- ┌────────────────────┐   1 Pokémon del rancho (Nv ≥ mínimo)
- │  Preparación       │   1 movimiento de su repertorio
- │                    │   ve sus tipos y cuánto suma a las pasivas
+ ┌────────────────────┐   Tablón (programadas por otros: hora, huecos,
+ │  Tablón /          │   premios, llave, fianza) · Mis incursiones
+ │  Programar         │   (cuenta atrás, baja) · Programar (franja de 15 min)
+ └─────────┬──────────┘   crear o aceptar: fianza del 10% del dinero
+           ▼  10 min antes se abre la sala
+ ┌────────────────────┐   checkin: se devuelve la fianza; se marca el primer
+ │  Sala del checkin  │   Pokémon disponible y su ataque (cambiar o «Fijar»;
+ │                    │   hace falta la llave). Ve los 5 huecos
  └─────────┬──────────┘
-           ▼
- ┌────────────────────┐   «Buscando grupo… 3/5»  (cancelar: no gasta la llave)
- │  Cola              │   máx. 60 s; luego bots hasta 5
- └─────────┬──────────┘
-           ▼  grupo formado: se gasta la llave, el Pokémon sale del rancho
+           ▼  a la hora: grupo con quien marcó Pokémon (+ bots); se gasta la llave; reparto de fianzas
  ┌────────────────────┐   tramo 1 → sala de reorganizar → tramo 2 → … → jefe
  │  Incursión         │   en cualquier momento: «Votar retirada» (n/votos)
  │                    │   «Daño del grupo»: quién lleva más daño en total
@@ -78,7 +80,7 @@ Un tramo acaba en una **sala de reorganizar** (cada uno puede cambiar su movimie
 gana la votación de retirada.
 
 ```
-   cola ──► grupo formado ──► TRAMO 1 ──► sala «reorganizar» ──► TRAMO 2 ──► … ──► fin
+   hora ──► grupo formado ──► TRAMO 1 ──► sala «reorganizar» ──► TRAMO 2 ──► … ──► fin
              semilla 1          │          1:30 para cambiar        │
                                 │          movimiento; quien no     │
                                 │          lo hace, sigue igual     │
@@ -91,12 +93,12 @@ gana la votación de retirada.
 
 ```
   Móvil A ─┐  join (Pokémon + movimiento)      ┌─► simula(tramo, semilla) ─► mismo resultado
-  Móvil B ─┤  poll: cada 3 s en cola,          │
+  Móvil B ─┤  poll: cada 3 s en la sala,        │
   Móvil C ─┼──  cada 10 s en la incursión ──►  Worker  ─┼─► simula(tramo, semilla) ─► mismo resultado
   Móvil D ─┤  vote / move en las salas          │
   Móvil E ─┘                │                   └─► …
                             ▼
-                   D1: cola + grupos
+                   D1: programadas + grupos
                    (grupo = incursión, 5 instantáneas, tramos con su semilla
                     y hora de inicio, movimientos elegidos, votos)
 ```
@@ -323,7 +325,8 @@ recalculan al empezar cada turno: un caído sin revivir deja de sumar. El tipo d
 ## Llaves y premios
 
 - **Llave de incursión**: un objeto por incursión que se compra en la Tienda y se guarda en la Mochila. Se gasta al
-  formarse el grupo; si se cancela la cola, no. Precio según la dificultad de la incursión (`data/incursions.ts ›
+  empezar la incursión programada (o al jugar ya con bots); sin ella se puede aceptar y hacer el checkin, pero no
+  marcar Pokémon, así que no se entra. Precio según la dificultad de la incursión (`data/incursions.ts ›
   KEY_PRICE`: muy fácil 5.000 ₽, fácil 10.000 ₽, media 30.000 ₽, difícil 50.000 ₽); como mucho 10 de cada una (`MAX_KEYS`).
 - **Gratuitas** (`free` en la ficha de la incursión; ahora, la de prueba): se entra sin llave y no se vende la suya,
   pero lo ganado (₽ y EXP de las salas y premio final) solo se cobra la primera vez que se termina, se gane, se pierda o
@@ -337,8 +340,9 @@ recalculan al empezar cada turno: un caído sin revivir deja de sumar. El tipo d
 
 ## Bots
 
-Están previstos desde el principio, aunque lo normal sea jugar con personas. Entran solo si la cola no se llena en
-60 s o sin servidor (`game/incursion/party.ts`). No votan.
+Están previstos desde el principio, aunque lo normal sea jugar con personas. Ocupan los huecos de una incursión
+programada que nadie llenó (o de quien no hizo el checkin con Pokémon) y todos los demás al jugar ya, sin servidor o en
+la gratuita (`game/incursion/party.ts`). No votan.
 
 - **Nivel**: el del Pokémon más alto del grupo menos 5 (y hasta 2 menos, al azar), sin bajar del mínimo de entrada ni
   pasar del rival más alto de la incursión: en la Cueva Helada (entrada 20–45, rivales 20–37), con tu Pokémon a Nv. 45
@@ -395,9 +399,9 @@ completar.
 | Llaves | 5.000 / 10.000 / 30.000 / 50.000 ₽, máx. 10 | `data/incursions.ts › KEY_PRICE, MAX_KEYS` |
 
 | Reorganizar | 90 s | `activeIncursion.ts › REGROUP_MS` |
-| Cola | 60 s como mucho; sin consultar 20 s, se sale | `online/protocol.ts › QUEUE_MAX_MS, QUEUE_STALE_MS` |
+| Incursiones programadas | franjas de 15 min, de 15 min a 7 días de antelación; fianza 10%; sala 10 min antes; baja con devolución hasta 1 h antes de abrir la sala; como mucho 3 creadas y 5 aceptadas a la vez, separadas 45 min; el servidor las guarda 7 días tras empezar; sin noticias del servidor, el checkin y la fianza caducan entonces (quien vuelve tarde aún entra en su grupo) | `schedule/scheduleRules.ts › SLOT_MS, MIN_LEAD_MS, MAX_LEAD_MS, BOND_FRACTION, CHECKIN_OPEN_MS, LEAVE_DEADLINE_MS, MAX_CREATED, MAX_JOINED, SCHEDULE_GAP_MS, SCHEDULE_TTL_MS` |
 | Grupos en el servidor | se borran tras 24 h sin consultas | `online/protocol.ts › GROUP_TTL_MS` |
-| Consultas | cada 3 s en la cola y al reorganizar; cada 10 s jugando un tramo | `net/incursionSync.ts › QUICK_SYNC_MS, PLAY_SYNC_MS` |
+| Consultas | cada 3 s en la sala del checkin y al reorganizar; cada 10 s jugando un tramo; el tablón cada 30 s mientras se mira, al cambiar de subpestaña y al volver a la app (y cada 60 s con fianzas retenidas) | `net/incursionSync.ts › QUICK_SYNC_MS, PLAY_SYNC_MS`, `net/scheduleSync.ts › ROOM_SYNC_MS, BONDS_SYNC_MS`, `net/incursionBoard.ts › REFRESH_EVERY_MS` |
 
 ## Dónde está cada cosa
 
@@ -441,8 +445,9 @@ completar.
     foeDiscovery.ts          rivales derrotados: se descubren en la Pokédex al recoger la incursión
     incursionGame.ts         en la partida: entrar, avanzar, reorganizar, retirarse y cobrar (sin servidor)
 
-  src/game/core/state.ts     incursion (la de ahora) e incursionKeys; MonPlace.Incursion
-  src/ui/incursion/          IncursionScreen (pestaña), IncursionList + IncursionInfo + IncursionPrep, MovePicker,
+  src/game/core/state.ts     incursion (la de ahora), incursionKeys, incursionBonds (fianzas) e incursionCheckin (sala); MonPlace.Incursion
+  src/ui/incursion/          IncursionScreen (pestaña), IncursionTabs (Tablón, Mis incursiones, Programar), IncursionList
+                             (Programar / Jugar ya) + IncursionInfo + IncursionPrep (jugar ya con bots), MovePicker,
                              IncursionView (en curso, a pantalla completa): IncursionStage (escena, stageSpots),
                              sceneState, IncursionStrip (PS, en la cabecera), MoveBar (barra de ataques, abajo), IncursionMenu (botón «Menú»: plegables:
                              IncursionRoster, DamageTally, pasivas, RetreatVote), RegroupPanel, IncursionSummary
@@ -450,13 +455,26 @@ completar.
   src/ui/shop/IncursionKeyShop.tsx, Mochila (game/team/bag.ts)
 
   src/game/incursion/online/ con otros jugadores
-    protocol.ts              peticiones (cola, salir, ponerse al día, movimiento, seguir, voto) y respuestas
-    requests.ts              validar lo que llega al servidor
-    sharedIncursion.ts       el grupo en el servidor: formar (pickGroup, formGroup), plazos, seguir, votos
-    linkedIncursion.ts       la cola en la partida y aplicar lo que dice el servidor
-  src/net/incursionApi.ts, incursionSync.ts   cliente y bucle de consultas
-  src/ui/incursion/          IncursionQueueView (buscando grupo), RetreatVote
-  worker/incursion.ts, worker/db/incursions.ts, migrations/0010_incursions.sql
+    protocol.ts              peticiones del grupo (ponerse al día, movimiento, seguir, voto, toques) y respuestas
+    requests.ts              validar lo que llega al servidor (también el Pokémon, para las programadas)
+    sharedIncursion.ts       el grupo en el servidor: formar (formGroup), plazos, seguir, votos
+    linkedIncursion.ts       entrar en el grupo (con el checkin hecho) y aplicar lo que dice el servidor
+  src/game/incursion/schedule/ incursiones programadas
+    scheduleRules.ts         franjas, plazos, fases (SchedulePhase), fianza, topes
+    scheduledIncursion.ts    la programada en el servidor: crear, aceptar, baja, cancelar (ScheduleRefusal)
+    scheduleRoom.ts          sala: checkin, marcar, fijar
+    scheduleStart.ts         a la hora: formar el grupo o cancelarla, y reparto de fianzas (bondShares)
+    scheduleView.ts, scheduleProtocol.ts, scheduleRequests.ts   vista por jugador, protocolo y validación
+    schedulePushes.ts        avisos (nueva, sala abierta, cancelada) y adónde llevan
+    linkedSchedule.ts        en la partida: fianzas (retener, devolver, liquidar) y caducidad
+    scheduleCheckin.ts       en la partida: el checkin, el Pokémon por defecto, marcar y fijar
+    scheduleSalvage.ts       fianzas de una partida de otra versión
+  src/net/incursionApi.ts, incursionSync.ts   cliente y bucle de consultas del grupo
+  src/net/incursionScheduleApi.ts, incursionBoard.ts, scheduleSync.ts   cliente, tablón y bucle de la sala y las fianzas
+  src/ui/incursion/          ScheduleBoard, ScheduleCard, MySchedules, ScheduleDialog, ScheduleRoom, IncursionPrizes,
+                             scheduleText, schedule.css; RetreatVote
+  worker/incursion.ts, worker/incursionSchedule.ts, worker/db/incursions.ts, worker/db/schedules.ts,
+  migrations/0010_incursions.sql, migrations/0019_incursion_schedules.sql
 ```
 
 ## Plan por fases
@@ -470,14 +488,42 @@ completar.
 5. ~~**Pantallas**: pestaña, **información**, preparación, escena de grupo, sala de reorganizar, retirada y resumen.~~
    Hecho, también la cola y los votos. Queda el fondo de la Cueva Helada (ahora usa el de cueva).
 6. ~~**Documentación**: fila en la tabla «Sistemas» de `diseno.md` y un tutorial.~~ Hecho: guía «Incursiones» (`ui/tutorials/guides/incursionGuide.ts`, capturas `inc-*`).
+7. ~~**Incursiones programadas**: hora fija, tablón, fianza, sala del checkin y avisos; sustituyen a la cola.~~ Hecho
+   (ver [Incursiones programadas](#incursiones-programadas)).
 
 ## Con y sin servidor
 
-- **Buscar grupo**: el móvil sigue en la cola consultando cada 3 s; la llave se gasta al formarse el grupo y no se
-  pierde si se cancela antes. Con la app oculta no consulta, y a los 20 s sale de la cola.
+- **Antes de empezar**: ver [Incursiones programadas](#incursiones-programadas). Sin servidor no hay tablón: cada
+  incursión se juega al momento con bots («Jugar ya»), igual que la gratuita con servidor.
 - **Durante**: el servidor decide cuándo empieza cada tramo (al acabar el plazo de reorganizar o cuando todos dan a
   seguir) y guarda los votos; cada móvil simula lo mismo. En la sala de reorganizar se ve lo que va eligiendo cada uno
   y quién está listo.
 - **Sin servidor** (al buscar grupo no responde): se juega en local con 4 bots, la retirada es inmediata y se puede
   seguir sin esperar al plazo. Si el servidor olvida un grupo a medias, la incursión sigue en local.
 - **Al terminar**, cada uno cobra en su partida.
+
+## Incursiones programadas
+
+Desde el 2026-11-17 sustituyen a la cola automática (decisión del usuario, `specs/001-incursiones-programadas/`).
+
+- **Programar**: en Ruta › Incursiones › Programar se elige incursión (las que piden llave; la gratuita se juega ya) y
+  una franja de 15 min entre 15 min y 7 días después. El creador ocupa el primer hueco y deja su fianza. Se avisa por
+  push a todos los que tienen activado el tema «Incursiones programadas» (salvo al creador), puedan entrar o no.
+- **Aceptar**: desde el Tablón, si quedan huecos y tiene algún Pokémon con el nivel de entrada (aunque esté de
+  expedición). No hace falta la llave, pero la tarjeta dice si la tiene. Se ven la hora, los apuntados, el nivel y los
+  premios (los de las salas y el final). Pide apodo, como las raids.
+- **Fianza**: el 10% del dinero al crear o aceptar, retenida en la partida (`incursionBonds`); no cuenta como gastado
+  para las misiones y sí para el ranking de dinero. Se devuelve al hacer el checkin, al darse de baja a tiempo o si el
+  creador cancela. La de quien no hace el checkin se reparte a partes iguales (hacia abajo) entre los que sí, a la hora
+  de comienzo, también si se cancela por no haber nadie con Pokémon; si nadie hizo el checkin, se pierde. Cada móvil la
+  liquida al leer al servidor; si el servidor ya no la tiene, se devuelve.
+- **Bajas y cancelación**: un apuntado puede darse de baja con devolución hasta 1 h antes de abrir la sala; después,
+  no. El creador no se da de baja: cancela, hasta que abre la sala.
+- **Topes**: 3 creadas y 5 aceptadas sin empezar a la vez, con 45 min entre los comienzos de las de un jugador.
+- **Sala del checkin**: abre 10 min antes y avisa por push a cada apuntado. Al entrar se devuelve la fianza y se marca
+  el primer Pokémon disponible (orden del selector: favoritos y nivel) con su primer ataque; se puede cambiar hasta la
+  hora o «Fijar» (no se deshace). Marcar exige la llave. Lo marcado queda reservado: el Pokémon no sale del rancho a otra
+  cosa y la llave no se gasta en otra incursión (no se intercambian).
+- **Comienzo**: siempre a su hora, nunca antes. Entran los que hicieron el checkin con Pokémon marcado; el resto, bots.
+  El grupo empieza a la hora de comienzo aunque se forme en la primera consulta posterior. Sin nadie, se cancela sin
+  gastar llaves. Desde ahí, todo como siempre.

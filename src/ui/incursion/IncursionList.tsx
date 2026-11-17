@@ -10,29 +10,66 @@ import { goToShop } from '../shared/navigation'
 import { BIOME_SCENERY } from '../shared/sheet/scenery'
 import { IncursionInfo } from './IncursionInfo'
 import { IncursionPrep } from './IncursionPrep'
+import { ScheduleDialog } from './ScheduleDialog'
 
 const TIER_NAME: Record<IncursionTier, string> = { [IncursionTier.VeryEasy]: 'Muy fácil', [IncursionTier.Easy]: 'Fácil', [IncursionTier.Medium]: 'Media', [IncursionTier.Hard]: 'Difícil' }
 
-/** Pestaña Incursiones sin ninguna en curso: la información y cada incursión con sus llaves */
-export function IncursionList({ game }: { game: GameState }) {
+interface Props {
+  game: GameState
+  /** Con servidor: las que piden llave se programan; sin él, todas se juegan ya con bots */
+  online: boolean
+  /** Hora del servidor */
+  now: number
+  onScheduled: () => void
+}
+
+/**
+ * Las incursiones con sus llaves: con servidor, «Programar» (con otros jugadores) en las que piden llave y «Jugar ya»
+ * (con bots) en las gratuitas; sin servidor, todas «Jugar ya». Sin servidor ocupa la pestaña entera
+ */
+export function IncursionList(props: Props) {
   const [info, setInfo] = useState(false)
   const [chosen, setChosen] = useState<Incursion | null>(null)
+  const [scheduling, setScheduling] = useState<Incursion | null>(null)
+  const { game, online } = props
 
-  return (
-    <div className="screen scroll incursion-list">
+  const content = (
+    <>
       <button className="btn incursion-info-btn" onClick={() => setInfo(true)}>
         Cómo funcionan las incursiones
       </button>
+      {!online && <p className="tiny muted center">Sin conexión con el servidor: se juega al momento con bots. Para jugar con otros, se programan con conexión.</p>}
       {INCURSIONS.map((inc) => (
-        <IncursionCard key={inc.id} game={game} inc={inc} onEnter={() => setChosen(inc)} />
+        <IncursionCard key={inc.id} game={game} inc={inc} schedules={online && needsKey(inc.id)} onEnter={() => setChosen(inc)} onSchedule={() => setScheduling(inc)} />
       ))}
       {info && <IncursionInfo onClose={() => setInfo(false)} />}
       {chosen && <IncursionPrep game={game} inc={chosen} onClose={() => setChosen(null)} />}
-    </div>
+      {scheduling && (
+        <ScheduleDialog
+          game={game}
+          inc={scheduling}
+          now={props.now}
+          onClose={() => setScheduling(null)}
+          onDone={() => {
+            setScheduling(null)
+            props.onScheduled()
+          }}
+        />
+      )}
+    </>
   )
+  return online ? content : <div className="screen scroll incursion-list">{content}</div>
 }
 
-function IncursionCard({ game, inc, onEnter }: { game: GameState; inc: Incursion; onEnter: () => void }) {
+interface CardProps {
+  game: GameState
+  inc: Incursion
+  schedules: boolean
+  onEnter: () => void
+  onSchedule: () => void
+}
+
+function IncursionCard({ game, inc, schedules, onEnter, onSchedule }: CardProps) {
   const battles = inc.rooms.filter((r) => r.kind === RoomKind.Battle).length
   const keys = keysOf(game, inc.id)
   return (
@@ -54,13 +91,17 @@ function IncursionCard({ game, inc, onEnter }: { game: GameState; inc: Incursion
           ) : (
             <span className="incursion-keys small">{freePrizeSpent(game, inc.id) ? 'Gratis · premios ya cobrados' : 'Gratis'}</span>
           )}
-          {!canAffordEntry(game, inc.id) ? (
+          {schedules ? (
+            <button className="btn go grow" onClick={onSchedule}>
+              Programar
+            </button>
+          ) : !canAffordEntry(game, inc.id) ? (
             <button className="btn primary grow" onClick={() => goToShop('keys')}>
               Comprar llave
             </button>
           ) : (
             <button className="btn go grow" onClick={onEnter}>
-              Entrar
+              Jugar ya
             </button>
           )}
         </div>

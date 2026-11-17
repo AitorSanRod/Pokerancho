@@ -5,10 +5,9 @@ import { TYPE_INFO } from '../../data/types'
 import { MonPlace, monPlace, type GameState, type OwnedMon } from '../../game/core/state'
 import { act } from '../../store/store'
 import { canEnter } from '../../game/incursion/entry'
-import { incursionBlocker } from '../../game/incursion/incursionGame'
+import { incursionBlocker, startIncursion } from '../../game/incursion/incursionGame'
 import { freePrizeSpent } from '../../game/incursion/freeIncursions'
 import { keysOf, needsKey } from '../../game/incursion/keys'
-import { enterQueue } from '../../game/incursion/online/linkedIncursion'
 import { monRepertoire } from '../../game/incursion/repertoire'
 import { byPickOrder } from '../../game/team/pickOrder'
 import { passiveWeightOf } from '../../game/team/ranchPassives'
@@ -22,7 +21,7 @@ import '../route/route-start.css'
 
 const usable = (inc: Incursion, m: OwnedMon) => canEnter(inc, m.level) && m.hp >= 1
 
-/** Antes de entrar: quién va (solo los del rancho con el nivel justo), con qué movimiento y qué suma a las pasivas */
+/** Antes de jugar ya con bots: quién va (solo los del rancho con el nivel justo), con qué movimiento y qué suma a las pasivas */
 export function IncursionPrep({ game, inc, onClose }: { game: GameState; inc: Incursion; onClose: () => void }) {
   const mons = byPickOrder(game, game.owned.filter((m) => monPlace(game, m.uid) === MonPlace.Ranch))
   const [uid, setUid] = useState(mons.find((m) => usable(inc, m))?.uid)
@@ -34,7 +33,7 @@ export function IncursionPrep({ game, inc, onClose }: { game: GameState; inc: In
 
   const enter = () => {
     if (!mon || !move) return
-    act((s) => enterQueue(s, inc.id, mon.uid, move.id, Date.now()))
+    act((s) => startIncursion(s, inc.id, mon.uid, move.id, Date.now()))
     onClose()
   }
 
@@ -54,8 +53,8 @@ export function IncursionPrep({ game, inc, onClose }: { game: GameState; inc: In
           </>
         )}
         <p className="tiny muted">
-          {needsKey(inc.id) ? `Llaves: ${keysOf(game, inc.id)}. Se gasta una al formarse el grupo: ` : `${entryNote(game, inc)} `}
-          se busca a otros entrenadores durante un minuto y, si no llegan a cinco, se completa con bots.
+          {needsKey(inc.id) ? `Llaves: ${keysOf(game, inc.id)}. Se gasta una al entrar: ` : `${entryNote(game, inc)} `}
+          juegas al momento, con bots en el resto del grupo.
         </p>
         {blocker && <p className="notice small">{blocker}</p>}
         <div className="row gap confirm-actions">
@@ -63,7 +62,7 @@ export function IncursionPrep({ game, inc, onClose }: { game: GameState; inc: In
             Cancelar
           </button>
           <button className="btn primary grow" disabled={!!blocker} onClick={enter}>
-            Buscar grupo
+            Entrar
           </button>
         </div>
       </div>

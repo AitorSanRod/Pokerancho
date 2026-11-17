@@ -28,3 +28,16 @@ export const formatPercent = (fraction: number): string => `${Math.floor(fractio
 /** Bono como porcentaje con un decimal si hace falta: 0.025 → "+2,5%" */
 export const formatBonus = (fraction: number): string =>
   `+${(fraction * 100).toLocaleString('es-ES', { maximumFractionDigits: 1 })}%`
+
+const TIME_FORMAT = new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit' })
+const DAY_FORMAT = new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric' })
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/** Día y hora locales de un momento cercano: "hoy 21:15", "mañana 18:00", "vie 21 · 09:30" */
+export function formatWhen(ms: number, now = Date.now()): string {
+  const day = (t: number) => new Date(t).toDateString()
+  const time = TIME_FORMAT.format(ms)
+  if (day(ms) === day(now)) return `hoy ${time}`
+  if (day(ms) === day(now + DAY_MS)) return `mañana ${time}`
+  return `${DAY_FORMAT.format(ms)} · ${time}`
+}
