@@ -116,7 +116,10 @@ export interface Route {
   /** Fondo animado que se ve mientras el Pokémon camina */
   biome: Biome
   backdrop?: RouteBackdrop
+  /** Nivel de los rivales salvajes: [mínimo, máximo] */
   levels: [number, number]
+  /** Nivel más alto con el que el Pokémon puede salir a la ruta (si sube dentro, sigue); sin él, no hay límite */
+  maxLevel?: number
   encounters: Encounter[]
   nodes: RouteNode[]
   /**

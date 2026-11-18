@@ -2,7 +2,8 @@ import { CloudAction, cloudAction, cloudUpload, hasUnsavedProgress, isFromNewerA
 import { recommendedSave, syncSnapshot } from '../game/core/cloudChoice'
 import { getState, openedPlayedAt, replaceState } from '../store/store'
 import { account, AccountStatus, refreshAccount, subscribeAccount } from './account'
-import { linkTo, readLink, revisionFor, writeLink } from './cloudLink'
+import { pendingUpload } from '../game/core/pendingUpload'
+import { adoptIfOwn, linkTo, notePending, readLink, revisionFor, writeLink } from './cloudLink'
 import { cloudState, updateCloud } from './cloudState'
 import { apiFetch, SLOW_REQUEST_MS } from './apiFetch'
 
@@ -76,9 +77,10 @@ interface Rejected {
 }
 
 /** Sube la partida de aquí encima de la revisión `base` de la nube */
-async function upload(base: number | null, keepalive = false) {
-  const snapshot = syncSnapshot(getState())
+async function upload(base: number | null, keepalive = false): Promise<void> {
+  const pending = pendingUpload(base, getState())
   const body = JSON.stringify({ baseRevision: base, ...cloudUpload(getState()) })
+  notePending(userId()!, pending)
   lastUploadAt = Date.now()
   const res = await checked(
     await apiFetch(
@@ -90,10 +92,12 @@ async function upload(base: number | null, keepalive = false) {
   if (res.status === 409) {
     const rejected = (await res.json()) as Rejected
     if (rejected.code === SaveRejection.OutdatedApp) markOutdated()
+    // Una subida anterior de aquí llegó aunque no su respuesta: se sube encima de ella
+    else if (rejected.cloud && adoptIfOwn(rejected.cloud)) return upload(rejected.cloud.revision, keepalive)
     else if (rejected.cloud) resolveConflict(rejected.cloud, OTHER_DEVICE_NOTICE)
     return
   }
-  linkTo(userId()!, ((await res.json()) as { revision: number }).revision, snapshot)
+  linkTo(userId()!, ((await res.json()) as { revision: number }).revision, pending.snapshot)
   updateCloud({ syncedAt: Date.now(), outdated: false })
 }
 
@@ -148,6 +152,7 @@ const connect = () =>
   exclusive(async () => {
     const saved = await fetchCloud()
     if (saved && isFromNewerApp(saved)) return markOutdated()
+    adoptIfOwn(saved)
     const action = cloudAction(readLink(), userId()!, saved, getState())
     if (action === CloudAction.Upload) await upload(saved?.revision ?? null)
     else if (action === CloudAction.Download) loadCloudSave(saved!, knownRevision() === null ? null : OTHER_DEVICE_NOTICE)

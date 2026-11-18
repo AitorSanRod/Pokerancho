@@ -56,6 +56,8 @@ export interface RouteDraft {
   backdropFile: string
   focusY: number
   levels: [number, number]
+  /** Nivel más alto con el que se puede salir a la ruta; null sin límite */
+  maxLevel: number | null
   encounters: EncDraft[]
   reward: { tickets: number; money: number; exp: number }
   unlocks: string
@@ -91,6 +93,7 @@ export const emptyRoute = (): RouteDraft => ({
   backdropFile: '',
   focusY: 40,
   levels: [5, 8],
+  maxLevel: null,
   encounters: [{ species: '', chance: 100 }],
   reward: { tickets: 2, money: 400, exp: 250 },
   unlocks: '',
@@ -135,6 +138,7 @@ export function fromRoute(r: Route): RouteDraft {
     backdropFile: r.backdrop ? fileOf(r.backdrop.image) : '',
     focusY: r.backdrop?.focusY ?? 40,
     levels: [...r.levels],
+    maxLevel: r.maxLevel ?? null,
     encounters: encDrafts(r.encounters),
     reward: { ...r.reward },
     unlocks: keyOf(DICTS.RouteId, r.unlocks),

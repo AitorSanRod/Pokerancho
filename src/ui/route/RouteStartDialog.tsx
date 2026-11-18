@@ -5,7 +5,8 @@ import { TutorialStep, type GameState, type OwnedMon } from '../../game/core/sta
 import { act } from '../../store/store'
 import { pathRaidMoneyMult } from '../../game/raid/routeRaidStreak'
 import { startRun } from '../../game/run/run'
-import { gymLevelBlocker, routeGym } from '../../game/run/runGym'
+import { routeGym } from '../../game/run/runGym'
+import { routeLevelBlocker, routeMaxLevel } from '../../game/run/routeLevelCap'
 import { defaultRouteMove, pickRouteMove } from '../../game/run/runMove'
 import { RouteMoveBar } from './RouteMoveBar'
 import { maxHp } from '../../game/team/stats'
@@ -32,7 +33,8 @@ export function RouteStartDialog({ game, route: r, mon, onClose }: { game: GameS
   const guided = game.tutorial === TutorialStep.Route
   const raidMoney = pathRaidMoneyMult(game, r, path, game.lastTick)
   const gym = routeGym(r)
-  const tooStrong = gymLevelBlocker(game, r)
+  const cap = routeMaxLevel(r)
+  const tooStrong = routeLevelBlocker(game, r)
   const stops = game.completedRoutes.includes(r.id) ? pathStopCount(path) : null
   const [moveId, setMoveId] = useState(() => defaultRouteMove(mon))
   const start = () =>
@@ -69,11 +71,12 @@ export function RouteStartDialog({ game, route: r, mon, onClose }: { game: GameS
           {gym ? (
             <>
               Sale <strong>{sp.name}</strong> (Nv. {mon.level}) contra <strong>{gym.leader}</strong> y sus {gym.team.length} Pokémon, uno tras otro. Solo
-              entran Pokémon de hasta Nv. {gym.maxLevel}.
+              entran Pokémon de hasta Nv. {cap}.
             </>
           ) : (
             <>
               Sale <strong>{sp.name}</strong> (Nv. {mon.level}) con el ataque que elijas.
+              {cap !== null && <> Solo salen Pokémon de hasta Nv. {cap}.</>}
             </>
           )}
         </p>

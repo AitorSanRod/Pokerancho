@@ -1,5 +1,6 @@
 import { AuthCode } from '../src/game/core/accountRules'
 import { MAX_SAVE_BYTES, parseUpload, SaveRejection, type CloudSave } from '../src/game/core/cloudSave'
+import { nextRevision } from '../src/game/core/pendingUpload'
 import { sessionUser } from './auth/session'
 import { loadSave, saveVersionOf, writeSave } from './db/saves'
 import type { Env } from './env'
@@ -13,7 +14,7 @@ async function upload(env: Env, request: Request, userId: string): Promise<Respo
   if (!sameOrigin(request)) return json({ code: AuthCode.WrongOrigin }, 403)
   const up = parseUpload(await readJson(request, MAX_SAVE_BYTES))
   if (!up) return json({ error: 'Petición no válida' }, 400)
-  const cloud: CloudSave = { save: up.save, team: up.team, revision: (up.baseRevision ?? 0) + 1, updatedAt: Date.now() }
+  const cloud: CloudSave = { save: up.save, team: up.team, revision: nextRevision(up.baseRevision), updatedAt: Date.now() }
   if (await writeSave(env.DB, userId, cloud, up.baseRevision)) return json({ revision: cloud.revision, updatedAt: cloud.updatedAt })
   const current = await loadSave(env.DB, userId)
   // Una app sin actualizar no sabría leer la de la nube: no se le da, se le pide que se actualice (su partida sigue en el móvil)

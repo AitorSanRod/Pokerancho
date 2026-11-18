@@ -3,7 +3,7 @@ import { node, NodeKind, route, type Route } from '../../data/maps'
 import { incursionMove } from '../../data/incursionMoves'
 import { species } from '../../data/species'
 import type { Rng } from '../core/random'
-import { activeMon, type GameState } from '../core/state'
+import type { GameState } from '../core/state'
 import { earnBadge } from '../collection/badges'
 import { strikeOf } from '../tower/towerMoves'
 import { startBattle } from './runBattle'
@@ -31,14 +31,6 @@ export const routeGymId = (r: Route): GymId | null => r.nodes.find((x) => x.kind
 export function routeGym(r: Route): Gym | null {
   const id = routeGymId(r)
   return id ? GYMS[id] : null
-}
-
-/** Por qué el compañero no puede entrar en el gimnasio de la ruta (pasa de su nivel máximo); null si puede o no es un gimnasio */
-export function gymLevelBlocker(s: GameState, r: Route): string | null {
-  const gym = routeGym(r)
-  const mon = activeMon(s)
-  if (!gym || !mon || mon.level <= gym.maxLevel) return null
-  return `${species(mon.speciesId).name} (Nv. ${mon.level}) es demasiado fuerte: a este gimnasio solo entran Pokémon de hasta Nv. ${gym.maxLevel}.`
 }
 
 /** En la parada del gimnasio, luchando contra el líder */

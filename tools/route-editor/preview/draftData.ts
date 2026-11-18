@@ -63,6 +63,7 @@ export function draftToRoute(d: RouteDraft): Route {
     biome: dictValue(DICTS.Biome, d.biome) ?? DICTS.Biome.Meadow,
     backdrop: image ? { image, focusY: d.focusY } : undefined,
     levels: d.levels,
+    maxLevel: d.maxLevel ?? undefined,
     encounters: encountersOf(d.encounters),
     reward: d.reward,
     unlocks: dictValue(DICTS.RouteId, d.unlocks),

@@ -342,6 +342,11 @@ Opcionales, con email y contraseña, en el propio Worker (`worker/auth/`, tablas
   preguntar. Al preguntar, `CloudChoiceDialog` marca como «Más reciente» la que se jugó después: la de la nube por
   `updatedAt` y la de aquí por el `lastTick` guardado al abrir la app (`store.ts › openedPlayedAt`, antes de que el
   avance sin conexión lo ponga en «ahora»). Un enlace de antes, sin instantánea, sigue la regla anterior.
+- **Subidas sin respuesta** (`CloudLink.pending`, `game/core/pendingUpload.ts`): al ocultar, cerrar o recargar la app
+  (también al actualizarla) el navegador suele cortar la página antes de leer la respuesta de la subida, aunque el
+  servidor ya la guardó. Antes de cada subida se apunta la revisión que le dará el servidor y su `lastTick` (las 3
+  últimas); si después la nube trae una de ellas (al conectar o en un 409), es de este dispositivo: se adopta su
+  revisión sin bajar nada ni avisar de «otro dispositivo», y se sube encima.
 - **Versiones de la app**: una app sin actualizar no sabe leer entera una partida guardada por una más nueva (perdería
   las especies o campos que no conoce). Por eso el servidor no acepta subir una partida de `SAVE_VERSION` más vieja que
   la de la nube (409 con `SaveRejection.OutdatedApp`) y el móvil no carga una de la nube más nueva (`isFromNewerApp`):

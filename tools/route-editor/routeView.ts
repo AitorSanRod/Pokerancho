@@ -2,7 +2,7 @@
 
 import { DICTS } from './catalog'
 import type { EncDraft, RouteDraft } from './draft'
-import { button, checkbox, label, numInput, select, speciesInput, textArea, textInput } from './fields'
+import { button, checkbox, label, numInput, optNumInput, select, speciesInput, textArea, textInput } from './fields'
 
 const opts = (dict: Record<string, unknown>): [string, string][] => Object.keys(dict).map((k) => [k, k])
 
@@ -48,8 +48,9 @@ export function routeSection(d: RouteDraft) {
       <div class="full">${label('Comentario en el código', textInput('comment', d.comment, '~6 min y 7 combates, el último contra un jefe'), 'opcional')}</div>
       ${label('Bioma (fondo al caminar)', select('biome', d.biome, opts(DICTS.Biome)))}
       ${label('Abre al completarla', select('unlocks', d.unlocks, opts(DICTS.RouteId), 'Nada'))}
-      ${label('Nivel mínimo', numInput('levels.0', d.levels[0]))}
-      ${label('Nivel máximo', numInput('levels.1', d.levels[1]))}
+      ${label('Rivales: nivel mínimo', numInput('levels.0', d.levels[0]))}
+      ${label('Rivales: nivel máximo', numInput('levels.1', d.levels[1]))}
+      ${label('Nivel máximo para salir', optNumInput('maxLevel', d.maxLevel ?? null, 'Sin límite'), 'si sube dentro, sigue')}
       ${backdropFields(d)}
     </div>
     <h3>Premio la primera vez</h3>

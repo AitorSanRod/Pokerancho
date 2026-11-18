@@ -3,6 +3,7 @@ import { unlockReachedRoutes } from '../run/routeUnlocks'
 import { repairExpeditions } from '../team/expeditionSalvage'
 import { rehomeOverflow } from '../team/ranches'
 import { progressSince, type SyncSnapshot } from './cloudChoice'
+import type { PendingUpload } from './pendingUpload'
 import { migrateSave } from './saveMigration'
 import { backupTeam, parseTeamBackup, restoreTeam, type TeamBackup } from './teamBackup'
 import { initialState, restoreState, SAVE_VERSION, TutorialStep, type GameState } from './state'
@@ -30,6 +31,8 @@ export interface CloudLink {
   revision: number
   /** Lo que había aquí la última vez que se subió o se bajó; sin ella (enlaces de antes), regla de siempre */
   snapshot?: SyncSnapshot
+  /** Subidas enviadas sin respuesta todavía (ver pendingUpload.ts) */
+  pending?: PendingUpload[]
 }
 
 export const CloudAction = { Upload: 'upload', Download: 'download', Ask: 'ask' } as const

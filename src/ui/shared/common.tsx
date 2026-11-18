@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import type { Move } from '../../data/moves'
-import { isShowdownGif, sprite } from '../../data/species'
+import { sprite } from '../../data/species'
 import { animatedSrc, markMissing } from './animatedSprite'
 import { TYPE_INFO, type PokeType } from '../../data/types'
 import { useSpriteBounds, type SpriteBounds } from './spriteBounds'
@@ -35,16 +35,6 @@ function imageStyle(natural: Natural, size: number, fit: number | undefined, bod
     left: (natural.w / 2 - (b.x + b.w / 2)) * scale,
     top: (natural.h - (b.y + b.h)) * scale,
   }
-}
-
-/**
- * Un GIF de Showdown pasado a la escala del lienzo de 96: su lado mayor mide lo que el del cuerpo en el PNG (sin
- * contorno, cabe en el lienzo).
- */
-function toCanvas(natural: Natural, body: SpriteBounds | null): Natural {
-  const side = Math.max(natural.w, natural.h)
-  const scale = body ? Math.max(body.w, body.h) / side : Math.min(1, SPRITE_CANVAS / side)
-  return { src: natural.src, w: natural.w * scale, h: natural.h * scale }
 }
 
 /**
@@ -92,10 +82,8 @@ export function Sprite({
   const [natural, setNatural] = useState<Natural | null>(null)
   const staticSrc = back ? sprite.back(id, shiny) : sprite.front(id, shiny)
   const src = gif ?? staticSrc
-  const showdown = gif !== null && isShowdownGif(gif)
   // El cuerpo se mide siempre en el PNG estático (misma escala que el GIF, pero sin el margen de la animación)
-  const layout = fit !== undefined || grounded
-  const body = useSpriteBounds(staticSrc, layout || showdown)
+  const body = useSpriteBounds(staticSrc, fit !== undefined || grounded)
   const loaded = natural?.src === src && body !== undefined ? natural : null
   const fail = () => {
     if (!gif) return
@@ -111,11 +99,7 @@ export function Sprite({
         draggable={false}
         onError={fail}
         onLoad={(e) => setNatural({ src, w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
-        style={
-          loaded
-            ? imageStyle(showdown ? toCanvas(loaded, body ?? null) : loaded, size, fit, layout ? (body ?? null) : null, gif !== null)
-            : { visibility: 'hidden' }
-        }
+        style={loaded ? imageStyle(loaded, size, fit, body ?? null, gif !== null) : { visibility: 'hidden' }}
       />
     </span>
   )

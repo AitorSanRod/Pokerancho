@@ -9,7 +9,8 @@ import { expeditionRouteBlocker } from '../team/expedition'
 import { towerMove, towerMoveChoices } from '../tower/towerMoves'
 import { BATTLE_EVENT_MS } from './battleTimeline'
 import { advanceRun, startRun, walk } from './run'
-import { gymLevelBlocker, routeGym } from './runGym'
+import { routeGym } from './runGym'
+import { routeLevelBlocker } from './routeLevelCap'
 import { defaultRouteMove, pickRouteMove } from './runMove'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
@@ -132,9 +133,9 @@ describe('gimnasio', () => {
     chooseStarter(s, POKEMON.Squirtle)
     s.unlockedRoutes.push(ROUTE)
     activeMon(s)!.level = GYM.maxLevel
-    expect(gymLevelBlocker(s, route(ROUTE))).toBeNull()
+    expect(routeLevelBlocker(s, route(ROUTE))).toBeNull()
     activeMon(s)!.level = GYM.maxLevel + 1
-    expect(gymLevelBlocker(s, route(ROUTE))).not.toBeNull()
+    expect(routeLevelBlocker(s, route(ROUTE))).not.toBeNull()
     startRun(s, ROUTE)
     expect(s.run).toBeNull()
   })

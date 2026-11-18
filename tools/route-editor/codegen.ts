@@ -54,6 +54,9 @@ export function routeCode(d: RouteDraft): string {
   if (d.useBackdrop) lines.push(`      backdrop: { image: ${backdropVar(d.backdropFile)}, focusY: ${d.focusY} },`)
   lines.push(
     `      levels: [${d.levels[0]}, ${d.levels[1]}],`,
+  )
+  if (d.maxLevel != null) lines.push(`      maxLevel: ${d.maxLevel},`)
+  lines.push(
     `      encounters: ${encCode(d.encounters)},`,
     `      reward: { tickets: ${d.reward.tickets}, money: ${d.reward.money}, exp: ${d.reward.exp} },`,
   )

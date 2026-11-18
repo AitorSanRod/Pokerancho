@@ -6,7 +6,8 @@ import { stepsPerMinute } from '../team/stats'
 import { advanceExpBoost, boostActive, BOOST_TAP_EXP, newExpBoost, reachEggSpot } from './expBoost'
 import { completeRoute, gainRunExp, spendBattleTime, startStopBattle } from './runBattle'
 import { spendHealTime, drinkStopPotion } from './runHeal'
-import { enterGym, gymLevelBlocker } from './runGym'
+import { enterGym } from './runGym'
+import { routeLevelBlocker } from './routeLevelCap'
 import { defaultRouteMove } from './runMove'
 import { enterTrainer } from './runTrainer'
 
@@ -30,7 +31,7 @@ function monBlocker(s: GameState): string | null {
 
 /** Sale a la ruta con el camino ya elegido; a partir de aquí todo es automático */
 export function startRun(s: GameState, routeId: string, path = pathFrom(route(routeId)), rng: Rng = Math.random) {
-  if (runBlocker(s) || !s.unlockedRoutes.includes(routeId) || !isValidPath(route(routeId), path) || gymLevelBlocker(s, route(routeId))) return
+  if (runBlocker(s) || !s.unlockedRoutes.includes(routeId) || !isValidPath(route(routeId), path) || routeLevelBlocker(s, route(routeId))) return
   if (s.tutorial === TutorialStep.Route) s.tutorial = null
   s.run = {
     routeId,
@@ -130,7 +131,7 @@ function arrive(s: GameState, r: Route, rng: Rng) {
 export function restartBlocker(s: GameState): string | null {
   const run = s.run
   if (!run || run.phase !== 'walking') return 'Solo se puede reiniciar mientras camina.'
-  return monBlocker(s) ?? gymLevelBlocker(s, route(run.routeId))
+  return monBlocker(s) ?? routeLevelBlocker(s, route(run.routeId))
 }
 
 /**
