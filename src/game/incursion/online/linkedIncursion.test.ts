@@ -53,6 +53,15 @@ describe('incursión con servidor', () => {
     expect(s.incursion?.online?.groupId).toBe('abcdef12')
   })
 
+  it('entra con el Pokémon que tiene el servidor aunque en el móvil marcara otro después', () => {
+    const view = serverView()
+    const other = createMon(POKEMON.Snorlax, 20, 0)
+    s.owned.push(other)
+    s.incursionCheckin!.uid = other.uid
+    expect(applyGroupView(s, view, NOW)).toBe(true)
+    expect(s.incursion?.uid).toBe(uid)
+  })
+
   it('no hace caso de un grupo que no es el suyo', () => {
     const view = serverView()
     s.incursionCheckin = null

@@ -1,7 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react'
 import type { IncursionId } from '../data/incursions'
-import { applyGroupView } from '../game/incursion/online/linkedIncursion'
-import { applyScheduleView, scheduleGone } from '../game/incursion/schedule/linkedSchedule'
+import { applyScheduleReply, applyScheduleView, scheduleGone } from '../game/incursion/schedule/linkedSchedule'
 import type { ScheduleRefusal } from '../game/incursion/schedule/scheduledIncursion'
 import { ScheduleAction, type BoardView, type ScheduleResponse } from '../game/incursion/schedule/scheduleProtocol'
 import { bondFor } from '../game/incursion/schedule/scheduleRules'
@@ -63,8 +62,7 @@ export function applyScheduleResponse(res: ScheduleResponse, scheduleId: string 
     if (scheduleId) act((s) => scheduleGone(s, scheduleId))
   } else {
     const { schedule, group } = res
-    if (group) act((s) => applyGroupView(s, group, Date.now()))
-    act((s) => applyScheduleView(s, schedule, schedule.serverNow))
+    act((s) => applyScheduleReply(s, schedule, group, Date.now()))
     replaceInBoard(schedule)
   }
   return null

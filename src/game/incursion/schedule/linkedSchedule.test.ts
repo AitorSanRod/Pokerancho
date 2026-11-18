@@ -5,11 +5,12 @@ import { seqRng } from '../../core/test-utils'
 import { createMon } from '../../team/mons'
 import { TEST_INCURSION } from '../incursion-test-mock'
 import { joiner, newSchedule, NOW } from './schedule-test-utils'
-import { applyScheduleView, bondOf, expireSchedules, scheduleBlocker, scheduleGone } from './linkedSchedule'
+import { groupView } from '../online/sharedIncursion'
+import { applyScheduleReply, applyScheduleView, bondOf, expireSchedules, scheduleBlocker, scheduleGone } from './linkedSchedule'
 import { cancelSchedule, joinSchedule, leaveSchedule, type ScheduledIncursion } from './scheduledIncursion'
 import { lockSchedule, markSchedule, checkInSchedule } from './scheduleRoom'
 import { checkinMember } from './scheduleCheckin'
-import { bondFor, checkInOpensAt, SCHEDULE_TTL_MS } from './scheduleRules'
+import { bondFor, checkInOpensAt, ScheduleCancel, SCHEDULE_TTL_MS } from './scheduleRules'
 import { startSchedule } from './scheduleStart'
 import { scheduleView } from './scheduleView'
 
@@ -144,5 +145,49 @@ describe('checkin y comienzo en la partida', () => {
     expect(s.incursionCheckin).toBeNull()
     expect(s.incursionBonds).toEqual([])
     expect(s.money).toBe(MONEY)
+  })
+})
+
+describe('entrar en el grupo al empezar', () => {
+  /** El jugador y el creador hacen el checkin y marcan; empieza a la hora: el grupo */
+  function started() {
+    see(NOW)
+    checkInSchedule(sched, ME, room())
+    see(room())
+    markSchedule(sched, ME, checkinMember(s)!, room())
+    checkInSchedule(sched, 'jugador-0', room())
+    markSchedule(sched, 'jugador-0', { ...checkinMember(s)!, id: 'otro' }, room())
+    return startSchedule(sched, 'aaaaaaaa', sched.startAt, seqRng(0.5))!
+  }
+
+  it('el tablón (sin el grupo) no le quita el checkin: espera a entrar', () => {
+    started()
+    see(sched.startAt)
+    expect(s.incursionCheckin).not.toBeNull()
+  })
+
+  it('con el grupo en la respuesta, entra', () => {
+    const g = started()
+    see(sched.startAt)
+    applyScheduleReply(s, scheduleView(sched, ME, sched.startAt), groupView(g, ME, sched.startAt)!, sched.startAt)
+    expect(s.incursion?.online?.groupId).toBe('aaaaaaaa')
+    expect(s.incursionCheckin).toBeNull()
+  })
+
+  it('si el grupo ya no existe, suelta el checkin', () => {
+    started()
+    applyScheduleReply(s, scheduleView(sched, ME, sched.startAt), undefined, sched.startAt)
+    expect(s.incursion).toBeNull()
+    expect(s.incursionCheckin).toBeNull()
+  })
+
+  it('si nadie más se apuntó, se devuelve la fianza aunque no hiciera el checkin', () => {
+    sched = newSchedule()
+    see(NOW, 'jugador-0')
+    startSchedule(sched, 'aaaaaaaa', sched.startAt, seqRng(0.5))
+    expect(sched.cancelledBy).toBe(ScheduleCancel.Alone)
+    see(sched.startAt, 'jugador-0')
+    expect(s.money).toBe(MONEY)
+    expect(s.incursionBonds).toEqual([])
   })
 })

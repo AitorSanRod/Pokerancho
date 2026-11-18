@@ -1,10 +1,10 @@
-import { groupView } from '../src/game/incursion/online/sharedIncursion'
+import { groupView, type SharedIncursion } from '../src/game/incursion/online/sharedIncursion'
 import { cancelSchedule, createSchedule, joinSchedule, leaveSchedule, seatOf, type ScheduledIncursion, type ScheduleRefusal } from '../src/game/incursion/schedule/scheduledIncursion'
 import { ScheduleAction, type ScheduleRequest, type ScheduleResponse } from '../src/game/incursion/schedule/scheduleProtocol'
 import { cancelPush, newSchedulePush, openPushKey, roomOpenPush, type SchedulePush } from '../src/game/incursion/schedule/schedulePushes'
 import { parseScheduleRequest } from '../src/game/incursion/schedule/scheduleRequests'
 import { checkInSchedule, lockSchedule, markSchedule } from '../src/game/incursion/schedule/scheduleRoom'
-import { startSchedule } from '../src/game/incursion/schedule/scheduleStart'
+import { isSettled, startSchedule } from '../src/game/incursion/schedule/scheduleStart'
 import { scheduleView } from '../src/game/incursion/schedule/scheduleView'
 import { loadGroup, saveGroup } from './db/incursions'
 import { loadSchedule, saveSchedule, schedulesOf, upcomingSchedules, type StoredSchedule } from './db/schedules'
@@ -14,7 +14,8 @@ import { notifySchedule, unnotifySchedule } from './push/notify'
 
 // POST /api/incursion-schedule: las incursiones programadas (ScheduleRequest, ver
 // src/game/incursion/schedule/scheduleProtocol.ts). Toda la lógica es la del juego; aquí se lee, se guarda en D1 y se
-// programan los avisos. A la hora de comienzo, la primera petición que la lea forma el grupo (o la cancela).
+// programan los avisos. A la hora de comienzo (o en cuanto todos fijan su Pokémon), la primera petición que la lea forma
+// el grupo (o la cancela).
 
 /** Veces que se repite una petición si otro jugador ha escrito la misma incursión justo a la vez */
 const MAX_ATTEMPTS = 5
@@ -29,22 +30,27 @@ type Outcome = { response: ScheduleResponse; pushes: SchedulePush[]; unnotify: {
 const newId = () => Array.from(crypto.getRandomValues(new Uint8Array(ID_BYTES)), (b) => b.toString(16).padStart(2, '0')).join('')
 const reply = (response: ScheduleResponse, pushes: SchedulePush[] = []): Outcome => ({ response, pushes, unnotify: null })
 
-/** Si ya es la hora, forma el grupo (o la cancela) y lo guarda; false si otro escribió la incursión antes */
+/** Si le toca, forma el grupo (o la cancela); lo guarda todo si la incursión cambió. false si otro la escribió antes */
 async function startIfDue(db: D1Database, stored: StoredSchedule, now: number): Promise<boolean> {
   const before = JSON.stringify(stored.sched)
   const group = startSchedule(stored.sched, newId(), now, Math.random)
-  if (group) await saveGroup(db, { group, version: null })
+  return saveIfChanged(db, stored, before, group, now)
+}
+
+/** Guarda la incursión si cambió desde `before` y, después, el grupo nuevo; false si otro la escribió antes */
+async function saveIfChanged(db: D1Database, stored: StoredSchedule, before: string, group: SharedIncursion | null, now: number): Promise<boolean> {
   if (JSON.stringify(stored.sched) === before) return true
   stored.sched.updatedAt = now
   if (!(await saveSchedule(db, stored))) return false
   stored.version = (stored.version ?? 0) + 1
+  if (group) await saveGroup(db, { group, version: null })
   return true
 }
 
 async function board(db: D1Database, playerId: string, now: number): Promise<Outcome | typeof CONFLICT> {
   const mine = await schedulesOf(db, playerId, now)
   for (const stored of mine) if (!(await startIfDue(db, stored, now))) return CONFLICT
-  const open = (await upcomingSchedules(db, now)).filter((o) => !o.sched.cancelledBy)
+  const open = (await upcomingSchedules(db, now)).filter((o) => !isSettled(o.sched))
   const view = (s: StoredSchedule) => scheduleView(s.sched, playerId, now)
   return reply({ board: { open: open.map(view), mine: mine.map(view), serverNow: now } })
 }
@@ -84,13 +90,12 @@ async function apply(db: D1Database, req: ScheduleRequest, sched: ScheduledIncur
 async function oneSchedule(db: D1Database, req: Exclude<ScheduleRequest, { action: 'board' | 'create' }>, now: number): Promise<Outcome | typeof CONFLICT> {
   const stored = await loadSchedule(db, req.scheduleId)
   if (!stored) return reply({ gone: true })
-  if (!(await startIfDue(db, stored, now))) return CONFLICT
   const before = JSON.stringify(stored.sched)
+  const dueGroup = startSchedule(stored.sched, newId(), now, Math.random)
   const { refused, pushes, unnotify } = await apply(db, req, stored.sched, now)
-  if (JSON.stringify(stored.sched) !== before) {
-    stored.sched.updatedAt = now
-    if (!(await saveSchedule(db, stored))) return CONFLICT
-  }
+  // Al fijar el último, empieza ya
+  const newGroup = dueGroup ?? startSchedule(stored.sched, newId(), now, Math.random)
+  if (!(await saveIfChanged(db, stored, before, newGroup, now))) return CONFLICT
   if (refused) return reply({ refused })
   const schedule = scheduleView(stored.sched, req.playerId, now)
   const group = stored.sched.groupId && seatOf(stored.sched, req.playerId) ? await loadGroup(db, stored.sched.groupId) : null

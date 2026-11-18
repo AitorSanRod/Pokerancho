@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PARTY_SIZE } from '../src/game/incursion/party'
 import { ScheduleRefusal } from '../src/game/incursion/schedule/scheduledIncursion'
 import { ScheduleAction } from '../src/game/incursion/schedule/scheduleProtocol'
-import { checkInOpensAt, leaveDeadline, ScheduleCancel, SLOT_MS } from '../src/game/incursion/schedule/scheduleRules'
+import { checkInOpensAt, leaveDeadline, ScheduleCancel, SchedulePhase, SLOT_MS } from '../src/game/incursion/schedule/scheduleRules'
 import { testWorker } from './test/api'
 import { call, checkIn, create, NOW, START, who } from './test/schedules'
 
@@ -88,24 +88,52 @@ describe('incursiones programadas en el servidor', () => {
     const api = testWorker()
     const id = (await create(api)).data.schedule.id
     await join(api, id, 1)
+    await join(api, id, 2)
     await checkIn(api, id, 0)
+    await checkIn(api, id, 2)
     vi.setSystemTime(START + 1000)
     const first = (await call(api, { action: ScheduleAction.Sync, ...who(0), scheduleId: id })).data
     const second = (await call(api, { action: ScheduleAction.Sync, ...who(0), scheduleId: id })).data
     expect(first.group.groupId).toBe(second.group.groupId)
-    expect(first.schedule.shares).toBe(50)
+    expect(first.schedule.shares).toBe(25)
     const absent = (await call(api, { action: ScheduleAction.Sync, ...who(1), scheduleId: id })).data
     expect(absent.group).toBeUndefined()
     expect(absent.schedule.shares).toBe(0)
   })
 
-  it('si nadie marca Pokémon, a la hora se cancela', async () => {
+  it('con un solo jugador con Pokémon, a la hora se cancela', async () => {
     const api = testWorker()
     const id = (await create(api)).data.schedule.id
+    await join(api, id, 1)
+    await checkIn(api, id, 0)
     vi.setSystemTime(START)
     const mine = (await call(api, { action: ScheduleAction.Board, ...who(0) })).data.board.mine
-    expect(mine[0].cancelledBy).toBe(ScheduleCancel.Nobody)
-    expect((await call(api, { action: ScheduleAction.Sync, ...who(0), scheduleId: id })).data.schedule.cancelledBy).toBe(ScheduleCancel.Nobody)
+    expect(mine[0].cancelledBy).toBe(ScheduleCancel.TooFew)
+    const synced = (await call(api, { action: ScheduleAction.Sync, ...who(0), scheduleId: id })).data
+    expect(synced.schedule.cancelledBy).toBe(ScheduleCancel.TooFew)
+    expect(synced.group).toBeUndefined()
+  })
+
+  it('si nadie más se apuntó, a la hora se cierra', async () => {
+    const api = testWorker()
+    const id = (await create(api)).data.schedule.id
+    await checkIn(api, id, 0)
+    vi.setSystemTime(START)
+    expect((await call(api, { action: ScheduleAction.Sync, ...who(0), scheduleId: id })).data.schedule.cancelledBy).toBe(ScheduleCancel.Alone)
+  })
+
+  it('al fijar el último su Pokémon, el grupo se forma antes de la hora y sale del tablón', async () => {
+    const api = testWorker()
+    const id = (await create(api)).data.schedule.id
+    await join(api, id, 1)
+    await checkIn(api, id, 0)
+    await checkIn(api, id, 1)
+    const lock = (n: number) => call(api, { action: ScheduleAction.Lock, ...who(n), scheduleId: id })
+    expect((await lock(0)).data.group).toBeUndefined()
+    const last = (await lock(1)).data
+    expect(last.schedule.phase).toBe(SchedulePhase.Started)
+    expect(last.group.you).toBe('mon1')
+    expect((await call(api, { action: ScheduleAction.Board, ...who(3) })).data.board.open).toEqual([])
   })
 
   it('una que no existe se da por perdida', async () => {

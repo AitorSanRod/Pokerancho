@@ -1,6 +1,6 @@
 import { incursion } from '../../data/incursions'
 import { ScheduleRefusal } from '../../game/incursion/schedule/scheduledIncursion'
-import { MAX_CREATED, MAX_JOINED, SchedulePhase } from '../../game/incursion/schedule/scheduleRules'
+import { MAX_CREATED, MAX_JOINED, MIN_PLAYERS, ScheduleCancel, SchedulePhase } from '../../game/incursion/schedule/scheduleRules'
 import type { ScheduleView } from '../../game/incursion/schedule/scheduleView'
 import { PARTY_SIZE } from '../../game/incursion/party'
 import { formatMoney } from '../shared/format'
@@ -30,11 +30,12 @@ export function boardBlocker(view: ScheduleView): string | null {
 
 /** Qué pasó con la fianza de una ya terminada o cancelada */
 export function settledText(view: ScheduleView): string {
-  if (view.cancelledBy && view.shares === null) return 'La canceló quien la programó: recuperaste tu fianza.'
+  if (view.cancelledBy === ScheduleCancel.Creator) return 'La canceló quien la programó: recuperaste tu fianza.'
+  if (view.cancelledBy === ScheduleCancel.Alone) return 'Nadie más se apuntó: se cerró y recuperaste tu fianza.'
   const you = view.you
   if (!you?.checkedIn) return `No hiciste el checkin: perdiste tu fianza (${formatMoney(you?.bond ?? 0)}).`
   const share = view.shares ? ` y ${formatMoney(view.shares)} del reparto de los ausentes` : ''
-  const how = view.cancelledBy ? 'Se canceló porque nadie tenía Pokémon marcado. ' : ''
+  const how = view.cancelledBy ? `Se canceló porque no había ${MIN_PLAYERS} jugadores con Pokémon. ` : ''
   return `${how}Recuperaste tu fianza${share}.`
 }
 

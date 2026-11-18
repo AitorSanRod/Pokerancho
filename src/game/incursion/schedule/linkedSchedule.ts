@@ -2,8 +2,10 @@ import { incursion, type IncursionId } from '../../../data/incursions'
 import type { GameState } from '../../core/state'
 import { holdMoney, releaseMoney } from '../../core/wallet'
 import { canEnter } from '../entry'
+import { applyGroupView } from '../online/linkedIncursion'
+import type { GroupView } from '../online/protocol'
 import { adoptServerLock, startCheckin } from './scheduleCheckin'
-import { ScheduleCancel, SchedulePhase, SCHEDULE_TTL_MS } from './scheduleRules'
+import { refundsAll, SchedulePhase, SCHEDULE_TTL_MS } from './scheduleRules'
 import type { ScheduleView } from './scheduleView'
 
 // Las incursiones programadas en la partida: la fianza que el móvil retiene al crear o aceptar una y lo que pasa con ella
@@ -59,22 +61,29 @@ function settle(s: GameState, bond: HeldBond, checkedIn: boolean, share: number)
   s.incursionBonds = s.incursionBonds.filter((b) => b !== bond)
 }
 
+/** Empezó con su Pokémon dentro del grupo: el checkin se guarda hasta entrar (aunque se cierre la app o falle la red) */
+const awaitsGroup = (view: ScheduleView): boolean => view.phase === SchedulePhase.Started && !!view.you?.memberId
+
+function dropCheckin(s: GameState, scheduleId: string) {
+  if (s.incursionCheckin?.scheduleId === scheduleId) s.incursionCheckin = null
+}
+
 function forget(s: GameState, scheduleId: string) {
   const bond = bondOf(s, scheduleId)
   if (bond) refund(s, bond)
   s.incursionBonds = s.incursionBonds.filter((b) => b.scheduleId !== scheduleId)
-  if (s.incursionCheckin?.scheduleId === scheduleId) s.incursionCheckin = null
+  dropCheckin(s, scheduleId)
 }
 
 /** Lo que dice el servidor de una incursión programada, en la partida: retener, devolver, liquidar o empezar el checkin */
 export function applyScheduleView(s: GameState, view: ScheduleView, now: number) {
   const you = view.you
   const bond = bondOf(s, view.id)
-  if (view.cancelledBy === ScheduleCancel.Creator || (!you && bond)) return forget(s, view.id)
+  if (refundsAll(view.cancelledBy) || (!you && bond)) return forget(s, view.id)
   if (!you) return
   if (view.shares !== null) {
     if (bond) settle(s, bond, you.checkedIn, view.shares)
-    if (s.incursionCheckin?.scheduleId === view.id) s.incursionCheckin = null
+    if (!awaitsGroup(view)) dropCheckin(s, view.id)
     return
   }
   if (view.phase === SchedulePhase.Open || view.phase === SchedulePhase.Committed) holdBond(s, view, you.bond)
@@ -82,6 +91,17 @@ export function applyScheduleView(s: GameState, view: ScheduleView, now: number)
   if (bond) refund(s, bond)
   if (s.incursionCheckin?.scheduleId !== view.id) startCheckin(s, view, now)
   adoptServerLock(s, view)
+}
+
+/**
+ * La respuesta del servidor sobre una sola (con su grupo, si ya empezó y el jugador está dentro): entra en el grupo y
+ * aplica lo de la incursión programada. Si empezó y no puede entrar (el grupo ya no existe o su Pokémon no está), el
+ * checkin se suelta
+ */
+export function applyScheduleReply(s: GameState, view: ScheduleView, group: GroupView | undefined, now: number) {
+  const joined = !!group && applyGroupView(s, group, now)
+  applyScheduleView(s, view, view.serverNow)
+  if (!joined && awaitsGroup(view)) dropCheckin(s, view.id)
 }
 
 /** El servidor ya no tiene esa incursión: se devuelve la fianza que no se hubiera devuelto y se olvida */

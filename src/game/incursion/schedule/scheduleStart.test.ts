@@ -3,8 +3,8 @@ import { seqRng } from '../../core/test-utils'
 import { PARTY_SIZE } from '../party'
 import { joiner, member, newSchedule, NOW } from './schedule-test-utils'
 import { cancelSchedule, joinSchedule } from './scheduledIncursion'
-import { checkInSchedule, markSchedule } from './scheduleRoom'
-import { checkInOpensAt, ScheduleCancel } from './scheduleRules'
+import { checkInSchedule, lockSchedule, markSchedule } from './scheduleRoom'
+import { checkInOpensAt, MIN_PLAYERS, ScheduleCancel } from './scheduleRules'
 import { bondShares, isSettled, startSchedule } from './scheduleStart'
 
 vi.mock('../../../data/incursions', () => import('../incursion-test-mock'))
@@ -37,7 +37,7 @@ describe('comienzo', () => {
   })
 
   it('solo empieza una vez', () => {
-    const sched = scheduled(1, [0])
+    const sched = scheduled(2, [0, 1])
     startSchedule(sched, 'aaaaaaaa', sched.startAt, seqRng(0.5))
     expect(startSchedule(sched, 'bbbbbbbb', sched.startAt, seqRng(0.5))).toBeNull()
     expect(sched.groupId).toBe('aaaaaaaa')
@@ -46,7 +46,50 @@ describe('comienzo', () => {
   it('sin nadie con Pokémon marcado se cancela', () => {
     const sched = scheduled(2, [0], [])
     expect(startSchedule(sched, 'aaaaaaaa', sched.startAt, seqRng(0.5))).toBeNull()
-    expect(sched.cancelledBy).toBe(ScheduleCancel.Nobody)
+    expect(sched.cancelledBy).toBe(ScheduleCancel.TooFew)
+  })
+
+  it(`con menos de ${MIN_PLAYERS} jugadores con Pokémon no empieza: se cancela`, () => {
+    const sched = scheduled(MIN_PLAYERS + 1, [0])
+    expect(startSchedule(sched, 'aaaaaaaa', sched.startAt, seqRng(0.5))).toBeNull()
+    expect(sched.cancelledBy).toBe(ScheduleCancel.TooFew)
+  })
+
+  it('si nadie más se apuntó, se cierra y se devuelve la fianza (sin reparto)', () => {
+    const sched = scheduled(1, [0])
+    expect(startSchedule(sched, 'aaaaaaaa', sched.startAt, seqRng(0.5))).toBeNull()
+    expect(sched.cancelledBy).toBe(ScheduleCancel.Alone)
+    expect(bondShares(sched)).toEqual({})
+  })
+})
+
+describe('comienzo antes de la hora', () => {
+  /** Programada con `players` apuntados, todos con Pokémon marcado; fijan los de `locked` */
+  function lockedBy(players: number, locked: number[]) {
+    const sched = scheduled(players, Array.from({ length: players }, (_, i) => i))
+    for (const i of locked) lockSchedule(sched, `jugador-${i}`, checkInOpensAt(sched.startAt))
+    return sched
+  }
+
+  it('si todos fijan su Pokémon en la sala, empieza ya', () => {
+    const sched = lockedBy(3, [0, 1, 2])
+    const at = checkInOpensAt(sched.startAt) + 1000
+    const g = startSchedule(sched, 'aaaaaaaa', at, seqRng(0.5))!
+    expect(g.seats).toHaveLength(3)
+    expect(g.legStarts).toEqual([at])
+    expect(isSettled(sched)).toBe(true)
+  })
+
+  it('mientras falte alguno por fijar, espera a la hora', () => {
+    const sched = lockedBy(3, [0, 1])
+    expect(startSchedule(sched, 'aaaaaaaa', checkInOpensAt(sched.startAt) + 1000, seqRng(0.5))).toBeNull()
+    expect(isSettled(sched)).toBe(false)
+  })
+
+  it('solo, aunque fije, no empieza antes', () => {
+    const sched = lockedBy(1, [0])
+    expect(startSchedule(sched, 'aaaaaaaa', checkInOpensAt(sched.startAt) + 1000, seqRng(0.5))).toBeNull()
+    expect(isSettled(sched)).toBe(false)
   })
 })
 

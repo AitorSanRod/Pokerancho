@@ -49,6 +49,10 @@ describe('fases', () => {
     expect(schedulePhase(sched, start)).toBe(SchedulePhase.Started)
   })
 
+  it('empezada antes de la hora si ya se formó el grupo', () => {
+    expect(schedulePhase({ ...sched, groupId: 'aaaaaaaa' }, start - CHECKIN_OPEN_MS)).toBe(SchedulePhase.Started)
+  })
+
   it('cancelada en cualquier momento', () => {
     expect(schedulePhase({ startAt: start, cancelledBy: ScheduleCancel.Creator }, NOW)).toBe(SchedulePhase.Cancelled)
   })

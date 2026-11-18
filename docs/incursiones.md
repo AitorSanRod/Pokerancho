@@ -57,7 +57,7 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
  │  Sala del checkin  │   Pokémon disponible y su ataque (cambiar o «Fijar»;
  │                    │   hace falta la llave). Ve los 5 huecos
  └─────────┬──────────┘
-           ▼  a la hora: grupo con quien marcó Pokémon (+ bots); se gasta la llave; reparto de fianzas
+           ▼  a la hora (o antes, si todos fijaron): grupo con quien marcó Pokémon (+ bots), al menos 2; se gasta la llave; reparto de fianzas
  ┌────────────────────┐   tramo 1 → sala de reorganizar → tramo 2 → … → jefe
  │  Incursión         │   en cualquier momento: «Votar retirada» (n/votos)
  │                    │   «Daño del grupo»: quién lleva más daño en total
@@ -399,7 +399,7 @@ completar.
 | Llaves | 5.000 / 10.000 / 30.000 / 50.000 ₽, máx. 10 | `data/incursions.ts › KEY_PRICE, MAX_KEYS` |
 
 | Reorganizar | 90 s | `activeIncursion.ts › REGROUP_MS` |
-| Incursiones programadas | franjas de 15 min, de 15 min a 7 días de antelación; fianza 10%; sala 10 min antes; baja (o cancelarla el creador) con devolución hasta 3 h antes del comienzo; como mucho 3 creadas y 5 aceptadas a la vez, separadas 45 min; el servidor las guarda 7 días tras empezar; sin noticias del servidor, el checkin y la fianza caducan entonces (quien vuelve tarde aún entra en su grupo) | `schedule/scheduleRules.ts › SLOT_MS, MIN_LEAD_MS, MAX_LEAD_MS, BOND_FRACTION, CHECKIN_OPEN_MS, CANCEL_DEADLINE_MS, MAX_CREATED, MAX_JOINED, SCHEDULE_GAP_MS, SCHEDULE_TTL_MS` |
+| Incursiones programadas | franjas de 15 min, de 15 min a 7 días de antelación; fianza 10%; sala 10 min antes; empieza con al menos 2 jugadores con Pokémon (antes de la hora si todos fijan); baja (o cancelarla el creador) con devolución hasta 3 h antes del comienzo; como mucho 3 creadas y 5 aceptadas a la vez, separadas 45 min; el servidor las guarda 7 días tras empezar; sin noticias del servidor, el checkin y la fianza caducan entonces (quien vuelve tarde aún entra en su grupo) | `schedule/scheduleRules.ts › SLOT_MS, MIN_LEAD_MS, MAX_LEAD_MS, BOND_FRACTION, CHECKIN_OPEN_MS, CANCEL_DEADLINE_MS, MAX_CREATED, MAX_JOINED, SCHEDULE_GAP_MS, SCHEDULE_TTL_MS, MIN_PLAYERS` |
 | Grupos en el servidor | se borran tras 24 h sin consultas | `online/protocol.ts › GROUP_TTL_MS` |
 | Consultas | cada 3 s en la sala del checkin y al reorganizar; cada 10 s jugando un tramo; el tablón cada 30 s mientras se mira, al cambiar de subpestaña y al volver a la app (y cada 60 s con fianzas retenidas) | `net/incursionSync.ts › QUICK_SYNC_MS, PLAY_SYNC_MS`, `net/scheduleSync.ts › ROOM_SYNC_MS, BONDS_SYNC_MS`, `net/incursionBoard.ts › REFRESH_EVERY_MS` |
 
@@ -463,7 +463,7 @@ completar.
     scheduleRules.ts         franjas, plazos, fases (SchedulePhase), fianza, topes
     scheduledIncursion.ts    la programada en el servidor: crear, aceptar, baja, cancelar (ScheduleRefusal)
     scheduleRoom.ts          sala: checkin, marcar, fijar
-    scheduleStart.ts         a la hora: formar el grupo o cancelarla, y reparto de fianzas (bondShares)
+    scheduleStart.ts         a la hora (o al fijar todos): formar el grupo o cancelarla, y reparto de fianzas (bondShares)
     scheduleView.ts, scheduleProtocol.ts, scheduleRequests.ts   vista por jugador, protocolo y validación
     schedulePushes.ts        avisos (nueva, sala abierta, cancelada) y adónde llevan
     linkedSchedule.ts        en la partida: fianzas (retener, devolver, liquidar) y caducidad
@@ -515,7 +515,8 @@ Desde el 2026-11-17 sustituyen a la cola automática (decisión del usuario, `sp
 - **Fianza**: el 10% del dinero al crear o aceptar, retenida en la partida (`incursionBonds`); no cuenta como gastado
   para las misiones y sí para el ranking de dinero. Se devuelve al hacer el checkin, al darse de baja a tiempo o si el
   creador cancela. La de quien no hace el checkin se reparte a partes iguales (hacia abajo) entre los que sí, a la hora
-  de comienzo, también si se cancela por no haber nadie con Pokémon; si nadie hizo el checkin, se pierde. Cada móvil la
+  de comienzo, también si se cancela por no haber 2 jugadores con Pokémon; si nadie hizo el checkin, se pierde. Si
+  nadie más se apuntó, se cierra a la hora y se devuelve la fianza (hiciera o no el checkin). Cada móvil la
   liquida al leer al servidor; si el servidor ya no la tiene, se devuelve.
 - **Bajas y cancelación**: hasta 3 h antes del comienzo, un apuntado puede darse de baja con su fianza devuelta y el
   creador puede cancelarla: todos (también él) recuperan la suya. Después, ninguna de las dos cosas. El creador no se
@@ -528,6 +529,10 @@ Desde el 2026-11-17 sustituyen a la cola automática (decisión del usuario, `sp
   el primer Pokémon disponible (orden del selector: favoritos y nivel) con su primer ataque; se puede cambiar hasta la
   hora o «Fijar» (no se deshace). Marcar exige la llave. Lo marcado queda reservado: el Pokémon no sale del rancho a otra
   cosa y la llave no se gasta en otra incursión (no se intercambian).
-- **Comienzo**: siempre a su hora, nunca antes. Entran los que hicieron el checkin con Pokémon marcado; el resto, bots.
-  El grupo empieza a la hora de comienzo aunque se forme en la primera consulta posterior. Sin nadie, se cancela sin
-  gastar llaves. Desde ahí, todo como siempre.
+- **Comienzo**: a su hora o, si todos los apuntados (al menos 2) han fijado su Pokémon en la sala, en cuanto fija el
+  último. Entran los que hicieron el checkin con Pokémon marcado; el resto, bots. A su hora, el grupo empieza a la hora
+  de comienzo aunque se forme en la primera consulta posterior. Con menos de 2 jugadores con Pokémon (`MIN_PLAYERS`),
+  no empieza: se cancela sin gastar llaves. Desde ahí, todo como siempre.
+- **Entrar en el grupo**: el móvil entra con el Pokémon que tiene marcado el servidor. Mientras no entra, el checkin
+  se guarda (también si se cierra la app o falla la red: al volver, la sala sigue consultando hasta entrar); solo se
+  suelta si el grupo ya no existe o su Pokémon no está libre. El tablón, que no trae el grupo, no lo suelta.

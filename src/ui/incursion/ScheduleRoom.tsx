@@ -6,6 +6,7 @@ import { PARTY_SIZE } from '../../game/incursion/party'
 import { monRepertoire } from '../../game/incursion/repertoire'
 import type { ScheduleCheckin } from '../../game/incursion/schedule/linkedSchedule'
 import { checkinMonBlocker, lockCheckinMon, markCheckinMon } from '../../game/incursion/schedule/scheduleCheckin'
+import { SchedulePhase } from '../../game/incursion/schedule/scheduleRules'
 import type { SeatView } from '../../game/incursion/schedule/scheduleView'
 import { findMon, MonPlace, monPlace, type GameState } from '../../game/core/state'
 import { useScheduleBoard } from '../../net/incursionBoard'
@@ -25,7 +26,8 @@ export function ScheduleRoom({ game, c }: { game: GameState; c: ScheduleCheckin 
   const { board, clockOffset } = useScheduleBoard()
   const view = board?.mine.find((v) => v.id === c.scheduleId)
   const inc = incursion(c.incursionId)
-  const left = c.startAt - (game.lastTick + clockOffset)
+  const started = view?.phase === SchedulePhase.Started
+  const left = started ? 0 : c.startAt - (game.lastTick + clockOffset)
   const seats: (SeatView | null)[] = Array.from({ length: PARTY_SIZE }, (_, i) => view?.seats[i] ?? null)
 
   return (
@@ -106,7 +108,7 @@ function YourPick({ game, c }: { game: GameState; c: ScheduleCheckin }) {
           />
           {!mon && <p className="notice small">Ninguno de tus Pokémon del rancho puede entrar ahora (nivel o PS).</p>}
           {mon && c.moveId && <MovePicker moves={moves} selectedId={c.moveId} onSelect={(moveId) => mark(mon.uid, moveId)} />}
-          <p className="tiny muted">Si no lo fijas, entras con el que tengas marcado a la hora de comienzo.</p>
+          <p className="tiny muted">Si no lo fijas, entras con el que tengas marcado a la hora de comienzo. Si todos lo fijáis, empieza ya.</p>
           <button className="btn primary" disabled={!mon} onClick={() => setConfirm(true)}>
             Fijar
           </button>

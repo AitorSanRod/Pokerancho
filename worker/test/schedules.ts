@@ -33,10 +33,12 @@ export async function checkIn(api: Api, scheduleId: string, n: number) {
   return call(api, { action: ScheduleAction.Mark, ...who(n), scheduleId, incursionId: TEST_INCURSION.id, member: member(n) })
 }
 
-/** Programada por el jugador 0, con su checkin hecho, y ya a la hora de comienzo: el grupo de incursión */
+/** Programada por el jugador 0 con el 1 apuntado, los dos con su checkin hecho, y ya a la hora de comienzo: el grupo de incursión del 0 */
 export async function startedGroup(api: Api) {
   const id = (await create(api)).data.schedule.id as string
+  await call(api, { action: ScheduleAction.Join, ...who(1), scheduleId: id, bond: 50 })
   await checkIn(api, id, 0)
+  await checkIn(api, id, 1)
   vi.setSystemTime(START)
   return (await call(api, { action: ScheduleAction.Sync, ...who(0), scheduleId: id })).data.group as { groupId: string; members: unknown[]; you: string }
 }

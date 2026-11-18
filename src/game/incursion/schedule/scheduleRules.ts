@@ -22,6 +22,8 @@ export const CANCEL_DEADLINE_MS = 3 * 60 * MINUTE_MS
 export const MAX_CREATED = 3
 /** Incursiones programadas aceptadas (sin contar las creadas) y aún sin empezar que puede tener un jugador a la vez */
 export const MAX_JOINED = 5
+/** Jugadores con Pokémon que hacen falta para empezar; con menos, se cancela */
+export const MIN_PLAYERS = 2
 /** Separación mínima entre los comienzos de dos incursiones de un jugador (la más larga dura 25 min, más la sala y margen) */
 export const SCHEDULE_GAP_MS = 45 * MINUTE_MS
 /** Lo que el servidor guarda una incursión programada después de su hora de comienzo (para liquidar las fianzas) */
@@ -40,8 +42,11 @@ export const SchedulePhase = {
 } as const
 export type SchedulePhase = (typeof SchedulePhase)[keyof typeof SchedulePhase]
 
-/** Quién la canceló: el creador antes de abrir la sala o nadie con Pokémon a la hora de comienzo */
-export const ScheduleCancel = { Creator: 'creator', Nobody: 'nobody' } as const
+/**
+ * Por qué se canceló: el creador antes de abrir la sala; nadie más se apuntó (se devuelven todas las fianzas, como al
+ * cancelarla el creador); o a la hora había menos de MIN_PLAYERS jugadores con Pokémon (los ausentes pierden la fianza)
+ */
+export const ScheduleCancel = { Creator: 'creator', Alone: 'alone', TooFew: 'nobody' } as const
 export type ScheduleCancel = (typeof ScheduleCancel)[keyof typeof ScheduleCancel]
 
 /** La fianza que se retiene con ese dinero */
@@ -63,9 +68,13 @@ export function validSlots(now: number): number[] {
   return slots
 }
 
-export function schedulePhase(sched: { startAt: number; cancelledBy: ScheduleCancel | null }, now: number): SchedulePhase {
+/** Se devuelven todas las fianzas, sin reparto */
+export const refundsAll = (cancelledBy: ScheduleCancel | null): boolean => cancelledBy === ScheduleCancel.Creator || cancelledBy === ScheduleCancel.Alone
+
+/** `groupId`: si ya se formó el grupo (puede ser antes de la hora, si todos fijaron su Pokémon) */
+export function schedulePhase(sched: { startAt: number; cancelledBy: ScheduleCancel | null; groupId?: string | null }, now: number): SchedulePhase {
   if (sched.cancelledBy) return SchedulePhase.Cancelled
-  if (now >= sched.startAt) return SchedulePhase.Started
+  if (sched.groupId || now >= sched.startAt) return SchedulePhase.Started
   if (now >= checkInOpensAt(sched.startAt)) return SchedulePhase.CheckIn
   return now >= leaveDeadline(sched.startAt) ? SchedulePhase.Committed : SchedulePhase.Open
 }
