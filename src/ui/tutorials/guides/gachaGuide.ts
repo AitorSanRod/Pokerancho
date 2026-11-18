@@ -16,7 +16,7 @@ export const GACHA_GUIDE: Guide = {
     {
       image: shot('gacha-shredder'),
       title: 'Trituradora',
-      text: 'Los tickets que no quieras se trituran en trozos de MissingNo: marca los que quieras y confirma abajo. Los de tus favoritos (el corazón de la ficha) no salen aquí.',
+      text: 'Los tickets que no quieras se trituran en trozos de MissingNo: toca un Pokémon y escribe cuántos, o tritura todos los de una rareza con su botón. Los de tus favoritos (el corazón de la ficha) solo se trituran desde su sección, al final.',
     },
     {
       image: shot('gacha-missingno'),

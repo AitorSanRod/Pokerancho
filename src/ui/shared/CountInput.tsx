@@ -1,6 +1,6 @@
 import { useEffect, useState, type FocusEvent } from 'react'
 import { useCorrectionGuard } from './correctionGuard'
-import { formatCount } from '../shared/format'
+import { formatCount } from './format'
 
 interface Props {
   value: number

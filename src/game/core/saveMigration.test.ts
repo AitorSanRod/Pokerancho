@@ -245,6 +245,16 @@ describe('al actualizar el juego no se pierde nada', () => {
     expect(migrated.expeditions).toHaveLength(2)
   })
 
+  it('las Mentas aleatorias se conservan y las neutras empiezan en 0 (o se quedan si son un número válido)', () => {
+    const save = fromOldVersion({ ...advancedGame(), mints: 3 })
+    delete save.neutralMints
+    const migrated = migrateSave(save)!
+    expect(migrated.mints).toBe(3)
+    expect(migrated.neutralMints).toBe(0)
+    expect(migrateSave({ ...fromOldVersion(advancedGame()), neutralMints: 2 })!.neutralMints).toBe(2)
+    expect(migrateSave({ ...fromOldVersion(advancedGame()), neutralMints: 1.5 })!.neutralMints).toBe(0)
+  })
+
   it('un campo con otra forma toma su valor inicial; los que ya no existen se ignoran', () => {
     const save = fromOldVersion(advancedGame())
     save.money = 'mucho'

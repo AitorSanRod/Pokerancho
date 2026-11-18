@@ -6,15 +6,26 @@ import type { GameState, OwnedMon } from '../../game/core/state'
 import { act } from '../../store/store'
 import { monSalePrice, pieceSalePrice, sellMon, sellPieces, sellShards, SHARD_SALE_PRICE } from '../../game/trade/serverSale'
 import { givableMons, giveMonBlocker } from '../../game/trade/tradeGive'
-import { Sprite } from '../shared/common'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
-import { HeartIcon } from '../shared/HeartIcon'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { ShopSection, ShopTile } from '../shop/ShopTile'
-import { SellCountDialog, type CountSale } from './SellCountDialog'
+import { CountDialog } from '../shared/CountDialog'
+import { SellFavorites } from './SellFavorites'
+import { SellMonIcon } from './SellMonIcon'
 import { formatMoney } from '../shared/format'
 import './sell.css'
+
+/** Una venta por cantidad (tickets de una especie o trozos) */
+interface CountSale {
+  /** Qué se vende, en minúscula y plural: «tickets de Pikachu» */
+  name: string
+  /** ₽ por cada uno */
+  price: number
+  max: number
+  /** Vende `count` en la partida y devuelve los ₽ cobrados */
+  sell: (s: GameState, count: number) => number
+}
 
 /** Tienda › Venta: vender al servidor Pokémon, tickets y trozos de MissingNo a precio fijo */
 export function SellScreen({ game }: { game: GameState }) {
@@ -25,11 +36,11 @@ export function SellScreen({ game }: { game: GameState }) {
 
   return (
     <div className="screen scroll">
-      <ShopSection title="Pokémon" art={ICON.Sell} tone="shop-fold-sell" defaultOpen hint="El precio depende de la rareza. Tu compañero no se puede vender.">
+      <ShopSection title="Pokémon" art={ICON.Sell} tone="shop-fold-sell" defaultOpen hint="El precio depende de la rareza. Tu compañero no se puede vender; tus favoritos, desde su sección.">
         {mons.map((m) => (
           <ShopTile
             key={m.uid}
-            icon={<MonIcon speciesId={m.speciesId} favorite={isFavorite(game, m.speciesId)} />}
+            icon={<SellMonIcon speciesId={m.speciesId} favorite={isFavorite(game, m.speciesId)} />}
             name={`${species(m.speciesId).name} Nv. ${m.level}`}
             action={
               <button className="btn primary small" disabled={giveMonBlocker(game, m.uid) !== null} onClick={() => setSelling(m)}>
@@ -46,7 +57,7 @@ export function SellScreen({ game }: { game: GameState }) {
         {withPieces.map((id) => (
           <ShopTile
             key={id}
-            icon={<MonIcon speciesId={id} favorite={isFavorite(game, id)} />}
+            icon={<SellMonIcon speciesId={id} favorite={isFavorite(game, id)} />}
             name={`Tickets de ${species(id).name}`}
             action={
               <button
@@ -64,6 +75,7 @@ export function SellScreen({ game }: { game: GameState }) {
         ))}
         {withPieces.length === 0 && <p className="small muted">No tienes tickets de ningún Pokémon.</p>}
       </ShopSection>
+      <SellFavorites game={game} />
       <ShopSection title="Trozos de MissingNo" art={ICON.Shard} tone="shop-fold-sell-shards">
         <ShopTile
           icon={<ItemIcon item={ICON.Shard} size={48} />}
@@ -92,16 +104,15 @@ export function SellScreen({ game }: { game: GameState }) {
           <p className="small">Se irá para siempre, con su nivel y sus ★.</p>
         </ConfirmDialog>
       )}
-      {countSale && <SellCountDialog sale={countSale} onClose={() => setCountSale(null)} />}
+      {countSale && (
+        <CountDialog
+          title={`Vender ${countSale.name}`}
+          max={countSale.max}
+          confirmLabel={(n) => `Vender por ${formatMoney(n * countSale.price)}`}
+          onConfirm={(n) => act((s) => countSale.sell(s, n))}
+          onClose={() => setCountSale(null)}
+        />
+      )}
     </div>
-  )
-}
-
-function MonIcon({ speciesId, favorite }: { speciesId: number; favorite: boolean }) {
-  return (
-    <span className="sell-mon-icon">
-      <Sprite id={speciesId} size={52} animated={false} />
-      {favorite && <HeartIcon className="sell-heart" />}
-    </span>
   )
 }

@@ -7,6 +7,7 @@ import { createMon, NEW_MON_LEVEL } from '../team/mons'
 import { RANCH_EXPANSION_SLOTS } from '../team/ranchExpansion'
 import { ranchCapacity, usedSlots } from '../team/ranches'
 import { CloudAction, cloudAction, cloudUpload, hasUnsavedProgress, isFromNewerApp, parseUpload, saveSummary, stateFromSaved, withEvolutionLines, type CloudSave } from './cloudSave'
+import { syncSnapshot } from './cloudChoice'
 import { initialState, SAVE_VERSION, type GameState } from './state'
 import { backupTeam } from './teamBackup'
 import { chooseStarter, readyForExpeditions, testExpedition } from './test-utils'
@@ -47,6 +48,25 @@ describe('partida en la nube', () => {
     const before = cloudOf(withNewMon, 4)
     chooseStarter(withNewMon, STARTERS[1])
     expect(hasUnsavedProgress(withNewMon, before)).toBe(true)
+  })
+
+  it('con instantánea: baja sin preguntar si aquí no se ha jugado nada desde la última sincronización', () => {
+    const local = playedGame()
+    const link = { userId: USER, revision: 3, snapshot: syncSnapshot(local) }
+    const cloud = cloudOf(playedGame(), 4)
+    expect(hasUnsavedProgress(local, cloud)).toBe(true)
+    expect(cloudAction(link, USER, cloud, local)).toBe(CloudAction.Download)
+    local.owned[0].level++
+    expect(cloudAction(link, USER, cloud, local)).toBe(CloudAction.Ask)
+    expect(cloudAction({ userId: USER, revision: 3 }, USER, cloud, playedGame())).toBe(CloudAction.Ask)
+  })
+
+  it('si la nube va por delante de la revisión vista, nunca sube la de aquí encima', () => {
+    const local = playedGame()
+    const cloud = cloudOf(playedGame(), 4)
+    for (const link of [{ userId: USER, revision: 3 }, { userId: USER, revision: 3, snapshot: syncSnapshot(local) }]) {
+      expect(cloudAction(link, USER, cloud, local)).not.toBe(CloudAction.Upload)
+    }
   })
 
   it('si la de aquí no es de la cuenta: pregunta, salvo que esté sin empezar (entonces baja sin preguntar)', () => {

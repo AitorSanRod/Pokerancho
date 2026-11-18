@@ -9,7 +9,7 @@ import type { GameState } from '../core/state'
 import { keysOf } from '../incursion/keys'
 import { tmsOf } from '../incursion/tms'
 import { hasFormItem } from './forms'
-import { mintsOf } from './mints'
+import { MintKind, mintsOf } from './mints'
 import { ranchTypeAvailable } from './ranchTypes'
 import { stonesOf } from './stones'
 
@@ -26,8 +26,10 @@ export interface Bag {
   starItems: BagEntry<StarItem>[]
   stones: BagEntry<Stone>[]
   formItems: BagEntry<FormItem>[]
-  /** Mentas aleatorias: un solo tipo, solo cuenta cuántas hay */
+  /** Mentas aleatorias: solo cuenta cuántas hay */
   mints: number
+  /** Mentas neutras: solo cuenta cuántas hay */
+  neutralMints: number
   /** Huevos Suerte cogidos en ruta (ver run/expBoost.ts) */
   luckyEggs: number
   ranchTypes: BagEntry<RanchTypeId>[]
@@ -43,7 +45,8 @@ export function bagContents(s: GameState): Bag {
     starItems: held([...STAR_ITEM_IDS].reverse(), (id) => starItemsOf(s, id)),
     stones: held(STONE_IDS, (id) => stonesOf(s, id)),
     formItems: held(FORM_ITEM_IDS, (id) => (hasFormItem(s, id) ? 1 : 0)),
-    mints: mintsOf(s),
+    mints: mintsOf(s, MintKind.Random),
+    neutralMints: mintsOf(s, MintKind.Neutral),
     luckyEggs: s.luckyEggs,
     ranchTypes: held(RANCH_TYPE_IDS, (id) => ranchTypeAvailable(s, id)),
     incursionKeys: held(INCURSIONS.map((i) => i.id), (id) => keysOf(s, id)),

@@ -13,6 +13,8 @@ let state: GameState = initialState()
 let storage: SaveStorage | null = null
 const listeners = new Set<() => void>()
 let saveTimer: ReturnType<typeof setTimeout> | undefined
+/** Última vez que se jugó la partida guardada, al abrir la app (antes de que el avance sin conexión la ponga en «ahora») */
+let playedAtOpen: number | null = null
 
 const notify = () => listeners.forEach((l) => l())
 
@@ -31,8 +33,12 @@ function scheduleSave() {
 export function startStore(from: SaveStorage) {
   storage = from
   state = loadSaved(from)
+  playedAtOpen = state.lastTick
   notify()
 }
+
+/** Hora real (ms) de la última vez que se jugó antes de abrir la app; null si aún no se ha cargado */
+export const openedPlayedAt = (): number | null => playedAtOpen
 
 /** Deja de guardar (otra pestaña se ha quedado con la partida): lo que pase aquí ya no pisa lo suyo */
 export function stopSaving() {

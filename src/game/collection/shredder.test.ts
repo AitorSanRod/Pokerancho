@@ -4,8 +4,10 @@ import { initialState } from '../core/state'
 import { speciesOfRarity } from '../core/test-utils'
 import { markSeen, toggleFavorite } from './dex'
 import { addPieces, piecesOf } from './pieces'
+import { FavoritePolicy } from '../trade/tradeGive'
 import {
   buyPiece,
+  favoriteStock,
   maxPiecesToBuy,
   PIECE_SHARD_PRICE,
   pieceShardPrice,
@@ -124,5 +126,20 @@ describe('buyPiece', () => {
     s.missingnoShards = PIECE_SHARD_PRICE[Rarity.Common] * 3
     expect(buyPiece(s, COMMON, 0)).toBe(false)
     expect(s.missingnoShards).toBe(PIECE_SHARD_PRICE[Rarity.Common] * 3)
+  })
+})
+
+describe('favoritos en la trituradora', () => {
+  it('sus tickets no se trituran salvo desde su sección, y no entran al marcar una rareza', () => {
+    const s = initialState()
+    addPieces(s, COMMON, 3)
+    addPieces(s, OTHER_COMMON, 2)
+    markSeen(s, COMMON)
+    toggleFavorite(s, COMMON)
+    expect(favoriteStock(s)).toEqual([{ speciesId: COMMON, count: 3 }])
+    expect(raritySelection(s, Rarity.Common)).toEqual({ [OTHER_COMMON]: 2 })
+    expect(shred(s, COMMON, 1)).toBe(0)
+    expect(shred(s, COMMON, 2, FavoritePolicy.Allow)).toBe(2 * SHARDS_PER_PIECE[Rarity.Common])
+    expect(piecesOf(s, COMMON)).toBe(1)
   })
 })

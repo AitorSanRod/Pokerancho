@@ -47,6 +47,7 @@ export const RouteId = {
   SSAnne2: 'ss-anne2',
   TunelRoca: 'tunel-roca',
   PuebloLavanda: 'pueblo-lavanda',
+  CiudadAzulona: 'ciudad-azulona'
 } as const
 export type RouteId = (typeof RouteId)[keyof typeof RouteId]
 
@@ -174,6 +175,9 @@ export function pathFrom(r: Route, fromId = startNode(r).id): string[] {
   for (let n = node(r, fromId); n.next.length > 0; n = node(r, n.next[0].to)) path.push(n.next[0].to)
   return path
 }
+
+/** Paradas de un camino: todos sus nodos menos el de salida (como las cuenta el mapa de la ruta en curso) */
+export const pathStopCount = (path: string[]): number => Math.max(0, path.length - 1)
 
 /** Un camino válido empieza en el inicio, sigue aristas existentes y acaba en un nodo final */
 export function isValidPath(r: Route, path: string[]): boolean {

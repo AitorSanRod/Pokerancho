@@ -1,4 +1,4 @@
-import { MINT_PRICE } from '../../../game/team/mints'
+import { MINT_PRICE, NEUTRAL_MINT_PRICE } from '../../../game/team/mints'
 import { ICON } from '../../shared/icons'
 import { shot, type Guide } from './guide'
 
@@ -16,7 +16,7 @@ export const SHOP_GUIDE: Guide = {
     {
       image: shot('shop-mints'),
       title: 'Objetos',
-      text: `Debajo, cada cosa en su desplegable: objetos evolutivos, tipos de rancho, llaves de incursión, formas de Rotom y Mentas (₽ ${MINT_PRICE.toLocaleString('es-ES')}). Lo comprado va a la Mochila hasta que lo usas.`,
+      text: `Debajo, cada cosa en su desplegable: objetos evolutivos, tipos de rancho, llaves de incursión, formas de Rotom y Mentas (la aleatoria, ₽ ${MINT_PRICE.toLocaleString('es-ES')}; la neutra, ₽ ${NEUTRAL_MINT_PRICE.toLocaleString('es-ES')}). Lo comprado va a la Mochila hasta que lo usas.`,
     },
     {
       image: shot('shop-sell'),

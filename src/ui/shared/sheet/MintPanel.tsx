@@ -4,11 +4,11 @@ import { NATURES, type Nature } from '../../../data/natures'
 import { species } from '../../../data/species'
 import type { GameState, OwnedMon } from '../../../game/core/state'
 import { act } from '../../../store/store'
-import { applyMint, mintBlocker, mintsOf } from '../../../game/team/mints'
+import { applyMint, mintBlocker, MintKind, mintsOf } from '../../../game/team/mints'
 import { ConfirmDialog } from '../ConfirmDialog'
-import { ICON } from '../icons'
 import { ItemIcon } from '../ItemIcon'
 import { MonSection } from './MonSheet'
+import { MINT_EFFECT, MINT_NAME, mintIcon } from './mintText'
 
 /** «Seria (no sube ni baja nada)» o «Miedosa: ▲ Velocidad ▼ Ataque» */
 function natureText(nature: Nature): string {
@@ -16,41 +16,44 @@ function natureText(nature: Nature): string {
   return up && down ? `${name}: ▲ ${STAT_NAME[up]} ▼ ${STAT_NAME[down]}` : `${name} (no sube ni baja nada)`
 }
 
-/**
- * Usar una Menta aleatoria: la naturaleza pasa a otra al azar. La confirmación no dice cuál saldrá; después, sí.
- * Sin mentas (y sin un resultado que enseñar), no se pinta
- */
+/** Qué pasará al usar la menta (la aleatoria no dice cuál saldrá; después, sí) */
+const confirmText = (kind: MintKind, name: string, nature: Nature) =>
+  `${name} perderá su naturaleza ${NATURES[nature].name.toLowerCase()} y tendrá ${kind === MintKind.Neutral ? 'la neutra' : 'otra al azar, distinta'}. No se puede deshacer y se gasta la menta.`
+
+/** Usar una Menta (aleatoria o neutra) en la ficha. Sin mentas (y sin un resultado que enseñar), no se pinta */
 export function MintPanel({ game, mon }: { game: GameState; mon: OwnedMon }) {
-  const [confirming, setConfirming] = useState(false)
+  const [confirming, setConfirming] = useState<MintKind | null>(null)
   const [result, setResult] = useState<Nature | null>(null)
-  if (mintsOf(game) === 0 && !result) return null
-  const blocker = mintBlocker(game, mon.uid)
+  const kinds = Object.values(MintKind).filter((kind) => mintsOf(game, kind) > 0)
+  if (kinds.length === 0 && !result) return null
   const name = species(mon.speciesId).name
-  const spendMint = () => {
-    setResult(act((s) => applyMint(s, mon.uid)))
-    setConfirming(false)
+  const spendMint = (kind: MintKind) => {
+    setResult(act((s) => applyMint(s, mon.uid, kind)))
+    setConfirming(null)
   }
   return (
     <MonSection title="Naturaleza">
       <p className="small">{natureText(mon.nature)}</p>
-      {mintsOf(game) > 0 && (
-        <button className="btn big-action" disabled={!!blocker} onClick={() => setConfirming(true)}>
-          <ItemIcon item={ICON.Mint} size={40} />
-          <span className="grow">
-            Menta aleatoria <span className="tiny muted">×{mintsOf(game)}</span>
-            <span className="tiny muted evolve-requirement">Otra naturaleza al azar</span>
-          </span>
-          <span className="tag">Usar</span>
-        </button>
-      )}
-      {blocker && mintsOf(game) > 0 && <p className="tiny muted">{blocker}</p>}
+      {kinds.map((kind) => {
+        const blocker = mintBlocker(game, mon.uid, kind)
+        return (
+          <div key={kind}>
+            <button className="btn big-action" disabled={!!blocker} onClick={() => setConfirming(kind)}>
+              <ItemIcon item={mintIcon(kind)} size={40} />
+              <span className="grow">
+                {MINT_NAME[kind]} <span className="tiny muted">×{mintsOf(game, kind)}</span>
+                <span className="tiny muted evolve-requirement">{MINT_EFFECT[kind]}</span>
+              </span>
+              <span className="tag">Usar</span>
+            </button>
+            {blocker && <p className="tiny muted">{blocker}</p>}
+          </div>
+        )
+      })}
       {result && <p className="tiny">¡Ahora {name} es {NATURES[result].name.toLowerCase()}!</p>}
       {confirming && (
-        <ConfirmDialog title="¿Usar la Menta aleatoria?" confirmLabel="Usar" onConfirm={spendMint} onCancel={() => setConfirming(false)}>
-          <p className="small">
-            {name} perderá su naturaleza {NATURES[mon.nature].name.toLowerCase()} y tendrá otra al azar, distinta. No se puede deshacer y se
-            gasta la menta.
-          </p>
+        <ConfirmDialog title={`¿Usar la ${MINT_NAME[confirming]}?`} confirmLabel="Usar" onConfirm={() => spendMint(confirming)} onCancel={() => setConfirming(null)}>
+          <p className="small">{confirmText(confirming, name, mon.nature)}</p>
         </ConfirmDialog>
       )}
     </MonSection>

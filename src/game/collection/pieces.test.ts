@@ -3,7 +3,7 @@ import { Nature } from '../../data/natures'
 import { POKEMON } from '../../data/pokemon'
 import { Rarity, RARITY_INFO, rarityOf, species } from '../../data/species'
 import { starItemOfRarity } from '../../data/starItems'
-import { boostedMoney } from '../battle/rewards'
+import { pieceSalePrice } from '../trade/serverSale'
 import { initialState } from '../core/state'
 import { chooseStarter, seqRng, speciesOfRarity } from '../core/test-utils'
 import { createMon, NEW_MON_LEVEL } from '../team/mons'
@@ -159,12 +159,12 @@ describe('combine', () => {
     expect(STAR_PRICES).toHaveLength(MAX_STARS)
   })
 
-  it('con las estrellas al máximo, las piezas se cambian por pokécuartos sin coste', () => {
+  it('con las estrellas al máximo, las piezas se cambian sin coste por los ₽ que darían en la Venta', () => {
     const s = stateWithStarter()
     s.owned[0].stars = MAX_STARS
     s.money = 0
     addPieces(s, POKEMON.Bulbasaur, PIECES_PER_COMBINE)
-    const expected = boostedMoney(RARITY_INFO[rarityOf(species(POKEMON.Bulbasaur))].surplusMoney)
+    const expected = PIECES_PER_COMBINE * pieceSalePrice(POKEMON.Bulbasaur)
     expect(combine(s, POKEMON.Bulbasaur)).toMatchObject({ kind: CombineKind.Money, money: expected })
     expect(s.money).toBe(expected)
     expect(s.owned[0].stars).toBe(MAX_STARS)

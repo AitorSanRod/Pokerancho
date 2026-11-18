@@ -19,6 +19,7 @@ const ciudadCarmin = asset(new URL('../../assets/routes/vermilion-city.webp', im
 const ssAnne = asset(new URL('../../assets/routes/ss-anne.webp', import.meta.url))
 const tunelRoca = asset(new URL('../../assets/routes/rock-tunnel.webp', import.meta.url))
 const puebloLavanda = asset(new URL('../../assets/routes/lavender-town.webp', import.meta.url))
+const ciudadAzulona = asset(new URL('../../assets/routes/celadon-city.webp', import.meta.url))
 
 export const KANTO: GameMap = {
   id: 'kanto',
@@ -408,6 +409,29 @@ export const KANTO: GameMap = {
         { id: 'f', name: 'Entrenador', kind: NodeKind.Trainer, steps: 50, trainer: TrainerId.Montanero2 },
         { id: 'g', name: 'Tienda Pokémon', kind: NodeKind.Heal, steps: 40, potion: Potion.SuperPotion },
         { id: 'h', name: 'Torre Pokémon', kind: NodeKind.Boss, steps: 70, statMult: 1.2, boss: boss(POKEMON.Gengar, 63, [{ type: 'ghost', level: 3 }, { type: 'psychic', level: 3 }]) },
+      ),
+    },
+    {
+      id: RouteId.CiudadAzulona,
+      name: 'Ciudad Azulona',
+      description: '',
+      biome: Biome.PewterCity,
+      backdrop: { image: ciudadAzulona, focusY: 50 },
+      levels: [60, 66],
+      encounters: enc([POKEMON.Voltorb, 15.5], [POKEMON.Chansey, 15], [POKEMON.Hitmonlee, 15], [POKEMON.Electabuzz, 15], [POKEMON.Magmar, 15], [POKEMON.Eevee, 5], [POKEMON.Lotad, 5], [POKEMON.Feebas, 0.5], [POKEMON.Porygon2, 14]),
+      reward: { tickets: 5, money: 6000, exp: 5600 },
+      nodes: chain(
+        { id: 's', name: 'Inicio', kind: NodeKind.Start, steps: 0 },
+        { id: 'a', name: '', kind: NodeKind.Wild, steps: 10, statMult: 1.2 },
+        { id: 'b', name: '', kind: NodeKind.Wild, steps: 10, statMult: 1.2 },
+        { id: 'c', name: '', kind: NodeKind.Wild, steps: 10, statMult: 1.2 },
+        { id: 'i', name: '', kind: NodeKind.Heal, steps: 20, potion: Potion.Potion },
+        { id: 'e', name: '', kind: NodeKind.Wild, steps: 5, statMult: 1.2 },
+        { id: 'd', name: '', kind: NodeKind.Wild, steps: 10, statMult: 1.3 },
+        { id: 'j', name: '', kind: NodeKind.Heal, steps: 20, potion: Potion.Potion },
+        { id: 'f', name: '', kind: NodeKind.Wild, steps: 5, statMult: 1.3 },
+        { id: 'g', name: '', kind: NodeKind.Wild, steps: 5, statMult: 1.3 },
+        { id: 'h', name: '', kind: NodeKind.Boss, steps: 10, statMult: 2, boss: boss(POKEMON.Gardevoir, 65, [{ type: 'ghost', level: 1 }]) },
       ),
     },
   ],

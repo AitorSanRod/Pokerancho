@@ -1,7 +1,8 @@
 import { CloudAction, cloudAction, cloudUpload, hasUnsavedProgress, isFromNewerApp, SaveRejection, stateFromSaved, type CloudSave } from '../game/core/cloudSave'
-import { getState, replaceState } from '../store/store'
+import { recommendedSave, syncSnapshot } from '../game/core/cloudChoice'
+import { getState, openedPlayedAt, replaceState } from '../store/store'
 import { account, AccountStatus, refreshAccount, subscribeAccount } from './account'
-import { readLink, writeLink } from './cloudLink'
+import { linkTo, readLink, revisionFor, writeLink } from './cloudLink'
 import { cloudState, updateCloud } from './cloudState'
 import { apiFetch, SLOW_REQUEST_MS } from './apiFetch'
 
@@ -20,6 +21,9 @@ const KEEPALIVE_MAX_BYTES = 60_000
 
 const OTHER_DEVICE_NOTICE = 'Has jugado con tu cuenta en otro dispositivo, así que hemos cargado esa partida, que es la más reciente.'
 
+/** Hasta la primera conexión tras abrir, «jugada aquí» es la hora guardada al abrir (el avance sin conexión la pone en «ahora») */
+let firstConnect = true
+
 let busy = false
 let lastUploadAt = 0
 
@@ -32,14 +36,23 @@ const markOutdated = () => updateCloud({ outdated: true, outdatedDismissed: fals
 function loadCloudSave(saved: CloudSave, notice: string | null = null) {
   if (isFromNewerApp(saved)) return markOutdated()
   replaceState(stateFromSaved(saved.save, saved.team))
-  writeLink({ userId: userId()!, revision: saved.revision })
-  updateCloud({ syncedAt: Date.now(), choice: null, notice: notice ?? cloudState().notice })
+  linkTo(userId()!, saved.revision, syncSnapshot(getState()))
+  updateCloud({ syncedAt: Date.now(), choice: null, recommended: null, notice: notice ?? cloudState().notice })
+}
+
+// Cuándo se jugó aquí por última vez (ver firstConnect)
+const localPlayedAt = () => (firstConnect ? (openedPlayedAt() ?? getState().lastTick) : getState().lastTick)
+
+/** Hay que elegir entre la de la nube y la de aquí: se recomienda la que se jugó después */
+function askChoice(saved: CloudSave) {
+  const playedAt = localPlayedAt()
+  updateCloud({ choice: saved, recommended: recommendedSave(saved.updatedAt, playedAt), localPlayedAt: playedAt })
 }
 
 /** Hay otra partida en la nube: se baja si aquí no hay nada que perder y, si lo hay, el jugador elige */
 function resolveConflict(saved: CloudSave, notice: string | null) {
   if (isFromNewerApp(saved)) return markOutdated()
-  if (hasUnsavedProgress(getState(), saved)) return updateCloud({ choice: saved })
+  if (hasUnsavedProgress(getState(), saved)) return askChoice(saved)
   loadCloudSave(saved, notice)
 }
 
@@ -64,6 +77,7 @@ interface Rejected {
 
 /** Sube la partida de aquí encima de la revisión `base` de la nube */
 async function upload(base: number | null, keepalive = false) {
+  const snapshot = syncSnapshot(getState())
   const body = JSON.stringify({ baseRevision: base, ...cloudUpload(getState()) })
   lastUploadAt = Date.now()
   const res = await checked(
@@ -79,15 +93,12 @@ async function upload(base: number | null, keepalive = false) {
     else if (rejected.cloud) resolveConflict(rejected.cloud, OTHER_DEVICE_NOTICE)
     return
   }
-  writeLink({ userId: userId()!, revision: ((await res.json()) as { revision: number }).revision })
+  linkTo(userId()!, ((await res.json()) as { revision: number }).revision, snapshot)
   updateCloud({ syncedAt: Date.now(), outdated: false })
 }
 
 /** Lo que el dispositivo cree que es la última revisión de la nube de esta cuenta */
-const knownRevision = () => {
-  const link = readLink()
-  return link?.userId === userId() ? link.revision : null
-}
+const knownRevision = () => revisionFor(userId())
 
 /** Una operación con la nube a la vez; los fallos de red solo se anotan (se reintenta más tarde) */
 async function exclusive(run: () => Promise<void>) {
@@ -122,7 +133,7 @@ export async function withCloudInSync<T>(run: (revision: number, adoptRevision: 
     await upload(knownRevision())
     const revision = knownRevision()
     if (revision === null || cloudState().choice || cloudState().outdated) throw new Error('Sin partida en la nube')
-    return await run(revision, (next) => writeLink({ userId: userId()!, revision: next }))
+    return await run(revision, (next) => linkTo(userId()!, next, syncSnapshot(getState())))
   } catch (e) {
     busy = false
     void connect()
@@ -139,8 +150,9 @@ const connect = () =>
     if (saved && isFromNewerApp(saved)) return markOutdated()
     const action = cloudAction(readLink(), userId()!, saved, getState())
     if (action === CloudAction.Upload) await upload(saved?.revision ?? null)
-    else if (action === CloudAction.Download) loadCloudSave(saved!)
-    else updateCloud({ choice: saved })
+    else if (action === CloudAction.Download) loadCloudSave(saved!, knownRevision() === null ? null : OTHER_DEVICE_NOTICE)
+    else askChoice(saved!)
+    firstConnect = false
   })
 
 /** Sube si toca (no mientras el jugador elige partida ni con la app sin actualizar) */
@@ -154,7 +166,7 @@ export function chooseSave(keepCloud: boolean) {
   const saved = cloudState().choice
   if (!saved) return
   if (keepCloud) return loadCloudSave(saved)
-  updateCloud({ choice: null })
+  updateCloud({ choice: null, recommended: null })
   void exclusive(() => upload(saved.revision))
 }
 
@@ -162,7 +174,7 @@ export function chooseSave(keepCloud: boolean) {
 export async function beforeSignOut() {
   await uploadNow()
   writeLink(null)
-  updateCloud({ syncedAt: null, choice: null, outdated: false })
+  updateCloud({ syncedAt: null, choice: null, recommended: null, outdated: false })
 }
 
 /** Arranca la sincronización (una vez, en App); devuelve cómo pararla */

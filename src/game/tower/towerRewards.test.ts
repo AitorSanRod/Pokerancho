@@ -6,15 +6,16 @@ import { piecesOf } from '../collection/pieces'
 import { activeMon, initialState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
 import { TOWER_LEVEL_CAP_FLOOR } from './towerFoes'
-import { floorExp, floorMoney, floorPrize, nextPrizeFloor, noTowerEarned, rewardFloor, TOWER_EGG_CHANCE, towerPrize } from './towerRewards'
+import { floorExp, floorMoney, floorPrize, nextPrizeFloor, noTowerEarned, rewardFloor, TOWER_EGG_CHANCE, TOWER_EXP_LEVEL_CUTS, towerExpMult, towerPrize } from './towerRewards'
 
 const FOE = SPECIES[5].id
 /** Azar que nunca da el Huevo Suerte */
 const NO_EGG = () => 1
 
-function onFloor(floor: number, best = 0) {
+function onFloor(floor: number, best = 0, level?: number) {
   const s = initialState()
   chooseStarter(s, POKEMON.Charmander)
+  if (level) activeMon(s)!.level = level
   const earned = noTowerEarned()
   const money = s.money
   const tickets = s.tickets
@@ -36,6 +37,24 @@ describe('premios de la torre', () => {
     const r = onFloor(1)
     expect(r.money).toBe(floorMoney(1))
     expect(r.earned).toMatchObject({ money: floorMoney(1), exp: floorExp(1), pieces: [], prizes: [] })
+  })
+
+  it('la EXP se recorta según el nivel del Pokémon que sube; el ₽, no', () => {
+    const lowest = Math.min(...TOWER_EXP_LEVEL_CUTS.map((c) => c.fromLevel))
+    expect(towerExpMult(lowest - 1)).toBe(1)
+    expect(onFloor(1, 0, lowest - 1).earned.exp).toBe(floorExp(1))
+    for (const cut of TOWER_EXP_LEVEL_CUTS) {
+      expect(towerExpMult(cut.fromLevel)).toBe(cut.mult)
+      const r = onFloor(1, 0, cut.fromLevel)
+      expect(r.earned.exp).toBe(Math.round(floorExp(1) * cut.mult))
+      expect(r.money).toBe(floorMoney(1))
+    }
+  })
+
+  it('el recorte usa el nivel con el que se gana el piso, antes de sumar su EXP', () => {
+    const lowest = Math.min(...TOWER_EXP_LEVEL_CUTS.map((c) => c.fromLevel))
+    const r = onFloor(TOWER_LEVEL_CAP_FLOOR, 0, lowest - 1)
+    expect(r.earned.exp).toBe(floorExp(TOWER_LEVEL_CAP_FLOOR))
   })
 
   it('cada pocos pisos hay premio de la lista y, pasada ella, el de después', () => {

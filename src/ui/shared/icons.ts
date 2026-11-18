@@ -47,6 +47,8 @@ export const ICON = {
   Form: ITEM.RotomCatalog,
   /** Menta aleatoria (cambia la naturaleza) */
   Mint: ITEM.SeriousMint,
+  /** Menta neutra (pone la naturaleza neutra) */
+  NeutralMint: ITEM.CalmMint,
   Active: ITEM.PokeBall,
   Money: ITEM.AmuletCoin,
   Wins: ITEM.Protein,

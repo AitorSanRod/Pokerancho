@@ -29,8 +29,8 @@ interface RarityInfo {
   color: string
   /** Probabilidad de que una pieza del gacha sea de esta rareza (las cuatro suman 1) */
   rate: number
-  /** ₽ por combinar 5 piezas de un Pokémon que ya tiene las ★ al máximo */
-  surplusMoney: number
+  /** ₽ por cada ticket de un Pokémon de esta rareza vendido (Tienda › Venta) o cambiado con las ★ al máximo (sin bonificación de ₽) */
+  ticketSalePrice: number
   /** ₽ que cuesta crear el Pokémon con sus piezas */
   createPrice: number
   /** ₽ que cuesta evolucionar a un Pokémon de esta rareza (la de la evolución, no la del que evoluciona) */
@@ -40,10 +40,10 @@ interface RarityInfo {
 }
 
 export const RARITY_INFO: Record<Rarity, RarityInfo> = {
-  [Rarity.Common]: { name: 'Común', color: '#888070', rate: 0.68, surplusMoney: 20, createPrice: 1000, evolvePrice: 1000, passiveWeight: 1 },
-  [Rarity.Rare]: { name: 'Raro', color: '#1a6fbf', rate: 0.24, surplusMoney: 50, createPrice: 2500, evolvePrice: 2500, passiveWeight: 2 },
-  [Rarity.Epic]: { name: 'Épico', color: '#a040a0', rate: 0.07, surplusMoney: 150, createPrice: 5000, evolvePrice: 5000, passiveWeight: 3 },
-  [Rarity.Legendary]: { name: 'Legendario', color: '#e0a000', rate: 0.01, surplusMoney: 500, createPrice: 10000, evolvePrice: 10000, passiveWeight: 5 },
+  [Rarity.Common]: { name: 'Común', color: '#888070', rate: 0.68, ticketSalePrice: 50, createPrice: 1000, evolvePrice: 1000, passiveWeight: 1 },
+  [Rarity.Rare]: { name: 'Raro', color: '#1a6fbf', rate: 0.24, ticketSalePrice: 100, createPrice: 2500, evolvePrice: 2500, passiveWeight: 2 },
+  [Rarity.Epic]: { name: 'Épico', color: '#a040a0', rate: 0.07, ticketSalePrice: 150, createPrice: 5000, evolvePrice: 5000, passiveWeight: 3 },
+  [Rarity.Legendary]: { name: 'Legendario', color: '#e0a000', rate: 0.01, ticketSalePrice: 250, createPrice: 10000, evolvePrice: 10000, passiveWeight: 5 },
 }
 
 interface RawSpecies extends Omit<Species, 'base'> {

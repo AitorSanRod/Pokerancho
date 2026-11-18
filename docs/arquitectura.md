@@ -166,7 +166,7 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `net/raidSync.ts` | Bucle que entra, consulta y avisa de las salas dejadas; cada cuánto se consulta; toques, ataques y críticos |
 | `net/raidBoard.ts` | La pestaña Raids según el servidor: cuántos esperan a cada jefe y la hora del servidor |
 | `game/core/accountRules.ts` | Lo que comparten web y servidor de cuentas: email, contraseña, códigos de error |
-| `game/core/cloudSave.ts` | Partida en la nube: qué hacer al conectar (`cloudAction`), progreso sin subir (`hasUnsavedProgress`), app sin actualizar (`isFromNewerApp`, `SaveRejection`), recuperar una copia (`stateFromSaved`), resumen y validar la subida |
+| `game/core/cloudSave.ts` + `cloudChoice.ts` | Partida en la nube: qué hacer al conectar (`cloudAction`), progreso sin subir (`hasUnsavedProgress`), progreso desde la última sincronización (`syncSnapshot`, `progressSince`) y cuál recomendar al elegir (`recommendedSave`), app sin actualizar (`isFromNewerApp`, `SaveRejection`), recuperar una copia (`stateFromSaved`), resumen y validar la subida |
 | `net/account.ts` | Cuenta opcional: sesión, enlaces de los correos, entrar, crearla, recuperar la contraseña (`/api/auth`) |
 | `net/cloudSync.ts` + `net/cloudState.ts` | Subir y bajar la partida de la cuenta; conflictos entre dispositivos y app sin actualizar; `withCloudInSync` para los intercambios / lo que ve la UI |
 | `game/trade/tradeOps.ts` | Operaciones de intercambio (anunciar, pagar, recoger) que aplica el servidor a la partida de la nube y el móvil a la suya |
@@ -335,6 +335,13 @@ Opcionales, con email y contraseña, en el propio Worker (`worker/auth/`, tablas
 - **Al conectar** (`cloudAction`): sin copia, se sube; si la de aquí ya es de la cuenta, se baja si hay revisión nueva
   (o se pregunta si aquí hay progreso sin subir, p. ej. tras jugar sin conexión) y si no se sube; si no, se pregunta
   cuál conservar (salvo que la de aquí esté sin empezar).
+- **Instantánea de la última sincronización** (`CloudLink.snapshot`, `game/core/cloudChoice.ts`): cada vez que la
+  partida queda igual aquí y en la nube, el dispositivo guarda nivel y ★ de cada Pokémon y las rutas completadas. Con
+  revisión nueva en la nube, solo se pregunta si aquí se ha jugado algo desde entonces (`progressSince`) que la nube no
+  tenga; un dispositivo viejo al que solo le «sobran» Pokémon vendidos o recreados en otro baja la de la nube sin
+  preguntar. Al preguntar, `CloudChoiceDialog` marca como «Más reciente» la que se jugó después: la de la nube por
+  `updatedAt` y la de aquí por el `lastTick` guardado al abrir la app (`store.ts › openedPlayedAt`, antes de que el
+  avance sin conexión lo ponga en «ahora»). Un enlace de antes, sin instantánea, sigue la regla anterior.
 - **Versiones de la app**: una app sin actualizar no sabe leer entera una partida guardada por una más nueva (perdería
   las especies o campos que no conoce). Por eso el servidor no acepta subir una partida de `SAVE_VERSION` más vieja que
   la de la nube (409 con `SaveRejection.OutdatedApp`) y el móvil no carga una de la nube más nueva (`isFromNewerApp`):
@@ -380,7 +387,11 @@ Push estándar (Web Push) desde el Worker: llegan aunque la app esté cerrada. C
   responde 404/410, la suscripción se borra.
 - **Versiones nuevas** (`net/appUpdate.ts`): el service worker va con `registerType: 'prompt'`. La versión nueva se
   descarga y espera; `UpdatePrompt` avisa para recargar («Más tarde» lo vuelve a enseñar al volver a la app). Con la
-  app abierta se mira si hay versión nueva cada `UPDATE_CHECK_MS` y al volver a ella.
+  app abierta se mira si hay versión nueva cada `UPDATE_CHECK_MS` y al volver a ella (escuchando `updatefound` en la
+  propia `registration`: workbox-window deja de hacerlo tras la primera versión encontrada). «Actualizar» espera a que
+  termine de instalarse la versión más nueva (hasta `INSTALL_WAIT_MS`) antes de activarla, para no quedarse en una
+  intermedia tras varias publicaciones, y apunta en `sessionStorage` que el jugador aceptó: si tras recargar aparece
+  otra versión en `ACCEPTED_UPDATE_MS`, se activa sin volver a avisar.
 - `public/sw-notifications.js` se importa en el service worker de Workbox: enseña el aviso y, al tocarlo, abre o trae
   al frente la app. Requisitos: HTTPS (o `localhost`) y, en iOS, la app instalada en la pantalla de inicio (16.4+).
 

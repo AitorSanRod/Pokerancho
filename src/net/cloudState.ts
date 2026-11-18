@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import type { SaveSide } from '../game/core/cloudChoice'
 import type { CloudSave } from '../game/core/cloudSave'
 
 // Lo que la UI ve de la partida en la nube (lo cambia net/cloudSync.ts): cuándo se guardó, si hay que elegir partida,
@@ -9,6 +10,10 @@ export interface CloudState {
   syncedAt: number | null
   /** Hay dos partidas distintas (la de la nube y la de aquí, con progreso que la otra no tiene): el jugador elige */
   choice: CloudSave | null
+  /** La que se recomienda al elegir: la que se jugó después */
+  recommended: SaveSide | null
+  /** Hora real (ms) de la última vez que se jugó aquí, para enseñarla al elegir */
+  localPlayedAt: number | null
   notice: string | null
   /** La última vez no se pudo hablar con el servidor */
   failing: boolean
@@ -21,7 +26,7 @@ export interface CloudState {
   outdatedDismissed: boolean
 }
 
-let cloud: CloudState = { syncedAt: null, choice: null, notice: null, failing: false, outdated: false, outdatedDismissed: false }
+let cloud: CloudState = { syncedAt: null, choice: null, recommended: null, localPlayedAt: null, notice: null, failing: false, outdated: false, outdatedDismissed: false }
 const listeners = new Set<() => void>()
 
 export const cloudState = (): CloudState => cloud

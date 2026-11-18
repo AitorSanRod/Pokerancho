@@ -60,6 +60,7 @@ export const ITEM = {
   Revive: 'revive',
   TmNormal: 'tm-normal',
   SeriousMint: 'serious-mint',
+  CalmMint: 'calm-mint',
   ShinyCharm: 'shiny-charm',
   PowerBracer: 'power-bracer',
   VsRecorder: 'vs-recorder',
