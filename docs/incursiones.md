@@ -35,7 +35,7 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
 | Información | Un apartado en la pestaña que explica cómo funciona todo (grupo, movimientos, pasivas, revivires, nivel, retirada, llaves) |
 | Premios | Escritos a mano: ₽ y EXP en cada sala de combate superada; al terminar, ₽, EXP, tickets y **tickets de cualquier Pokémon** que elijamos |
 | Dónde | Nueva pestaña **Incursiones** arriba en Ruta, junto a Rutas y Raids |
-| Incursiones | **Bosque Verde** (Nv. 15–30, rivales 15–30, jefes finales **Nidoking** y **Nidoqueen**) y **Cueva Helada** (jefe final **Gyarados**). Además, una **Incursión de prueba** (Nv. 5–20, cinco salas, una de cada tipo, unos 6 min) para probar el modo |
+| Incursiones | **Bosque Verde** (Nv. 15–30, rivales 15–30, jefes finales **Nidoking** y **Nidoqueen**) y **Cueva Helada** (jefe final **Gyarados**); fáciles, **Central Energía** (Nv. 25–50, jefe **Electabuzz**); medias, **Torre Pokémon** (Nv. 30–55, jefe **Gengar**) y **Dojo Karate** (Nv. 30–55, **Machamp** con Hitmonlee y Hitmonchan); difíciles, **Volcán Canela** (Nv. 45–70, jefe **Moltres**), **Calle Victoria** (Nv. 48–70, **Rhydon** y **Aerodactyl**) y **Guarida Dragón** (Nv. 52–75, jefe **Dragonite**). Tú con bots, sin tocar, al nivel máximo de entrada (90 partidas, mezclando seis Pokémon): Cueva Helada 48%, Central Energía 92%, Torre Pokémon 86%, Dojo Karate 62%, Volcán Canela 69%, Calle Victoria 81%, Guarida Dragón 89%; 10 niveles por debajo, del 37% (Dojo Karate y Volcán Canela) al 63% (Guarida Dragón). Además, una **Incursión de prueba** (Nv. 5–20, cinco salas, una de cada tipo, unos 6 min) para probar el modo |
 
 ## Recorrido del jugador
 

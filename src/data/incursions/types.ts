@@ -7,7 +7,17 @@ import type { Tm } from '../tms'
 // incursión va en su fichero de esta carpeta y se añade a la lista de index.ts.
 
 /** Id de cada incursión. El valor se guarda en la partida: no cambiarlo sin subir SAVE_VERSION */
-export const IncursionId = { Prueba: 'prueba', CuevaHelada: 'cueva-helada', BosqueVerde: 'bosque-verde' } as const
+export const IncursionId = {
+  Prueba: 'prueba',
+  CuevaHelada: 'cueva-helada',
+  BosqueVerde: 'bosque-verde',
+  CentralEnergia: 'central-energia',
+  TorrePokemon: 'torre-pokemon',
+  DojoKarate: 'dojo-karate',
+  VolcanCanela: 'volcan-canela',
+  CalleVictoria: 'calle-victoria',
+  GuaridaDragon: 'guarida-dragon',
+} as const
 export type IncursionId = (typeof IncursionId)[keyof typeof IncursionId]
 
 /** Dificultad: decide el precio de su llave */

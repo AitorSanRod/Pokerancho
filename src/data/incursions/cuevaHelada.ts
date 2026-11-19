@@ -99,7 +99,10 @@ export const CUEVA_HELADA: Incursion = {
     { kind: IncursionPrizeKind.Tickets, amount: 10, chance: 0.1 },
     { kind: IncursionPrizeKind.Pieces, speciesId: POKEMON.Magikarp, amount: 3, chance: 0.5 },
     { kind: IncursionPrizeKind.Pieces, speciesId: POKEMON.Lapras, amount: 3, chance: 0.05 },
+    { kind: IncursionPrizeKind.Tm, tm: Tm.Liofilizacion, amount: 1, chance: 0.08 },
+    { kind: IncursionPrizeKind.Tm, tm: Tm.Escaldar, amount: 1, chance: 0.05 },
     { kind: IncursionPrizeKind.Tm, tm: Tm.Senuelo, amount: 1, chance: 0.05 },
+    { kind: IncursionPrizeKind.Tm, tm: Tm.JoyaDeLuz, amount: 1, chance: 0.03 },
   ],
   bots: [POKEMON.Raichu, POKEMON.Clefable, POKEMON.Machoke, POKEMON.Kadabra, POKEMON.Ponyta, POKEMON.Magneton, POKEMON.Magmar, POKEMON.Hitmonchan],
 }
