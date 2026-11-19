@@ -12,18 +12,18 @@ export const TORRE_POKEMON: Incursion = {
   description: 'Plantas en penumbra llenas de fantasmas. En lo alto de la torre, Gengar se ríe de los que suben.',
   biome: Biome.MeadowDusk,
   tier: IncursionTier.Medium,
-  minLevel: 30,
+  minLevel: 45,
   maxLevel: 55,
   rooms: [
     {
       kind: RoomKind.Battle,
       name: 'Planta baja',
       foes: [
-        foe(POKEMON.Gastly, 32, [IMOVE.Lenguetazo.id, IMOVE.RayoConfuso.id]),
-        foe(POKEMON.Gastly, 32, [IMOVE.SombraVil.id, IMOVE.Hipnosis.id]),
+        foe(POKEMON.Gastly, 44, [IMOVE.Lenguetazo.id, IMOVE.RayoConfuso.id]),
+        foe(POKEMON.Gastly, 44, [IMOVE.SombraVil.id, IMOVE.Hipnosis.id]),
         oneOf(
-          foe(POKEMON.Golbat, 32, [IMOVE.Mordisco.id, IMOVE.RayoConfuso.id]),
-          foe(POKEMON.Cubone, 33, [IMOVE.HuesoPalo.id, IMOVE.Cabezazo.id]),
+          foe(POKEMON.Golbat, 44, [IMOVE.Mordisco.id, IMOVE.RayoConfuso.id]),
+          foe(POKEMON.Cubone, 45, [IMOVE.HuesoPalo.id, IMOVE.Cabezazo.id]),
         ),
       ],
       reward: { money: 500, exp: 250 },
@@ -32,9 +32,9 @@ export const TORRE_POKEMON: Incursion = {
       kind: RoomKind.Battle,
       name: 'Escaleras',
       foes: [
-        foe(POKEMON.Haunter, 36, [IMOVE.BolaSombra.id, IMOVE.Hipnosis.id]),
-        foe(POKEMON.Sableye, 35, [IMOVE.GolpeUmbrio.id, IMOVE.FuegoFatuo.id]),
-        foe(POKEMON.Koffing, 35, [IMOVE.BombaLodo.id, IMOVE.Toxico.id]),
+        foe(POKEMON.Haunter, 48, [IMOVE.BolaSombra.id, IMOVE.Hipnosis.id]),
+        foe(POKEMON.Sableye, 47, [IMOVE.GolpeUmbrio.id, IMOVE.FuegoFatuo.id]),
+        foe(POKEMON.Koffing, 47, [IMOVE.BombaLodo.id, IMOVE.Toxico.id]),
       ],
       reward: { money: 600, exp: 300 },
     },
@@ -43,15 +43,15 @@ export const TORRE_POKEMON: Incursion = {
       kind: RoomKind.Battle,
       name: 'Tumbas',
       foes: [
-        foe(POKEMON.Marowak, 40, [IMOVE.HuesoPalo.id, IMOVE.Cabezazo.id], {
+        foe(POKEMON.Marowak, 52, [IMOVE.HuesoPalo.id, IMOVE.Cabezazo.id], {
           hpMult: 2.5,
           passives: [{ type: PokeType.Ground, level: 1 }],
           boss: { areaEvery: 4, phase: { belowHp: 0.3, moveIds: [IMOVE.Terremoto.id] } },
         }),
-        foe(POKEMON.Haunter, 37, [IMOVE.SombraVil.id, IMOVE.RayoConfuso.id]),
+        foe(POKEMON.Haunter, 49, [IMOVE.SombraVil.id, IMOVE.RayoConfuso.id]),
         weighted(
-          [foe(POKEMON.Gastly, 36, [IMOVE.Lenguetazo.id, IMOVE.Hipnosis.id]), 4],
-          [foe(POKEMON.Mimikyu, 38, [IMOVE.Carantona.id, IMOVE.GarraUmbria.id]), 1],
+          [foe(POKEMON.Gastly, 48, [IMOVE.Lenguetazo.id, IMOVE.Hipnosis.id]), 4],
+          [foe(POKEMON.Mimikyu, 50, [IMOVE.Carantona.id, IMOVE.GarraUmbria.id]), 1],
         ),
       ],
       reward: { money: 800, exp: 400 },
@@ -61,9 +61,9 @@ export const TORRE_POKEMON: Incursion = {
       kind: RoomKind.Battle,
       name: 'Planta alta',
       foes: [
-        foe(POKEMON.Mimikyu, 40, [IMOVE.Carantona.id, IMOVE.SombraVil.id]),
-        foe(POKEMON.Weezing, 40, [IMOVE.BombaLodo.id, IMOVE.FuegoFatuo.id]),
-        foe(POKEMON.Umbreon, 40, [IMOVE.PulsoNoche.id, IMOVE.LuzLunar.id]),
+        foe(POKEMON.Mimikyu, 52, [IMOVE.Carantona.id, IMOVE.SombraVil.id]),
+        foe(POKEMON.Weezing, 52, [IMOVE.BombaLodo.id, IMOVE.FuegoFatuo.id]),
+        foe(POKEMON.Umbreon, 52, [IMOVE.PulsoNoche.id, IMOVE.LuzLunar.id]),
       ],
       reward: { money: 700, exp: 350 },
     },
@@ -72,7 +72,7 @@ export const TORRE_POKEMON: Incursion = {
       kind: RoomKind.Battle,
       name: 'Cima de la torre',
       foes: [
-        foe(POKEMON.Gengar, 47, [IMOVE.BolaSombra.id, IMOVE.Hipnosis.id, IMOVE.BombaLodo.id], {
+        foe(POKEMON.Gengar, 59, [IMOVE.BolaSombra.id, IMOVE.Hipnosis.id, IMOVE.BombaLodo.id], {
           hpMult: 5,
           passives: [{ type: PokeType.Ghost, level: 1 }],
           boss: { enrage: { fromTurn: 15, every: 6, atk: 1 }, areaEvery: 4, phase: { belowHp: 0.3, moveIds: [IMOVE.GolpeFantasma.id, IMOVE.OndaToxica.id] } },

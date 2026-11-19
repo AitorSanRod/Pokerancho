@@ -12,7 +12,7 @@ export const DOJO_KARATE: Incursion = {
   description: 'Discípulos que entrenan sin descanso. Al fondo, el maestro Machamp con Hitmonlee y Hitmonchan.',
   biome: Biome.VermilionCity,
   tier: IncursionTier.Medium,
-  minLevel: 30,
+  minLevel: 35,
   maxLevel: 55,
   rooms: [
     {

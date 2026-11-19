@@ -12,18 +12,18 @@ export const CALLE_VICTORIA: Incursion = {
   description: 'Cuevas de roca y acero antes de la Liga. A la salida esperan Rhydon y Aerodactyl.',
   biome: Biome.Cave,
   tier: IncursionTier.Hard,
-  minLevel: 48,
+  minLevel: 60,
   maxLevel: 70,
   rooms: [
     {
       kind: RoomKind.Battle,
       name: 'Entrada',
       foes: [
-        foe(POKEMON.Graveler, 49, [IMOVE.Avalancha.id, IMOVE.DefensaFerrea.id]),
-        foe(POKEMON.Onix, 49, [IMOVE.TumbaRocas.id, IMOVE.Atadura.id], { hpMult: 1.3 }),
+        foe(POKEMON.Graveler, 64, [IMOVE.Avalancha.id, IMOVE.DefensaFerrea.id]),
+        foe(POKEMON.Onix, 64, [IMOVE.TumbaRocas.id, IMOVE.Atadura.id], { hpMult: 1.3 }),
         oneOf(
-          foe(POKEMON.Machoke, 49, [IMOVE.TajoCruzado.id, IMOVE.Corpulencia.id]),
-          foe(POKEMON.Sandslash, 49, [IMOVE.Excavar.id, IMOVE.Cuchillada.id]),
+          foe(POKEMON.Machoke, 64, [IMOVE.TajoCruzado.id, IMOVE.Corpulencia.id]),
+          foe(POKEMON.Sandslash, 64, [IMOVE.Excavar.id, IMOVE.Cuchillada.id]),
         ),
       ],
       reward: { money: 850, exp: 420 },
@@ -32,9 +32,9 @@ export const CALLE_VICTORIA: Incursion = {
       kind: RoomKind.Battle,
       name: 'Galería de cascadas',
       foes: [
-        foe(POKEMON.Golbat, 52, [IMOVE.Vuelo.id, IMOVE.RayoConfuso.id]),
-        foe(POKEMON.Rhyhorn, 51, [IMOVE.Taladradora.id, IMOVE.Cornada.id]),
-        foe(POKEMON.Kabutops, 52, [IMOVE.ConchaFilo.id, IMOVE.AcuaJet.id]),
+        foe(POKEMON.Golbat, 67, [IMOVE.Vuelo.id, IMOVE.RayoConfuso.id]),
+        foe(POKEMON.Rhyhorn, 66, [IMOVE.Taladradora.id, IMOVE.Cornada.id]),
+        foe(POKEMON.Kabutops, 67, [IMOVE.ConchaFilo.id, IMOVE.AcuaJet.id]),
       ],
       reward: { money: 900, exp: 450 },
     },
@@ -43,13 +43,13 @@ export const CALLE_VICTORIA: Incursion = {
       kind: RoomKind.Battle,
       name: 'Pasadizo de acero',
       foes: [
-        foe(POKEMON.Excadrill, 54, [IMOVE.Taladradora.id, IMOVE.GarraMetal.id], {
+        foe(POKEMON.Excadrill, 69, [IMOVE.Taladradora.id, IMOVE.GarraMetal.id], {
           hpMult: 2,
           passives: [{ type: PokeType.Steel, level: 1 }],
           boss: { areaEvery: 4, phase: { belowHp: 0.3, moveIds: [IMOVE.Terremoto.id] } },
         }),
-        foe(POKEMON.Skarmory, 54, [IMOVE.AlaDeAcero.id, IMOVE.DefensaFerrea.id]),
-        foe(POKEMON.Krookodile, 54, [IMOVE.Terremoto.id, IMOVE.Triturar.id]),
+        foe(POKEMON.Skarmory, 69, [IMOVE.AlaDeAcero.id, IMOVE.DefensaFerrea.id]),
+        foe(POKEMON.Krookodile, 69, [IMOVE.Terremoto.id, IMOVE.Triturar.id]),
       ],
       reward: { money: 1200, exp: 600 },
     },
@@ -58,9 +58,9 @@ export const CALLE_VICTORIA: Incursion = {
       kind: RoomKind.Battle,
       name: 'Gran caverna',
       foes: [
-        foe(POKEMON.Golem, 56, [IMOVE.Avalancha.id, IMOVE.Terremoto.id], { hpMult: 1.5 }),
-        foe(POKEMON.Omastar, 55, [IMOVE.Surf.id, IMOVE.PoderPasado.id]),
-        foe(POKEMON.Marowak, 55, [IMOVE.HuesoPalo.id, IMOVE.Terremoto.id]),
+        foe(POKEMON.Golem, 71, [IMOVE.Avalancha.id, IMOVE.Terremoto.id], { hpMult: 1.5 }),
+        foe(POKEMON.Omastar, 70, [IMOVE.Surf.id, IMOVE.PoderPasado.id]),
+        foe(POKEMON.Marowak, 70, [IMOVE.HuesoPalo.id, IMOVE.Terremoto.id]),
       ],
       reward: { money: 1100, exp: 550 },
     },
@@ -69,12 +69,12 @@ export const CALLE_VICTORIA: Incursion = {
       kind: RoomKind.Battle,
       name: 'Salida de la calle',
       foes: [
-        foe(POKEMON.Rhydon, 58, [IMOVE.Avalancha.id, IMOVE.Cornada.id], {
+        foe(POKEMON.Rhydon, 73, [IMOVE.Avalancha.id, IMOVE.Cornada.id], {
           hpMult: 4,
           passives: [{ type: PokeType.Rock, level: 2 }],
           boss: { areaEvery: 5, phase: { belowHp: 0.3, moveIds: [IMOVE.Terremoto.id, IMOVE.Megacuerno.id] } },
         }),
-        foe(POKEMON.Aerodactyl, 58, [IMOVE.Avalancha.id, IMOVE.Triturar.id, IMOVE.AtaqueAla.id], {
+        foe(POKEMON.Aerodactyl, 73, [IMOVE.Avalancha.id, IMOVE.Triturar.id, IMOVE.AtaqueAla.id], {
           hpMult: 3,
           boss: { enrage: { fromTurn: 15, every: 6, atk: 1 }, areaEvery: 4 },
         }),

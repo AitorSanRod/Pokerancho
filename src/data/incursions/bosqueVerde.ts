@@ -12,18 +12,18 @@ export const BOSQUE_VERDE: Incursion = {
   description: 'Pokémon de tipo bicho entre los árboles y, en lo más profundo del bosque, Nidoking y Nidoqueen.',
   biome: Biome.Forest,
   tier: IncursionTier.VeryEasy,
-  minLevel: 15,
+  minLevel: 30,
   maxLevel: 40,
   rooms: [
     {
       kind: RoomKind.Battle,
       name: 'Entrada del bosque',
       foes: [
-        foe(POKEMON.Weedle, 15, [IMOVE.CorteFuria.id, IMOVE.Acido.id]),
-        foe(POKEMON.Caterpie, 15, [IMOVE.Acido.id, IMOVE.Placaje.id]),
+        foe(POKEMON.Weedle, 11, [IMOVE.CorteFuria.id, IMOVE.Acido.id]),
+        foe(POKEMON.Caterpie, 11, [IMOVE.Acido.id, IMOVE.Placaje.id]),
         oneOf(
-          foe(POKEMON.Butterfree, 18, [IMOVE.VientoPlata.id, IMOVE.Paralizador.id]),
-          foe(POKEMON.Beedrill, 18, [IMOVE.TijeraX.id, IMOVE.VenenoX.id]),
+          foe(POKEMON.Butterfree, 14, [IMOVE.VientoPlata.id, IMOVE.Paralizador.id]),
+          foe(POKEMON.Beedrill, 14, [IMOVE.TijeraX.id, IMOVE.VenenoX.id]),
         ),
       ],
       reward: { money: 300, exp: 150 },
@@ -33,12 +33,12 @@ export const BOSQUE_VERDE: Incursion = {
       kind: RoomKind.Battle,
       name: 'Nido de Nidoran',
       foes: [
-        foe(POKEMON.Nidorino, 22, [IMOVE.ColmilloVeneno.id, IMOVE.CorteFuria.id], {
+        foe(POKEMON.Nidorino, 18, [IMOVE.ColmilloVeneno.id, IMOVE.CorteFuria.id], {
           hpMult: 2,
           passives: [{ type: PokeType.Poison, level: 1 }],
           boss: { areaEvery: 5, phase: { belowHp: 0.3, moveIds: [IMOVE.Terremoto.id] } },
         }),
-        foe(POKEMON.Nidorina, 21, [IMOVE.VenenoX.id, IMOVE.Toxico.id], { hpMult: 1.5 }),
+        foe(POKEMON.Nidorina, 17, [IMOVE.VenenoX.id, IMOVE.Toxico.id], { hpMult: 1.5 }),
       ],
       reward: { money: 500, exp: 250 },
     },
@@ -46,11 +46,11 @@ export const BOSQUE_VERDE: Incursion = {
       kind: RoomKind.Battle,
       name: 'Interior del bosque',
       foes: [
-        foe(POKEMON.Shroomish, 24, [IMOVE.BombaAcida.id, IMOVE.Follaje.id], { hpMult: 1.2 }),
-        foe(POKEMON.Parasect, 26, [IMOVE.PolvoVeneno.id, IMOVE.IdaYVuelta.id], { hpMult: 1.5 }),
+        foe(POKEMON.Shroomish, 20, [IMOVE.BombaAcida.id, IMOVE.Follaje.id], { hpMult: 1.2 }),
+        foe(POKEMON.Parasect, 22, [IMOVE.PolvoVeneno.id, IMOVE.IdaYVuelta.id], { hpMult: 1.5 }),
         oneOf(
-          foe(POKEMON.Butterfree, 25, [IMOVE.VientoPlata.id, IMOVE.Paralizador.id], { passives: [{ type: PokeType.Bug, level: 1 }] }),
-          foe(POKEMON.Beedrill, 25, [IMOVE.TijeraX.id, IMOVE.VenenoX.id], { passives: [{ type: PokeType.Bug, level: 1 }] }),
+          foe(POKEMON.Butterfree, 21, [IMOVE.VientoPlata.id, IMOVE.Paralizador.id], { passives: [{ type: PokeType.Bug, level: 1 }] }),
+          foe(POKEMON.Beedrill, 21, [IMOVE.TijeraX.id, IMOVE.VenenoX.id], { passives: [{ type: PokeType.Bug, level: 1 }] }),
         ),
       ],
       reward: { money: 600, exp: 300 },
@@ -60,12 +60,12 @@ export const BOSQUE_VERDE: Incursion = {
       kind: RoomKind.Battle,
       name: 'Corazón del bosque',
       foes: [
-        foe(POKEMON.Nidoking, 30, [IMOVE.FuerzaEquina.id, IMOVE.Toxico.id], {
+        foe(POKEMON.Nidoking, 26, [IMOVE.FuerzaEquina.id, IMOVE.Toxico.id], {
           hpMult: 2.5,
           passives: [],
           boss: { enrage: { fromTurn: 15, every: 6, atk: 1 }, areaEvery: 4, phase: { belowHp: 0.2, moveIds: [IMOVE.Terremoto.id] } },
         }),
-        foe(POKEMON.Nidoqueen, 29, [IMOVE.Taladradora.id, IMOVE.Paralizador.id], {
+        foe(POKEMON.Nidoqueen, 25, [IMOVE.Taladradora.id, IMOVE.Paralizador.id], {
           hpMult: 2.5,
           passives: [{ type: PokeType.Ground, level: 1 }],
           boss: { areaEvery: 5, phase: { belowHp: 0.3, moveIds: [IMOVE.Terremoto.id] } },

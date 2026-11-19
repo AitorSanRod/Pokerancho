@@ -12,19 +12,19 @@ export const VOLCAN_CANELA: Incursion = {
   description: 'Ríos de lava y Pokémon de fuego. En el corazón del volcán arde Moltres.',
   biome: Biome.MtMoon,
   tier: IncursionTier.Hard,
-  minLevel: 45,
+  minLevel: 55,
   maxLevel: 70,
   rooms: [
     {
       kind: RoomKind.Battle,
       name: 'Ladera',
       foes: [
-        foe(POKEMON.Ponyta, 50, [IMOVE.Ascuas.id, IMOVE.Pisoton.id]),
-        foe(POKEMON.Growlithe, 50, [IMOVE.ColmilloIgneo.id, IMOVE.Mordisco.id]),
+        foe(POKEMON.Ponyta, 59, [IMOVE.Ascuas.id, IMOVE.Pisoton.id]),
+        foe(POKEMON.Growlithe, 59, [IMOVE.ColmilloIgneo.id, IMOVE.Mordisco.id]),
         oneOf(
-          foe(POKEMON.Charmeleon, 51, [IMOVE.Lanzallamas.id, IMOVE.Cuchillada.id]),
-          foe(POKEMON.Quilava, 51, [IMOVE.RuedaFuego.id, IMOVE.AtaqueRapido.id]),
-          foe(POKEMON.Charcadet, 51, [IMOVE.Lanzallamas.id, IMOVE.FuegoFatuo.id]),
+          foe(POKEMON.Charmeleon, 60, [IMOVE.Lanzallamas.id, IMOVE.Cuchillada.id]),
+          foe(POKEMON.Quilava, 60, [IMOVE.RuedaFuego.id, IMOVE.AtaqueRapido.id]),
+          foe(POKEMON.Charcadet, 60, [IMOVE.Lanzallamas.id, IMOVE.FuegoFatuo.id]),
         ),
       ],
       reward: { money: 800, exp: 400 },
@@ -33,11 +33,11 @@ export const VOLCAN_CANELA: Incursion = {
       kind: RoomKind.Battle,
       name: 'Ríos de lava',
       foes: [
-        foe(POKEMON.Magmar, 54, [IMOVE.Lanzallamas.id, IMOVE.PunoFuego.id, IMOVE.FuegoFatuo.id]),
-        foe(POKEMON.Rapidash, 54, [IMOVE.RuedaFuego.id, IMOVE.Pisoton.id]),
+        foe(POKEMON.Magmar, 63, [IMOVE.Lanzallamas.id, IMOVE.PunoFuego.id, IMOVE.FuegoFatuo.id]),
+        foe(POKEMON.Rapidash, 63, [IMOVE.RuedaFuego.id, IMOVE.Pisoton.id]),
         weighted(
-          [foe(POKEMON.Houndour, 53, [IMOVE.Lanzallamas.id, IMOVE.Mordisco.id]), 2],
-          [foe(POKEMON.Graveler, 53, [IMOVE.Avalancha.id, IMOVE.DefensaFerrea.id]), 1],
+          [foe(POKEMON.Houndour, 62, [IMOVE.Lanzallamas.id, IMOVE.Mordisco.id]), 2],
+          [foe(POKEMON.Graveler, 62, [IMOVE.Avalancha.id, IMOVE.DefensaFerrea.id]), 1],
         ),
       ],
       reward: { money: 900, exp: 450 },
@@ -47,13 +47,13 @@ export const VOLCAN_CANELA: Incursion = {
       kind: RoomKind.Battle,
       name: 'Cráter',
       foes: [
-        foe(POKEMON.Arcanine, 57, [IMOVE.Lanzallamas.id, IMOVE.Triturar.id], {
+        foe(POKEMON.Arcanine, 66, [IMOVE.Lanzallamas.id, IMOVE.Triturar.id], {
           hpMult: 3,
           passives: [{ type: PokeType.Fire, level: 1 }],
           boss: { areaEvery: 4, phase: { belowHp: 0.3, moveIds: [IMOVE.VelocidadExtrema.id, IMOVE.Llamarada.id] } },
         }),
-        foe(POKEMON.Ninetales, 56, [IMOVE.Lanzallamas.id, IMOVE.FuegoFatuo.id]),
-        foe(POKEMON.Flareon, 56, [IMOVE.Humareda.id, IMOVE.Mordisco.id]),
+        foe(POKEMON.Ninetales, 65, [IMOVE.Lanzallamas.id, IMOVE.FuegoFatuo.id]),
+        foe(POKEMON.Flareon, 65, [IMOVE.Humareda.id, IMOVE.Mordisco.id]),
       ],
       reward: { money: 1200, exp: 600 },
     },
@@ -62,9 +62,9 @@ export const VOLCAN_CANELA: Incursion = {
       kind: RoomKind.Battle,
       name: 'Cámara de magma',
       foes: [
-        foe(POKEMON.Volcarona, 58, [IMOVE.Zumbido.id, IMOVE.OndaIgnea.id]),
-        foe(POKEMON.Houndoom, 58, [IMOVE.PulsoNoche.id, IMOVE.Lanzallamas.id]),
-        foe(POKEMON.Typhlosion, 58, [IMOVE.Lanzallamas.id, IMOVE.Humareda.id]),
+        foe(POKEMON.Volcarona, 67, [IMOVE.Zumbido.id, IMOVE.OndaIgnea.id]),
+        foe(POKEMON.Houndoom, 67, [IMOVE.PulsoNoche.id, IMOVE.Lanzallamas.id]),
+        foe(POKEMON.Typhlosion, 67, [IMOVE.Lanzallamas.id, IMOVE.Humareda.id]),
       ],
       reward: { money: 1100, exp: 550 },
     },
@@ -73,7 +73,7 @@ export const VOLCAN_CANELA: Incursion = {
       kind: RoomKind.Battle,
       name: 'Corazón del volcán',
       foes: [
-        foe(POKEMON.Moltres, 62, [IMOVE.Lanzallamas.id, IMOVE.AtaqueAla.id, IMOVE.VientoAfin.id], {
+        foe(POKEMON.Moltres, 71, [IMOVE.Lanzallamas.id, IMOVE.AtaqueAla.id, IMOVE.VientoAfin.id], {
           hpMult: 6,
           passives: [{ type: PokeType.Fire, level: 2 }],
           boss: { enrage: { fromTurn: 15, every: 6, atk: 1 }, areaEvery: 3, phase: { belowHp: 0.3, moveIds: [IMOVE.Sofoco.id, IMOVE.Vendaval.id] } },

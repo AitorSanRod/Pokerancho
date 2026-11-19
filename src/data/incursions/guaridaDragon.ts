@@ -12,18 +12,18 @@ export const GUARIDA_DRAGON: Incursion = {
   description: 'Remolinos y grutas donde crecen los dragones. Al fondo de la guarida duerme Dragonite.',
   biome: Biome.Sea,
   tier: IncursionTier.Hard,
-  minLevel: 52,
+  minLevel: 60,
   maxLevel: 75,
   rooms: [
     {
       kind: RoomKind.Battle,
       name: 'Orilla',
       foes: [
-        foe(POKEMON.Dratini, 52, [IMOVE.Dragoaliento.id, IMOVE.Atadura.id]),
-        foe(POKEMON.Seadra, 53, [IMOVE.Hidropulso.id, IMOVE.Ciclon.id]),
+        foe(POKEMON.Dratini, 66, [IMOVE.Dragoaliento.id, IMOVE.Atadura.id]),
+        foe(POKEMON.Seadra, 67, [IMOVE.Hidropulso.id, IMOVE.Ciclon.id]),
         oneOf(
-          foe(POKEMON.Dragonair, 54, [IMOVE.ColaDragon.id, IMOVE.OndaTrueno.id]),
-          foe(POKEMON.Vibrava, 54, [IMOVE.Dragoaliento.id, IMOVE.Terratemblor.id]),
+          foe(POKEMON.Dragonair, 68, [IMOVE.ColaDragon.id, IMOVE.OndaTrueno.id]),
+          foe(POKEMON.Vibrava, 68, [IMOVE.Dragoaliento.id, IMOVE.Terratemblor.id]),
         ),
       ],
       reward: { money: 900, exp: 450 },
@@ -32,9 +32,9 @@ export const GUARIDA_DRAGON: Incursion = {
       kind: RoomKind.Battle,
       name: 'Remolinos',
       foes: [
-        foe(POKEMON.Gyarados, 56, [IMOVE.Cascada.id, IMOVE.DanzaDragon.id]),
-        foe(POKEMON.Dragonair, 55, [IMOVE.ColaDragon.id, IMOVE.OndaTrueno.id]),
-        foe(POKEMON.Lapras, 55, [IMOVE.Surf.id, IMOVE.RayoHielo.id]),
+        foe(POKEMON.Gyarados, 70, [IMOVE.Cascada.id, IMOVE.DanzaDragon.id]),
+        foe(POKEMON.Dragonair, 69, [IMOVE.ColaDragon.id, IMOVE.OndaTrueno.id]),
+        foe(POKEMON.Lapras, 69, [IMOVE.Surf.id, IMOVE.RayoHielo.id]),
       ],
       reward: { money: 1000, exp: 500 },
     },
@@ -43,9 +43,9 @@ export const GUARIDA_DRAGON: Incursion = {
       kind: RoomKind.Battle,
       name: 'Nido',
       foes: [
-        foe(POKEMON.Altaria, 57, [IMOVE.PulsoDragon.id, IMOVE.Respiro.id]),
-        foe(POKEMON.Noivern, 57, [IMOVE.PulsoDragon.id, IMOVE.TajoAereo.id]),
-        foe(POKEMON.Shelgon, 56, [IMOVE.Cabezazo.id, IMOVE.DefensaFerrea.id], { hpMult: 1.5 }),
+        foe(POKEMON.Altaria, 71, [IMOVE.PulsoDragon.id, IMOVE.Respiro.id]),
+        foe(POKEMON.Noivern, 71, [IMOVE.PulsoDragon.id, IMOVE.TajoAereo.id]),
+        foe(POKEMON.Shelgon, 70, [IMOVE.Cabezazo.id, IMOVE.DefensaFerrea.id], { hpMult: 1.5 }),
       ],
       reward: { money: 1300, exp: 650 },
     },
@@ -54,13 +54,13 @@ export const GUARIDA_DRAGON: Incursion = {
       kind: RoomKind.Battle,
       name: 'Santuario',
       foes: [
-        foe(POKEMON.Flygon, 60, [IMOVE.Terremoto.id, IMOVE.GarraDragon.id], {
+        foe(POKEMON.Flygon, 74, [IMOVE.Terremoto.id, IMOVE.GarraDragon.id], {
           hpMult: 2,
           passives: [{ type: PokeType.Dragon, level: 1 }],
           boss: { areaEvery: 4 },
         }),
-        foe(POKEMON.Milotic, 58, [IMOVE.Surf.id, IMOVE.AcuaAro.id]),
-        foe(POKEMON.Salamence, 59, [IMOVE.GarraDragon.id, IMOVE.Triturar.id]),
+        foe(POKEMON.Milotic, 72, [IMOVE.Surf.id, IMOVE.AcuaAro.id]),
+        foe(POKEMON.Salamence, 73, [IMOVE.GarraDragon.id, IMOVE.Triturar.id]),
       ],
       reward: { money: 1300, exp: 650 },
     },
@@ -69,7 +69,7 @@ export const GUARIDA_DRAGON: Incursion = {
       kind: RoomKind.Battle,
       name: 'Guarida',
       foes: [
-        foe(POKEMON.Dragonite, 62, [IMOVE.GarraDragon.id, IMOVE.AtaqueAla.id, IMOVE.DanzaDragon.id], {
+        foe(POKEMON.Dragonite, 76, [IMOVE.GarraDragon.id, IMOVE.AtaqueAla.id, IMOVE.DanzaDragon.id], {
           hpMult: 5,
           passives: [{ type: PokeType.Dragon, level: 2 }],
           boss: { enrage: { fromTurn: 15, every: 5, atk: 1 }, areaEvery: 3, phase: { belowHp: 0.3, moveIds: [IMOVE.CometaDraco.id, IMOVE.VelocidadExtrema.id] } },

@@ -85,10 +85,14 @@ export async function buildDemoSave(scenario) {
   if (scenario.checkinStart) {
     const { repertoire } = await import('/src/game/incursion/repertoire.ts')
     const incursionId = 'bosque-verde'
-    const uid = uidOf(P.Charmander)
+    const { incursion } = await import('/src/data/incursions/index.ts')
+    const mon = s.owned.find((m) => m.speciesId === P.Charmander)
+    // Con el nivel justo para entrar
+    mon.level = Math.max(mon.level, incursion(incursionId).minLevel)
+    const uid = mon.uid
     s.incursionKeys[incursionId] = 1
     s.incursionBonds = [{ scheduleId: 'a1b2c3d4', incursionId, startAt: scenario.checkinStart, amount: 1250, refunded: true }]
-    s.incursionCheckin = { scheduleId: 'a1b2c3d4', incursionId, startAt: scenario.checkinStart, uid, moveId: repertoire(P.Charmander, 16)[0].id, locked: false }
+    s.incursionCheckin = { scheduleId: 'a1b2c3d4', incursionId, startAt: scenario.checkinStart, uid, moveId: repertoire(P.Charmander, mon.level)[0].id, locked: false }
   }
   if (scenario.incursion) await setUpIncursion(s, uidOf(P.Charmander), scenario.incursion)
   s.lastTick = Date.now()
