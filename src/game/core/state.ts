@@ -20,7 +20,7 @@ import type { Expedition, RouteRaidStreak, Run } from './runTypes'
 
 // Los tipos de los Pokémon, la ruta y las expediciones están en sus ficheros; se reexportan para importarlos de aquí
 export type { OwnedMon, RanchSpot } from './monTypes'
-export type { Expedition, ExpeditionTerms, RouteRaidStreak, Run, RunPhase, StopHeal } from './runTypes'
+export type { Expedition, ExpeditionTerms, RouteRaidStreak, Run, RunPhase, RunSurprise, StopChest, StopHeal } from './runTypes'
 
 /** Paso del tutorial inicial (ver tutorial.ts); null cuando ya se juega con libertad */
 export const TutorialStep = { Starter: 'starter', Combine: 'combine', Route: 'route' } as const
@@ -96,6 +96,10 @@ export interface GameState {
   tutorial: TutorialStep | null
   unlockedRoutes: string[]
   completedRoutes: string[]
+  /** Estrellas conseguidas en cada ruta, por sus claves (la de completarla no se guarda: es `completedRoutes`; ver run/routeStars.ts) */
+  routeStars: Record<string, string[]>
+  /** Último camino elegido en cada ruta con bifurcaciones: el que sale marcado la próxima vez (ver run/routeBranches.ts) */
+  routePaths: Record<string, string[]>
   run: Run | null
   expeditions: Expedition[]
   /**
@@ -119,7 +123,7 @@ export interface GameState {
   lastTick: number
 }
 
-export const SAVE_VERSION = 66
+export const SAVE_VERSION = 67
 
 export function initialState(): GameState {
   return {
@@ -162,6 +166,8 @@ export function initialState(): GameState {
     tutorial: TutorialStep.Starter,
     unlockedRoutes: [RouteId.PuebloPaleta],
     completedRoutes: [],
+    routeStars: {},
+    routePaths: {},
     run: null,
     expeditions: [],
     raids: noTabRaids(),

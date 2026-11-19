@@ -70,3 +70,12 @@
     transform: scaleX(-1) translateY(-5px) rotate(-3deg);
   }
 }
+/* Fondo estático (gimnasios y Alto Mando): la imagen entera, con su suelo a la altura de --ground */
+.scene-still {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center bottom;
+  image-rendering: pixelated;
+  pointer-events: none;
+}

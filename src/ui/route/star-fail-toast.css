@@ -1,0 +1,48 @@
+/* Aviso de estrella perdida en la ruta en curso (StarFailToast.tsx): aparece arriba, se queda y se va */
+.star-fail-toast {
+  position: absolute;
+  top: calc(var(--safe-top) + 120px);
+  left: 50%;
+  z-index: var(--z-float);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 8px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--text) 88%, transparent);
+  color: var(--bg-2);
+  box-shadow: 0 4px 12px #0006;
+  translate: -50% 0;
+  pointer-events: none;
+  animation: star-fail var(--toast-ms) ease-out forwards;
+}
+.star-fail-toast span {
+  display: flex;
+  flex-direction: column;
+}
+.star-fail-toast small {
+  font-size: 12px;
+  opacity: 0.85;
+}
+.star-fail-mark {
+  font-size: 22px;
+  color: var(--line);
+  text-decoration: line-through var(--red) 3px;
+}
+
+@keyframes star-fail {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  12%,
+  80% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}

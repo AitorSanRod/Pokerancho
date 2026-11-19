@@ -2,7 +2,10 @@ import type { Badge } from '../../data/badges'
 import type { Encounter } from '../../data/maps'
 import type { Potion } from '../../data/potions'
 import type { BattleRecord } from '../battle/battle'
+import type { Trainer } from '../../data/trainers'
+import type { PokeType } from '../../data/types'
 import type { ExpBoost } from '../run/expBoost'
+import type { SurpriseKind } from '../run/runSurprise'
 import type { RunGym } from '../run/runGym'
 import type { RunTrainer } from '../run/runTrainer'
 import type { RouteBattleSetup } from '../run/tapCrit'
@@ -25,10 +28,40 @@ export interface StopHeal {
   msLeft: number
 }
 
+/** Parada sorpresa de esta salida (ver run/runSurprise.ts) */
+export interface RunSurprise {
+  kind: SurpriseKind
+  /** Índice en `path` de la parada de salvajes que sustituye */
+  stop: number
+  /** En una horda, los salvajes que quedan por salir tras el que lucha */
+  left: number
+  /** El entrenador rival que reta (su equipo sale de los salvajes de la parada); null en las demás sorpresas */
+  trainer: Trainer | null
+}
+
+/** Cofre de la parada sorpresa: lo que traía (ya sumado) y los milisegundos reales que quedan de la parada */
+export interface StopChest {
+  money: number
+  tickets: number
+  /** Especies de los tickets de especie, uno por entrada */
+  pieces: number[]
+  msLeft: number
+}
+
 export interface Run {
   routeId: string
   /** Nodos elegidos antes de salir, del inicio al final */
   path: string[]
+  /** Nivel con el que salió el Pokémon (para las estrellas de nivel, ver run/routeStars.ts) */
+  startLevel: number
+  /** Tipos de las pasivas de rancho con las que ha luchado en la ruta (para las estrellas de pasivas) */
+  passiveTypes: PokeType[]
+  /** PS más bajos a los que ha llegado en la ruta, en % de sus PS máximos (para las estrellas de PS) */
+  lowestHp: number
+  /** Parada sorpresa de esta salida; null si no le ha tocado ninguna */
+  surprise: RunSurprise | null
+  /** Cofre que está abriendo en la parada sorpresa; mientras `msLeft` sea > 0 no se dan pasos */
+  chest: StopChest | null
   /** Índice en `path` del último nodo alcanzado */
   stop: number
   /** Pasos dados en el tramo actual */
@@ -45,8 +78,8 @@ export interface Run {
   heal: StopHeal | null
   /** Huevo Suerte: si sale en esta ruta y dónde, y si la ruta va con uno usado (ver run/expBoost.ts) */
   boost: ExpBoost
-  /** Ruta que se ha desbloqueado al completar esta por primera vez (null si no ha desbloqueado ninguna) */
-  unlocked: string | null
+  /** Rutas que se han desbloqueado al completar esta por primera vez (la siguiente y las opcionales) */
+  unlocked: string[]
   /** Ataque elegido para sus combates (de su repertorio de incursión; ver run/runMove.ts) */
   moveId: string
   /** Combate contra el líder en la parada de gimnasio: qué Pokémon suyo toca (ver run/runGym.ts); null fuera */
@@ -72,6 +105,8 @@ export interface Run {
     discovered: number[]
     /** Medalla ganada en esta ruta (la primera victoria contra el líder del gimnasio); null si ninguna */
     badge: Badge | null
+    /** Estrellas de la ruta conseguidas al completarla esta vez (sus claves, ver run/routeStars.ts) */
+    stars: string[]
   }
 }
 

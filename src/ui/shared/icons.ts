@@ -76,4 +76,11 @@ export const ICON = {
   Tower: ITEM.MachoBrace,
   /** Perfil del jugador (menú del rancho) */
   Profile: ITEM.PalPad,
+  /** Estrellas de una ruta */
+  Star: ITEM.StarPiece,
+  /** Paradas sorpresa de una ruta: cofre, horda, Pokémon poco común y entrenador rival */
+  Chest: ITEM.BigNugget,
+  Horde: ITEM.Honey,
+  RareFoe: ITEM.DowsingMachine,
+  Rival: ITEM.VsRecorder,
 } as const

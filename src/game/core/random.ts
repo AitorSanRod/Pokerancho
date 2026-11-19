@@ -15,6 +15,16 @@ export function pickEncounter(pool: Encounter[], rng: Rng): number {
   return pool[pool.length - 1].speciesId
 }
 
+/** Elige un valor según su peso: `pickWeighted([['a', 3], ['b', 1]], rng)` da 'a' tres de cada cuatro veces */
+export function pickWeighted<T>(entries: [value: T, weight: number][], rng: Rng): T {
+  let roll = rng() * entries.reduce((sum, [, w]) => sum + w, 0)
+  for (const [value, weight] of entries) {
+    roll -= weight
+    if (roll < 0) return value
+  }
+  return entries[entries.length - 1][0]
+}
+
 /** Rng determinista a partir de una semilla (mulberry32): da siempre la misma secuencia, p. ej. para estimaciones estables */
 export function seededRng(seed: number): Rng {
   let a = seed >>> 0

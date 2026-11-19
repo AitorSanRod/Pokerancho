@@ -1,0 +1,68 @@
+/* Estrellas de una ruta (RouteStars.tsx): en su tarjeta de la lista y en el diálogo de comenzar */
+
+.route-stars {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card) 85%, transparent);
+  font-size: 15px;
+  line-height: 1.2;
+  letter-spacing: 1px;
+  color: var(--line);
+}
+.route-stars .on {
+  color: var(--yellow-dark);
+  text-shadow: 0 0 2px var(--yellow);
+}
+
+.route-star-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.route-star-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: var(--card-2);
+}
+.route-star-list li > .grow {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.route-star-mark {
+  flex-shrink: 0;
+  width: 28px;
+  font-size: 24px;
+  line-height: 1;
+  text-align: center;
+  color: var(--line);
+}
+.route-star-mark.on {
+  color: var(--yellow-dark);
+  text-shadow: 0 0 3px var(--yellow);
+}
+.route-star-list li.done {
+  background: color-mix(in srgb, var(--yellow) 25%, var(--card));
+}
+.route-star-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.route-star-ready {
+  font-weight: 700;
+}
+.route-star-ready.yes {
+  color: var(--hp-ok);
+}
+.route-star-ready.no {
+  color: var(--red-dark);
+}

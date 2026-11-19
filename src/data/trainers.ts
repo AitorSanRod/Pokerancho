@@ -205,6 +205,137 @@ export const TRAINERS = trainerList({
       { speciesId: POKEMON.Farfetchd, level: 23, statMult: 1.1 },
     ],
   },
+  // Monte Moon: cada uno saca un Pokémon de calentamiento y, después, su especialista con la pasiva de su tipo
+  CampistaMonteMoon: {
+    trainerClass: TrainerClass.Camper,
+    gender: Gender.Male,
+    team: [
+      { speciesId: POKEMON.Ponyta, level: 33 },
+      { speciesId: POKEMON.Growlithe, level: 36, passives: [{ type: 'fire', level: 2 }] },
+    ],
+  },
+  PescadorMonteMoon: {
+    trainerClass: TrainerClass.Fisherman,
+    team: [
+      { speciesId: POKEMON.Goldeen, level: 33 },
+      { speciesId: POKEMON.Poliwhirl, level: 36, passives: [{ type: 'water', level: 2 }] },
+    ],
+  },
+  DomingueraMonteMoon: {
+    trainerClass: TrainerClass.Camper,
+    gender: Gender.Female,
+    team: [
+      { speciesId: POKEMON.Weepinbell, level: 33 },
+      { speciesId: POKEMON.Victreebel, level: 36, passives: [{ type: 'grass', level: 2 }] },
+    ],
+  },
+  MontaneroTunel: {
+    trainerClass: TrainerClass.Hiker,
+    team: [
+      { speciesId: POKEMON.Graveler, level: 57, statMult: 1.1 },
+      { speciesId: POKEMON.Onix, level: 58, statMult: 1.3 },
+      { speciesId: POKEMON.Golem, level: 59, statMult: 1.3, passives: [{ type: 'rock', level: 2 }] },
+    ],
+  },
+  // De Azulona a la Liga
+  ReclutaRocketTorre: {
+    trainerClass: TrainerClass.RocketGrunt,
+    team: [
+      { speciesId: POKEMON.Golbat, level: 68, statMult: 1.3 },
+      { speciesId: POKEMON.Arbok, level: 69, statMult: 1.3 },
+      { speciesId: POKEMON.Weezing, level: 70, statMult: 1.4 },
+    ],
+  },
+  PescadorRuta12: {
+    trainerClass: TrainerClass.Fisherman,
+    team: [
+      { speciesId: POKEMON.Seaking, level: 69, statMult: 1.3 },
+      { speciesId: POKEMON.Kingler, level: 70, statMult: 1.3 },
+      { speciesId: POKEMON.Gyarados, level: 71, statMult: 1.5 },
+    ],
+  },
+  OrnitologoCiclovia: {
+    trainerClass: TrainerClass.BirdKeeper,
+    team: [
+      { speciesId: POKEMON.Fearow, level: 70, statMult: 1.3 },
+      { speciesId: POKEMON.Dodrio, level: 71, statMult: 1.4 },
+      { speciesId: POKEMON.Pidgeot, level: 72, statMult: 1.5 },
+    ],
+  },
+  CampistaSafari: {
+    trainerClass: TrainerClass.Camper,
+    team: [
+      { speciesId: POKEMON.Rhyhorn, level: 72, statMult: 1.3 },
+      { speciesId: POKEMON.Exeggcute, level: 72, statMult: 1.3 },
+      { speciesId: POKEMON.Nidorino, level: 73, statMult: 1.4 },
+    ],
+  },
+  ReclutaRocketSilph1: {
+    trainerClass: TrainerClass.RocketGrunt,
+    gender: Gender.Male,
+    team: [
+      { speciesId: POKEMON.Raticate, level: 76, statMult: 1.4 },
+      { speciesId: POKEMON.Golbat, level: 76, statMult: 1.4 },
+      { speciesId: POKEMON.Hypno, level: 77, statMult: 1.5 },
+    ],
+  },
+  ReclutaRocketSilph2: {
+    trainerClass: TrainerClass.RocketGrunt,
+    gender: Gender.Female,
+    team: [
+      { speciesId: POKEMON.Arbok, level: 77, statMult: 1.4 },
+      { speciesId: POKEMON.Weezing, level: 78, statMult: 1.5 },
+    ],
+  },
+  GiovanniSilph: {
+    trainerClass: TrainerClass.Giovanni,
+    team: [
+      { speciesId: POKEMON.Nidorino, level: 77, statMult: 1.5 },
+      { speciesId: POKEMON.Kangaskhan, level: 78, statMult: 1.6, passives: [{ type: 'normal', level: 2 }] },
+      { speciesId: POKEMON.Rhyhorn, level: 78, statMult: 1.6 },
+      { speciesId: POKEMON.Nidoqueen, level: 79, statMult: 1.8, passives: [{ type: 'ground', level: 2 }] },
+    ],
+  },
+  NadadorEspuma: {
+    trainerClass: TrainerClass.Swimmer,
+    gender: Gender.Male,
+    team: [
+      { speciesId: POKEMON.Seadra, level: 81, statMult: 1.4 },
+      { speciesId: POKEMON.Starmie, level: 82, statMult: 1.5 },
+    ],
+  },
+  NadadoraEspuma: {
+    trainerClass: TrainerClass.Swimmer,
+    gender: Gender.Female,
+    team: [
+      { speciesId: POKEMON.Dewgong, level: 82, statMult: 1.5 },
+      { speciesId: POKEMON.Cloyster, level: 83, statMult: 1.6 },
+    ],
+  },
+  MontaneroCanela: {
+    trainerClass: TrainerClass.Hiker,
+    team: [
+      { speciesId: POKEMON.Graveler, level: 84, statMult: 1.5 },
+      { speciesId: POKEMON.Golem, level: 85, statMult: 1.6 },
+      { speciesId: POKEMON.Rhydon, level: 86, statMult: 1.7 },
+    ],
+  },
+  KaratekaVictoria: {
+    trainerClass: TrainerClass.BlackBelt,
+    team: [
+      { speciesId: POKEMON.Hitmonchan, level: 91, statMult: 1.6 },
+      { speciesId: POKEMON.Machoke, level: 91, statMult: 1.6 },
+      { speciesId: POKEMON.Machamp, level: 92, statMult: 1.8, passives: [{ type: 'fighting', level: 2 }] },
+    ],
+  },
+  MontaneroVictoria: {
+    trainerClass: TrainerClass.Hiker,
+    team: [
+      { speciesId: POKEMON.Onix, level: 92, statMult: 1.6 },
+      { speciesId: POKEMON.Golem, level: 93, statMult: 1.7 },
+      { speciesId: POKEMON.Rhydon, level: 94, statMult: 1.8, passives: [{ type: 'rock', level: 2 }] },
+    ],
+  },
   Karateka1: {
     trainerClass: TrainerClass.BlackBelt,
     team: [

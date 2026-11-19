@@ -95,18 +95,6 @@
   border-right: 3px solid var(--text);
   rotate: 45deg;
 }
-/* Completada: insignia redonda verde */
-.route-done {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--hp-ok);
-  color: #fff;
-  font-weight: 800;
-}
 /* Por qué está bloqueada, a lo ancho bajo el nombre al tocar la línea */
 .route-lock-reason {
   flex-basis: 100%;

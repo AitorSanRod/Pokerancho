@@ -9,7 +9,7 @@ import { expeditionRouteBlocker } from '../team/expedition'
 import { towerMove, towerMoveChoices } from '../tower/towerMoves'
 import { BATTLE_EVENT_MS } from './battleTimeline'
 import { advanceRun, startRun, walk } from './run'
-import { routeGym } from './runGym'
+import { routeGym, routeGyms } from './runGym'
 import { routeLevelBlocker } from './routeLevelCap'
 import { defaultRouteMove, pickRouteMove } from './runMove'
 
@@ -55,6 +55,7 @@ describe('gimnasio', () => {
   it('el líder saca su equipo uno tras otro, como entrenador', () => {
     const s = atTheGym(MAX_LEVEL)
     expect(routeGym(route(ROUTE))).toBe(GYM)
+    expect(routeGyms(route(ROUTE))).toEqual([GYM])
     GYM.team.forEach((foe, i) => {
       expect(s.run!.gym!.index).toBe(i)
       expect(s.run!.lastBattle!.enemy.speciesId).toBe(foe.speciesId)
@@ -74,6 +75,20 @@ describe('gimnasio', () => {
     advanceRun(again, Number.MAX_SAFE_INTEGER)
     expect(again.badges).toEqual([GYM.badge])
     expect(again.run!.earned.badge).toBeNull()
+  })
+
+  it('un líder sin medalla (el Alto Mando) se gana sin dar ninguna', () => {
+    const badge = GYM.badge
+    delete GYM.badge
+    try {
+      const s = atTheGym(MAX_LEVEL)
+      advanceRun(s, Number.MAX_SAFE_INTEGER)
+      expect(s.run!.phase).toBe('complete')
+      expect(s.badges).toEqual([])
+      expect(s.run!.earned.badge).toBeNull()
+    } finally {
+      GYM.badge = badge
+    }
   })
 
   it('si cae, no hay medalla', () => {

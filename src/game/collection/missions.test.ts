@@ -6,7 +6,7 @@ import { POKEMON } from '../../data/pokemon'
 import { initialState } from '../core/state'
 import { chooseStarter } from '../core/test-utils'
 import { spendMoney } from '../core/wallet'
-import { completeRoute } from '../run/runBattle'
+import { completeRoute } from '../run/runComplete'
 import { startRun } from '../run/run'
 import { advanceMission, claimableMissions, claimMission, dayKey, salvageMissions, type Mission } from './missions'
 

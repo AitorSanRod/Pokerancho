@@ -1,9 +1,9 @@
 import { GYMS } from '../../../data/gyms'
 import { node, NodeKind, route } from '../../../data/maps'
 import { species } from '../../../data/species'
-import { TRAINERS } from '../../../data/trainers'
 import type { TrainerTeam } from '../../../data/trainerTeam'
 import type { Run } from '../../../game/core/state'
+import { trainerAt } from '../../../game/run/runTrainer'
 import { LEADER_SPRITES } from './leaderSprites'
 import { trainerPortrait } from './trainerSprites'
 
@@ -26,12 +26,12 @@ const sceneOf = (name: string, sprite: string | undefined, team: TrainerTeam, in
   foeName: species(team[index].speciesId).name,
 })
 
-/** El combate contra el líder o el entrenador de la parada en curso; null si la parada no es de ninguno de los dos */
+/** El combate contra el líder o el entrenador de la parada en curso (también el rival de una sorpresa); null si no hay ninguno */
 export function trainerScene(run: Run): TrainerScene | null {
   const n = node(route(run.routeId), run.path[run.stop])
   if (n.kind === NodeKind.Gym && n.gym && run.gym) return sceneOf(GYMS[n.gym].leader, LEADER_SPRITES[n.gym], GYMS[n.gym].team, run.gym.index)
-  if (n.kind === NodeKind.Trainer && n.trainer && run.trainer) {
-    const trainer = TRAINERS[n.trainer]
+  const trainer = trainerAt(run)
+  if (trainer && run.trainer) {
     const { name, sprite } = trainerPortrait(trainer, run.trainer.who)
     return sceneOf(name, sprite, trainer.team, run.trainer.index)
   }

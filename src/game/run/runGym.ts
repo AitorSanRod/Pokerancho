@@ -28,6 +28,9 @@ function currentGym(s: GameState): Gym | null {
 /** El gimnasio de la ruta (el de su parada de gimnasio), si es una ruta de gimnasio */
 export const routeGymId = (r: Route): GymId | null => r.nodes.find((x) => x.kind === NodeKind.Gym)?.gym ?? null
 
+/** Los líderes de la ruta, en orden (varios en la del Alto Mando) */
+export const routeGyms = (r: Route): Gym[] => r.nodes.flatMap((x) => (x.kind === NodeKind.Gym && x.gym ? [GYMS[x.gym]] : []))
+
 export function routeGym(r: Route): Gym | null {
   const id = routeGymId(r)
   return id ? GYMS[id] : null
@@ -67,5 +70,5 @@ export function nextGymFoe(s: GameState, r: Route, rng: Rng): boolean {
 /** Vencido el último Pokémon del líder: su medalla, si es la primera vez */
 export function winGym(s: GameState) {
   const gym = currentGym(s)
-  if (gym && earnBadge(s, gym.badge)) s.run!.earned.badge = gym.badge
+  if (gym?.badge && earnBadge(s, gym.badge)) s.run!.earned.badge = gym.badge
 }

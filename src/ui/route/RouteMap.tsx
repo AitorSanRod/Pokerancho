@@ -5,9 +5,10 @@ import { runBlocker } from '../../game/run/run'
 import { TutorialHint } from '../shared/TutorialHint'
 import { PREVIOUS_ROUTE_REASON, RouteRow, RouteRowTitle } from './RouteRow'
 import { RouteStartDialog } from './RouteStartDialog'
+import { RouteStarCount } from './RouteStars'
 
 /**
- * Lista de rutas, una por línea: nombre, niveles y si está completada, sobre la imagen de su zona difuminada. Toda la
+ * Lista de rutas, una por línea: nombre, niveles y sus estrellas (la primera, completarla), sobre la imagen de su zona difuminada. Toda la
  * línea es el botón de comenzarla (con un candado si sigue bloqueada).
  */
 export function RouteMap({ game }: { game: GameState }) {
@@ -22,7 +23,6 @@ export function RouteMap({ game }: { game: GameState }) {
       <div className="route-list">
         {KANTO.routes.map((r) => {
           const unlocked = game.unlockedRoutes.includes(r.id)
-          const done = game.completedRoutes.includes(r.id)
           // En el tutorial se guía hasta la primera ruta, que es la única desbloqueada
           const guided = game.tutorial === TutorialStep.Route && unlocked && !starting
           return (
@@ -37,11 +37,7 @@ export function RouteMap({ game }: { game: GameState }) {
                 onClick={() => setStarting(r)}
               >
                 <RouteRowTitle route={r} />
-                {done && (
-                  <span className="route-done" aria-label="Completada">
-                    ✓
-                  </span>
-                )}
+                {unlocked && <RouteStarCount game={game} route={r} />}
               </RouteRow>
             </Fragment>
           )

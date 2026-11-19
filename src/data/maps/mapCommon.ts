@@ -2,6 +2,7 @@ import type { PassiveRef } from '../passives'
 import { GYMS, type GymId } from '../gyms'
 import type { Potion } from '../potions'
 import type { RaidTier } from '../raidBosses'
+import type { RouteStarGoals } from './routeStarGoals'
 import { TRAINERS, type TrainerId } from '../trainers'
 
 export interface Encounter {
@@ -47,7 +48,25 @@ export const RouteId = {
   SSAnne2: 'ss-anne2',
   TunelRoca: 'tunel-roca',
   PuebloLavanda: 'pueblo-lavanda',
-  CiudadAzulona: 'ciudad-azulona'
+  CiudadAzulona: 'ciudad-azulona',
+  GimnasioAzulona: 'gimnasio-azulona',
+  TorrePokemon: 'torre-pokemon',
+  Ruta12: 'ruta-12',
+  ZonaSafari: 'zona-safari',
+  GimnasioFucsia: 'gimnasio-fucsia',
+  SilphSA: 'silph-sa',
+  CentralElectrica: 'central-electrica',
+  GimnasioAzafran: 'gimnasio-azafran',
+  IslasEspuma: 'islas-espuma',
+  CuevaEspuma: 'cueva-espuma',
+  IslaCanela: 'isla-canela',
+  MonteAscuas: 'monte-ascuas',
+  GimnasioCanela: 'gimnasio-canela',
+  GimnasioVerde: 'gimnasio-verde',
+  CalleVictoria: 'calle-victoria',
+  AltoMando: 'alto-mando',
+  CuevaCeleste: 'cueva-celeste',
+  IslaLejana: 'isla-lejana',
 } as const
 export type RouteId = (typeof RouteId)[keyof typeof RouteId]
 
@@ -67,14 +86,18 @@ export interface Boss {
   tier?: RaidTier
 }
 
-interface RouteEdge {
+export interface RouteEdge {
   to: string
   steps: number
+  /** En una bifurcación, el nombre del camino que empieza aquí, tal y como se elige antes de salir */
+  label?: string
+  /** En una bifurcación, lo que tiene de especial ese camino («Más entrenadores: más ₽») */
+  hint?: string
 }
 
 /**
  * Las rutas son grafos: un nodo con varios `next` es una bifurcación y el jugador elige el camino antes de
- * salir. Las rutas actuales son caminos únicos.
+ * salir (ver game/run/routeBranches.ts). Se escriben con `chain` y `fork` (routeBuilder.ts).
  */
 export interface RouteNode {
   id: string
@@ -127,7 +150,15 @@ export interface Route {
    * `exp` es también la base de la EXP de sus expediciones.
    */
   reward: { tickets: number; money: number; exp: number }
+  /**
+   * Lo que piden su segunda y tercera estrella (la primera es completarla), con los atajos de routeStarGoals.ts. Sin
+   * ellas: salir sin pasar del nivel de su rival más fuerte y descubrir todas sus especies (ver game/run/routeStars.ts)
+   */
+  stars?: RouteStarGoals
+  /** La ruta siguiente, que se abre al completarla por primera vez */
   unlocks?: RouteId
+  /** Rutas opcionales que se abren además de la siguiente (las de los legendarios, fuera del camino principal) */
+  alsoUnlocks?: RouteId[]
 }
 
 export interface GameMap {
@@ -135,6 +166,9 @@ export interface GameMap {
   name: string
   routes: Route[]
 }
+
+/** Rutas que abre al completarla por primera vez: la siguiente y las opcionales */
+export const routeOpens = (r: Route): RouteId[] => [...(r.unlocks ? [r.unlocks] : []), ...(r.alsoUnlocks ?? [])]
 
 /** Pokémon que salen y su probabilidad en %: `enc([POKEMON.Pidgey, 30], [POKEMON.Rattata, 70])` */
 export const enc = (...chances: [speciesId: number, chance: number][]): Encounter[] =>
@@ -146,14 +180,8 @@ export const boss = (speciesId: number, level: number, passives?: PassiveRef[]):
 /** Jefe comunitario de una parada `NodeKind.Raid`: `raidBoss(POKEMON.Pidgeotto, 12, RaidTier.Low)` */
 export const raidBoss = (speciesId: number, level: number, tier: RaidTier): Boss => ({ speciesId, level, tier })
 
-/** Atajo para un camino sin bifurcar: cada nodo enlaza con el siguiente de la lista */
-type Stop = Omit<RouteNode, 'next'> & { steps: number }
-export function chain(...stops: Stop[]): RouteNode[] {
-  return stops.map(({ steps: _steps, ...stop }, i) => {
-    const next = stops[i + 1]
-    return { ...stop, next: next ? [{ to: next.id, steps: next.steps }] : [] }
-  })
-}
+export { chain, fork, type Branch, type Stop } from './routeBuilder'
+export * from './routeStarGoals'
 
 /**
  * Imagen propia de `src/assets`, escrita como `asset(new URL('../../assets/…', import.meta.url))` y no con `import`:

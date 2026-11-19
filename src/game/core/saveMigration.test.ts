@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { FORM_ITEM_IDS, FORM_ITEMS } from '../../data/forms'
 import { IncursionId, MAX_KEYS } from '../../data/incursions'
-import { route, RouteId, wildSpecies } from '../../data/maps'
+import { pathFrom, route, RouteId, wildSpecies } from '../../data/maps'
 import { Nature, NEUTRAL_NATURE } from '../../data/natures'
 import { DEFAULT_RANCH_BACKDROP, RanchBackdrop } from '../../data/ranchBackdrops'
 import { RanchTypeId } from '../../data/ranchTypes'
@@ -78,6 +78,8 @@ function advancedGame(): GameState {
     // Coherente: con Pueblo Paleta completada, también abierta la ruta que desbloquea
     unlockedRoutes: [RouteId.PuebloPaleta, route(RouteId.PuebloPaleta).unlocks!, RouteId.BosqueVerde],
     completedRoutes: [RouteId.PuebloPaleta],
+    routeStars: { [RouteId.PuebloPaleta]: ['see-all'] },
+    routePaths: { [RouteId.Ruta1]: pathFrom(route(RouteId.Ruta1)) },
     // El activo también puede estar de expedición (sin ruta en curso)
     expeditions: [
       testExpedition(second.uid, RouteId.PuebloPaleta, { durationMin: EXPEDITION_DURATIONS[0], focus: ExpeditionFocus.Loot, elapsedMin: 2 }),
@@ -97,7 +99,7 @@ const fromOldVersion = (s: GameState, version = OLD) => JSON.parse(JSON.stringif
 
 const KEPT: (keyof GameState)[] = [
   'money', 'tickets', 'missingnoShards', 'seen', 'caught', 'favorites', 'pieces', 'upgrades', 'ranchTypeItems', 'ranchTypeOf', 'ranchExtraSlots', 'ranchNames', 'ranchBackdropOf',
-  'stones', 'formItems', 'incursionKeys', 'freeIncursionsPlayed', 'claimedServerGifts', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'badges', 'lastTick',
+  'stones', 'formItems', 'incursionKeys', 'freeIncursionsPlayed', 'claimedServerGifts', 'tutorial', 'unlockedRoutes', 'completedRoutes', 'routeStars', 'routePaths', 'owned', 'activeUid', 'expeditions', 'raidPrizes', 'routeRaidStreaks', 'tradeStamp', 'badges', 'lastTick',
 ]
 
 /** El paso de verdad de la versión anterior, que algún test sustituye por uno de prueba */
@@ -225,6 +227,9 @@ describe('al actualizar el juego no se pierde nada', () => {
     save.seen.push(UNKNOWN_SPECIES)
     save.pieces[UNKNOWN_SPECIES] = 5
     save.completedRoutes.push('ruta-que-ya-no-existe')
+    save.routeStars['ruta-que-ya-no-existe'] = ['see-all']
+    save.routeStars[RouteId.Ruta1] = 'no es una lista'
+    save.routePaths[RouteId.PuebloPaleta] = ['s', 'parada-que-no-existe']
     save.stones.piedraInventada = 2
     save.upgrades.ranches = 999
     save.ranchNames = { 0: 'Prado', 1: '   ', 2: 7, 999: 'Lejos' }
@@ -236,6 +241,8 @@ describe('al actualizar el juego no se pierde nada', () => {
     expect(migrated.seen).not.toContain(UNKNOWN_SPECIES)
     expect(migrated.pieces).not.toHaveProperty(String(UNKNOWN_SPECIES))
     expect(migrated.completedRoutes).toEqual([RouteId.PuebloPaleta])
+    expect(migrated.routeStars).toEqual({ [RouteId.PuebloPaleta]: ['see-all'] })
+    expect(migrated.routePaths).toEqual({ [RouteId.Ruta1]: pathFrom(route(RouteId.Ruta1)) })
     expect(migrated.stones).not.toHaveProperty('piedraInventada')
     expect(migrated.upgrades.ranches).toBeLessThanOrEqual(UPGRADES.ranches.prices.length)
     expect(migrated.ranchNames).toEqual({ 0: 'Prado' })

@@ -1,0 +1,81 @@
+/* Cofre de una parada sorpresa (ChestStop.tsx): salta sobre el Pokémon y enseña lo que traía */
+.chest-stop {
+  position: absolute;
+  left: 40%;
+  bottom: var(--ground);
+  width: 160px;
+  height: 150px;
+  translate: -50% 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.chest-icon {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  translate: -50% 0;
+  animation: chest-pop var(--chest-ms) ease-out forwards;
+}
+.chest-loot {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: 900;
+  font-size: 18px;
+  color: var(--yellow);
+  white-space: nowrap;
+  text-shadow:
+    0 2px 0 #000a,
+    0 0 4px #000a;
+  opacity: 0;
+  animation: chest-text calc(var(--chest-ms) * 0.6) ease-out calc(var(--chest-ms) * 0.3) forwards;
+}
+.chest-loot small {
+  font-size: 12px;
+  color: #fff;
+}
+
+@keyframes chest-pop {
+  0% {
+    transform: translateY(20px) scale(0.4);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(-10px) scale(1.15);
+    opacity: 1;
+  }
+  35% {
+    transform: translateY(0) scale(1) rotate(-8deg);
+  }
+  45% {
+    transform: rotate(8deg);
+  }
+  55%,
+  85% {
+    transform: rotate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+}
+@keyframes chest-text {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  25%,
+  80% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+}

@@ -68,6 +68,9 @@ export const ITEM = {
   QuickClaw: 'quick-claw',
   MachoBrace: 'macho-brace',
   PalPad: 'pal-pad',
+  BigNugget: 'big-nugget',
+  Honey: 'honey',
+  DowsingMachine: 'dowsing-machine',
 } as const
 export type Item = (typeof ITEM)[keyof typeof ITEM]
 

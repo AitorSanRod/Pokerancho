@@ -1,0 +1,32 @@
+/* Elegir camino en las bifurcaciones de una ruta (RouteBranchPicker.tsx), en el diálogo de comenzar */
+
+.route-branches {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.route-branch-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 6px;
+  margin-top: 4px;
+}
+.route-branch-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--card-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.route-branch-option.chosen {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--card));
+}

@@ -1,5 +1,5 @@
 import { incursion, IncursionId, MAX_KEYS } from '../../data/incursions'
-import { route } from '../../data/maps'
+import { isValidPath, route } from '../../data/maps'
 import { NEUTRAL_NATURE } from '../../data/natures'
 import { isRanchBackdrop } from '../../data/ranchBackdrops'
 import { RANCH_TYPES } from '../../data/ranchTypes'
@@ -122,6 +122,18 @@ const isIncursionId = (v: unknown): v is IncursionId => (Object.values(Incursion
 /** Lista sin repetir de los valores que valen */
 const listOf = <T>(v: unknown, valid: (x: unknown) => x is T): T[] | undefined => (Array.isArray(v) ? [...new Set(v.filter(valid))] : undefined)
 
+const isText = (x: unknown): x is string => typeof x === 'string'
+
+/** Tabla ruta → valor con solo las rutas que existen y los valores que acepta `valid` (undefined lo quita) */
+function byRoute<T>(v: unknown, valid: (x: unknown, routeId: string) => T | undefined): Record<string, T> | undefined {
+  if (!isRecord(v)) return undefined
+  const kept = Object.entries(v).flatMap(([id, x]) => {
+    const value = isRoute(id) ? valid(x, id) : undefined
+    return value === undefined ? [] : [[id, value] as const]
+  })
+  return Object.fromEntries(kept)
+}
+
 /** Tabla clave → cantidad con solo las claves que valen y cantidades enteras no negativas */
 function countsOf(v: unknown, validKey: (k: string) => boolean, max = Number.MAX_SAFE_INTEGER): Record<string, number> | undefined {
   if (!isRecord(v)) return undefined
@@ -185,6 +197,8 @@ const RULES: Partial<Record<keyof GameState, (v: unknown) => unknown>> = {
   tutorial: (v) => (v === null || (Object.values(TutorialStep) as unknown[]).includes(v) ? v : undefined),
   unlockedRoutes: (v) => listOf(v, isRoute),
   completedRoutes: (v) => listOf(v, isRoute),
+  routeStars: (v) => byRoute(v, (keys) => listOf(keys, isText)),
+  routePaths: (v) => byRoute(v, (path, id) => (Array.isArray(path) && isValidPath(route(id), path) ? path : undefined)),
   owned: (v) => (Array.isArray(v) ? v.map(salvageMon).filter((m): m is OwnedMon => m !== null) : undefined),
   // El compañero empieza en null y sameShape no aceptaría su uid: sin esta regla se cambiaba en cada versión
   activeUid: (v) => (typeof v === 'string' && v ? v : undefined),

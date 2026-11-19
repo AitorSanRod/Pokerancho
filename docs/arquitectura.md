@@ -128,7 +128,11 @@ estilos base se cargan antes (`main.tsx`), así los de cada pantalla pueden pisa
 | `game/battle/battle.ts` | Simulación de combate automático |
 | `game/battle/rewards.ts` | Dinero, tickets y piezas por victoria |
 | `game/run/run.ts` | Ruta del Pokémon activo: salida, avance por tiempo, pasos y toques |
-| `game/run/runBattle.ts` | Combates de la ruta: se resuelven al llegar y se aplican al acabar su tiempo; premio final |
+| `game/run/runBattle.ts` | Combates de la ruta: se resuelven al llegar y se aplican al acabar su tiempo |
+| `game/run/runComplete.ts` | Ruta completada: misiones, premio de la primera vez, ruta que desbloquea y estrellas |
+| `game/run/routeBranches.ts` | Bifurcaciones: cruces del camino, elegir otro camino y el último elegido en cada ruta |
+| `game/run/runSurprise.ts` | Parada sorpresa al repetir una ruta: cofre, horda, Pokémon poco común o entrenador rival |
+| `game/run/routeStars.ts` | Las tres estrellas de cada ruta (salen de sus datos) y su premio al conseguirlas |
 | `game/run/runHeal.ts` | Paradas de curación: al llegar se usa la poción y el Pokémon se para `HEAL_STOP_MS` |
 | `game/team/mons.ts` | Alta de un Pokémon (`createMon`) |
 | `game/team/stats.ts` | Fórmulas de stats, EXP y velocidad de paso |
@@ -242,15 +246,17 @@ progreso offline), lo multiplica por `timeScale` (x1 en producción; el botón �
 ## Ciclo de una run
 
 ```
-RouteStartDialog (camino principal, pathFrom) → startRun(routeId, path) → 'walking'
+RouteStartDialog (camino elegido en las bifurcaciones, preferredPath) → startRun(routeId, path) → 'walking'
+  (al salir: rememberPath y, si la ruta ya está completada, rollSurprise sortea una parada sorpresa)
+  → (pasos) → llegada a la parada sorpresa → enterSurprise: cofre (Run.chest, se para chest.msLeft), horda, raro o rival
   → (pasos) → llegada a parada de curación → drinkStopPotion: cura → Run.heal (se para heal.msLeft; si es la última, completeRoute)
   → (pasos) → llegada a parada → startStopBattle: combate simulado → lastBattle, battleMsLeft
       → (pasa battleMsLeft; no hay pasos) → settleBattle aplica PS y premio
           → derrota: 'fainted'
-          → última parada: completeRoute → 'complete'
+          → última parada: completeRoute (runComplete.ts, con claimRouteStars) → 'complete'
           → si no: sigue 'walking'
   → endRun (al volver al rancho o abandonando)
-  → restartRun (desde «Abandonar»): endRun + startRun de la misma ruta, con paradas y rivales sorteados de nuevo
+  → restartRun (desde «Abandonar»): endRun + startRun de la misma ruta y camino, con rivales (y sorpresa) sorteados de nuevo
 ```
 
 El motor **nunca espera a la UI**: el combate se resuelve entero al llegar (`simulateBattle` devuelve la lista

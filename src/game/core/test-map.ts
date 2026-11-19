@@ -1,5 +1,6 @@
-import { boss, chain, enc, NodeKind, raidBoss, RouteId, Biome, StopLandmark, type GameMap } from '../../data/maps/mapCommon'
+import { boss, chain, enc, fork, NodeKind, raidBoss, RouteId, Biome, StopLandmark, type GameMap } from '../../data/maps/mapCommon'
 import { GymId } from '../../data/gyms'
+import { starMinHp, starPassives } from '../../data/maps/routeStarGoals'
 import { TrainerId } from '../../data/trainers'
 import { Potion } from '../../data/potions'
 import { RaidTier } from '../../data/raidBosses'
@@ -36,6 +37,7 @@ export const KANTO: GameMap = {
       levels: [3, 4],
       encounters: enc([POKEMON.Rattata, 100]),
       reward: { tickets: 1, money: 20, exp: 200 },
+      stars: [starMinHp(50), starPassives('water')],
       nodes: chain(
         { id: 's', name: 'Inicio', kind: NodeKind.Start, steps: 0 },
         { id: 'a', name: 'Salvaje', kind: NodeKind.Wild, steps: 20 },
@@ -94,6 +96,38 @@ export const KANTO: GameMap = {
         { id: 's', name: 'Inicio', kind: NodeKind.Start, steps: 0 },
         { id: 't', name: 'Entrenador', kind: NodeKind.Trainer, steps: 20, trainer: TrainerId.MarineroDani },
         { id: 'a', name: 'Salvaje', kind: NodeKind.Wild, steps: 20 },
+      ),
+    },
+    {
+      id: RouteId.Ruta3,
+      name: 'Ruta con bifurcación',
+      description: '',
+      biome: Biome.Meadow,
+      levels: [4, 7],
+      encounters: enc([POKEMON.Pidgey, 80], [POKEMON.Rattata, 20]),
+      reward: { tickets: 1, money: 40, exp: 100 },
+      alsoUnlocks: [RouteId.SSAnne],
+      nodes: chain(
+        { id: 's', name: 'Inicio', kind: NodeKind.Start, steps: 0 },
+        { id: 'a', name: 'Salvaje', kind: NodeKind.Wild, steps: 20 },
+        fork(
+          {
+            label: 'Hierba',
+            hint: 'Más salvajes',
+            stops: [
+              { id: 'h1', name: 'Hierba 1', kind: NodeKind.Wild, steps: 20 },
+              { id: 'h2', name: 'Hierba 2', kind: NodeKind.Wild, steps: 30, levelBonus: 2 },
+            ],
+          },
+          {
+            label: 'Senda',
+            stops: [
+              { id: 't', name: 'Entrenador', kind: NodeKind.Trainer, steps: 25, trainer: TrainerId.MarineroDani },
+              { id: 'p', name: 'Poción', kind: NodeKind.Heal, steps: 10, potion: Potion.Potion },
+            ],
+          },
+        ),
+        { id: 'z', name: 'Jefe', kind: NodeKind.Boss, steps: 20, boss: boss(POKEMON.Pidgeotto, 7) },
       ),
     },
   ],

@@ -2,7 +2,7 @@ import type { Route, RouteNode } from '../../data/maps'
 import { POTION_INFO, type Potion } from '../../data/potions'
 import { activeMon, type GameState, type OwnedMon } from '../core/state'
 import { maxHp } from '../team/stats'
-import { completeRoute } from './runBattle'
+import { completeRoute } from './runComplete'
 
 /** Milisegundos reales que el Pokémon se queda parado curándose en una parada de poción (lo que dura la animación) */
 export const HEAL_STOP_MS = 1800

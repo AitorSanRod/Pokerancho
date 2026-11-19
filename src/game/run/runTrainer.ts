@@ -3,9 +3,10 @@ import { findRoute, node, NodeKind, route, type Route } from '../../data/maps'
 import { species } from '../../data/species'
 import { TRAINERS, type Trainer } from '../../data/trainers'
 import type { Rng } from '../core/random'
-import type { GameState } from '../core/state'
+import type { GameState, Run } from '../core/state'
 import { strikeOf } from '../tower/towerMoves'
 import { startBattle } from './runBattle'
+import { surpriseHere } from './runSurprise'
 import { fixedWho, pickTrainerWho, trainerIdentity, type TrainerWho } from './trainerIdentity'
 
 // Parada de entrenador (NodeKind.Trainer): el entrenador (data/trainers.ts) saca su equipo uno tras otro y el Pokémon de
@@ -22,13 +23,15 @@ export interface RunTrainer {
   who: TrainerWho
 }
 
-/** El entrenador de la parada en la que está la ruta, si es de entrenador */
-export function currentTrainer(s: GameState): Trainer | null {
-  const run = s.run
-  if (!run) return null
+/** El entrenador de la parada en la que está la ruta: el de una parada de entrenador o el rival de una sorpresa */
+export function trainerAt(run: Run): Trainer | null {
+  const rival = surpriseHere(run)?.trainer
+  if (rival) return rival
   const n = node(route(run.routeId), run.path[run.stop])
   return n.kind === NodeKind.Trainer && n.trainer ? TRAINERS[n.trainer] : null
 }
+
+export const currentTrainer = (s: GameState): Trainer | null => (s.run ? trainerAt(s.run) : null)
 
 /**
  * Quién es el entrenador de una ruta guardada antes de que se eligiera al azar (su nombre fijo o solo el título); null

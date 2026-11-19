@@ -2,7 +2,7 @@ import { Fragment, useEffect, useRef, type CSSProperties } from 'react'
 import { legSteps, node, route } from '../../data/maps'
 import type { Run } from '../../game/core/state'
 import { ItemIcon } from '../shared/ItemIcon'
-import { STOP_ICON } from './stopIcons'
+import { STOP_ICON, SURPRISE_ICON } from './stopIcons'
 import './stop-track.css'
 
 /** Lo andado del tramo hacia la parada siguiente (0–1); fuera de un tramo, nada */
@@ -26,7 +26,8 @@ function useCenterCurrent(stop: number) {
 }
 
 /**
- * Mapa horizontal del camino elegido: las paradas ya alcanzadas enseñan qué eran y las que faltan, un «?». La línea
+ * Mapa horizontal del camino elegido: las paradas ya alcanzadas enseñan qué eran (la sorpresa, con su icono) y las que
+ * faltan, un «?». La línea
  * entre paradas se va llenando con los pasos, así que también marca el avance del tramo en curso. Si la ruta es
  * larga, se desplaza con el dedo y sigue sola a la parada actual
  */
@@ -41,11 +42,12 @@ export function StopTrack({ run }: { run: Run }) {
         const state = i === run.stop ? 'current' : reached ? 'passed' : 'unknown'
         const fill = reached ? 1 : i === run.stop + 1 ? leg : 0
         const n = node(r, id)
+        const surprise = run.surprise?.stop === i ? run.surprise.kind : null
         return (
           <Fragment key={`${id}:${i}`}>
             {i > 0 && <li className="stop-link" style={{ '--fill': fill } as CSSProperties} aria-hidden />}
             <li className={`stop-dot ${state}`} title={reached ? n.name : undefined}>
-              {reached ? <ItemIcon item={STOP_ICON[n.kind]} size={20} /> : '?'}
+              {reached ? <ItemIcon item={surprise ? SURPRISE_ICON[surprise] : STOP_ICON[n.kind]} size={20} /> : '?'}
             </li>
           </Fragment>
         )

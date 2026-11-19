@@ -3,13 +3,17 @@ import { species } from '../../data/species'
 import type { Rng } from '../core/random'
 import { activeMon, MonPlace, monPlace, TutorialStep, type GameState, type Run } from '../core/state'
 import { stepsPerMinute } from '../team/stats'
+import { hpPercent } from './routeStars'
 import { advanceExpBoost, boostActive, BOOST_TAP_EXP, newExpBoost, reachEggSpot } from './expBoost'
-import { completeRoute, gainRunExp, spendBattleTime, startStopBattle } from './runBattle'
+import { gainRunExp, spendBattleTime, startStopBattle } from './runBattle'
+import { completeRoute } from './runComplete'
 import { spendHealTime, drinkStopPotion } from './runHeal'
 import { enterGym } from './runGym'
 import { routeLevelBlocker } from './routeLevelCap'
 import { defaultRouteMove } from './runMove'
 import { enterTrainer } from './runTrainer'
+import { rememberPath } from './routeBranches'
+import { enterSurprise, rollSurprise, spendChestTime, surpriseHere } from './runSurprise'
 
 export function runBlocker(s: GameState): string | null {
   if (activeMon(s) && s.run) return 'Ya hay una ruta en curso.'
@@ -33,9 +37,14 @@ function monBlocker(s: GameState): string | null {
 export function startRun(s: GameState, routeId: string, path = pathFrom(route(routeId)), rng: Rng = Math.random) {
   if (runBlocker(s) || !s.unlockedRoutes.includes(routeId) || !isValidPath(route(routeId), path) || routeLevelBlocker(s, route(routeId))) return
   if (s.tutorial === TutorialStep.Route) s.tutorial = null
+  const r = route(routeId)
+  rememberPath(s, r, path)
   s.run = {
     routeId,
     path,
+    startLevel: activeMon(s)!.level,
+    passiveTypes: [],
+    lowestHp: hpPercent(activeMon(s)!),
     stop: 0,
     steps: 0,
     phase: 'walking',
@@ -44,17 +53,19 @@ export function startRun(s: GameState, routeId: string, path = pathFrom(route(ro
     battleMsLeft: 0,
     heal: null,
     boost: newExpBoost(routeId, path, s.luckyEggArmed, rng),
-    unlocked: null,
+    surprise: rollSurprise(s, r, path, rng),
+    chest: null,
+    unlocked: [],
     moveId: defaultRouteMove(activeMon(s)!),
     gym: null,
     trainer: null,
-    earned: { money: 0, tickets: 0, pieces: [], exp: 0, levelsGained: 0, wins: 0, battles: 0, raidBosses: [], raidMoneyMult: 1, discovered: [], badge: null },
+    earned: { money: 0, tickets: 0, pieces: [], exp: 0, levelsGained: 0, wins: 0, battles: 0, raidBosses: [], raidMoneyMult: 1, discovered: [], badge: null, stars: [] },
   }
   s.luckyEggArmed = false
 }
 
-/** Caminando de verdad: ni en combate ni curándose */
-const isWalking = (run: Run): boolean => run.phase === 'walking' && run.battleMsLeft === 0 && !run.heal
+/** Caminando de verdad: ni en combate, ni curándose, ni abriendo un cofre */
+const isWalking = (run: Run): boolean => run.phase === 'walking' && run.battleMsLeft === 0 && !run.heal && !run.chest
 
 /**
  * Avanza la ruta `realMs` milisegundos reales. Durante un combate o una cura el tiempo se gasta en ellos y no se dan pasos;
@@ -72,6 +83,10 @@ export function advanceRun(s: GameState, realMs: number, rng: Rng = Math.random)
     }
     if (run.heal) {
       left -= spendHealTime(s, route(run.routeId), left)
+      continue
+    }
+    if (run.chest) {
+      left -= spendChestTime(s, route(run.routeId), left)
       continue
     }
 
@@ -116,8 +131,10 @@ function arrive(s: GameState, r: Route, rng: Rng) {
   run.stop++
   run.steps = 0
   const n = node(r, run.path[run.stop])
-  // Con combate o cura, el final de la ruta se decide al acabar (ver runBattle.ts y runHeal.ts)
-  if (n.kind === NodeKind.Wild || n.kind === NodeKind.Boss || n.kind === NodeKind.Raid) startStopBattle(s, r, n, rng)
+  const surprise = surpriseHere(run)
+  // Con combate, cura o cofre, el final de la ruta se decide al acabar (ver runBattle.ts y runHeal.ts)
+  if (surprise) enterSurprise(s, r, n, surprise, rng)
+  else if (n.kind === NodeKind.Wild || n.kind === NodeKind.Boss || n.kind === NodeKind.Raid) startStopBattle(s, r, n, rng)
   else if (n.kind === NodeKind.Heal) drinkStopPotion(s, n)
   else if (n.kind === NodeKind.Gym) enterGym(s, r, rng)
   else if (n.kind === NodeKind.Trainer) enterTrainer(s, r, rng)
@@ -135,14 +152,15 @@ export function restartBlocker(s: GameState): string | null {
 }
 
 /**
- * Vuelve a salir a la misma ruta desde el principio, como al empezarla: las paradas y sus rivales se sortean de nuevo.
+ * Vuelve a salir a la misma ruta y por el mismo camino desde el principio, como al empezarla: sus rivales (y la parada
+ * sorpresa) se sortean de nuevo.
  * Se conserva lo ganado hasta ahora (como al abandonar), el Huevo Suerte usado y el ataque elegido
  */
 export function restartRun(s: GameState, rng: Rng = Math.random) {
   if (restartBlocker(s)) return
-  const { routeId, moveId, boost } = s.run!
+  const { routeId, path, moveId, boost } = s.run!
   endRun(s)
-  startRun(s, routeId, pathFrom(route(routeId)), rng)
+  startRun(s, routeId, path, rng)
   if (!s.run) return
   s.run.moveId = moveId
   s.run.boost.active ||= boost.active

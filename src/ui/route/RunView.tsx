@@ -15,15 +15,18 @@ import { CritRing } from './CritRing'
 import { preloadFoe, useFoeShown } from './foeReady'
 import { RouteBattle } from './RouteBattle'
 import { HealStop } from './HealStop'
+import { ChestStop } from './ChestStop'
 import { StopTrack } from './StopTrack'
 import { ExpBoostBadge, ExpBoostSpawn } from './ExpBoost'
 import { WalkScene } from './WalkScene'
+import { gymScenery } from './gymScenery'
 import { pickRouteMove } from '../../game/run/runMove'
 import { towerMoveBarRoom } from '../tower/towerMoveBarRoom'
 import { trainerScene } from './gym/trainerScene'
 import { RouteMoveBar } from './RouteMoveBar'
 import { AbandonButton } from './AbandonButton'
 import { RunSummary } from './RunSummary'
+import { StarFailToast } from './StarFailToast'
 import './run.css'
 
 /** En combate, tocar es para el crítico: no sale la flecha de los pasos */
@@ -33,7 +36,7 @@ function tapInBattle(): boolean {
 }
 
 /**
- * La ruta avanza sola: el Pokémon camina, se para a combatir (o a curarse) en cada parada y sigue hasta el final. Si la
+ * La ruta avanza sola: el Pokémon camina, se para a combatir (o a curarse, o a abrir un cofre) en cada parada y sigue hasta el final. Si la
  * imagen del rival aún no ha llegado, sigue andando y el combate espera (foeReady.ts)
  */
 export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: OwnedMon }) {
@@ -43,7 +46,7 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
   const foeShown = useFoeShown(current?.enemy ?? null, 'run')
   const battle = foeShown ? current : null
   const frame = battle && battleFrame(battle, run.battleMsLeft)
-  const walking = run.phase === 'walking' && !battle && !run.heal
+  const walking = run.phase === 'walking' && !battle && !run.heal && !run.chest
   const boosted = boostActive(run)
   const lastStop = run.path.length - 1
   const playerClass = battle && frame ? fighterClass(battle, frame, 'player') : ''
@@ -65,6 +68,7 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
     >
       <WalkScene
         biome={r.biome}
+        still={gymScenery(r, run.path, run.stop)}
         speciesId={mon.speciesId}
         shiny={mon.shiny}
         moving={walking}
@@ -85,6 +89,7 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
           />
         )}
         {run.heal && <HealStop key={run.stop} heal={run.heal} />}
+        {run.chest && <ChestStop key={run.stop} chest={run.chest} />}
         {walking && run.boost.visibleMs > 0 && <ExpBoostSpawn spot={run.boost.spot} />}
       </WalkScene>
 
@@ -104,10 +109,12 @@ export function RunView({ game, run, mon }: { game: GameState; run: Run; mon: Ow
 
       {walking && <div className="tap-hint">{boosted ? `Cada toque: +${BOOST_TAP_EXP} EXP` : 'Toca para avanzar más rápido'}</div>}
       {run.heal && <div className="tap-hint">Parada de curación</div>}
+      {run.chest && <div className="tap-hint">Parada sorpresa: un cofre</div>}
       {battle && !frame?.ended && <div className="tap-hint">Atento: si sale un anillo sobre el rival, toca cuando se cierre</div>}
 
       {moveBar && <RouteMoveBar mon={mon} moveId={run.moveId} onPick={(id) => act((s) => pickRouteMove(s, id, Date.now()))} />}
 
+      <StarFailToast game={game} />
       {ended && !battle && <RunSummary run={run} mon={mon} />}
     </div>
   )

@@ -1,7 +1,8 @@
-// Formulario del gimnasio: id, líder (con su GIF si ya lo tiene), medalla y equipo, un Pokémon tras otro.
+// Formulario del gimnasio: id, líder (con su GIF si ya lo tiene), medalla, tipo y equipo, un Pokémon tras otro.
 
 import { esc, label, numInput, select, textInput } from '../fields'
 import { teamSection } from '../team/teamView'
+import { TYPES, typeName } from '../catalog'
 import { BADGE_OPTIONS, isNewGym, leaderSprite } from './gymCatalog'
 import { gymIdValue } from './gymCodegen'
 import type { GymDraft } from './gymDraft'
@@ -20,6 +21,7 @@ export function gymForm(d: GymDraft): string {
       ${label('Valor del id', textInput('idValue', d.idValue, gymIdValue(d) || 'carmin'), 'solo si es nuevo')}
       ${label('Líder', textInput('leader', d.leader, 'Lt. Surge'))}
       ${label('Medalla', select('badge', d.badge, BADGE_OPTIONS))}
+      ${label('Tipo', select('type', d.type, TYPES.map((t) => [t, typeName(t)])), 'da el fondo de su combate')}
       ${label('Nivel máximo para entrar', numInput('maxLevel', d.maxLevel), 'un Pokémon por encima no puede entrar')}
       <div class="full">${leaderPreview(d)}</div>
     </div>

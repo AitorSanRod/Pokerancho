@@ -8,7 +8,7 @@ import { evolutionsOf, EVOLVING_SPECIES, type Evolution } from '../../src/data/e
 import { GYMS } from '../../src/data/gyms'
 import type { TrainerTeam } from '../../src/data/trainerTeam'
 import { INCURSIONS, type FoeSlot } from '../../src/data/incursions'
-import { findRoute, KANTO, NodeKind, type Route } from '../../src/data/maps'
+import { findRoute, KANTO, NodeKind, routeOpens, type Route } from '../../src/data/maps'
 import { HARD_RAID_BOSSES, RAID_BOSSES } from '../../src/data/raidBosses'
 import { SPECIES, STARTERS, species } from '../../src/data/species'
 import { STONE_IDS, STONES } from '../../src/data/stones'
@@ -51,7 +51,7 @@ function reachableRoutes(): Route[] {
     const r = findRoute(id)
     if (!r || found.includes(r)) continue
     found.push(r)
-    if (r.unlocks) queue.push(r.unlocks)
+    queue.push(...routeOpens(r))
   }
   return found
 }

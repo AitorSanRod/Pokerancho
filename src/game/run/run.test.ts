@@ -12,6 +12,7 @@ import { maxHp, stepsPerMinute } from '../team/stats'
 import { advanceRun, endRun, restartBlocker, restartRun, runBlocker, startRun, tapRun, walk } from './run'
 import { battleDuration } from './battleTimeline'
 import { BOSS_MONEY_MULT, BOSS_TICKETS } from './runBattle'
+import { starPrize } from './routeStars'
 
 vi.mock('../../data/maps/kantoMaps', () => import('../core/test-map'))
 
@@ -202,11 +203,12 @@ describe('advanceRun', () => {
     expect(s.run!.battleMsLeft).toBe(0)
     expect(s.completedRoutes).toContain(ROUTE)
     expect(s.unlockedRoutes).toContain(route(ROUTE).unlocks)
-    expect(s.run!.unlocked).toBe(route(ROUTE).unlocks)
+    expect(s.run!.unlocked).toEqual([route(ROUTE).unlocks])
   })
 
   it('el premio final solo se da la primera vez que se completa', () => {
-    // Con rng alto ningún salvaje suelta ticket: la diferencia entre ambas vueltas es el premio final
+    // Con rng alto ningún salvaje suelta ticket ni hay parada sorpresa: la diferencia entre ambas vueltas es el premio
+    // final y el de las estrellas conseguidas en la primera
     const noDrops = () => 0.99
     const s = stateOnRoute(50)
     const mon = activeMon(s)!
@@ -214,13 +216,14 @@ describe('advanceRun', () => {
     const first = { ...s.run!.earned }
     endRun(s)
     const expAfterFirst = mon.exp
-    startRun(s, ROUTE)
+    startRun(s, ROUTE, undefined, noDrops)
     advanceRun(s, PLENTY_MS, noDrops)
     const { reward } = route(ROUTE)
+    const starTickets = starPrize(route(ROUTE)).tickets * first.stars.length
     expect(s.run!.phase).toBe('complete')
-    expect(first.tickets - s.run!.earned.tickets).toBe(reward.tickets)
+    expect(first.tickets - s.run!.earned.tickets).toBe(reward.tickets + starTickets)
     expect(s.run!.earned.exp).toBe(0)
-    expect(s.run!.unlocked).toBeNull()
+    expect(s.run!.unlocked).toEqual([])
     expect(mon.exp).toBe(expAfterFirst)
   })
 

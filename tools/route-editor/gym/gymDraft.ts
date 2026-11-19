@@ -3,6 +3,7 @@
 
 import { BADGES, type Badge } from '../../../src/data/badges'
 import type { Gym } from '../../../src/data/gyms'
+import type { PokeType } from '../../../src/data/types'
 import { keyOf, DICTS } from '../catalog'
 import { loadStored, store } from '../mode'
 import { emptyFoe, foeDraft, type FoeDraft } from '../team/teamDraft'
@@ -15,6 +16,8 @@ export interface GymDraft {
   leader: string
   /** Clave de Badge: `Cascade` */
   badge: string
+  /** Tipo del líder (da el fondo de su combate): `water` */
+  type: PokeType
   /** Nivel máximo para entrar */
   maxLevel: number
   team: FoeDraft[]
@@ -27,7 +30,7 @@ export const BADGES_BY_KEY: Record<string, Badge> = Object.fromEntries(
 
 export const badgeName = (key: string): string => (key in BADGES_BY_KEY ? BADGES[BADGES_BY_KEY[key]].name : '')
 
-export const emptyGym = (): GymDraft => ({ idKey: '', idValue: '', leader: '', badge: Object.keys(BADGES_BY_KEY)[0], maxLevel: 30, team: [emptyFoe()] })
+export const emptyGym = (): GymDraft => ({ idKey: '', idValue: '', leader: '', badge: Object.keys(BADGES_BY_KEY)[0], type: 'normal', maxLevel: 30, team: [emptyFoe()] })
 
 /** Borrador de un gimnasio del juego (o pegado) */
 export const fromGym = (idKey: string, idValue: string, g: Gym): GymDraft => ({
@@ -35,6 +38,7 @@ export const fromGym = (idKey: string, idValue: string, g: Gym): GymDraft => ({
   idValue,
   leader: g.leader,
   badge: keyOf(DICTS.Badge, g.badge),
+  type: g.type,
   maxLevel: g.maxLevel,
   team: g.team.map(foeDraft),
 })

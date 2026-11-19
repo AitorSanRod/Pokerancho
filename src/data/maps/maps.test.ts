@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { GYMS } from '../gyms'
 import { incursionMove, moveClass, MoveClass } from '../incursionMoves'
-import { isValidPath, KANTO, node, NodeKind, onlyTrainerFights, pathFrom, pathSpecies, pathStopCount, type Route } from './index'
+import { isKnownSpecies, Rarity, rarityOf, species } from '../species'
+import { TYPE_INFO } from '../types'
+import { isValidPath, KANTO, node, NodeKind, onlyTrainerFights, pathFrom, pathSpecies, pathStopCount, StarGoal, wildSpecies, type Route } from './index'
+
+/** Épicos salvajes que puede tener una ruta como mucho */
+const MAX_WILD_EPICS = 3
 
 function reachableIds(r: Route): Set<string> {
   const byId = new Map(r.nodes.map((n) => [n.id, n]))
@@ -75,6 +80,26 @@ describe.each(KANTO.routes)('ruta $id', (r) => {
 
   it('desbloquea una ruta existente', () => {
     if (r.unlocks) expect(KANTO.routes.map((x) => x.id)).toContain(r.unlocks)
+  })
+
+  it('no lleva más de MAX_WILD_EPICS épicos salvajes ni ningún legendario salvaje (los legendarios van de jefe)', () => {
+    const rarities = wildSpecies(r).map((id) => rarityOf(species(id)))
+    expect(rarities.filter((x) => x === Rarity.Epic).length).toBeLessThanOrEqual(MAX_WILD_EPICS)
+    expect(rarities).not.toContain(Rarity.Legendary)
+  })
+
+  it('sus estrellas elegidas piden cosas posibles: especies y tipos que existen, PS entre 1 y 99, nivel positivo', () => {
+    for (const star of r.stars ?? []) {
+      if (star.goal === StarGoal.WithSpecies) expect(isKnownSpecies(star.speciesId)).toBe(true)
+      if (star.goal === StarGoal.MonType) expect(TYPE_INFO).toHaveProperty(star.type)
+      if (star.goal === StarGoal.OnlyPassiveTypes) {
+        expect(star.types.length).toBeGreaterThan(0)
+        for (const t of star.types) expect(TYPE_INFO).toHaveProperty(t)
+      }
+      if (star.goal === StarGoal.MinHp) expect(star.percent).toBeGreaterThanOrEqual(1)
+      if (star.goal === StarGoal.MinHp) expect(star.percent).toBeLessThanOrEqual(99)
+      if (star.goal === StarGoal.LevelCap && star.level !== undefined) expect(star.level).toBeGreaterThan(0)
+    }
   })
 
   it('las especies del camino incluyen sus salvajes y su jefe, sin repetir', () => {

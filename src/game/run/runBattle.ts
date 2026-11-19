@@ -1,9 +1,8 @@
 import { legSteps, node, NodeKind, type Boss, type Route, type RouteNode } from '../../data/maps'
 import type { Move } from '../../data/moves'
 import { makeFighter } from '../battle/battle'
-import { boostedMoney, expReward, moneyReward, pieceReward, ticketReward } from '../battle/rewards'
+import { expReward, moneyReward, pieceReward, ticketReward } from '../battle/rewards'
 import { MissionKind } from '../../data/dailyMissions'
-import { baseSpeciesOf } from '../../data/species'
 import { markSeen } from '../collection/dex'
 import { advanceMission } from '../collection/missions'
 import { addPieces } from '../collection/pieces'
@@ -19,6 +18,9 @@ import { rewardsFor } from './tapCrit'
 import { nextGymFoe, winGym } from './runGym'
 import { routeMove } from './runMove'
 import { nextTrainerFoe } from './runTrainer'
+import { nextHordeFoe, type StopFoe } from './runSurprise'
+import { completeRoute } from './runComplete'
+import { noteLowestHp, notePassives } from './routeStars'
 import { winRouteRaid } from '../raid/routeRaid'
 import { foeExpMult, foeStatMult, rollShinyFoe, shinyIntro } from './shinyFoe'
 
@@ -65,20 +67,24 @@ export interface BattleOpts {
   expMult?: number
   /** Nivel por el que se calcula la EXP si no es el del rival (con el Huevo Suerte, el del Pokémon del jugador) */
   expLevel?: number
+  /** Suelta seguro un ticket de su especie al vencerlo (el Pokémon poco común de una parada sorpresa) */
+  piece?: boolean
 }
+
 
 /**
  * Resuelve el combate de la parada pero no lo aplica: PS, premio y derrota se aplican en `settleBattle` cuando
  * termina su tiempo, para que el estado no se adelante a lo que ve el jugador. Los jefes (también los comunitarios de
  * las paradas de raid) luchan con sus stats completas (sin WILD_STAT_MULT), con sus pasivas del mapa, y dan más premio.
- * Cualquiera de los dos puede salir shiny.
+ * Cualquiera de los dos puede salir shiny (y entonces se anuncia como shiny, aunque sea de una sorpresa).
  */
-export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng) {
+export function startStopBattle(s: GameState, r: Route, n: RouteNode, rng: Rng, surprise: StopFoe = {}) {
   const isBoss = n.kind === NodeKind.Boss || n.kind === NodeKind.Raid
-  const rival = rivalOf(r, n, rng)
+  const rival = surprise.rival ?? rivalOf(r, n, rng)
   const shiny = rollShinyFoe(rng)
   const statMult = foeStatMult(n.statMult ?? (isBoss ? 1 : WILD_STAT_MULT), shiny)
-  startBattle(s, r, rival, { boss: isBoss, statMult, shiny, expLevel: boostedExpLevel(s, rival.level) }, rng)
+  const intro = shiny ? undefined : surprise.intro
+  startBattle(s, r, rival, { boss: isBoss, statMult, shiny, intro, piece: surprise.piece, expLevel: boostedExpLevel(s, rival.level) }, rng)
 }
 
 /**
@@ -98,11 +104,13 @@ export function startBattle(s: GameState, r: Route, foe: Boss, opts: BattleOpts,
   const mon = activeMon(s)!
   const { speciesId: enemyId, level, passives } = foe
   const enemy = { ...makeFighter('enemy', enemyId, level, { statMult: opts.statMult, passives }), trainer: opts.trainer, movePool: opts.foeMoves }
+  const ranch = ranchPassives(s, mon.ranch!)
+  notePassives(run, ranch)
   const player = makeFighter('player', mon.speciesId, mon.level, {
     hp: Math.floor(mon.hp),
     stars: mon.stars,
     nature: mon.nature,
-    passives: ranchPassives(s, mon.ranch!),
+    passives: ranch,
     perks: monPerks(s, mon),
     move: routeMove(s),
   })
@@ -110,7 +118,7 @@ export function startBattle(s: GameState, r: Route, foe: Boss, opts: BattleOpts,
     money: moneyReward(level, legSteps(r, run.path, run.stop), rng) * (opts.boss ? BOSS_MONEY_MULT : 1),
     tickets: opts.boss ? BOSS_TICKETS : ticketReward(enemyId, rng),
     exp: expReward(opts.expLevel ?? level, mon.level) * (opts.boss ? BOSS_EXP_MULT : 1) * (opts.expMult ?? 1) * (boostActive(run) ? BOOST_EXP_MULT : 1) * foeExpMult(opts.shiny === true),
-    piece: pieceReward(enemyId, rng),
+    piece: opts.piece || pieceReward(enemyId, rng),
   }
   const intro = opts.intro ?? (opts.shiny ? shinyIntro(enemy.name, level) : undefined)
   run.battleSetup = { seed: Math.floor(rng() * 2 ** 31), player, enemy, prize, taps: [], intro }
@@ -144,6 +152,7 @@ function settleBattle(s: GameState, r: Route, rng: Rng) {
   const mon = activeMon(s)!
   // En combate los PS iban escalados por la pasiva de PS: se vuelven a la escala del Pokémon
   mon.hp = Math.min(maxHp(mon), Math.round((record.events[record.events.length - 1].playerHp * maxHp(mon)) / record.player.maxHp))
+  noteLowestHp(run, record)
   if (record.outcome === 'lose') {
     record.rewards.moneyLost = faint(s)
     return
@@ -167,6 +176,7 @@ function settleBattle(s: GameState, r: Route, rng: Rng) {
     if (run.gym && nextGymFoe(s, r, rng)) return
     if (run.gym) winGym(s)
     if (run.trainer && nextTrainerFoe(s, r, rng)) return
+    if (nextHordeFoe(s, r, rng)) return
   }
   if (run.stop === run.path.length - 1) completeRoute(s, r)
 }
@@ -186,30 +196,4 @@ export function faint(s: GameState): number {
   run.earned.money -= lost
   run.phase = 'fainted'
   return lost
-}
-
-/** Completar una ruta cuenta para las misiones de rutas: cualquiera, esa ruta y con ese compañero */
-function countRouteMissions(s: GameState, r: Route) {
-  advanceMission(s, MissionKind.CompleteRoutes)
-  advanceMission(s, MissionKind.CompleteRoute, 1, { routeId: r.id })
-  advanceMission(s, MissionKind.CompleteRouteWith, 1, { speciesId: baseSpeciesOf(activeMon(s)!.speciesId) })
-}
-
-/** Completa la ruta. Su premio final solo se gana la primera vez; al repetirla quedan los combates */
-export function completeRoute(s: GameState, r: Route) {
-  const run = s.run!
-  run.phase = 'complete'
-  countRouteMissions(s, r)
-  if (s.completedRoutes.includes(r.id)) return
-  s.completedRoutes.push(r.id)
-  s.tickets += r.reward.tickets
-  const money = boostedMoney(r.reward.money)
-  s.money += money
-  run.earned.tickets += r.reward.tickets
-  run.earned.money += money
-  gainRunExp(s, r.reward.exp)
-  if (r.unlocks && !s.unlockedRoutes.includes(r.unlocks)) {
-    s.unlockedRoutes.push(r.unlocks)
-    run.unlocked = r.unlocks
-  }
 }

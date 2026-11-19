@@ -18,7 +18,7 @@ export type CarriedKey = 'run' | 'raids' | 'incursion' | 'incursionCheckin' | 't
  * ScheduleCheckin o TowerRun, o algo que haga que lo guardado ya no se juegue igual
  */
 export const CARRIED_SINCE: Record<CarriedKey, number> = {
-  run: 64,
+  run: 67,
   raids: 64,
   incursion: 58,
   incursionCheckin: 65,
