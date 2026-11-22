@@ -9,7 +9,7 @@ import { endOfTurn, loseTurn } from './groupStatus'
 import { performMove } from './moveEffects'
 import { resolveFallen } from './revives'
 import { applyPicks } from './movePicks'
-import { anyPlayerUp, noTurnOrders, type TurnOrders } from './tapWindow'
+import { anyPlayerUp, noTurnOrders, perfectStrikers, type TurnOrders } from './tapWindow'
 
 // Un combate de sala: el grupo contra los rivales, por turnos. Al empezar el turno vuelven los caídos (si quedan
 // revivires) y se recalculan las pasivas; después viene la ventana de toques (ver tapWindow.ts), actúan todos por
@@ -36,7 +36,7 @@ export function turnOrder(bf: Battlefield, rng: Rng): GroupFighter[] {
 }
 
 /**
- * Juega la sala. `tapWindow` abre la ventana de toques del turno y da sus órdenes (quién potenció su ataque, quién
+ * Juega la sala. `tapWindow` abre la ventana de toques del turno y da sus órdenes (lo que consiguió cada uno, quién
  * acertó el toque crítico y quién cambió de ataque u objetivo); si aún no se sabe (undefined), la sala se para ahí:
  * 'waiting'. Si `outOfTime` dice que se ha acabado el tiempo, no empieza otro turno y se pierde. Con `tapsAlways`, hay
  * ventana aunque no quede en pie ningún Pokémon de un jugador (en ella puede entrar uno, ver joins.ts)
@@ -55,9 +55,10 @@ export function fightRoom(
     for (const boss of bossesUp(bf)) bossTurnStart(bf, boss)
     const orders = tapsAlways || anyPlayerUp(bf) ? tapWindow() : noTurnOrders()
     if (!orders) return 'waiting'
-    bf.boosted = orders.boosted
-    bf.critReady = [...(orders.crits ?? [])]
+    bf.taps = orders.taps ?? {}
+    bf.boosted = orders.boosted ?? []
     applyPicks(bf, orders.picks)
+    bf.critReady = [...new Set([...(orders.crits ?? []), ...perfectStrikers(bf)])]
     for (const foe of bf.foes.filter(isUp)) foe.move = chooseFoeMove(bf, foe, rng, isAreaTurn(bf, foe))
     for (const f of turnOrder(bf, rng)) {
       if (!isUp(f) || loseTurn(bf, f, rng)) continue

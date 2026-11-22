@@ -7,6 +7,7 @@ import { isFormItem } from '../../data/forms'
 import { baseSpeciesOf, isKnownSpecies, SPECIES } from '../../data/species'
 import { isStarItem, STAR_ITEMS } from '../../data/starItems'
 import { Stone } from '../../data/stones'
+import { isIncursionMove } from '../../data/incursionMoves'
 import { isTm } from '../../data/tms'
 import { refundLostBonds, salvageBonds } from '../incursion/schedule/scheduleSalvage'
 import { ExpeditionFocus } from '../team/expeditionFocus'
@@ -82,6 +83,13 @@ export const SAVE_MIGRATIONS: Partial<Record<number, (save: Save) => void>> = {
   62: (save) => {
     if (isRecord(save.raids)) for (const tr of Object.values(save.raids)) if (isRecord(tr)) tr.pendingJoin ??= false
   },
+  // Los toques son un reto con puntuación: la incursión y las salas de raid en marcha siguen (si no, el jugador se
+  // quedaría fuera de su grupo del servidor), sin nada conseguido en la ventana abierta. Lo ya jugado se repite igual:
+  // las órdenes de antes (`boosted`) se leen con la mejora de entonces (tapWindow.ts › LEGACY_TAP_BONUS)
+  68: (save) => {
+    if (isRecord(save.incursion)) save.incursion.pendingTap ??= 0
+    if (isRecord(save.raids)) for (const tr of Object.values(save.raids)) if (isRecord(tr)) tr.pendingTap ??= 0
+  },
 }
 
 /**
@@ -120,6 +128,7 @@ const isRoute = (v: unknown): v is string => {
 const isIncursionId = (v: unknown): v is IncursionId => (Object.values(IncursionId) as unknown[]).includes(v)
 
 /** Lista sin repetir de los valores que valen */
+const isMoveId = (x: unknown): x is string => typeof x === 'string' && isIncursionMove(x)
 const listOf = <T>(v: unknown, valid: (x: unknown) => x is T): T[] | undefined => (Array.isArray(v) ? [...new Set(v.filter(valid))] : undefined)
 
 const isText = (x: unknown): x is string => typeof x === 'string'
@@ -153,6 +162,9 @@ function salvageMon(v: unknown): OwnedMon | null {
   mon.hp = typeof v.hp === 'number' && v.hp >= 0 ? Math.min(v.hp, maxHp(mon)) : maxHp(mon)
   mon.spot = isRecord(v.spot) && typeof v.spot.x === 'number' && typeof v.spot.y === 'number' ? { x: v.spot.x, y: v.spot.y } : null
   mon.tmMoves = listOf(v.tmMoves, isTm) ?? []
+  // Los elegidos en la ficha que aún existen; los que no encajen con lo que sabe, los descarta moveLoadout al usarlos
+  mon.routeMoves = listOf(v.routeMoves, isMoveId) ?? null
+  mon.incursionMoves = listOf(v.incursionMoves, isMoveId) ?? null
   return mon
 }
 

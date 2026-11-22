@@ -1,5 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { incursionMove } from '../../data/incursionMoves'
+import { ringKey } from '../../game/battle/critTiming'
 import { findMon, type GameState } from '../../game/core/state'
 import { IncursionPhase } from '../../game/incursion/activeIncursion'
 import type { TabRaid } from '../../game/raid/raid'
@@ -21,7 +22,7 @@ import { RaidCritPad } from './RaidCritPad'
 import { RaidFightHud } from './RaidFightHud'
 import { RaidFightMenu } from './RaidFightMenu'
 import { RaidFinale } from './RaidFinale'
-import { raidCritHit, raidPilot, raidTapGoal } from './raidPilot'
+import { raidCritHit, raidPilot, raidTapScore } from './raidPilot'
 import '../incursion/incursion.css'
 import '../incursion/incursion-view.css'
 import './raid.css'
@@ -52,11 +53,19 @@ export function RaidFightView({ game, tr, rotation, onCollected }: Props) {
   const picked = pickNow(pilot, scene)
   const choosing = myMonUp && !finished && !!mon && !!picked
   const tap = p.tap
+  const tapMoveId = tr.pendingPick?.moveId ?? mine?.moveId ?? ''
   const ring = choosing && !tap ? fightRingAt(p.record.legs[0], tr.uid, tr.room.id, p.legMs) : null
   const nicknames = Object.fromEntries(tr.room.entrants.filter((e) => e.member.id !== tr.uid).map((e) => [e.member.id, e.trainer]))
   const overlay =
     tap && myMonUp ? (
-      <TapPad move={incursionMove(tr.pendingPick?.moveId ?? mine!.moveId!)} windowKey={`${tr.room.id}:${tap.turn}`} msLeft={tap.msLeft} onGoal={() => raidTapGoal(tr, rotation, tap.turn)} />
+      <TapPad
+        key={`${tr.room.id}:${tap.turn}:${tapMoveId}`}
+        move={incursionMove(tapMoveId)}
+        seed={ringKey(tr.room.id, tap.turn, tr.uid)}
+        msLeft={tap.msLeft}
+        lastTick={game.lastTick}
+        onScore={(score, done) => raidTapScore(tr, rotation, tap.turn, score, done)}
+      />
     ) : (
       ring && <RaidCritPad key={ring.seq} ring={ring} legStart={fight.legStarts[0]} legMs={p.legMs} lastTick={game.lastTick} onCrit={() => raidCritHit(tr, rotation)} />
     )

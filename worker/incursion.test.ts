@@ -33,10 +33,10 @@ describe('incursiones con otros jugadores', () => {
   it('acepta el aviso de toques de un jugador del grupo', async () => {
     const api = testWorker()
     const { groupId } = await startedGroup(api)
-    const tapped = await api.call('/api/incursion', { body: { action: IncursionAction.Tap, ...who(0), groupId, leg: 0, turn: 0 } })
+    const tapped = await api.call('/api/incursion', { body: { action: IncursionAction.Tap, ...who(0), groupId, leg: 0, turn: 0, score: 1 } })
     expect(tapped.status).toBe(200)
     expect(tapped.data.group.groupId).toBe(groupId)
-    expect((await api.call('/api/incursion', { body: { action: IncursionAction.Tap, ...who(0), groupId, leg: -1, turn: 0 } })).status).toBe(400)
+    expect((await api.call('/api/incursion', { body: { action: IncursionAction.Tap, ...who(0), groupId, leg: -1, turn: 0, score: 1 } })).status).toBe(400)
   })
 
   it('la cola ya no existe: una app sin actualizar recibe un error', async () => {

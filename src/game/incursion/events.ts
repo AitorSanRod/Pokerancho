@@ -59,6 +59,7 @@ export interface IncursionEvent {
   maxHp?: number
   /** Hit y Heal: PS que quita o devuelve */
   amount?: number
+  /** Hit: golpe crítico. Heal: cura crítica (todos los anillos del reto acertados, ver tapWindow.ts) */
   crit?: boolean
   /** Multiplicador de eficacia de tipos del golpe */
   eff?: number

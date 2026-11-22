@@ -78,13 +78,23 @@ describe('pelea en el servidor', () => {
     advanceShared(room, fightStart(CYCLE))
     const at = openWindowAt(room)
     const moveId = room.entrants[0].member.moveId
-    tapShared(room, 'p1', 0, at)
     pickShared(room, 'p1', { moveId, target: null }, at)
+    tapShared(room, 'p1', 0, 0.5, at)
     critShared(room, 'p1', at)
     expect(roomView(room, 'p1', at)).toMatchObject({ you: 'p1', yourPick: { moveId, target: null }, yourCrit: true })
     advanceShared(room, at + 60_000)
-    expect(room.fight!.orders[0].turns[0]).toEqual({ boosted: ['p1'], picks: { p1: { moveId, target: null } }, crits: ['p1'] })
-    expect(room.tapPending).toEqual([])
+    expect(room.fight!.orders[0].turns[0]).toEqual({ taps: { p1: 0.5 }, picks: { p1: { moveId, target: null } }, crits: ['p1'] })
+    expect(room.tapScores).toEqual({})
+  })
+
+  it('cambiar de ataque en plena ventana empieza el reto de cero', () => {
+    const room = shared()
+    join(room, 'p1')
+    advanceShared(room, fightStart(CYCLE))
+    const at = openWindowAt(room)
+    tapShared(room, 'p1', 0, 0.5, at)
+    pickShared(room, 'p1', { moveId: room.entrants[0].member.moveId, target: null }, at)
+    expect(room.tapScores).toEqual({})
   })
 
   it('lo que ve cada jugador no lleva los ids de los demás', () => {

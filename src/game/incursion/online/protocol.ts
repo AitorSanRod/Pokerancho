@@ -52,6 +52,8 @@ export interface TapRequest extends GroupRequestBase {
   action: typeof IncursionAction.Tap
   leg: number
   turn: number
+  /** Lo conseguido en el reto, de 0 a 1 (ver tapChallenge.ts) */
+  score: number
 }
 export interface PickRequest extends GroupRequestBase {
   action: typeof IncursionAction.Pick

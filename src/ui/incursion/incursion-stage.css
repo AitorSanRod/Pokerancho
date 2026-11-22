@@ -97,47 +97,6 @@
 .incursion-caption:empty {
   display: none;
 }
-/* Ventana de toques: toda la escena es el botón, con el contador y el tiempo que queda abajo */
-.incursion-tap-pad {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  border: 0;
-  background: #10204066;
-  color: #fff;
-  text-shadow: 0 2px 0 #0008;
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-user-select: none;
-}
-.incursion-tap-pad:active:not(.done) .incursion-tap-count {
-  scale: 1.12;
-}
-.incursion-tap-pad.done {
-  background: #3a8f2f66;
-}
-.incursion-tap-title {
-  font-size: 22px;
-  font-weight: 900;
-}
-.incursion-tap-count {
-  font-size: 44px;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-  transition: scale 0.05s;
-}
-.incursion-tap-time {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 6px;
-  background: var(--yellow);
-}
 /* Apuntar tocando la escena: los que pueden recibir tu ataque llevan un aro a los pies; el objetivo, el aro amarillo
    y la flecha del cursor de los juegos encima */
 .incursion-fighter.pickable {
@@ -157,9 +116,9 @@
   border-radius: 50%;
 }
 .incursion-fighter.picked::after {
-  border: 3px solid #ffd400;
-  background: #ffd40040;
-  box-shadow: 0 0 10px #ffd400;
+  border: 3px solid var(--yellow);
+  background: color-mix(in srgb, var(--yellow) 25%, transparent);
+  box-shadow: 0 0 10px var(--yellow);
 }
 .incursion-aim {
   width: 0;
@@ -167,8 +126,8 @@
   margin-bottom: 4px;
   border: 10px solid transparent;
   border-bottom: 0;
-  border-top: 14px solid #ffd400;
-  filter: drop-shadow(0 2px 0 #2b2820);
+  border-top: 14px solid var(--yellow);
+  filter: drop-shadow(0 2px 0 var(--frame-ink));
   animation: aim-bob 0.7s ease-in-out infinite alternate;
 }
 @keyframes aim-bob {

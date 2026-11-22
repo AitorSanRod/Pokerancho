@@ -58,7 +58,7 @@ describe('lo que estaba a medias al actualizar', () => {
     const uid = s.activeUid!
     const incursion = { incursionId: IncursionId.CuevaHelada, uid }
     const kept = migrateSave({ ...fromOld(s), incursion })!
-    expect(kept.incursion).toEqual(incursion)
+    expect(kept.incursion).toMatchObject(incursion)
     expect(kept.incursionKeys[IncursionId.CuevaHelada]).toBeUndefined()
     expect(carriedProgress({ ...fromOld(s), incursion: { ...incursion, uid: 'nadie' } }, OLD)).not.toHaveProperty('incursion')
   })

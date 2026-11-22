@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { incursionMove } from '../../data/incursionMoves'
 import { findMon, type GameState } from '../../game/core/state'
 import { PickSide, pickSide } from '../../game/incursion/movePicks'
-import { monRepertoire } from '../../game/incursion/repertoire'
+import { incursionMoveChoices } from '../../game/incursion/incursionLoadout'
 import { Bar, Sprite } from '../shared/common'
 import { MovePicker } from './MovePicker'
 import { pickCandidates, type FightPilot, type Pick } from './pickAction'
@@ -40,7 +40,7 @@ export function PickDialog({ game, pilot, scene, current, onClose }: Props) {
   return (
     <Modal className="incursion-pick" label="Cambiar ataque" onClose={onClose}>
       <h3>Cambiar ataque</h3>
-      <MovePicker moves={monRepertoire(mon)} selectedId={moveId} onSelect={setMoveId} />
+      <MovePicker moves={incursionMoveChoices(mon)} selectedId={moveId} onSelect={setMoveId} />
       {side && (
         <>
           <div className="label">{side === PickSide.Foes ? '¿A qué rival?' : '¿A qué aliado?'}</div>

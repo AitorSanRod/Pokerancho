@@ -31,7 +31,13 @@ describe('elegir ataque en plena pelea', () => {
   it('solo un ataque que conoce; queda pendiente hasta la próxima ventana', () => {
     expect(setIncursionPick(s, { moveId: 'no-existe', target: null }, NOW)).toBe(false)
     expect(setIncursionPick(s, { moveId: moves[1].id, target: 'foe-0-0' }, NOW)).toBe(true)
-    expect(pendingOrders(s.incursion!, true)).toEqual({ boosted: [uid], picks: { [uid]: { moveId: moves[1].id, target: 'foe-0-0' } } })
+    expect(pendingOrders(s.incursion!)).toEqual({ picks: { [uid]: { moveId: moves[1].id, target: 'foe-0-0' } } })
+  })
+
+  it('cambiar de ataque en plena ventana empieza el reto de los toques de cero', () => {
+    s.incursion!.pendingTap = 0.6
+    setIncursionPick(s, { moveId: moves[1].id, target: null }, NOW)
+    expect(s.incursion!.pendingTap).toBe(0)
   })
 
   it('al cerrarse la ventana entra en sus órdenes y deja de estar pendiente', () => {

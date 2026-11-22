@@ -16,6 +16,12 @@
   border-radius: 50%;
 }
 .tap-ring-target {
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 2px 2px #000a;
   border: 3px solid #fff;
   box-shadow: 0 0 6px #0008;
   opacity: 0.85;

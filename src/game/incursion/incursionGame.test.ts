@@ -6,7 +6,7 @@ import { seqRng } from '../core/test-utils'
 import { initialState, MonPlace, monPlace, type GameState } from '../core/state'
 import { createMon } from '../team/mons'
 import { incursionProgress, IncursionPhase, recordOf, REGROUP_MS } from './activeIncursion'
-import { advanceIncursion, boostIncursionTap, chooseIncursionMove, collectIncursion, continueIncursion, incursionBlocker, retreatIncursion, startIncursion } from './incursionGame'
+import { advanceIncursion, scoreIncursionTap, chooseIncursionMove, collectIncursion, continueIncursion, incursionBlocker, retreatIncursion, startIncursion } from './incursionGame'
 import { LegOutcome } from './incursionLeg'
 import { defeatedFoes, newDiscoveries } from './foeDiscovery'
 import { eventStartMs, legDuration } from './incursionTimeline'
@@ -153,13 +153,24 @@ describe('incursión en curso', () => {
     expect(s.incursion!.orders[0].turns[0]).toEqual(noTurnOrders())
   })
 
-  it('al llegar a los toques en la ventana abierta, su Pokémon queda potenciado ese turno', () => {
+  it('lo conseguido en la ventana abierta va a sus órdenes: a medias, al cerrarse; entero o acabado el reto, ya', () => {
     start()
     const opens = openWindowAt(0)
-    boostIncursionTap(s, opens - 1)
+    scoreIncursionTap(s, 1, true, opens - 1)
     expect(s.incursion!.orders[0].turns).toEqual([])
-    boostIncursionTap(s, opens + 1)
-    expect(s.incursion!.orders[0].turns[0].boosted).toEqual([uid])
+    scoreIncursionTap(s, 0.4, false, opens + 1)
+    scoreIncursionTap(s, 0.2, false, opens + 2)
+    expect(s.incursion!.orders[0].turns).toEqual([])
+    advanceIncursion(s, opens + TAP_WINDOW_MS)
+    expect(s.incursion!.orders[0].turns[0].taps).toEqual({ [uid]: 0.4 })
+    expect(s.incursion!.pendingTap).toBe(0)
+  })
+
+  it('con el reto acabado, la ventana se cierra ya aunque no sea entero', () => {
+    start()
+    const opens = openWindowAt(0)
+    scoreIncursionTap(s, 0.5, true, opens + 1)
+    expect(s.incursion!.orders[0].turns[0].taps).toEqual({ [uid]: 0.5 })
   })
 
   it('al retirarse se termina en ese momento, con lo ganado hasta entonces', () => {

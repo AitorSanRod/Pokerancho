@@ -5,7 +5,7 @@ import { act } from '../../store/store'
 import type { ActiveIncursion } from '../../game/incursion/activeIncursion'
 import { chooseIncursionMove, continueIncursion } from '../../game/incursion/incursionGame'
 import type { MemberState } from '../../game/incursion/fighter'
-import { monRepertoire } from '../../game/incursion/repertoire'
+import { incursionMoveChoices } from '../../game/incursion/incursionLoadout'
 import { sendIncursionMove, sendIncursionReady } from '../../net/incursionSync'
 import { MovePicker } from './MovePicker'
 import { CLASS_LABEL } from '../shared/moveText'
@@ -50,7 +50,7 @@ export function RegroupPanel({ game, a, members, msLeft }: { game: GameState; a:
         })}
       </ul>
       <div className="label">Tu movimiento para lo que queda</div>
-      <MovePicker moves={monRepertoire(mon)} selectedId={selected} onSelect={choose} />
+      <MovePicker moves={incursionMoveChoices(mon)} selectedId={selected} onSelect={choose} />
       <button className="btn primary" disabled={imReady} onClick={goOn}>
         {imReady ? `Esperando a los demás (${online?.ready.length ?? 0}/${players})` : 'Seguir ya'}
       </button>

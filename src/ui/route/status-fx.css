@@ -1,6 +1,7 @@
 /* Estados alterados sobre el sprite, mientras duran (clase status-<id>, ver statusClass en battleFrame.ts). Van en la
    imagen, no en su caja, para no pisar las animaciones de embestida, golpe o caída. Los colores son los del tipo que
-   representa cada estado en STATUS_INFO */
+   representa cada estado en STATUS_INFO, como
+   variables --type-<tipo> (ui/shared/typeColors.ts) */
 
 /* Quemadura: brillo naranja que parpadea como una llama */
 .status-burn .sprite img {
@@ -33,19 +34,19 @@
 @keyframes status-burn {
   0%,
   100% {
-    filter: drop-shadow(0 0 2px #f08030) brightness(1);
+    filter: drop-shadow(0 0 2px var(--type-fire)) brightness(1);
   }
   50% {
-    filter: drop-shadow(0 0 6px #f08030) drop-shadow(0 -2px 3px #ffd040) brightness(1.15);
+    filter: drop-shadow(0 0 6px var(--type-fire)) drop-shadow(0 -2px 3px var(--yellow)) brightness(1.15);
   }
 }
 @keyframes status-poison {
   0%,
   100% {
-    filter: drop-shadow(0 0 2px #a040a0);
+    filter: drop-shadow(0 0 2px var(--type-poison));
   }
   50% {
-    filter: drop-shadow(0 0 7px #a040a0) saturate(0.8) brightness(0.95);
+    filter: drop-shadow(0 0 7px var(--type-poison)) saturate(0.8) brightness(0.95);
   }
 }
 @keyframes status-paralysis {
@@ -56,21 +57,21 @@
     translate: 0 0;
   }
   76% {
-    filter: drop-shadow(0 0 5px #f8d030) brightness(1.6);
+    filter: drop-shadow(0 0 5px var(--type-electric)) brightness(1.6);
     translate: -2px 0;
   }
   82% {
-    filter: drop-shadow(0 0 3px #f8d030) brightness(1.3);
+    filter: drop-shadow(0 0 3px var(--type-electric)) brightness(1.3);
     translate: 2px 0;
   }
 }
 @keyframes status-freeze {
   0%,
   100% {
-    filter: drop-shadow(0 0 3px #98d8d8) saturate(0.45) brightness(1.1);
+    filter: drop-shadow(0 0 3px var(--type-ice)) saturate(0.45) brightness(1.1);
   }
   50% {
-    filter: drop-shadow(0 0 7px #c8f0ff) saturate(0.35) brightness(1.25);
+    filter: drop-shadow(0 0 7px color-mix(in srgb, var(--type-ice) 45%, #fff)) saturate(0.35) brightness(1.25);
   }
 }
 @keyframes status-confusion {

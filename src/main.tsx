@@ -7,7 +7,9 @@ import { startAppUpdates } from './net/appUpdate'
 import { bootGame } from './store/boot'
 import { ErrorBoundary } from './ui/shared/ErrorBoundary'
 import { OtherTabScreen } from './ui/shared/OtherTabScreen'
+import { installTypeColors } from './ui/shared/typeColors'
 
+installTypeColors()
 startAppUpdates()
 
 const root = createRoot(document.getElementById('root')!)

@@ -21,11 +21,12 @@ describe('peticiones de raids', () => {
   })
 
   it('acepta las de una sala con lo suyo y rechaza las que no encajan', () => {
-    expect(parseRequest({ ...who, action: RaidAction.Tap, roomId: ROOM, turn: 3 })).toMatchObject({ action: RaidAction.Tap, turn: 3 })
+    expect(parseRequest({ ...who, action: RaidAction.Tap, roomId: ROOM, turn: 3, score: 0.5 })).toMatchObject({ action: RaidAction.Tap, turn: 3, score: 0.5 })
+    expect(parseRequest({ ...who, action: RaidAction.Tap, roomId: ROOM, turn: 3, score: 2 })).toBeNull()
     expect(parseRequest({ ...who, action: RaidAction.Pick, roomId: ROOM, moveId: 'placaje', target: null })).toMatchObject({ target: null })
     expect(parseRequest({ ...who, action: RaidAction.Crit, roomId: ROOM })).toMatchObject({ action: RaidAction.Crit })
     expect(parseRequest({ ...who, action: RaidAction.Sync, roomId: 'route/x' })).toBeNull()
-    expect(parseRequest({ ...who, action: RaidAction.Tap, roomId: ROOM, turn: -1 })).toBeNull()
+    expect(parseRequest({ ...who, action: RaidAction.Tap, roomId: ROOM, turn: -1, score: 1 })).toBeNull()
     expect(parseRequest({ ...who, playerId: 'x', action: RaidAction.Board })).toBeNull()
   })
 

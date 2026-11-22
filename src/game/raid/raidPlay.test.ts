@@ -4,7 +4,7 @@ import { MonPlace, monPlace } from '../core/state'
 import { IncursionPhase } from '../incursion/activeIncursion'
 import { eventStartMs } from '../incursion/incursionTimeline'
 import { joinRaid, leaveRaid, raidBlocker, RaidLink } from './raid'
-import { advanceRaids, boostRaidTap, collectRaid, markRaidCrit, raidOrders, raidProgress, setRaidPick } from './raidPlay'
+import { advanceRaids, scoreRaidTap, collectRaid, markRaidCrit, raidOrders, raidProgress, setRaidPick } from './raidPlay'
 import { raidReady, ROTATION } from './raid-test-utils'
 import { RAID_ROOM_SIZE } from './raidRoom'
 import { cycleEnd, fightStart, lobbyStart } from './raidSchedule'
@@ -74,9 +74,12 @@ describe('la pelea sin servidor', () => {
     expect(raidProgress(tr, at)!.phase).toBe(IncursionPhase.Tap)
     expect(setRaidPick(s, ROTATION, { moveId: move, target: null }, at)).toBe(true)
     markRaidCrit(s, ROTATION, at)
-    const orders = raidOrders(tr, true)
-    boostRaidTap(s, ROTATION, at)
+    scoreRaidTap(s, ROTATION, 0.4, false, at)
+    expect(tr.room.fight!.orders[0].turns).toHaveLength(0)
+    const orders = { ...raidOrders(tr), taps: { [tr.uid]: 1 } }
+    scoreRaidTap(s, ROTATION, 1, false, at)
     expect(tr.room.fight!.orders[0].turns.at(-1)).toEqual(orders)
+    expect(tr.pendingTap).toBe(0)
     expect(tr.pendingPick).toBeNull()
     expect(tr.pendingCrit).toBe(false)
   })

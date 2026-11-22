@@ -15,19 +15,23 @@ interface Props {
   startsInMs: number
   lastTick: number
   result: RingResult
+  /** Lo que dice al acertarlo (sin él, «¡Crítico!») */
+  hitText?: string
+  /** Lo que lleva dentro mientras se cierra, como el número de un anillo de una secuencia */
+  label?: string
 }
 
 /**
- * Anillo del toque crítico (rutas y raids), sobre el rival o el jefe: se cierra hasta el borde del blanco; al tocar,
+ * Anillo del toque crítico (rutas y raids), sobre el rival o el jefe, o de la ventana de toques: se cierra hasta el borde del blanco; al tocar,
  * dice si fue crítico o fallo. Quien lo pinta le da una `key` por anillo, para que cada uno empiece su animación
  */
-export function TapRing({ durationMs, startsInMs, lastTick, result }: Props) {
+export function TapRing({ durationMs, startsInMs, lastTick, result, hitText = '¡Crítico!', label }: Props) {
   const [delayMs] = useState(() => startsInMs - Math.max(0, Date.now() - lastTick))
   return (
     <div className={`tap-ring ${result ?? ''}`}>
-      <span className="tap-ring-target" />
+      <span className="tap-ring-target">{!result && label}</span>
       {!result && <span className="tap-ring-closing" style={{ animationDuration: `${durationMs}ms`, animationDelay: `${delayMs}ms` }} />}
-      {result && <span className="tap-ring-text">{result === 'crit' ? '¡Crítico!' : '¡Fallo!'}</span>}
+      {result && <span className="tap-ring-text">{result === 'crit' ? hitText : '¡Fallo!'}</span>}
     </div>
   )
 }

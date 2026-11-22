@@ -13,7 +13,7 @@ import type { Earned } from './incursionRewards'
 import { markFreePlayed, payableEarnings } from './freeIncursions'
 import { canAffordEntry, spendKey } from './keys'
 import { fillWithBots, freshMember } from './party'
-import { monKnows } from './repertoire'
+import { carriesIncursionMove } from './incursionLoadout'
 import { retreatPasses } from './retreatVote'
 import { pendingOrders } from './incursionPicks'
 import { settleTaps } from './tapSettle'
@@ -44,7 +44,7 @@ export function monEntryBlocker(s: GameState, id: IncursionId, uid: string, move
   if (block === EntryBlock.TooLow) return `Hace falta Nv. ${inc.minLevel} para entrar.`
   if (block === EntryBlock.TooHigh) return `No pueden entrar Pokémon de más de Nv. ${inc.maxLevel}.`
   if (mon.hp < 1) return `${species(mon.speciesId).name} está debilitado.`
-  if (!monKnows(mon, moveId)) return 'No conoce ese movimiento.'
+  if (!carriesIncursionMove(mon, moveId)) return 'No lleva ese movimiento.'
   return null
 }
 
@@ -64,6 +64,7 @@ export function startIncursion(s: GameState, id: IncursionId, uid: string, moveI
     legStarts: [now],
     nextMove: null,
     pendingPick: null,
+    pendingTap: 0,
     retreat: null,
     online: null,
   }
@@ -75,6 +76,8 @@ function nextLeg(a: ActiveIncursion, at: number) {
   a.nextMove = null
 }
 
+const clearPending = (a: ActiveIncursion) => Object.assign(a, { pendingPick: null, pendingTap: 0 })
+
 /**
  * Con el tiempo: se cierran las ventanas de toques ya pasadas y, al acabar el plazo de una sala de reorganizar, empieza
  * el tramo siguiente (aunque la app estuviera cerrada). Con otros jugadores lo decide el servidor
@@ -83,7 +86,7 @@ export function advanceIncursion(s: GameState, now: number) {
   const a = s.incursion
   if (!a || a.online) return
   for (;;) {
-    if (settleTaps(a, now, 0, pendingOrders(a, false))) a.pendingPick = null
+    if (settleTaps(a, now, 0, pendingOrders(a))) clearPending(a)
     const p = incursionProgress(a, now)
     if (p.phase !== IncursionPhase.Regroup || p.regroupMsLeft > 0) return
     nextLeg(a, regroupEnd(a, p))
@@ -91,17 +94,19 @@ export function advanceIncursion(s: GameState, now: number) {
 }
 
 /**
- * Sin servidor: el jugador ha llegado a los toques en la ventana abierta y su Pokémon pega más este turno (la ventana
- * se cierra ya, con el cambio de ataque que tuviera pendiente)
+ * Sin servidor: lo que lleva conseguido el jugador en el reto de la ventana abierta (de 0 a 1; nunca baja). Con `done`
+ * (acabó el reto) o la puntuación entera, la ventana se cierra ya, con el cambio de ataque que tuviera pendiente
  */
-export function boostIncursionTap(s: GameState, now: number) {
+export function scoreIncursionTap(s: GameState, score: number, done: boolean, now: number) {
   const a = s.incursion
   if (!a || a.online) return
   const p = incursionProgress(a, now)
   const turns = a.orders[p.leg].turns
   if (p.phase !== IncursionPhase.Tap || !p.tap || turns.length !== p.tap.turn) return
-  turns.push(pendingOrders(a, true))
-  a.pendingPick = null
+  a.pendingTap = Math.max(a.pendingTap, Math.min(1, score))
+  if (!done && a.pendingTap < 1) return
+  turns.push(pendingOrders(a))
+  clearPending(a)
 }
 
 /** En la sala de reorganizar: elige el movimiento para el tramo siguiente */
@@ -109,7 +114,7 @@ export function chooseIncursionMove(s: GameState, moveId: string, now: number) {
   const a = s.incursion
   const mon = a && findMon(s, a.uid)
   if (!a || !mon || incursionProgress(a, now).phase !== IncursionPhase.Regroup) return
-  if (monKnows(mon, moveId)) a.nextMove = moveId
+  if (carriesIncursionMove(mon, moveId)) a.nextMove = moveId
 }
 
 /** En la sala de reorganizar: sigue ya, sin esperar al plazo (sin servidor, el único jugador es él; con él, se avisa al servidor) */

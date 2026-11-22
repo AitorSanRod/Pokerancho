@@ -1,7 +1,7 @@
 import { incursion } from '../../../data/incursions'
 import { canEnter } from '../entry'
 import type { MemberState } from '../fighter'
-import { mayKnow } from '../tms'
+import { mayCarryIncursionMove } from '../incursionLoadout'
 import { ScheduleRefusal, seatOf, type ScheduledIncursion, type ScheduleSeat } from './scheduledIncursion'
 import { schedulePhase, SchedulePhase } from './scheduleRules'
 
@@ -24,7 +24,7 @@ export function checkInSchedule(sched: ScheduledIncursion, playerId: string, now
 }
 
 /** El Pokémon puede entrar en esta incursión: su nivel y un ataque que conoce */
-const fits = (sched: ScheduledIncursion, m: MemberState) => canEnter(incursion(sched.incursionId), m.level) && mayKnow(m.speciesId, m.level, m.moveId)
+const fits = (sched: ScheduledIncursion, m: MemberState) => canEnter(incursion(sched.incursionId), m.level) && mayCarryIncursionMove(m.speciesId, m.level, m.moveId)
 
 /** Marca (o cambia) el Pokémon y el ataque con los que entrará, si no ha fijado */
 export function markSchedule(sched: ScheduledIncursion, playerId: string, member: MemberState, now: number): ScheduleRefusal | null {

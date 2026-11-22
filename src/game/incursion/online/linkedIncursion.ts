@@ -38,6 +38,7 @@ export function applyGroupView(s: GameState, view: GroupView, now: number): bool
     retreat: view.retreat,
     nextMove: view.nextMoves[view.you] ?? null,
     pendingPick: view.yourPick ?? null,
+    pendingTap: 0,
     online: { groupId: view.groupId, nicknames: view.nicknames, votes: view.votes, ready: view.ready, nextMoves: view.nextMoves },
   }
   return true

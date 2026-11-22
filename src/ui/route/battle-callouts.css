@@ -46,6 +46,10 @@
 .battle-pop.heavy {
   color: #ffb43a;
 }
+/* La cura crítica (incursiones): grande como un golpe fuerte, pero en verde */
+.battle-pop.heal.heavy {
+  color: var(--hp-ok);
+}
 .battle-pop.heavy b {
   font-size: 30px;
 }

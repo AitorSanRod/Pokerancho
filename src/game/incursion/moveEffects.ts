@@ -9,7 +9,7 @@ import { inflict } from './groupStatus'
 import { healAmount } from './healing'
 import { cappedHit, koHealAmount } from '../battle/combatBonus'
 import { addStages, MAX_STAGES, stageText } from '../battle/statStages'
-import { tapMult } from './tapWindow'
+import { tapMult, tapPerfect } from './tapWindow'
 import { debuffTarget, healTarget, inflictTarget, strikeTarget } from './targeting'
 
 // Qué hace cada movimiento en una incursión según su clase (data/incursionMoves): los de daño golpean y luego aplican
@@ -103,13 +103,15 @@ function damageMove(bf: Battlefield, actor: GroupFighter, mv: IncursionMove, rng
   ownSideEffects(bf, actor, mv)
 }
 
+/** Cura; con todos los anillos del reto acertados, cura crítica (×TAP_CRIT_MULT, ver tapWindow.ts) */
 function healMove(bf: Battlefield, actor: GroupFighter, mv: IncursionMove) {
-  const amount = healAmount(actor, mv.power) * tapMult(bf, actor)
+  const crit = tapPerfect(bf, actor)
+  const amount = healAmount(actor, mv.power) * tapMult(bf, actor) * (crit ? TAP_CRIT_MULT : 1)
   const one = effectOf(mv, EffectKind.HealAlly)
   const target = one && healTarget(bf, actor)
-  if (one && target) restore(bf, target, amount * one.fraction)
+  if (one && target) restore(bf, target, amount * one.fraction, crit)
   const team = effectOf(mv, EffectKind.HealTeam)
-  if (team) for (const t of allies(bf, actor)) restore(bf, t, amount * team.fraction)
+  if (team) for (const t of allies(bf, actor)) restore(bf, t, amount * team.fraction, crit)
   ownSideEffects(bf, actor, mv)
 }
 

@@ -25,7 +25,7 @@
   position: relative;
   width: 164px;
   padding: 5px 9px 6px 11px;
-  border: 2px solid #2b2820;
+  border: 2px solid var(--frame-ink);
   border-radius: 10px 4px 10px 4px;
   background: linear-gradient(#fdfcf4, #ecead9);
   color: var(--text);

@@ -61,6 +61,8 @@ export interface SyncRequest extends RoomRequestBase {
 }
 export interface TapRequest extends RoomRequestBase {
   action: typeof RaidAction.Tap
+  /** Lo conseguido en el reto, de 0 a 1 (ver incursion/tapChallenge.ts) */
+  score: number
   turn: number
 }
 export interface PickRequest extends RoomRequestBase {

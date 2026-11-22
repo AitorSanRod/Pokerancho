@@ -1,6 +1,6 @@
 import { act } from '../../store/store'
 import { RaidLink, type TabRaid } from '../../game/raid/raid'
-import { boostRaidTap, markRaidCrit, setRaidPick } from '../../game/raid/raidPlay'
+import { markRaidCrit, scoreRaidTap, setRaidPick } from '../../game/raid/raidPlay'
 import type { RaidRotation } from '../../game/raid/online/protocol'
 import { sendRaidCrit, sendRaidPick, sendRaidTap } from '../../net/raidSync'
 import type { FightPilot } from '../incursion/pickAction'
@@ -21,10 +21,10 @@ export const raidPilot = (tr: TabRaid, rotation: RaidRotation): FightPilot => ({
   },
 })
 
-/** Ha llegado a los toques en la ventana `turn` */
-export function raidTapGoal(tr: TabRaid, rotation: RaidRotation, turn: number) {
-  if (online(tr)) void sendRaidTap(rotation, turn)
-  else act((s) => boostRaidTap(s, rotation, Date.now()))
+/** Lo que lleva conseguido en el reto de la ventana `turn` y si lo ha acabado */
+export function raidTapScore(tr: TabRaid, rotation: RaidRotation, turn: number, score: number, done: boolean) {
+  if (online(tr)) void sendRaidTap(rotation, turn, score)
+  else act((s) => scoreRaidTap(s, rotation, score, done, Date.now()))
 }
 
 /** Ha acertado el anillo: su primer golpe del turno siguiente será crítico */

@@ -3,7 +3,7 @@ import { IncursionPhase } from '../../incursion/activeIncursion'
 import type { MemberState } from '../../incursion/fighter'
 import { TAP_CLOSE_DELAY_MS } from '../../incursion/online/sharedIncursion'
 import { settleGroupTaps } from '../../incursion/tapSettle'
-import type { MovePick } from '../../incursion/tapWindow'
+import { withoutTap, type MovePick } from '../../incursion/tapWindow'
 import { mayKnowCombatMove } from '../../combat/combatRepertoire'
 import { fightProgress, raidSource } from '../raidFight'
 import { fightDue, startFight } from '../raidLobby'
@@ -25,8 +25,8 @@ export interface RaidSeat {
 
 export interface SharedRaid extends RaidRoom {
   seats: RaidSeat[]
-  /** Pokémon de los jugadores que han llegado a los toques en la ventana abierta */
-  tapPending: string[]
+  /** Lo conseguido en el reto de la ventana abierta por los Pokémon de los jugadores, de 0 a 1 */
+  tapScores: Record<string, number>
   /** Cambios de ataque y objetivo que entrarán en la próxima ventana, por Pokémon */
   pickPending: Record<string, MovePick>
   /** Pokémon de los jugadores que han acertado el toque crítico y aún no ha llegado su ventana */
@@ -41,7 +41,7 @@ export interface SharedRaid extends RaidRoom {
 export const createShared = (id: string, rotation: RaidRotation, cycle: number, now: number, rng: Rng): SharedRaid => ({
   ...newRoom(id, rotation, cycle, Math.floor(rng() * 2 ** 31)),
   seats: [],
-  tapPending: [],
+  tapScores: {},
   pickPending: {},
   critPending: [],
   joinPending: [],
@@ -105,9 +105,9 @@ export function advanceShared(room: SharedRaid, now: number) {
   if (fightDue(room, now)) startFight(room)
   if (!room.fight) return
   const joins = room.entrants.filter((e) => room.joinPending?.includes(e.member.id)).map((e) => e.member)
-  const pending = { boosted: room.tapPending, picks: room.pickPending, crits: room.critPending, ...(joins.length ? { joins } : {}) }
+  const pending = { taps: room.tapScores ?? {}, picks: room.pickPending, crits: room.critPending, ...(joins.length ? { joins } : {}) }
   if (!settleGroupTaps(room.fight, raidSource(roomBoss(room)), now, TAP_CLOSE_DELAY_MS, pending)) return
-  Object.assign(room, { tapPending: [], pickPending: {}, critPending: [], joinPending: [] })
+  Object.assign(room, { tapScores: {}, pickPending: {}, critPending: [], joinPending: [] })
 }
 
 /** El Pokémon del jugador en la pelea en marcha (no terminada; también si acaba de entrar); null si no está */
@@ -117,16 +117,19 @@ function fighting(room: SharedRaid, playerId: string, now: number): MemberState 
   return room.entrants.find((e) => e.member.id === id)?.member ?? null
 }
 
-/** El jugador ha llegado a los toques en la ventana `turn`: vale si es la abierta */
-export function tapShared(room: SharedRaid, playerId: string, turn: number, now: number) {
+/** Lo que lleva conseguido el jugador en el reto de la ventana `turn` (se queda lo mejor que haya dicho): vale si es la abierta */
+export function tapShared(room: SharedRaid, playerId: string, turn: number, score: number, now: number) {
   const member = fighting(room, playerId, now)
-  if (member && room.fight!.orders[0].turns.length === turn) room.tapPending = [...new Set([...room.tapPending, member.id])]
+  if (!member || room.fight!.orders[0].turns.length !== turn) return
+  room.tapScores = { ...room.tapScores, [member.id]: Math.max(room.tapScores?.[member.id] ?? 0, score) }
 }
 
 /** El jugador cambia el ataque de su Pokémon y a quién lo dirige: entra en la próxima ventana (si conoce el ataque) */
 export function pickShared(room: SharedRaid, playerId: string, pick: MovePick, now: number) {
   const member = fighting(room, playerId, now)
-  if (member && mayKnowCombatMove(member.speciesId, member.level, pick.moveId) && raidMoveAllowed(pick.moveId)) room.pickPending = { ...room.pickPending, [member.id]: pick }
+  if (!member || !mayKnowCombatMove(member.speciesId, member.level, pick.moveId) || !raidMoveAllowed(pick.moveId)) return
+  room.pickPending = { ...room.pickPending, [member.id]: pick }
+  room.tapScores = withoutTap(room.tapScores ?? {}, member.id)
 }
 
 /** El jugador ha acertado el toque crítico: su primer golpe del turno siguiente será crítico */

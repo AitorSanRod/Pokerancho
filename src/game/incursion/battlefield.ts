@@ -18,7 +18,9 @@ export interface Battlefield {
   /** Contador de caídas, para gastar los revivires en el orden en que cayeron */
   falls: number
   passives: GroupPassive[]
-  /** Pokémon del grupo que han potenciado su ataque este turno con los toques (ver tapWindow.ts) */
+  /** Lo conseguido este turno en el reto de los toques, de 0 a 1, por el id de cada Pokémon del grupo (ver tapWindow.ts) */
+  taps: Record<string, number>
+  /** Quiénes llegaron a los toques, en las órdenes de antes de los retos (ver tapWindow.ts › TurnOrders.boosted) */
   boosted: string[]
   /** Pokémon del grupo cuyo primer golpe a un rival de este turno es crítico: acertaron el toque crítico (tapWindow.ts) */
   critReady: string[]
@@ -46,12 +48,12 @@ export function hurt(bf: Battlefield, f: GroupFighter, amount: number, hit: Omit
   bf.log(on(f, { kind: EventKind.Faint, text: `¡${f.name} se debilitó!` }))
 }
 
-/** Recupera PS sin pasar del máximo y lo anuncia */
-export function restore(bf: Battlefield, f: GroupFighter, amount: number) {
+/** Recupera PS sin pasar del máximo y lo anuncia; con `crit`, como cura crítica */
+export function restore(bf: Battlefield, f: GroupFighter, amount: number, crit = false) {
   const healed = Math.min(f.maxHp - f.hp, Math.ceil(amount))
   if (healed <= 0 || f.hp === 0) return
   f.hp += healed
-  bf.log(on(f, { kind: EventKind.Heal, amount: healed, text: `+${healed} PS` }))
+  bf.log(on(f, { kind: EventKind.Heal, amount: healed, ...(crit ? { crit } : {}), text: `${crit ? '¡Cura crítica! ' : ''}+${healed} PS` }))
 }
 
 /** Revivires que le quedan a ese Pokémon: los suyos (con `revivesEach`) o los del grupo */

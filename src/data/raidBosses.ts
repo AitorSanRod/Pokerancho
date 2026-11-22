@@ -26,15 +26,11 @@ export const HARD_RAID_STAT_MULT = 1.5
 
 /** Jefes de la rotación «Normal» de la pestaña Raids (y de la pestaña sin servidor), en este orden */
 export const RAID_BOSSES: RaidBoss[] = [
-  { speciesId: POKEMON.Charmander, level: 20, minLevel: 10, tier: RaidTier.Low },
-  { speciesId: POKEMON.Bulbasaur, level: 30, minLevel: 20, tier: RaidTier.Low },
-  { speciesId: POKEMON.Squirtle, level: 40, minLevel: 30, tier: RaidTier.Mid },
-  { speciesId: POKEMON.Totodile, level: 20, minLevel: 10, tier: RaidTier.Low },
-  { speciesId: POKEMON.Cyndaquil, level: 30, minLevel: 20, tier: RaidTier.Low },
-  { speciesId: POKEMON.Chikorita, level: 40, minLevel: 30, tier: RaidTier.Mid },
-  { speciesId: POKEMON.Chespin, level: 20, minLevel: 10, tier: RaidTier.Low },
-  { speciesId: POKEMON.Fennekin, level: 30, minLevel: 20, tier: RaidTier.Low },
-  { speciesId: POKEMON.Froakie, level: 40, minLevel: 30, tier: RaidTier.Mid },
+  { speciesId: POKEMON.Eevee, level: 20, minLevel: 10, tier: RaidTier.Low },
+  { speciesId: POKEMON.Scyther, level: 35, minLevel: 15, tier: RaidTier.Mid },
+  { speciesId: POKEMON.Pinsir, level: 45, minLevel: 25, tier: RaidTier.Mid },
+  { speciesId: POKEMON.Lapras, level: 45, minLevel: 30, tier: RaidTier.Mid },
+  { speciesId: POKEMON.Dragonite, level: 50, minLevel: 40, tier: RaidTier.High },
 ]
 
 /**
@@ -42,9 +38,9 @@ export const RAID_BOSSES: RaidBoss[] = [
  * por tanto más vida) que los de RAID_BOSSES y mejores premios (`prizeMult` multiplica las cantidades de su tabla)
  */
 export const HARD_RAID_BOSSES: RaidBoss[] = [
-  { speciesId: POKEMON.Houndoom, level: 60, minLevel: 45, tier: RaidTier.MidHard, prizeMult: 3 },
-  { speciesId: POKEMON.Flygon, level: 60, minLevel: 45, tier: RaidTier.MidHard, prizeMult: 3 },
-  { speciesId: POKEMON.Articuno, level: 60, minLevel: 45, tier: RaidTier.MidHard, prizeMult: 3 }
+  { speciesId: POKEMON.Togekiss, level: 50, minLevel: 45, tier: RaidTier.MidHard, prizeMult: 2.5 },
+  { speciesId: POKEMON.Altaria, level: 60, minLevel: 45, tier: RaidTier.MidHard, prizeMult: 3 },
+  { speciesId: POKEMON.Salamence, level: 70, minLevel: 55, tier: RaidTier.MidHard, prizeMult: 3.5 }
 ]
 
 /** Qué da una línea de premio: `Exp` es EXP para el Pokémon que luchó contra el jefe (además de la que gana por minuto) */

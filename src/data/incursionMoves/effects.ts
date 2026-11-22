@@ -1,5 +1,6 @@
 import type { StatusId } from '../passives'
 import type { PokeType } from '../types'
+import type { TapChallenge } from './tap'
 
 // Cómo se escribe un ataque de incursión: potencia + lista de efectos. Por ejemplo, Absorber es
 // `move(…, 40, [drain(0.5)])` (pega con potencia 40 y cura al propio la mitad del daño) y Deseo,
@@ -59,11 +60,6 @@ export const area = (): MoveEffect => ({ kind: EffectKind.Area, allies: false })
 /** Como Terremoto: a todos los rivales y también a sus compañeros */
 export const areaAll = (): MoveEffect => ({ kind: EffectKind.Area, allies: true })
 
-/** Toques que hacen falta en la ventana de toques para potenciar un ataque, si no dice otra cosa */
-export const DEFAULT_TAP_GOAL = 100
-/** Lo que mejora un ataque potenciado por los toques, si no dice otra cosa (0.1 = +10%) */
-export const DEFAULT_TAP_BONUS = 0.1
-
 export interface IncursionMove {
   id: string
   name: string
@@ -74,20 +70,14 @@ export interface IncursionMove {
   /** Como en los juegos: en cada turno actúan antes los de más prioridad y, a igual prioridad, los más rápidos */
   priority: number
   effects: MoveEffect[]
-  /** Toques para potenciarlo en la ventana de toques */
-  tapGoal: number
-  /**
-   * Mejora al potenciarlo: más daño (los de daño), más cura (los de cura) o más daño y cura del resto del grupo (los de
-   * estado)
-   */
-  tapBonus: number
+  /** Su reto de la ventana de toques, a mano; sin él, el de la regla (game/incursion/tapChallenge.ts) */
+  tap?: TapChallenge
 }
 
 interface MoveOptions {
   accuracy?: number
   priority?: number
-  tapGoal?: number
-  tapBonus?: number
+  tap?: TapChallenge
 }
 
 export const move = (id: string, name: string, type: PokeType, power: number, effects: MoveEffect[] = [], opts: MoveOptions = {}): IncursionMove => ({
@@ -98,8 +88,7 @@ export const move = (id: string, name: string, type: PokeType, power: number, ef
   effects,
   accuracy: opts.accuracy ?? 100,
   priority: opts.priority ?? 0,
-  tapGoal: opts.tapGoal ?? DEFAULT_TAP_GOAL,
-  tapBonus: opts.tapBonus ?? DEFAULT_TAP_BONUS,
+  ...(opts.tap ? { tap: opts.tap } : {}),
 })
 
 export const MoveClass = { Damage: 'damage', Heal: 'heal', Status: 'status' } as const

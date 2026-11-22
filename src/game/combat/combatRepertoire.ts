@@ -13,7 +13,7 @@ import { MAX_LEVEL } from '../team/stats'
 
 const RARITY_ORDER = Object.values(Rarity)
 
-type Mon = Pick<OwnedMon, 'speciesId' | 'level' | 'tmMoves'>
+type Mon = Pick<OwnedMon, 'speciesId' | 'level' | 'tmMoves'> & Partial<Pick<OwnedMon, 'routeMoves'>>
 
 const reaches = (rarity: Rarity, min: Rarity | undefined) => !min || RARITY_ORDER.indexOf(rarity) >= RARITY_ORDER.indexOf(min)
 
@@ -51,18 +51,28 @@ const overridesOf = (speciesId: number): string[] =>
 /** El más potente antes; a igual potencia, el más preciso */
 const byPower = (a: IncursionMove, b: IncursionMove) => b.power - a.power || b.accuracy - a.accuracy
 
+/** Los que puede elegir en la ficha para las rutas, la torre y las raids: todos los de daño que sabe */
+export const routeMovePool = (mon: Mon): IncursionMove[] => combatMoveChoices(mon).filter((mv) => isStrike(mv.id))
+
 /**
- * Los que lleva a las rutas, la torre y las raids: como mucho ROUTE_MOVE_SLOTS de los que sabe. Primero los puestos a
- * mano para su especie; luego, con dos tipos, el más potente de cada uno; y si queda sitio, los más potentes del resto
+ * Los que elige el juego si no los ha elegido a mano: como mucho ROUTE_MOVE_SLOTS de daño. Primero los puestos a mano
+ * para su especie; luego, con dos tipos, el más potente de cada uno; y si queda sitio, los más potentes del resto
  */
-export function routeMoveChoices(mon: Mon): IncursionMove[] {
+export function autoRouteMoves(mon: Mon): IncursionMove[] {
   const overrides = overridesOf(mon.speciesId)
-  const known = [...combatMoveChoices(mon)].sort(byPower)
+  const known = [...routeMovePool(mon)].sort(byPower)
   const own = known.filter((mv) => overrides.includes(mv.id))
   const types = species(mon.speciesId).types
   const bestOfType = types.length > 1 ? types.map((t) => known.find((mv) => mv.type === t && !own.includes(mv))) : []
   const picks = [...own, ...bestOfType.filter((mv) => mv !== undefined), ...known]
   return picks.filter((mv, i) => picks.indexOf(mv) === i).slice(0, ROUTE_MOVE_SLOTS)
+}
+
+/** Los que lleva a las rutas, la torre y las raids: los elegidos en la ficha (los que aún sabe) o, sin elegir, los del juego */
+export function routeMoveChoices(mon: Mon): IncursionMove[] {
+  if (!mon.routeMoves) return autoRouteMoves(mon)
+  const pool = routeMovePool(mon)
+  return mon.routeMoves.flatMap((id) => pool.filter((mv) => mv.id === id)).slice(0, ROUTE_MOVE_SLOTS)
 }
 
 /**

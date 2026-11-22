@@ -2,9 +2,7 @@ import type { IncursionMove } from '../../data/incursionMoves'
 import type { OwnedMon } from '../../game/core/state'
 import { towerMoveChoices } from '../../game/tower/towerMoves'
 import { MoveBarMoves } from '../incursion/MoveBarMoves'
-
-/** En las rutas, la torre y la raid solo cuenta el golpe: tipo (en la etiqueta), potencia y precisión */
-const strikeText = (mv: IncursionMove) => `Pot. ${mv.power} · Prec. ${mv.accuracy}%`
+import { strikeMeta } from '../shared/moveText'
 
 interface Props {
   mon: OwnedMon
@@ -29,7 +27,7 @@ export function RouteMoveBar({ mon, moveId, inUseId = moveId, moves = towerMoveC
         <strong>Tu ataque</strong>
         <span className="move-bar-hint">{inline ? 'También en pleno combate' : 'Cambia desde su siguiente ataque'}</span>
       </div>
-      <MoveBarMoves moves={moves} selectedId={moveId} inUseId={inUseId} meta={strikeText} onPick={onPick} />
+      <MoveBarMoves moves={moves} selectedId={moveId} inUseId={inUseId} meta={strikeMeta} onPick={onPick} />
     </div>
   )
 }

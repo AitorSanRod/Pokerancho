@@ -36,6 +36,13 @@ describe('peticiones de incursión', () => {
     expect(parseIncursionRequest({ action: IncursionAction.Ready, ...who, groupId: 'abcdef12' })).not.toBeNull()
   })
 
+  it('acepta lo conseguido en los toques solo de 0 a 1', () => {
+    const tap = { action: IncursionAction.Tap, ...who, groupId: 'abcdef12', leg: 0, turn: 2 }
+    expect(parseIncursionRequest({ ...tap, score: 0.4 })).toMatchObject({ score: 0.4, turn: 2 })
+    expect(parseIncursionRequest({ ...tap, score: 1.5 })).toBeNull()
+    expect(parseIncursionRequest(tap)).toBeNull()
+  })
+
   it('el Pokémon conserva si es shiny; cualquier otro valor cuenta como normal', () => {
     expect(parse({ shiny: true })).toMatchObject({ shiny: true })
     expect(parse({ shiny: 1 })).toMatchObject({ shiny: undefined })

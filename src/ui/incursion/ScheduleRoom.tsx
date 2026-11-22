@@ -3,7 +3,7 @@ import { incursion } from '../../data/incursions'
 import { canEnter } from '../../game/incursion/entry'
 import { canAffordEntry } from '../../game/incursion/keys'
 import { PARTY_SIZE } from '../../game/incursion/party'
-import { monRepertoire } from '../../game/incursion/repertoire'
+import { incursionMoveChoices } from '../../game/incursion/incursionLoadout'
 import type { ScheduleCheckin } from '../../game/incursion/schedule/linkedSchedule'
 import { checkinMonBlocker, lockCheckinMon, markCheckinMon } from '../../game/incursion/schedule/scheduleCheckin'
 import { SchedulePhase } from '../../game/incursion/schedule/scheduleRules'
@@ -19,6 +19,7 @@ import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { MonPicker } from '../shared/MonPicker'
 import { goToShop } from '../shared/navigation'
+import { LoadoutButton } from './LoadoutButton'
 import { MovePicker } from './MovePicker'
 
 /** Sala del checkin, a pantalla de la pestaña: cuenta atrás, los huecos y el Pokémon y el ataque con los que entras */
@@ -75,14 +76,14 @@ function YourPick({ game, c }: { game: GameState; c: ScheduleCheckin }) {
   }
   const mons = game.owned.filter((m) => m.uid === c.uid || monPlace(game, m.uid) === MonPlace.Ranch)
   const mon = c.uid ? findMon(game, c.uid) : undefined
-  const moves = mon ? monRepertoire(mon) : []
+  const moves = mon ? incursionMoveChoices(mon) : []
   const mark = (uid: string, moveId: string) => {
     act((s) => markCheckinMon(s, uid, moveId))
     syncScheduleRoomNow()
   }
   const pickMon = (uid: string) => {
     const next = findMon(game, uid)
-    if (next) mark(uid, monRepertoire(next)[0]?.id ?? '')
+    if (next) mark(uid, incursionMoveChoices(next)[0]?.id ?? '')
   }
   const lock = () => {
     setConfirm(false)
@@ -95,7 +96,8 @@ function YourPick({ game, c }: { game: GameState; c: ScheduleCheckin }) {
       <div className="label">Tu Pokémon {c.locked && '(fijado)'}</div>
       {c.locked && mon ? (
         <p className="small center">
-          <Sprite id={mon.speciesId} size={64} shiny={mon.shiny} /> Entras con él: ya no se puede cambiar.
+          <Sprite id={mon.speciesId} size={64} shiny={mon.shiny} /> Entras con él: ya no se puede cambiar. Sus otros ataques, sí, hasta que empiece.
+          <LoadoutButton game={game} mon={mon} />
         </p>
       ) : (
         <>
@@ -104,10 +106,15 @@ function YourPick({ game, c }: { game: GameState; c: ScheduleCheckin }) {
             mons={mons}
             selectedUid={c.uid ?? undefined}
             onSelect={pickMon}
-            lockOf={(m) => (canEnter(inc, m.level) && !checkinMonBlocker(game, inc.id, m.uid, monRepertoire(m)[0]?.id ?? '') ? null : 'other')}
+            lockOf={(m) => (canEnter(inc, m.level) && !checkinMonBlocker(game, inc.id, m.uid, incursionMoveChoices(m)[0]?.id ?? '') ? null : 'other')}
           />
           {!mon && <p className="notice small">Ninguno de tus Pokémon del rancho puede entrar ahora (nivel o PS).</p>}
-          {mon && c.moveId && <MovePicker moves={moves} selectedId={c.moveId} onSelect={(moveId) => mark(mon.uid, moveId)} />}
+          {mon && c.moveId && (
+            <>
+              <MovePicker moves={moves} selectedId={c.moveId} onSelect={(moveId) => mark(mon.uid, moveId)} />
+              <LoadoutButton game={game} mon={mon} onClosed={syncScheduleRoomNow} />
+            </>
+          )}
           <p className="tiny muted">Si no lo fijas, entras con el que tengas marcado a la hora de comienzo. Si todos lo fijáis, empieza ya.</p>
           <button className="btn primary" disabled={!mon} onClick={() => setConfirm(true)}>
             Fijar
@@ -116,7 +123,7 @@ function YourPick({ game, c }: { game: GameState; c: ScheduleCheckin }) {
       )}
       {confirm && (
         <ConfirmDialog title="Fijar tu Pokémon" confirmLabel="Fijar" onConfirm={lock} onCancel={() => setConfirm(false)}>
-          <p className="small">Después ya no podrás cambiar de Pokémon ni de ataque hasta que empiece.</p>
+          <p className="small">Después ya no podrás cambiar de Pokémon ni el ataque con el que entras; los otros tres, sí, hasta que empiece.</p>
         </ConfirmDialog>
       )}
     </div>

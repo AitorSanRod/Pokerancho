@@ -7,7 +7,8 @@ import { cleanNickname } from '../../raid/online/requests'
 import { canEnter } from '../entry'
 import type { MemberState } from '../fighter'
 import { freshMember } from '../party'
-import { mayKnow } from '../tms'
+import { mayCarryIncursionMove } from '../incursionLoadout'
+import { isTapScore } from '../tapChallenge'
 import { IncursionAction, type GroupRequest } from './protocol'
 
 // Lo que llega al servidor de incursiones viene de cualquiera: se comprueba todo y se descarta lo que no encaje. Las
@@ -36,7 +37,7 @@ export function parseMember(incursionId: IncursionId, v: unknown): MemberState |
   if (!isInt(v.level, 1, inc.maxLevel) || !canEnter(inc, v.level) || !isInt(v.stars, 0, MAX_STARS)) return null
   if (typeof v.hpFraction !== 'number' || !(v.hpFraction > 0 && v.hpFraction <= 1)) return null
   const speciesId = v.speciesId as number
-  if (!mayKnow(speciesId, v.level, v.moveId)) return null
+  if (!mayCarryIncursionMove(speciesId, v.level, v.moveId)) return null
   const perks = parsePerks(v.perks)
   if (!perks) return null
   const nature = isNature(v.nature) ? v.nature : undefined
@@ -53,7 +54,8 @@ export function parseIncursionRequest(body: unknown): GroupRequest | null {
   if (body.action === IncursionAction.Ready) return { action: IncursionAction.Ready, ...group }
   if (body.action === IncursionAction.Move) return matches(body.moveId, MOVE_ID) ? { action: IncursionAction.Move, ...group, moveId: body.moveId } : null
   if (body.action === IncursionAction.Tap) {
-    return isInt(body.leg, 0, MAX_LEGS) && isInt(body.turn, 0, MAX_TURNS) ? { action: IncursionAction.Tap, ...group, leg: body.leg, turn: body.turn } : null
+    if (!isInt(body.leg, 0, MAX_LEGS) || !isInt(body.turn, 0, MAX_TURNS) || !isTapScore(body.score)) return null
+    return { action: IncursionAction.Tap, ...group, leg: body.leg, turn: body.turn, score: body.score }
   }
   if (body.action === IncursionAction.Pick) {
     const target = body.target === null ? null : matches(body.target, TARGET_ID) ? body.target : undefined

@@ -6,7 +6,16 @@ import { TM_IDS, TMS, type Tm } from '../../data/tms'
 import { speciesOfRarity } from '../core/test-utils'
 import { repertoire } from '../incursion/repertoire'
 import { MAX_LEVEL } from '../team/stats'
-import { combatLearnTimeline, combatMoveChoices, combatRepertoire, mayKnowCombatMove, ROUTE_MOVE_SLOTS, routeMoveChoices } from './combatRepertoire'
+import {
+  autoRouteMoves,
+  combatLearnTimeline,
+  combatMoveChoices,
+  combatRepertoire,
+  mayKnowCombatMove,
+  ROUTE_MOVE_SLOTS,
+  routeMoveChoices,
+  routeMovePool,
+} from './combatRepertoire'
 
 const RARITY_ORDER = Object.values(Rarity)
 const ids = (moves: { id: string }[]) => moves.map((mv) => mv.id).sort()
@@ -119,6 +128,20 @@ describe('ataques de ruta, torre y raids', () => {
     const weakest = Object.values(COMBAT_LADDERS).flat().filter((s) => !sp.types.includes(s.move.type)).sort((a, b) => a.move.power - b.move.power)[0]
     COMBAT_SPECIES_MOVES[sp.id] = [{ move: weakest.move, level: 1 }]
     expect(routeMoveChoices(atMax(sp.id))[0].id).toBe(weakest.move.id)
+  })
+
+  it('se eligen entre los de daño que sabe, y el relleno del juego también es solo de daño', () => {
+    for (const sp of ladderSpecies) {
+      const mon = atMax(sp.id)
+      for (const mv of [...routeMovePool(mon), ...autoRouteMoves(mon)]) expect(moveClass(mv)).toBe(MoveClass.Damage)
+    }
+  })
+
+  it('con los elegidos a mano, lleva esos en su orden (sin los que no sabe) aunque sean más flojos', () => {
+    const mon = atMax(crowded(1).id)
+    const weakestFirst = [...routeMovePool(mon)].sort((a, b) => a.power - b.power).map((mv) => mv.id)
+    const chosen = { ...mon, routeMoves: ['no-existe', ...weakestFirst] }
+    expect(routeMoveChoices(chosen).map((mv) => mv.id)).toEqual(weakestFirst.slice(0, ROUTE_MOVE_SLOTS))
   })
 })
 

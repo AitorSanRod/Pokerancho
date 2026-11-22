@@ -18,7 +18,7 @@ function playedWithLateJoiner() {
   const room = lateRoom()
   const late = entrant('tarde')
   seatLate(room, late, EARLY)
-  settleGroupTaps(room.fight!, raidSource(roomBoss(room)), cycleEnd(CYCLE) * 2, 0, { boosted: [], picks: {}, joins: [late.member] })
+  settleGroupTaps(room.fight!, raidSource(roomBoss(room)), cycleEnd(CYCLE) * 2, 0, { picks: {}, joins: [late.member] })
   return { room, p: fightProgress(room.fight!, roomBoss(room), cycleEnd(CYCLE)) }
 }
 

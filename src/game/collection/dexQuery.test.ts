@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { Rarity, SPECIES, species } from '../../data/species'
+import { TYPE_INFO } from '../../data/types'
 import { initialState } from '../core/state'
 import { chooseStarter, speciesOfRarity } from '../core/test-utils'
 import { createMon } from '../team/mons'
 import { markSeen, toggleFavorite } from './dex'
-import { applyDexQuery, DEFAULT_DEX_QUERY, DexFilter, DexSort, isDexQueryActive, ownedLevel, plainText, type DexQuery } from './dexQuery'
+import { applyDexQuery, DEFAULT_DEX_QUERY, DexFilter, DexSort, isDexQueryActive, ownedLevel, plainText, TYPES_BY_NAME, type DexQuery } from './dexQuery'
 import { addPieces, canCombine, PIECES_PER_COMBINE } from './pieces'
 
 const [A, B, C, D] = SPECIES.slice(0, 4)
@@ -75,5 +76,32 @@ describe('consulta de la Pokédex', () => {
     expect(ownedLevel(s, B.id)).toBe(9)
     expect(ownedLevel(s, A.id)).toBe(0)
     expect(isDexQueryActive({ ...DEFAULT_DEX_QUERY, sort: DexSort.Level })).toBe(true)
+  })
+
+  it('los tipos van por orden alfabético de su nombre', () => {
+    const names = TYPES_BY_NAME.map((type) => TYPE_INFO[type].name)
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'es')))
+  })
+
+  it('filtra por un tipo, solo entre las vistas', () => {
+    const s = initialState()
+    const sp = SPECIES.find((x) => x.types.length === 2)!
+    const [, second] = sp.types
+    const q = { filter: DexFilter.Type, type: second }
+    expect(applyDexQuery(s, [sp], { ...DEFAULT_DEX_QUERY, ...q })).toEqual([])
+    markSeen(s, sp.id)
+    expect(applyDexQuery(s, [sp], { ...DEFAULT_DEX_QUERY, ...q })).toEqual([sp])
+  })
+
+  it('con todos los tipos, ordena por el que va antes en el alfabeto y deja al final las no vistas', () => {
+    const s = initialState()
+    const first = (sp: (typeof SPECIES)[number]) => Math.min(...sp.types.map((t) => TYPES_BY_NAME.indexOf(t)))
+    const seen = SPECIES.slice(0, 30)
+    const unseen = SPECIES[30]
+    for (const sp of seen) markSeen(s, sp.id)
+    const sorted = applyDexQuery(s, [unseen, ...seen], { ...DEFAULT_DEX_QUERY, filter: DexFilter.Type, type: null })
+    const ranks = sorted.slice(0, -1).map(first)
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b))
+    expect(sorted.at(-1)).toBe(unseen)
   })
 })

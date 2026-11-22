@@ -1,6 +1,7 @@
 import { isKnownSpecies } from '../../../data/species'
 import type { MemberState } from '../../incursion/fighter'
 import { freshMember } from '../../incursion/party'
+import { isTapScore } from '../../incursion/tapChallenge'
 import { MoveBook } from '../../../data/combatMoves'
 import { mayKnowCombatMove } from '../../combat/combatRepertoire'
 import { isNature } from '../../team/natures'
@@ -55,7 +56,7 @@ function parseRoomRequest(body: Json, who: { playerId: string; nickname: string 
     case RaidAction.Crit:
       return { ...base, action: body.action }
     case RaidAction.Tap:
-      return isInt(body.turn, 0, MAX_TURNS) ? { ...base, action: RaidAction.Tap, turn: body.turn } : null
+      return isInt(body.turn, 0, MAX_TURNS) && isTapScore(body.score) ? { ...base, action: RaidAction.Tap, turn: body.turn, score: body.score } : null
     case RaidAction.Pick: {
       const target = body.target === null ? null : matches(body.target, TARGET_ID) ? body.target : undefined
       return matches(body.moveId, MOVE_ID) && target !== undefined ? { ...base, action: RaidAction.Pick, moveId: body.moveId, target } : null

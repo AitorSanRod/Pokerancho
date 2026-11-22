@@ -17,7 +17,7 @@
   flex-direction: column;
   gap: 6px;
   padding: 8px 10px 10px;
-  border: 3px solid #2b2820;
+  border: 3px solid var(--frame-ink);
   border-radius: 14px 6px 14px 6px;
   background: linear-gradient(#fdfcf4, #ecead9);
   color: var(--text);
@@ -58,7 +58,7 @@
   flex: none;
   width: 26px;
   height: 26px;
-  border: 2px solid #2b2820;
+  border: 2px solid var(--frame-ink);
   border-radius: 50%;
   background: #fff;
   color: var(--text);
@@ -88,7 +88,7 @@
   column-gap: 6px;
   min-height: 52px;
   padding: 6px 10px 6px 12px;
-  border: 2px solid #2b2820;
+  border: 2px solid var(--frame-ink);
   border-radius: 10px;
   background: linear-gradient(color-mix(in srgb, var(--type-color) 22%, #fff), color-mix(in srgb, var(--type-color) 38%, #fff));
   color: var(--text);
@@ -137,7 +137,7 @@
   background: linear-gradient(color-mix(in srgb, var(--type-color) 85%, #fff), var(--type-color));
   color: #fff;
   text-shadow: 0 1px 0 #0007;
-  outline: 3px solid #ffd400;
+  outline: 3px solid var(--yellow);
   outline-offset: 1px;
 }
 .move-bar-move.selected .move-bar-type {
@@ -151,7 +151,7 @@
   translate: 0 -50%;
   border: 7px solid transparent;
   border-right: 0;
-  border-left: 8px solid #2b2820;
+  border-left: 8px solid var(--frame-ink);
 }
 /* El que se usa este turno, si ya has elegido otro para el próximo */
 .move-bar-move.in-use:not(.selected) {
@@ -180,7 +180,7 @@
   min-width: 38px;
   aspect-ratio: 1;
   padding: 0;
-  border: 2px solid #2b2820;
+  border: 2px solid var(--frame-ink);
   border-radius: 50%;
   background: radial-gradient(circle at 50% 35%, #fff, #e4e1d0);
   box-shadow: 0 2px 0 #0004;
@@ -196,9 +196,9 @@
   font-weight: 900;
 }
 .move-bar-target.selected {
-  background: radial-gradient(circle at 50% 35%, #fff6b0, #ffd400);
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--yellow) 35%, #fff), var(--yellow));
   box-shadow:
-    0 0 0 3px #ffd40066,
+    0 0 0 3px color-mix(in srgb, var(--yellow) 40%, transparent),
     0 2px 0 #0004;
 }
 .move-bar-tip {

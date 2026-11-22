@@ -15,6 +15,8 @@
   --red-dark: #9b2008;
   --yellow: #f7d02c;
   --yellow-dark: #c8a800;
+  /* Borde grueso y oscuro de las piezas de combate (barra de ataques, marcadores de PS), como el menú de los juegos */
+  --frame-ink: #2b2820;
   /* Corazón de favorito */
   --favorite: #e8457a;
   --page: #44403a;

@@ -72,18 +72,19 @@ describe('grupo de incursión', () => {
     expect(g.legStarts).toEqual([NOW, at + 1])
   })
 
-  it('la ventana de toques se cierra un poco después de acabar, con los que avisaron a tiempo', () => {
+  it('la ventana de toques se cierra un poco después de acabar, con lo mejor que dijo a tiempo cada uno', () => {
     const g = group(3)
     const end = windowEndAt(g)
-    tapShared(g, 'jugador-0', 0, 0, end - 1)
-    tapShared(g, 'otro', 0, 0, end - 1)
-    tapShared(g, 'jugador-1', 0, 5, end - 1)
+    tapShared(g, 'jugador-0', 0, 0, 0.6, end - 2)
+    tapShared(g, 'jugador-0', 0, 0, 0.4, end - 1)
+    tapShared(g, 'otro', 0, 0, 1, end - 1)
+    tapShared(g, 'jugador-1', 0, 5, 1, end - 1)
     advanceShared(g, end)
     expect(g.orders[0].turns).toEqual([])
     advanceShared(g, end + TAP_CLOSE_DELAY_MS)
-    expect(g.orders[0].turns[0].boosted).toEqual(['mon0'])
-    tapShared(g, 'jugador-2', 0, 0, end + TAP_CLOSE_DELAY_MS + 1)
-    expect(g.tapPending).toEqual([])
+    expect(g.orders[0].turns[0].taps).toEqual({ mon0: 0.6 })
+    tapShared(g, 'jugador-2', 0, 0, 1, end + TAP_CLOSE_DELAY_MS + 1)
+    expect(g.tapScores).toEqual({})
   })
 
   it('el cambio de ataque entra en la ventana que se cierra; uno que no conoce, no', () => {

@@ -3,7 +3,7 @@ import { REGROUP_MS } from '../../../game/incursion/activeIncursion'
 import { BOND_FRACTION, CHECKIN_OPEN_MS } from '../../../game/incursion/schedule/scheduleRules'
 import { PARTY_SIZE } from '../../../game/incursion/party'
 import { INCURSION_REVIVES } from '../../../game/incursion/revives'
-import { DEFAULT_TAP_BONUS, DEFAULT_TAP_GOAL } from '../../../data/incursionMoves'
+import { TAP_CRIT_MULT } from '../../../game/battle/attack'
 import { TAP_WINDOW_MS } from '../../../game/incursion/tapWindow'
 import { formatMinutes, formatPercent } from '../../shared/format'
 import { ICON } from '../../shared/icons'
@@ -55,7 +55,7 @@ export const INCURSION_GUIDE: Guide = {
     {
       image: shot('inc-tap'),
       title: 'Toca para potenciar tu ataque',
-      text: `Antes de cada turno del grupo tienes ${seconds(TAP_WINDOW_MS)} para tocar la pantalla. Si llegas a los toques de tu ataque (${DEFAULT_TAP_GOAL} en casi todos), lo potencias ese turno (+${Math.round(DEFAULT_TAP_BONUS * 100)}%): los de daño pegan más, los de cura curan más y los de estado hacen que el resto del grupo pegue y cure más. Si no estás mirando, el turno sigue sin potenciar.`,
+      text: `Antes de cada turno del grupo tienes ${seconds(TAP_WINDOW_MS)} para el reto de tu ataque. En unos hay que tocar rápido: cuantos más toques, más mejora, aunque no llegues a la meta. En otros salen anillos uno tras otro: toca cada uno encima justo cuando se cierre, en orden. Cuantos más aciertes, más mejora y, si los aciertas todos, crítico (×${TAP_CRIT_MULT}), cura crítica o, los de estado, aún más mejora para el grupo. La «i» del ataque dice su reto. Si no estás mirando, el turno sigue sin potenciar.`,
     },
     {
       image: shot('inc-regroup'),

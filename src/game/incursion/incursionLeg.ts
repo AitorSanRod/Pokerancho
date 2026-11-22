@@ -64,7 +64,7 @@ export interface LegResult {
 
 function battlefield(start: LegStart, revivesEach: number | undefined, log: (e: IncursionEvent) => void): Battlefield {
   const party = start.members.map(partyFighter)
-  const bf: Battlefield = { party, foes: [], revives: start.revives, revivesEach, turn: 0, falls: 0, passives: [], boosted: [], critReady: [], log }
+  const bf: Battlefield = { party, foes: [], revives: start.revives, revivesEach, turn: 0, falls: 0, passives: [], taps: {}, boosted: [], critReady: [], log }
   refreshPassives(bf)
   return bf
 }

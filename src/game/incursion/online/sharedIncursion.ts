@@ -3,10 +3,10 @@ import type { Rng } from '../../core/random'
 import { incursionProgress, IncursionPhase, regroupEnd, startNextLeg, type IncursionPlan } from '../activeIncursion'
 import type { MemberState } from '../fighter'
 import { fillWithBots } from '../party'
-import { mayKnow } from '../tms'
+import { mayCarryIncursionMove } from '../incursionLoadout'
 import { retreatPasses } from '../retreatVote'
 import { settleTaps } from '../tapSettle'
-import { TAP_SETTLE_MS, type MovePick } from '../tapWindow'
+import { TAP_SETTLE_MS, withoutTap, type MovePick } from '../tapWindow'
 import type { GroupView } from './protocol'
 
 // Un grupo de incursión tal y como lo guarda el servidor: la incursión (como en la partida) más quién es cada jugador,
@@ -29,8 +29,8 @@ export interface SharedIncursion extends IncursionPlan {
   ready: string[]
   /** Movimiento elegido en la sala de reorganizar en curso, por Pokémon */
   nextMoves: Record<string, string>
-  /** Pokémon de los jugadores que han llegado a los toques en la ventana abierta (ver tapWindow.ts) */
-  tapPending: string[]
+  /** Lo conseguido en el reto de la ventana abierta por los Pokémon de los jugadores, de 0 a 1 (ver tapWindow.ts) */
+  tapScores: Record<string, number>
   /** Cambios de ataque y objetivo que entrarán en la próxima ventana, por Pokémon (ver movePicks.ts) */
   pickPending: Record<string, MovePick>
   /** Falta apuntar en el ranking el daño a los jefes (ver bossDamage.ts); los grupos de antes no lo llevan y no cuentan */
@@ -64,7 +64,7 @@ export function formGroup(id: string, incursionId: IncursionId, players: GroupPl
     votes: [],
     ready: [],
     nextMoves: {},
-    tapPending: [],
+    tapScores: {},
     pickPending: {},
     damagePending: true,
     updatedAt: startAt,
@@ -77,7 +77,7 @@ function nextLeg(g: SharedIncursion, at: number) {
   startNextLeg(g, at, g.nextMoves)
   g.nextMoves = {}
   g.ready = []
-  g.tapPending = []
+  g.tapScores = {}
 }
 
 /**
@@ -87,8 +87,8 @@ function nextLeg(g: SharedIncursion, at: number) {
 export function advanceShared(g: SharedIncursion, now: number) {
   g.updatedAt = now
   for (;;) {
-    if (settleTaps(g, now, TAP_CLOSE_DELAY_MS, { boosted: g.tapPending ?? [], picks: g.pickPending ?? {} })) {
-      g.tapPending = []
+    if (settleTaps(g, now, TAP_CLOSE_DELAY_MS, { taps: g.tapScores ?? {}, picks: g.pickPending ?? {} })) {
+      g.tapScores = {}
       g.pickPending = {}
     }
     const p = incursionProgress(g, now)
@@ -97,20 +97,25 @@ export function advanceShared(g: SharedIncursion, now: number) {
   }
 }
 
-/** El jugador ha llegado a los toques en la ventana `turn` del tramo `leg`: vale si es la abierta y llega a tiempo */
-export function tapShared(g: SharedIncursion, playerId: string, leg: number, turn: number, now: number) {
+/**
+ * Lo que lleva conseguido el jugador en el reto de la ventana `turn` del tramo `leg` (de 0 a 1; se queda lo mejor que
+ * haya dicho): vale si es la abierta y llega a tiempo
+ */
+export function tapShared(g: SharedIncursion, playerId: string, leg: number, turn: number, score: number, now: number) {
   const memberId = seatOf(g, playerId)?.memberId
   const waiting = incursionProgress(g, now)
   const open = waiting.leg === leg && (g.orders[leg]?.turns?.length ?? 0) === turn
   if (!memberId || !open || waiting.phase === IncursionPhase.Finished) return
-  g.tapPending = [...new Set([...(g.tapPending ?? []), memberId])]
+  g.tapScores = { ...g.tapScores, [memberId]: Math.max(g.tapScores?.[memberId] ?? 0, score) }
 }
 
 /** El jugador cambia el ataque de su Pokémon y a quién lo dirige: entra en la próxima ventana (si conoce el ataque) */
 export function pickShared(g: SharedIncursion, playerId: string, pick: MovePick, now: number) {
   const member = g.members.find((m) => m.id === seatOf(g, playerId)?.memberId)
   if (!member || incursionProgress(g, now).phase === IncursionPhase.Finished) return
-  if (mayKnow(member.speciesId, member.level, pick.moveId)) g.pickPending = { ...g.pickPending, [member.id]: pick }
+  if (!mayCarryIncursionMove(member.speciesId, member.level, pick.moveId)) return
+  g.pickPending = { ...g.pickPending, [member.id]: pick }
+  g.tapScores = withoutTap(g.tapScores ?? {}, member.id)
 }
 
 const inRegroup = (g: SharedIncursion, now: number) => incursionProgress(g, now).phase === IncursionPhase.Regroup
@@ -118,7 +123,7 @@ const inRegroup = (g: SharedIncursion, now: number) => incursionProgress(g, now)
 /** En la sala de reorganizar: el movimiento del jugador para el tramo siguiente, si lo conoce */
 export function chooseShared(g: SharedIncursion, playerId: string, moveId: string, now: number) {
   const member = g.members.find((m) => m.id === seatOf(g, playerId)?.memberId)
-  if (member && inRegroup(g, now) && mayKnow(member.speciesId, member.level, moveId)) g.nextMoves[member.id] = moveId
+  if (member && inRegroup(g, now) && mayCarryIncursionMove(member.speciesId, member.level, moveId)) g.nextMoves[member.id] = moveId
 }
 
 /** En la sala de reorganizar: el jugador ya está; cuando lo están todos, empieza el tramo siguiente */

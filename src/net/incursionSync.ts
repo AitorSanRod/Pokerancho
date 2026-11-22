@@ -64,7 +64,7 @@ async function sendToGroup(
     | { action: typeof IncursionAction.Move; moveId: string }
     | { action: typeof IncursionAction.Ready }
     | { action: typeof IncursionAction.Vote; retreat: boolean }
-    | { action: typeof IncursionAction.Tap; leg: number; turn: number }
+    | { action: typeof IncursionAction.Tap; leg: number; turn: number; score: number }
     | { action: typeof IncursionAction.Pick; moveId: string; target: string | null },
 ) {
   const groupId = getState().incursion?.online?.groupId
@@ -82,7 +82,7 @@ export const sendIncursionVote = (retreat: boolean) => sendToGroup({ action: Inc
 /** Cambia el ataque de su Pokémon y a quién lo dirige, desde la próxima ventana */
 export const sendIncursionPick = (moveId: string, target: string | null) => sendToGroup({ action: IncursionAction.Pick, moveId, target })
 /** Ha llegado a los toques en la ventana `turn` del tramo `leg` */
-export const sendIncursionTap = (leg: number, turn: number) => sendToGroup({ action: IncursionAction.Tap, leg, turn })
+export const sendIncursionTap = (leg: number, turn: number, score: number) => sendToGroup({ action: IncursionAction.Tap, leg, turn, score })
 
 /** Arranca el bucle (una vez, en App); devuelve cómo pararlo */
 export function startIncursionSync(): () => void {

@@ -4,6 +4,7 @@ import type { IncursionMove } from './effects'
 import { SUPPORT_MOVES } from './support'
 
 export * from './effects'
+export * from './tap'
 export { DAMAGE_BY_TYPE, DAMAGE_MOVES } from './damage'
 export { SUPPORT_BY_TYPE, SUPPORT_MOVES } from './support'
 export { CATALOG_BY_TYPE } from './catalog'

@@ -32,7 +32,7 @@ async function groupAction(db: D1Database, req: GroupRequest): Promise<Outcome> 
   if (req.action === IncursionAction.Move) chooseShared(g, req.playerId, req.moveId, now)
   if (req.action === IncursionAction.Ready) readyShared(g, req.playerId, now)
   if (req.action === IncursionAction.Vote) voteShared(g, req.playerId, req.retreat, now)
-  if (req.action === IncursionAction.Tap) tapShared(g, req.playerId, req.leg, req.turn, now)
+  if (req.action === IncursionAction.Tap) tapShared(g, req.playerId, req.leg, req.turn, req.score, now)
   if (req.action === IncursionAction.Pick) pickShared(g, req.playerId, { moveId: req.moveId, target: req.target }, now)
   const tally = takeBossDamage(g, now)
   const changed = JSON.stringify({ ...g, updatedAt: savedAt }) !== before

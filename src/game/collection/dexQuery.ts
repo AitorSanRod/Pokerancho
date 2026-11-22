@@ -1,4 +1,5 @@
 import { baseSpeciesOf, Rarity, rarityOf, type SPECIES } from '../../data/species'
+import { TYPE_INFO, type PokeType } from '../../data/types'
 import { ownedOfSpecies, type GameState } from '../core/state'
 import { isFavorite, isSeen } from './dex'
 import { canCombine, piecesOf } from './pieces'
@@ -17,6 +18,8 @@ export const DexFilter = {
   Tickets: 'tickets',
   Ready: 'ready',
   Favorites: 'favorites',
+  /** Por tipo: uno (`DexQuery.type`) o todos ordenados por tipo */
+  Type: 'type',
 } as const
 export type DexFilter = (typeof DexFilter)[keyof typeof DexFilter]
 
@@ -25,9 +28,21 @@ export interface DexQuery {
   text: string
   sort: DexSort
   filter: DexFilter
+  /** Con el filtro de tipo: el elegido, o `null` para todos ordenados por tipo */
+  type: PokeType | null
 }
 
-export const DEFAULT_DEX_QUERY: DexQuery = { text: '', sort: DexSort.Number, filter: DexFilter.All }
+export const DEFAULT_DEX_QUERY: DexQuery = { text: '', sort: DexSort.Number, filter: DexFilter.All, type: null }
+
+/** Los tipos por orden alfabético de su nombre */
+export const TYPES_BY_NAME: PokeType[] = (Object.keys(TYPE_INFO) as PokeType[]).sort((a, b) =>
+  TYPE_INFO[a].name.localeCompare(TYPE_INFO[b].name, 'es'),
+)
+
+const TYPE_RANK = new Map(TYPES_BY_NAME.map((type, i) => [type, i]))
+
+/** Puesto del tipo de la especie que va antes en el alfabeto (Psíquico y Hada cuenta como Hada) */
+const typeRank = (sp: DexSpecies): number => Math.min(...sp.types.map((type) => TYPE_RANK.get(type) ?? TYPES_BY_NAME.length))
 
 /** Sin mayúsculas ni tildes, para comparar lo escrito con un nombre */
 export const plainText = (text: string): string =>
@@ -56,6 +71,19 @@ const FILTER_TEST: Record<DexFilter, (s: GameState, id: number) => boolean> = {
   [DexFilter.Tickets]: (s, id) => piecesOf(s, id) > 0,
   [DexFilter.Ready]: canCombine,
   [DexFilter.Favorites]: isFavorite,
+  // El tipo es de las vistas, como el nombre: lo comprueba `matchesType`
+  [DexFilter.Type]: () => true,
+}
+
+function matchesType(s: GameState, sp: DexSpecies, q: DexQuery): boolean {
+  if (q.filter !== DexFilter.Type || q.type === null) return true
+  return isSeen(s, sp.id) && sp.types.includes(q.type)
+}
+
+/** Todos por tipo: las vistas por su tipo (a igualdad, en el orden elegido) y al final las que no */
+function sortByType(s: GameState, list: DexSpecies[]): DexSpecies[] {
+  const rank = (sp: DexSpecies) => (isSeen(s, sp.id) ? typeRank(sp) : TYPES_BY_NAME.length)
+  return [...list].sort((a, b) => rank(a) - rank(b))
 }
 
 function matchesText(s: GameState, sp: DexSpecies, text: string): boolean {
@@ -95,9 +123,9 @@ function sortDex(s: GameState, list: DexSpecies[], sort: DexSort): DexSpecies[] 
 export function applyDexQuery(s: GameState, list: DexSpecies[], q: DexQuery): DexSpecies[] {
   const test = FILTER_TEST[q.filter]
   const ownedOnly = q.sort === DexSort.Level
-  return sortDex(
-    s,
-    list.filter((sp) => test(s, sp.id) && (!ownedOnly || isOwned(s, sp.id)) && matchesText(s, sp, q.text)),
-    q.sort,
+  const shown = list.filter(
+    (sp) => test(s, sp.id) && (!ownedOnly || isOwned(s, sp.id)) && matchesText(s, sp, q.text) && matchesType(s, sp, q),
   )
+  const sorted = sortDex(s, shown, q.sort)
+  return q.filter === DexFilter.Type && q.type === null ? sortByType(s, sorted) : sorted
 }

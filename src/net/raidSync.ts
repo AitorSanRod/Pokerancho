@@ -102,7 +102,7 @@ export function startRaidSync(): () => void {
 }
 
 /** Manda una decisión del jugador en la pelea de la rotación y aplica la respuesta; sin conexión, no pasa nada */
-async function sendToRoom(rotation: RaidRotation, extra: Pick<RoomRequest, 'action'> & Partial<{ turn: number; moveId: string; target: string | null }>) {
+async function sendToRoom(rotation: RaidRotation, extra: Pick<RoomRequest, 'action'> & Partial<{ turn: number; score: number; moveId: string; target: string | null }>) {
   const tr = getState().raids[rotation]
   if (tr?.link !== RaidLink.Online) return
   try {
@@ -113,7 +113,7 @@ async function sendToRoom(rotation: RaidRotation, extra: Pick<RoomRequest, 'acti
 }
 
 /** Ha llegado a los toques en la ventana `turn` */
-export const sendRaidTap = (rotation: RaidRotation, turn: number) => sendToRoom(rotation, { action: RaidAction.Tap, turn })
+export const sendRaidTap = (rotation: RaidRotation, turn: number, score: number) => sendToRoom(rotation, { action: RaidAction.Tap, turn, score })
 /** Cambia el ataque de su Pokémon y a quién lo dirige, desde la próxima ventana */
 export const sendRaidPick = (rotation: RaidRotation, moveId: string, target: string | null) => sendToRoom(rotation, { action: RaidAction.Pick, moveId, target })
 /** Ha acertado el toque crítico: su primer golpe del turno siguiente será crítico */

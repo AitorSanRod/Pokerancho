@@ -30,6 +30,8 @@ export interface TabRaid {
   link: RaidLink
   /** Ataque y objetivo elegidos en plena pelea que aún no han llegado a una ventana de toques */
   pendingPick: MovePick | null
+  /** Sin servidor: lo conseguido en el reto de la ventana de toques abierta, de 0 a 1 (ver incursion/tapChallenge.ts) */
+  pendingTap: number
   /** Ha acertado el toque crítico: su primer golpe del turno siguiente será crítico */
   pendingCrit: boolean
   /** Ha pedido entrar en la pelea ya empezada y aún no ha llegado a una ventana de toques */
@@ -97,7 +99,7 @@ export function joinRaid(s: GameState, rotation: RaidRotation, uid: string, move
   const trainer = room.entrants.find((e) => e.member.id === own?.uid)?.trainer
   if (!seatEntrant(room, raidEntrant(s, uid, moveId, trainer), own?.uid ?? null)) return
   const link = own?.link === RaidLink.Local ? RaidLink.Local : RaidLink.Joining
-  s.raids[rotation] = { room, uid, link, pendingPick: null, pendingCrit: false, pendingJoin: false }
+  s.raids[rotation] = { room, uid, link, pendingPick: null, pendingTap: 0, pendingCrit: false, pendingJoin: false }
 }
 
 /** Entra en la pelea ya empezada: en la sala local con bots, puesta al día, y se pide sitio al servidor */
@@ -105,7 +107,7 @@ function joinFight(s: GameState, rotation: RaidRotation, uid: string, moveId: st
   const cycle = cycleAt(now)
   const room = lateLocalRoom(localRoomId(rotation, cycle), rotation, cycle, now)
   if (!seatLate(room, raidEntrant(s, uid, moveId), now)) return
-  s.raids[rotation] = { room, uid, link: RaidLink.Joining, pendingPick: null, pendingCrit: false, pendingJoin: true }
+  s.raids[rotation] = { room, uid, link: RaidLink.Joining, pendingPick: null, pendingTap: 0, pendingCrit: false, pendingJoin: true }
 }
 
 /** Sale de la sala abierta y su Pokémon vuelve al rancho; con servidor, se le avisará (`roomsToLeave`) */

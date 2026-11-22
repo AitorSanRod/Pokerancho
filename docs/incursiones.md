@@ -15,7 +15,7 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
 | Tema | Decisión |
 |---|---|
 | Ritmo | Por turnos y automático. Lo que se decide (movimiento) se elige antes de entrar o en las salas de reorganizar |
-| Ataques | Uno por Pokémon (más adelante, varios con condiciones). Cada Pokémon tiene su **repertorio**: como mucho dos por tipo (su mejor ataque de daño y el de apoyo del tipo) más los propios de la especie y lo aprendido con **MTs** |
+| Ataques | Lleva 4 (`incursionLoadout.ts › INCURSION_MOVE_SLOTS`), elegidos en la «i» de la ficha entre su repertorio de ahora y sus ataques de ruta (con los datos de incursión); entra con uno y en la pelea cambia entre los 4. Cada Pokémon tiene su **repertorio**: como mucho dos por tipo (su mejor ataque de daño y el de apoyo del tipo) más los propios de la especie y lo aprendido con **MTs** |
 | Roles | Libres: el papel lo da el movimiento elegido (daño, curar, provocar, apoyo) |
 | Grupo | **Incursiones programadas** (desde 2026-11-17; sustituyen a la cola automática): un jugador elige incursión y franja de 15 min, ocupa un hueco y deja una **fianza** (10% de su dinero); el resto se apunta desde el tablón. A la hora, los huecos de quien no hizo el checkin, con bots. Ver [Incursiones programadas](#incursiones-programadas) |
 | Salas | Escritas a mano en cada incursión: combate, curar, revivir, reorganizar ataques, jefe. PS y estados se arrastran entre salas |
@@ -168,25 +168,45 @@ Para que sea **exigente** (cada incursión elige cuáles usa):
 
 ## Toques antes de cada turno
 
-Antes de cada turno del grupo hay una **ventana de toques** de 5 s: toda la escena es un botón y, si el jugador llega a
-50 toques, su Pokémon hace un **10% más de daño** ese turno (`game/incursion/tapWindow.ts`). Solo hay ventana si queda
-en pie algún Pokémon de un jugador (los bots no tocan); quien no mira, sigue sin potenciar.
+Antes de cada turno del grupo hay una **ventana de toques** de 5 s: toda la escena es un botón con el **reto** del
+ataque que va a usar el Pokémon (`game/incursion/tapChallenge.ts`). Combate en dos fases: primero se prepara el ataque
+(el reto) y luego se juegan los ataques del turno. Hay dos clases de reto:
+
+- **Machacar**: tocar todo lo posible. Cada toque cuenta: la mejora va según la parte de la meta conseguida (a saltos
+  de un 20%, `TAP_SCORE_STEPS`), así que hacer 10 de 40 también vale.
+- **Anillos**: salen uno tras otro (de 1 a 3, al azar pero fijos para cada ventana y Pokémon, en sitios distintos de la
+  escena, numerados) y se cierran; cada uno se toca una vez, encima y cuando se cierra, en orden
+  (`tapRings.ts`). Tocar fuera, antes de tiempo o de más hace fallar ese anillo. Premio escalonado: la parte acertada
+  mejora el ataque y **todos** dan el premio grande: **crítico** (×1,5 en su primer golpe a un rival) los de daño,
+  **cura crítica** (×1,5) los de cura y, los de estado, su mejora al grupo ×1,5 (`tapWindow.ts › STATUS_PERFECT_MULT`).
+
+El reto de cada ataque sale por regla (salvo que lleve el suyo a mano, `tap` en `move(…, { tap })`): los de daño con
+prioridad, 1 anillo; los de daño de potencia 90 o más o de área, de 2 a 3 anillos; el resto de los de daño, machacar
+(0,4 toques por punto de potencia, de 15 a 50, y +0,4% por toque pedido: piden más, mejoran más); los de cura, de 1 a 2
+anillos, y los de estado, de 1 a 3. Lo conseguido es una puntuación de 0 a 1 por Pokémon (`TurnOrders.taps`).
+
+Solo hay ventana si queda en pie algún Pokémon de un jugador (los bots no tocan); quien no mira, sigue sin potenciar.
+Cambiar de ataque en plena ventana empieza el reto de cero, con el del ataque nuevo.
 
 Es la única decisión dentro de un tramo, así que la simulación **se para en cada ventana** de la que aún no se sabe el
 resultado y sigue cuando se sabe, igual en todos los móviles. La ventana es un evento más de la línea de tiempo (5 s de
 toques + 1,5 s para ver el resultado), así que todos saben exactamente cuándo empieza y acaba. Las órdenes de cada tramo
-guardan quién potenció su ataque en cada ventana (`LegOrders.taps`).
+guardan lo que consiguió cada uno en cada ventana (`LegOrders.turns`, con `TurnOrders.taps`).
 
-- **Sin servidor**: al llegar a los toques se apunta enseguida; al pasar la hora, la ventana se cierra sin potenciar
-  (`incursionGame.ts › boostIncursionTap`, `advanceIncursion`).
-- **Con servidor**: al llegar a los toques el móvil avisa (`IncursionAction.Tap`); el servidor cierra la ventana 0,75 s
-  después de que acabe con los que avisaron a tiempo (`sharedIncursion.ts › TAP_CLOSE_DELAY_MS`) y los móviles
+- **Sin servidor**: lo conseguido se apunta cada vez que sube (`ActiveIncursion.pendingTap`); con la puntuación entera o
+  el reto acabado la ventana se cierra ya y, si no, al pasar su hora, con lo que llevara (`incursionGame.ts ›
+  scoreIncursionTap`, `advanceIncursion`).
+- **Con servidor**: el móvil avisa cada vez que sube lo conseguido (`IncursionAction.Tap` con `score`; como mucho 5
+  avisos al machacar y uno por anillo); el servidor se queda con lo mejor de cada uno y cierra la ventana 0,75 s
+  después de que acabe (`sharedIncursion.ts › tapScores`, `TAP_CLOSE_DELAY_MS`) y los móviles
   consultan enseguida para tenerlo antes de que empiece el turno. Si no llega a tiempo, se ve «Esperando a los toques del
   grupo…».
 - **Con la app cerrada**: las ventanas pasadas se cierran todas de una vez, sin nadie (`tapSettle.ts › settleTaps`).
 
-Las partidas e incursiones guardadas de antes no tienen `taps`: se leen como «ninguna ventana cerrada aún», así que no
-hizo falta subir `SAVE_VERSION`.
+Al pasar de «llegó o no a los toques» (`boosted`) a la puntuación (`taps`), lo que iba a medias **sigue** al actualizar
+(no se tocó `CARRIED_SINCE`: perder `s.incursion` deja al jugador fuera de su grupo del servidor, porque el checkin ya
+se gastó). El paso de migración 68 pone `pendingTap` a 0, y las órdenes ya guardadas con `boosted` (en la partida y en
+el servidor) se juegan con la mejora de entonces (`tapWindow.ts › LEGACY_TAP_BONUS`), así lo ya visto no cambia.
 
 ## Salas (a mano)
 
@@ -242,9 +262,9 @@ especies). En un Pokémon medio cura algo más que cuando era un % de los PS (S�
 Amortiguador, Pulso Cura y Luz Lunar, 70, ≈ el 35%; Acua Aro, 30 a todos, ≈ el 14%); a uno con muchos PS, en
 proporción, menos.
 
-**Toques**: cada ataque dice cuántos toques hacen falta (`tapGoal`, 100 en todos por ahora) y cuánto mejora
-(`tapBonus`, +10% en todos). Uno de daño potenciado pega más; uno de cura, cura más; uno de estado no mejora lo suyo,
-sino que suma su mejora al daño y a la cura de cada compañero ese turno (varios de estado potenciados se suman).
+**Toques**: el reto de cada ataque y su mejora salen por regla (ver «Toques antes de cada turno»; a mano, con `tap`).
+Uno de daño potenciado pega más; uno de cura, cura más; uno de estado no mejora lo suyo, sino que suma su mejora al daño
+y a la cura de cada compañero ese turno (varios de estado potenciados se suman).
 
 Los golpes, bajadas y estados contra un solo rival van al que provoca, si hay alguno.
 
@@ -272,8 +292,7 @@ Pokémon de los tipos que dice cada una (a cualquier nivel, aunque evolucione, y
 compran: salen como premio final de incursión (`IncursionPrizeKind.Tm`, con poca probabilidad) y se intercambian
 entre jugadores. Se enseñan en la ficha, en la sección «MT», que solo sale si tienes alguna que ese Pokémon pueda
 aprender. El servidor no ve las MTs de cada Pokémon: acepta el ataque de una MT en cualquiera que pueda aprenderla
-(`tms.ts › mayKnow`), igual que se fía de su nivel. En la ficha del Pokémon (rancho y Pokédex), la «i» junto a su ataque abre todos sus ataques: los de combate
-(rutas, torre y raids, `combatRepertoire.ts › combatLearnTimeline`) y el repertorio de incursión nivel a nivel (`repertoire.ts › learnTimeline`).
+(`incursionLoadout.ts › mayCarryIncursionMove`, que también acepta sus ataques de ruta y lo superado), igual que se fía de su nivel. En la ficha del Pokémon, la «i» junto a su ataque abre los que lleva: Rutas (2) e Incursiones (4); al tocar uno, sus datos y la lista para cambiarlo (`combat/moveLoadout.ts`). En la Pokédex, todo lo que aprende la especie, con su nivel.
 
 Cada tipo tiene su papel en el grupo por su ataque de apoyo:
 
@@ -392,7 +411,7 @@ completar.
 | Turnos por sala | 80 como mucho (luego se pierde) | `groupBattle.ts › MAX_ROOM_TURNS` |
 | Confusión | se quita el 10% de sus PS | `groupStatus.ts › CONFUSION_SELF_HIT` |
 | Grupo y bots | 5; bots del más alto −5 (hasta −7), entre el mínimo de entrada y el rival más alto | `party.ts › PARTY_SIZE, BOT_LEVEL_GAP, BOT_LEVEL_SPREAD` |
-| Toques | 5 s de ventana + 1,5 s de resultado; cada ataque dice sus toques y su mejora (100 y +10% por defecto); el servidor cierra a los 0,75 s | `tapWindow.ts › TAP_WINDOW_MS, TAP_SETTLE_MS`, `data/incursionMoves/effects.ts › DEFAULT_TAP_GOAL, DEFAULT_TAP_BONUS`, `online/sharedIncursion.ts › TAP_CLOSE_DELAY_MS` |
+| Toques | 5 s de ventana + 1,5 s de resultado; el servidor cierra a los 0,75 s. Machacar: 0,4 toques por punto de potencia (15–50), +0,4% por toque pedido, a saltos del 20%. Anillos: daño con prioridad 1, daño fuerte (pot. ≥ 90) o de área 2–3, cura 1–2, estado 1–3; +20% por la parte acertada; todos: crítico o cura crítica ×1,5, estado ×1,5 su mejora. Cada anillo se cierra en 800 ms; el primero, a los 1,2 s; entre cierres, 0,65–1 s; acierta de 200 ms antes a 150 ms después | `tapWindow.ts › TAP_WINDOW_MS, TAP_SETTLE_MS, STATUS_PERFECT_MULT`, `tapChallenge.ts` (todas), `tapRings.ts › RING_LEAD_MS, RING_GAP_MIN_MS, RING_GAP_MAX_MS, RING_EARLY_MS, RING_LATE_MS`, `battle/attack.ts › TAP_CRIT_MULT`, `online/sharedIncursion.ts › TAP_CLOSE_DELAY_MS` |
 | Catálogo de ataques | +10 de precisión a la de los juegos (+5 si era 90; hasta 100); curas de 70 a uno y 30 al grupo; los que atraen golpes, −40% de daño | `data/incursionMoves/catalog/catalogMove.ts › CATALOG_ACCURACY_BONUS, CATALOG_ACCURACY_BONUS_AT_90, SINGLE_HEAL_POWER, TEAM_HEAL_POWER, REDIRECT_GUARD` |
 | Ritmo en pantalla | ms de cada evento | `incursionTimeline.ts › INCURSION_EVENT_MS` |
 | Pasivas | las de tipo del rancho: pesos 1/2/3/5, umbrales 3/4/5 | `data/passives.ts`, `RARITY_INFO.passiveWeight` |

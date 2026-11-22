@@ -28,20 +28,20 @@ export const raidFinished = (tr: TabRaid, now: number): boolean => raidProgress(
 const joining = (tr: TabRaid) => (tr.pendingJoin ? { joins: tr.room.entrants.filter((e) => e.member.id === tr.uid).map((e) => e.member) } : {})
 
 /** Lo que el jugador lleva decidido para la próxima ventana, como órdenes del turno */
-export const raidOrders = (tr: TabRaid, boosted: boolean): TurnOrders => ({
-  boosted: boosted ? [tr.uid] : [],
+export const raidOrders = (tr: TabRaid): TurnOrders => ({
+  ...(tr.pendingTap > 0 ? { taps: { [tr.uid]: tr.pendingTap } } : {}),
   picks: tr.pendingPick ? { [tr.uid]: tr.pendingPick } : {},
   crits: tr.pendingCrit ? [tr.uid] : [],
   ...joining(tr),
 })
 
-const clearPending = (tr: TabRaid) => Object.assign(tr, { pendingPick: null, pendingCrit: false, pendingJoin: false })
+const clearPending = (tr: TabRaid) => Object.assign(tr, { pendingPick: null, pendingTap: 0, pendingCrit: false, pendingJoin: false })
 
 /** Sin servidor: la pelea empieza a su hora y se cierran las ventanas de toques ya pasadas */
 function playLocally(tr: TabRaid, now: number) {
   if (fightDue(tr.room, now)) startFight(tr.room)
   const fight = tr.room.fight
-  if (fight && settleGroupTaps(fight, raidSource(roomBoss(tr.room)), now, 0, raidOrders(tr, false))) clearPending(tr)
+  if (fight && settleGroupTaps(fight, raidSource(roomBoss(tr.room)), now, 0, raidOrders(tr))) clearPending(tr)
 }
 
 /** Lo que se lleva al terminar: el premio por la parte del jefe quitada y su Pokémon, con los PS que le queden */
@@ -93,17 +93,23 @@ export function setRaidPick(s: GameState, rotation: RaidRotation, pick: MovePick
   const mon = tr && findMon(s, tr.uid)
   if (!tr || !mon || !carriesRaidMove(mon, pick.moveId)) return false
   tr.pendingPick = { moveId: pick.moveId, target: pick.target }
+  tr.pendingTap = 0
   return true
 }
 
-/** Sin servidor: ha llegado a los toques en la ventana abierta; se cierra ya, con lo que tuviera decidido */
-export function boostRaidTap(s: GameState, rotation: RaidRotation, now: number) {
+/**
+ * Sin servidor: lo que lleva conseguido en el reto de la ventana abierta (de 0 a 1; nunca baja). Con `done` (acabó el
+ * reto) o la puntuación entera, la ventana se cierra ya, con lo que tuviera decidido
+ */
+export function scoreRaidTap(s: GameState, rotation: RaidRotation, score: number, done: boolean, now: number) {
   const tr = liveFight(s, rotation, now)
   const p = tr && raidProgress(tr, now)
   if (!tr || tr.link !== RaidLink.Local || p?.phase !== IncursionPhase.Tap || !p.tap) return
   const turns = tr.room.fight!.orders[0].turns
   if (turns.length !== p.tap.turn) return
-  turns.push(raidOrders(tr, true))
+  tr.pendingTap = Math.max(tr.pendingTap, Math.min(1, score))
+  if (!done && tr.pendingTap < 1) return
+  turns.push(raidOrders(tr))
   clearPending(tr)
 }
 

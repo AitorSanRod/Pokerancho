@@ -31,7 +31,7 @@ function statLine(mon: OwnedMon, level: number): StatLine {
  * Sin `mon` (especie que aún no tienes) solo se ve lo que se sabe de la especie y, si cuenta como capturada por tener
  * una evolución suya, el aviso de que lo es. Con `previewLevel` (el nivel al que llegaría con el entrenamiento elegido)
  * las stats dicen cuánto subirían. El ataque es el de combate con el que sale (el más fuerte; sin `mon`, el primero que
- * aprende) y, junto a él, la «i» abre el resumen de todos sus ataques (MovesInfo).
+ * aprende) y, junto a él, la «i» abre sus ataques de rutas e incursiones, para cambiarlos (MovesInfo).
  */
 export function MonOverview({ game, speciesId, mon, previewLevel = null }: { game: GameState; speciesId: number; mon?: OwnedMon; previewLevel?: number | null }) {
   // Con una forma (Rotom Calor), sus tipos y su ataque; lo de la Pokédex, de su especie
@@ -71,7 +71,7 @@ export function MonOverview({ game, speciesId, mon, previewLevel = null }: { gam
           </button>
         </div>
       )}
-      {movesOpen && <MovesInfo speciesId={sp.id} level={mon?.level ?? null} tmMoves={mon?.tmMoves} onClose={() => setMovesOpen(false)} />}
+      {movesOpen && <MovesInfo game={game} speciesId={sp.id} mon={mon} onClose={() => setMovesOpen(false)} />}
     </MonSection>
   )
 }

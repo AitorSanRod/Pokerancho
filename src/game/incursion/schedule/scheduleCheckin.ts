@@ -6,7 +6,7 @@ import { maxHp } from '../../team/stats'
 import type { MemberState } from '../fighter'
 import { monEntryBlocker } from '../incursionGame'
 import { freshMember } from '../party'
-import { monRepertoire } from '../repertoire'
+import { incursionMoveChoices } from '../incursionLoadout'
 import type { ScheduleView } from './scheduleView'
 
 // El checkin en la partida: al hacerlo se marca el primer Pokémon disponible (orden del selector) con su primer ataque;
@@ -20,7 +20,7 @@ export function checkinMonBlocker(s: GameState, incursionId: IncursionId, uid: s
   return monEntryBlocker(s, incursionId, uid, moveId)
 }
 
-const firstMove = (mon: OwnedMon) => monRepertoire(mon)[0]?.id ?? ''
+const firstMove = (mon: OwnedMon) => incursionMoveChoices(mon)[0]?.id ?? ''
 
 /** El primero de la lista (favoritos y por nivel) que puede entrar, con su primer ataque; null si ninguno */
 export function defaultPick(s: GameState, incursionId: IncursionId): { uid: string; moveId: string } | null {

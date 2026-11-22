@@ -1,3 +1,4 @@
+import { IMOVE } from '../../data/incursionMoves'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { FORM_ITEM_IDS, FORM_ITEMS } from '../../data/forms'
 import { IncursionId, MAX_KEYS } from '../../data/incursions'
@@ -43,6 +44,8 @@ const ATTACK_PER_GYM_VERSION = 59
 const TOWER_EGG_AUTO_VERSION = 60
 /** Última versión sin entrar en la pelea de la raid ya empezada */
 const RAID_NO_LATE_JOIN_VERSION = 62
+/** Última versión con los toques de «llegar o no» (`boosted`), antes de los retos con puntuación */
+const TAP_SCORE_VERSION = 68
 const [A, B, C] = STARTERS
 const UNKNOWN_SPECIES = -7
 const OTHER_BACKDROP = Object.values(RanchBackdrop).find((b) => b !== DEFAULT_RANCH_BACKDROP)!
@@ -157,6 +160,17 @@ describe('al actualizar el juego no se pierde nada', () => {
     const s = migrateSave({ ...saved, tms: { [tm]: 2, quitada: 1 } })!
     expect(s.tms).toEqual({ [tm]: 2 })
     expect(s.owned[0].tmMoves).toEqual([tm])
+  })
+
+  it('los ataques elegidos en la ficha se quedan si existen; sin elegir (o de antes), los pone el juego', () => {
+    const [move] = Object.values(IMOVE)
+    const saved = fromOldVersion(advancedGame()) as { owned: Record<string, unknown>[] }
+    saved.owned[0] = { ...saved.owned[0], routeMoves: [move.id, 'quitado'], incursionMoves: 'roto' }
+    delete saved.owned[1].routeMoves
+    const [first, second] = migrateSave(saved)!.owned
+    expect(first.routeMoves).toEqual([move.id])
+    expect(first.incursionMoves).toBeNull()
+    expect(second.routeMoves).toBeNull()
   })
 
   it('un Pokémon de antes de las MTs no ha aprendido ninguna', () => {
@@ -376,6 +390,23 @@ describe('al actualizar el juego no se pierde nada', () => {
     const save = fromOldVersion(advancedGame())
     save.dinero = 50
     expect(migrateSave(save)!.money).toBe(100)
+  })
+
+  it('la incursión en marcha de antes de los retos de toques sigue (no se queda fuera de su grupo), sin nada conseguido', () => {
+    const s = advancedGame()
+    const keys = s.incursionKeys[IncursionId.CuevaHelada] ?? 0
+    const save = { ...fromOldVersion(s, TAP_SCORE_VERSION), incursion: { incursionId: IncursionId.CuevaHelada, uid: s.owned[0].uid } }
+    const migrated = migrateSave(save)!
+    expect(migrated.incursion).toMatchObject({ uid: s.owned[0].uid, pendingTap: 0 })
+    expect(migrated.incursionKeys[IncursionId.CuevaHelada] ?? 0).toBe(keys)
+  })
+
+  it('la sala de raid de antes de los retos de toques sigue, sin nada conseguido', () => {
+    const { s, mon, move } = raidReady(RAID_CYCLE)
+    joinRaid(s, ROTATION, mon.uid, move, lobbyStart(RAID_CYCLE))
+    const save = fromOldVersion(s, TAP_SCORE_VERSION)
+    delete save.raids[ROTATION].pendingTap
+    expect(migrateSave(save)!.raids[ROTATION]).toMatchObject({ uid: mon.uid, pendingTap: 0 })
   })
 
   it('en cualquier cambio de versión, la incursión en curso se descarta y se devuelve su llave', () => {

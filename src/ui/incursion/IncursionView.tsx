@@ -11,7 +11,8 @@ import { IncursionMenu, IncursionMenuPanel } from './IncursionMenu'
 import { IncursionStage } from './IncursionStage'
 import { IncursionStrip } from './IncursionStrip'
 import { act } from '../../store/store'
-import { boostIncursionTap } from '../../game/incursion/incursionGame'
+import { scoreIncursionTap } from '../../game/incursion/incursionGame'
+import { ringKey } from '../../game/battle/critTiming'
 import { sendIncursionTap } from '../../net/incursionSync'
 import { MoveBar } from './MoveBar'
 import { incursionPilot, sceneTargeting } from './pickAction'
@@ -39,8 +40,11 @@ export function IncursionView({ game, a }: { game: GameState; a: ActiveIncursion
   const choosing = myMonUp && !finished && p.phase !== IncursionPhase.Regroup
   const pilot = incursionPilot(a)
   const tap = p.tap
-  const onGoal = () => (a.online ? void sendIncursionTap(p.leg, tap!.turn) : act((s) => boostIncursionTap(s, Date.now())))
-  const tapPad = tap && myMonUp && <TapPad move={incursionMove(a.pendingPick?.moveId ?? mine!.moveId!)} windowKey={`${p.leg}:${tap.turn}`} msLeft={tap.msLeft} onGoal={onGoal} />
+  const onScore = (score: number, done: boolean) => (a.online ? void sendIncursionTap(p.leg, tap!.turn, score) : act((s) => scoreIncursionTap(s, score, done, Date.now())))
+  const tapMove = tap && myMonUp && incursionMove(a.pendingPick?.moveId ?? mine!.moveId!)
+  const tapPad = tap && tapMove && (
+    <TapPad key={`${p.leg}:${tap.turn}:${tapMove.id}`} move={tapMove} seed={ringKey(a.orders[0].seed, p.leg, tap.turn, a.uid)} msLeft={tap.msLeft} lastTick={game.lastTick} onScore={onScore} />
+  )
 
   return (
     <div className="screen incursion-view">

@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { MoveClass, moveClass, type IncursionMove } from '../../data/incursionMoves'
 import { findMon, type GameState } from '../../game/core/state'
-import { monRepertoire } from '../../game/incursion/repertoire'
+import { incursionMoveChoices } from '../../game/incursion/incursionLoadout'
 import { BoxIcon } from '../shared/BoxIcon'
-import { CLASS_LABEL } from '../shared/moveText'
+import { classMeta } from '../shared/moveText'
 import { MoveBarMoves } from './MoveBarMoves'
 import { PickDialog } from './PickDialog'
 import { pickCandidates, pickNow, type FightPilot } from './pickAction'
@@ -12,9 +11,6 @@ import './move-bar.css'
 
 /** Hasta cuántos posibles objetivos cabe al lado la pista de que también se puede tocar en la escena */
 const TIP_ROOM = 3
-
-/** «Daño · Pot. 40»; los de estado, solo su clase */
-const moveMeta = (mv: IncursionMove) => [CLASS_LABEL[moveClass(mv)], moveClass(mv) === MoveClass.Status ? '' : `Pot. ${mv.power}`].filter(Boolean).join(' · ')
 
 /**
  * Barra de ataques, abajo sobre la escena: un toque cambia el ataque (y otro, a quién va) desde el próximo turno, sin
@@ -44,7 +40,7 @@ export function MoveBar({ game, pilot, scene }: { game: GameState; pilot: FightP
           i
         </button>
       </div>
-      <MoveBarMoves moves={monRepertoire(mon)} selectedId={next.moveId} inUseId={applied.moveId} meta={moveMeta} onPick={pickMove} />
+      <MoveBarMoves moves={incursionMoveChoices(mon)} selectedId={next.moveId} inUseId={applied.moveId} meta={classMeta} onPick={pickMove} />
       {candidates.length > 0 && (
         <div className="move-bar-targets">
           <span className="move-bar-to">Objetivo</span>

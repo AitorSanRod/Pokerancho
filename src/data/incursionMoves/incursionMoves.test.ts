@@ -21,13 +21,9 @@ describe('ataques de incursión', () => {
     expect(isIncursionMove('no-existe')).toBe(false)
   })
 
-  it('ningún id se repite y todos dicen sus toques y su mejora', () => {
+  it('ningún id se repite', () => {
     const all = Object.values(IMOVE)
     expect(new Set(all.map((mv) => mv.id)).size).toBe(all.length)
-    for (const mv of all) {
-      expect(mv.tapGoal).toBeGreaterThan(0)
-      expect(mv.tapBonus).toBeGreaterThan(0)
-    }
   })
 
   it('los de cura llevan potencia', () => {

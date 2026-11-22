@@ -51,6 +51,8 @@ export interface ActiveIncursion extends IncursionPlan {
   nextMove: string | null
   /** Ataque y objetivo elegidos en plena pelea que aún no han llegado a una ventana de toques (ver incursionPicks.ts) */
   pendingPick: MovePick | null
+  /** Sin servidor: lo conseguido en el reto de la ventana de toques abierta, de 0 a 1 (ver tapChallenge.ts) */
+  pendingTap: number
   /** Con otros jugadores, lo que dice el servidor (él decide cuándo empieza cada tramo); null: en local, con bots */
   online: OnlineIncursion | null
 }

@@ -37,7 +37,7 @@ export function applyRoomView(s: GameState, rotation: RaidRotation, view: RoomVi
   const local = ownEntrant(tr)
   if (stale && local) seatEntrant(room, local, view.you)
   const uid = stale ? tr.uid : view.you
-  s.raids[rotation] = { room, uid, link: stale ? RaidLink.Joining : RaidLink.Online, pendingPick: view.yourPick, pendingCrit: view.yourCrit, pendingJoin: view.yourJoin }
+  s.raids[rotation] = { room, uid, link: stale ? RaidLink.Joining : RaidLink.Online, pendingPick: view.yourPick, pendingTap: 0, pendingCrit: view.yourCrit, pendingJoin: view.yourJoin }
   return true
 }
 

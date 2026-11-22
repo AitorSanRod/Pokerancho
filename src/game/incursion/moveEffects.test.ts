@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { area, areaAll, drain, healAlly, healTeam, lower, move, raise, raiseSelf, taunt, type IncursionMove } from '../../data/incursionMoves'
+import { area, areaAll, drain, healAlly, healTeam, lower, move, raise, raiseSelf, TapKind, taunt, type IncursionMove } from '../../data/incursionMoves'
 import { seqRng } from '../core/test-utils'
 import { EventKind } from './events'
 import { stat, type GroupFighter } from './fighter'
@@ -106,7 +106,7 @@ describe('ataques de incursión', () => {
     const strikeOn = (boosted: boolean) => {
       const a = ally('a')
       const { bf, events } = field([a], [enemy('e', { hpMult: 50 })])
-      if (boosted) bf.boosted = [a.id]
+      if (boosted) bf.taps = { [a.id]: 0.5 }
       performMove(bf, a, rng)
       return events.find((e) => e.kind === EventKind.Hit)!
     }
@@ -116,11 +116,25 @@ describe('ataques de incursión', () => {
       const healer = using(ally('h'), HEAL_ONE)
       const hurt = hurtAlly('x')
       const { bf } = field([healer, hurt], [enemy('e')])
-      if (boosted) bf.boosted = [healer.id]
+      if (boosted) bf.taps = { [healer.id]: 0.5 }
       performMove(bf, healer, rng)
       return hurt.hp
     }
     expect(healOn(true)).toBeGreaterThan(healOn(false))
+  })
+
+  it('con todos los anillos del reto, uno de cura hace cura crítica: cura más y lo dice', () => {
+    const healOn = (score: number) => {
+      const healer = using(ally('h'), move('prueba-cura-anillos', 'Cura', 'normal', POWER, [healAlly(1)], { tap: { kind: TapKind.Rings, min: 1, max: 1, bonus: 0.2 } }))
+      const hurt = hurtAlly('x')
+      const { bf, events } = field([healer, hurt], [enemy('e')])
+      bf.taps = { [healer.id]: score }
+      performMove(bf, healer, rng)
+      return events.find((e) => e.kind === EventKind.Heal)!
+    }
+    expect(healOn(1).crit).toBe(true)
+    expect(healOn(0).crit).toBeUndefined()
+    expect(healOn(1).amount).toBeGreaterThan(healOn(0).amount!)
   })
 
   it('un compañero de estado potenciado hace que los demás peguen más', () => {
@@ -128,7 +142,7 @@ describe('ataques de incursión', () => {
       const a = ally('a')
       const support = using(ally('s'), RAISE)
       const { bf, events } = field([a, support], [enemy('e', { hpMult: 50 })])
-      if (supportBoosted) bf.boosted = [support.id]
+      if (supportBoosted) bf.taps = { [support.id]: 0.5 }
       performMove(bf, a, rng)
       return events.find((e) => e.kind === EventKind.Hit)!.amount!
     }

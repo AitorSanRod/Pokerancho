@@ -71,7 +71,7 @@ async function roomAction(db: D1Database, req: RoomRequest): Promise<Outcome> {
   const savedAt = room.updatedAt
   advanceShared(room, now)
   if (req.action === RaidAction.Leave) leaveShared(room, req.playerId)
-  if (req.action === RaidAction.Tap) tapShared(room, req.playerId, req.turn, now)
+  if (req.action === RaidAction.Tap) tapShared(room, req.playerId, req.turn, req.score, now)
   if (req.action === RaidAction.Pick) pickShared(room, req.playerId, { moveId: req.moveId, target: req.target }, now)
   if (req.action === RaidAction.Crit) critShared(room, req.playerId, now)
   const changed = JSON.stringify({ ...room, updatedAt: savedAt }) !== before || damageDue(room, now)

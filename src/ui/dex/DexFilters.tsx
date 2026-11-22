@@ -1,4 +1,5 @@
-import { DexFilter, DexSort, type DexQuery } from '../../game/collection/dexQuery'
+import { TYPE_INFO, type PokeType } from '../../data/types'
+import { DexFilter, DexSort, TYPES_BY_NAME, type DexQuery } from '../../game/collection/dexQuery'
 import './dex-toolbar.css'
 
 const SORT_LABEL: Record<DexSort, string> = {
@@ -17,14 +18,17 @@ const FILTER_LABEL: Record<DexFilter, string> = {
   [DexFilter.Tickets]: 'Con tickets',
   [DexFilter.Ready]: 'Listos para combinar',
   [DexFilter.Favorites]: 'Favoritos',
+  [DexFilter.Type]: 'Tipo',
 }
+
+const ALL_TYPES = 'all'
 
 interface Props {
   query: DexQuery
   onChange: (patch: Partial<DexQuery>) => void
 }
 
-/** Desplegables de orden y filtro de la Pokédex */
+/** Desplegables de orden y filtro de la Pokédex; con el filtro de tipo, también la lista de tipos */
 export function DexFilters({ query, onChange }: Props) {
   return (
     <div className="dex-selects">
@@ -48,6 +52,22 @@ export function DexFilters({ query, onChange }: Props) {
           ))}
         </select>
       </label>
+      {query.filter === DexFilter.Type && (
+        <label className="dex-select">
+          <span className="tiny muted">Tipo</span>
+          <select
+            value={query.type ?? ALL_TYPES}
+            onChange={(e) => onChange({ type: e.target.value === ALL_TYPES ? null : (e.target.value as PokeType) })}
+          >
+            <option value={ALL_TYPES}>Todos</option>
+            {TYPES_BY_NAME.map((type) => (
+              <option key={type} value={type}>
+                {TYPE_INFO[type].name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
     </div>
   )
 }
