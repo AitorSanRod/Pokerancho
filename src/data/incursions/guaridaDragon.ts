@@ -79,7 +79,7 @@ export const GUARIDA_DRAGON: Incursion = {
     },
   ],
   prizes: [
-    { kind: IncursionPrizeKind.Money, amount: 50000, chance: 1 },
+    { kind: IncursionPrizeKind.Money, amount: 60000, chance: 1 },
     { kind: IncursionPrizeKind.Money, amount: 30000, chance: 0.1 },
     { kind: IncursionPrizeKind.Money, amount: 100000, chance: 0.01 },
     { kind: IncursionPrizeKind.Exp, amount: 16000, chance: 1 },

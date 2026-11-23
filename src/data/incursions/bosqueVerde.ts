@@ -75,7 +75,7 @@ export const BOSQUE_VERDE: Incursion = {
     },
   ],
   prizes: [
-    { kind: IncursionPrizeKind.Money, amount: 7000, chance: 1 },
+    { kind: IncursionPrizeKind.Money, amount: 9000, chance: 1 },
     { kind: IncursionPrizeKind.Money, amount: 5000, chance: 0.1 },
     { kind: IncursionPrizeKind.Money, amount: 20000, chance: 0.01 },
     { kind: IncursionPrizeKind.Exp, amount: 3000, chance: 1 },

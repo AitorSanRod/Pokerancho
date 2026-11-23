@@ -86,7 +86,7 @@ export const CUEVA_HELADA: Incursion = {
     },
   ],
   prizes: [
-    { kind: IncursionPrizeKind.Money, amount: 15000, chance: 1 },
+    { kind: IncursionPrizeKind.Money, amount: 20000, chance: 1 },
     { kind: IncursionPrizeKind.StarItem, item: StarItem.Stardust, amount: 1, chance: 0.2 },
     { kind: IncursionPrizeKind.StarItem, item: StarItem.StarPiece, amount: 1, chance: 0.025 },
     { kind: IncursionPrizeKind.StarItem, item: StarItem.CometShard, amount: 1, chance: 0.005 },

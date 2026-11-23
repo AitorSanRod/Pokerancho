@@ -83,7 +83,7 @@ export const VOLCAN_CANELA: Incursion = {
     },
   ],
   prizes: [
-    { kind: IncursionPrizeKind.Money, amount: 50000, chance: 1 },
+    { kind: IncursionPrizeKind.Money, amount: 55000, chance: 1 },
     { kind: IncursionPrizeKind.Money, amount: 30000, chance: 0.1 },
     { kind: IncursionPrizeKind.Money, amount: 100000, chance: 0.01 },
     { kind: IncursionPrizeKind.Exp, amount: 15000, chance: 1 },

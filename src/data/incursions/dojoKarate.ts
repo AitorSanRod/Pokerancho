@@ -67,7 +67,7 @@ export const DOJO_KARATE: Incursion = {
     },
   ],
   prizes: [
-    { kind: IncursionPrizeKind.Money, amount: 30000, chance: 1 },
+    { kind: IncursionPrizeKind.Money, amount: 35000, chance: 1 },
     { kind: IncursionPrizeKind.Money, amount: 20000, chance: 0.1 },
     { kind: IncursionPrizeKind.Money, amount: 60000, chance: 0.01 },
     { kind: IncursionPrizeKind.Exp, amount: 9000, chance: 1 },

@@ -82,7 +82,7 @@ export const CENTRAL_ENERGIA: Incursion = {
     },
   ],
   prizes: [
-    { kind: IncursionPrizeKind.Money, amount: 16000, chance: 1 },
+    { kind: IncursionPrizeKind.Money, amount: 20000, chance: 1 },
     { kind: IncursionPrizeKind.Money, amount: 10000, chance: 0.1 },
     { kind: IncursionPrizeKind.Money, amount: 30000, chance: 0.01 },
     { kind: IncursionPrizeKind.Exp, amount: 5500, chance: 1 },
