@@ -36,12 +36,12 @@ export const PLAY_GUIDE: Guide = {
     {
       image: shot('play-expeditions'),
       title: 'Manda al resto de expedición',
-      text: 'Arriba, el icono de la bicicleta abre Expediciones: elige una ruta que ya hayas completado, quién va y cuánto tiempo. Vuelven con EXP, dinero, tickets y a veces Pokémon nuevos, sin riesgo.',
+      text: 'Arriba, Expediciones: elige una ruta que ya hayas completado, quién va y cuánto tiempo. Vuelven con EXP, dinero, tickets y a veces Pokémon nuevos, sin riesgo.',
     },
     {
       image: shot('play-gacha'),
       title: 'Abre Poké Balls',
-      text: 'En Gacha, cada ticket de gacha abre una Poké Ball con tickets de Pokémon al azar. Si te faltan, cómpralos con ₽ justo debajo.',
+      text: 'En la pestaña Pokédex, en Tirar, cada ticket de gacha abre una Poké Ball con tickets de Pokémon al azar. Si te faltan, cómpralos con ₽ justo debajo.',
     },
     {
       image: shot('play-dex'),

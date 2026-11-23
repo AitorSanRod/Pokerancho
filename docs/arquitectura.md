@@ -69,21 +69,22 @@ src/
     gift/             Obsequio diario (DailyGiftSheet), que se abre desde el menú del rancho (ranch/RanchMenu)
     shop/             Tienda (ShopScreen: pestañas Tienda, Intercambios y Venta); trade/ (Intercambios), sell/ (Venta)
     inbox/            Notificaciones del menú del rancho (InboxSheet): obsequio listo, premios de raid e intercambios
-    ranch/            Rancho (varios ranchos, arrastre, Caja); al tocar un Pokémon abre PokemonSheet
+    ranch/            Rancho (varios ranchos, arrastre, Caja, tira «En curso»); al tocar un Pokémon abre PokemonSheet
     settings/         Menú ⚙️ y notificaciones
-    route/            Pestaña Ruta: lista de rutas y diálogo de comenzar, ruta en curso, combate, escena por bioma
+    route/            Pestaña Ruta (Ruta, Expediciones y Torre): lista de rutas y diálogo de comenzar, ruta en curso, combate, escena por bioma
                       (pixelScene/: pixel art generado y animado en canvas, ver fondos.md)
     expeditions/      Enviar, seguir y recoger expediciones
-    raid/             Pestaña Ruta › Raids: una pestaña por rotación, la sala abierta (RaidLobby: lista, entrar, cambiar o
+    community/        Pestaña Comunidad: subpestañas Incursiones y Raids
+    raid/             Comunidad › Raids: una pestaña por rotación, la sala abierta (RaidLobby: lista, entrar, cambiar o
                       salir), la pelea (RaidFightView bajo las pestañas, con la escena de la incursión, cabecera
                       como la de ruta en RaidFightHud y la barra de ataques de las rutas), el anillo crítico, el
                       final y el apodo (NicknameDialog)
-    incursion/        Pestaña Ruta › Incursiones: subpestañas Tablón, Mis incursiones y Programar (incursiones
+    incursion/        Comunidad › Incursiones: subpestañas Tablón, Mis incursiones, Programar y Sala (con el checkin abierto) (incursiones
                       programadas), sala del checkin, lista con información, preparación para jugar ya con bots, la
                       incursión en curso (IncursionStage sobre la escena de ruta; sceneState rehace cada momento desde
                       los eventos), sala de reorganizar, retirada y final
     gacha/            Tiradas, apertura de la Pokéball, trituradora y tienda de MissingNo
-    dex/              Pokédex; al tocar una casilla abre PokemonSheet, la misma ficha que el rancho
+    dex/              Pestaña Pokédex (con el gacha en sus subpestañas); al tocar una casilla abre PokemonSheet, la misma ficha que el rancho
     shop/             Mejoras
 worker/
   index.ts            Entrada: /api/raid, /api/save y /api/auth/* (la web la sirve Cloudflare sin pasar por aquí)

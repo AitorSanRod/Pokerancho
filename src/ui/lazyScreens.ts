@@ -16,7 +16,7 @@ export const RouteScreen = screen(() => import('./route/RouteScreen').then((m) =
 export const RanchScreen = screen(() => import('./ranch/RanchScreen').then((m) => m.RanchScreen))
 export const ShopScreen = screen(() => import('./shop/ShopScreen').then((m) => m.ShopScreen))
 export const GachaScreen = screen(() => import('./gacha/GachaScreen').then((m) => m.GachaScreen))
-export const DexScreen = screen(() => import('./dex/DexScreen').then((m) => m.DexScreen))
+export const CommunityScreen = screen(() => import('./community/CommunityScreen').then((m) => m.CommunityScreen))
 export const StarterScreen = screen(() => import('./starter/StarterScreen').then((m) => m.StarterScreen))
 
 /** Milisegundos tras arrancar en los que se piden las pantallas que aún no se han visto */

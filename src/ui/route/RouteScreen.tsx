@@ -2,29 +2,22 @@ import { useEffect, useState } from 'react'
 import { activeMon, type GameState } from '../../game/core/state'
 import { isExpeditionDone } from '../../game/team/expedition'
 import { ExpeditionScreen } from '../expeditions/ExpeditionScreen'
-import { IncursionScreen } from '../incursion/IncursionScreen'
-import { RaidScreen } from '../raid/RaidScreen'
 import { TowerScreen } from '../tower/TowerScreen'
 import { IconTabs } from '../shared/IconTabs'
 import { ICON } from '../shared/icons'
-import { incursionSpotPending, listenIncursionRequests } from '../shared/navigation'
+import { routeSpots, type RouteSpot } from '../shared/navigation'
 import { pendingKey, useUnseen } from '../shared/useUnseen'
 import { RouteMap } from './RouteMap'
 import { RunView } from './RunView'
 import './route.css'
 
-type RouteTab = 'route' | 'expeditions' | 'raid' | 'incursion' | 'tower'
-
-
-/** Pestaña Ruta: la ruta del Pokémon activo (mapa o ruta en curso), las expediciones del resto, el jefe comunitario, las incursiones y la torre */
+/** Pestaña Ruta: la ruta del Pokémon activo (mapa o ruta en curso), las expediciones del resto y la torre */
 export function RouteScreen({ game }: { game: GameState }) {
-  const [tab, setTab] = useState<RouteTab>(() => (incursionSpotPending() ? 'incursion' : 'route'))
-  useEffect(() => listenIncursionRequests(() => setTab('incursion')), [])
+  const [tab, setTab] = useState<RouteSpot>(() => routeSpots.take() ?? 'route')
+  useEffect(() => routeSpots.listen(setTab), [])
   const mon = activeMon(game)
   const returned = game.expeditions.filter(isExpeditionDone)
-  const prizes = game.raidPrizes
   const returnedUnseen = useUnseen('route:expeditions', pendingKey(returned.map((e) => e.uid)), tab === 'expeditions')
-  const prizesUnseen = useUnseen('route:raid', pendingKey(prizes.map((p) => `${p.bossSpeciesId}:${p.uid}`)), tab === 'raid')
 
   return (
     <div className="screen tabbed">
@@ -32,20 +25,14 @@ export function RouteScreen({ game }: { game: GameState }) {
         active={tab}
         onChange={setTab}
         tabs={[
-          { id: 'route', icon: ICON.Route, label: 'Ruta' },
+          { id: 'route', icon: ICON.Route, label: 'Ruta', live: game.run !== null },
           { id: 'expeditions', icon: ICON.Expedition, label: 'Expediciones', count: returnedUnseen ? returned.length : 0 },
-          { id: 'raid', icon: ICON.Raid, label: 'Raids', count: prizesUnseen ? prizes.length : 0 },
-          { id: 'incursion', icon: ICON.Incursion, label: 'Incursiones' },
-          { id: 'tower', icon: ICON.Tower, label: 'Torre' },
+          { id: 'tower', icon: ICON.Tower, label: 'Torre', live: game.tower !== null && game.tower.end === null },
         ]}
       />
       <div className="tabbed-body">
         {tab === 'tower' ? (
           <TowerScreen game={game} />
-        ) : tab === 'incursion' ? (
-          <IncursionScreen game={game} />
-        ) : tab === 'raid' ? (
-          <RaidScreen game={game} />
         ) : tab === 'expeditions' ? (
           <ExpeditionScreen game={game} />
         ) : game.run && mon ? (

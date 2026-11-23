@@ -1,0 +1,63 @@
+/* Tira «En curso» del rancho, bajo el botón del rancho y el de ajustes: tarjetas oscuras translúcidas como los
+   demás controles del rancho, que se deslizan de lado si no caben */
+
+.activity-strip {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  right: 0;
+  z-index: var(--z-controls);
+  display: flex;
+  gap: 6px;
+  padding: 0 8px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+.activity-strip::-webkit-scrollbar {
+  display: none;
+}
+.activity-card {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  max-width: 220px;
+  padding: 4px 12px 4px 8px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  background: #0009;
+  color: #fff;
+  text-align: left;
+  scroll-snap-align: start;
+}
+/* Pide que se mire ya: algo que recoger, un checkin, una sala abierta */
+.activity-card.ready {
+  border-color: var(--yellow);
+}
+.activity-icon {
+  position: relative;
+  display: flex;
+}
+.activity-icon .dot,
+.activity-icon .live-dot {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  width: 9px;
+  height: 9px;
+}
+.activity-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.activity-text > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.activity-text .tiny {
+  opacity: 0.85;
+}

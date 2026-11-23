@@ -40,7 +40,7 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
 ## Recorrido del jugador
 
 ```
-  Ruta › Incursiones
+  Comunidad › Incursiones
         │
         ▼
  ┌────────────────────┐   elige incursión (y dificultad)
@@ -525,7 +525,7 @@ completar.
 
 Desde el 2026-11-17 sustituyen a la cola automática (decisión del usuario, `specs/001-incursiones-programadas/`).
 
-- **Programar**: en Ruta › Incursiones › Programar se elige incursión (las que piden llave; la gratuita se juega ya) y
+- **Programar**: en Comunidad › Incursiones › Programar se elige incursión (las que piden llave; la gratuita se juega ya) y
   una franja de 15 min entre 15 min y 7 días después. El creador ocupa el primer hueco y deja su fianza. Se avisa por
   push a todos los que tienen activado el tema «Incursiones programadas» (salvo al creador), puedan entrar o no.
 - **Aceptar**: desde el Tablón, si quedan huecos y tiene algún Pokémon con el nivel de entrada (aunque esté de

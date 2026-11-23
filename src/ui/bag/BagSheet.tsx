@@ -68,7 +68,7 @@ export function BagSheet({ game, onBack }: { game: GameState; onBack: () => void
             </BagGroup>
           )}
           {bag.incursionKeys.length > 0 && (
-            <BagGroup title="Llaves de incursión" hint="Se gasta una al entrar en su incursión, en Ruta › Incursiones.">
+            <BagGroup title="Llaves de incursión" hint="Se gasta una al entrar en su incursión, en Comunidad › Incursiones.">
               {bag.incursionKeys.map(({ id, count }) => (
                 <BagTile key={id} icon={<ItemIcon item={ICON.Incursion} size={44} />} name={incursion(id).name} count={count} />
               ))}

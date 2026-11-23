@@ -6,7 +6,6 @@ import { combinableCount } from '../../game/collection/pieces'
 import { TutorialStep, type GameState } from '../../game/core/state'
 import { tutorialStarter } from '../../game/team/tutorial'
 import { TutorialHint } from '../shared/TutorialHint'
-import { PokemonSheet } from '../shared/sheet/PokemonSheet'
 import { ICON } from '../shared/icons'
 import { ItemIcon } from '../shared/ItemIcon'
 import { DexCell } from './DexCell'
@@ -17,8 +16,15 @@ import './dex.css'
 
 const SECTIONS = dexSections()
 
-export function DexScreen({ game }: { game: GameState }) {
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+interface DexScreenProps {
+  game: GameState
+  /** Especie con la ficha abierta (la pinta Gacha, fuera de las pestañas, para cubrir toda la zona de contenido) */
+  selectedId: number | null
+  onSelect: (speciesId: number) => void
+}
+
+/** Pestaña Pokédex (su primera subpestaña): las Pokédex regionales y la Nacional, con buscador, filtros y las mejoras por tipo */
+export function DexScreen({ game, selectedId, onSelect }: DexScreenProps) {
   const [query, setQuery] = useState(DEFAULT_DEX_QUERY)
   const ready = combinableCount(game)
   const filtering = isDexQueryActive(query)
@@ -28,8 +34,7 @@ export function DexScreen({ game }: { game: GameState }) {
   const nothingFound = filtering && sections.every(({ shown }) => shown.length === 0)
 
   return (
-    <>
-      <div className="screen scroll">
+    <div className="screen scroll">
         <div className="row between">
           <h2 className="section-title">Pokédex</h2>
           <span className="small">
@@ -72,7 +77,7 @@ export function DexScreen({ game }: { game: GameState }) {
                       sp={sp}
                       selected={selectedId === sp.id}
                       tutorialTarget={sp.id === target}
-                      onSelect={() => setSelectedId(sp.id)}
+                      onSelect={() => onSelect(sp.id)}
                       footer={query.sort === DexSort.Level && <span className="tiny dex-level">Nv. {ownedLevel(game, sp.id)}</span>}
                     />
                   ))}
@@ -81,9 +86,6 @@ export function DexScreen({ game }: { game: GameState }) {
             </DexSection>
           )
         })}
-      </div>
-      {/* Fuera de la lista que hace scroll, para cubrir toda la zona de contenido como la ficha del rancho */}
-      {selectedId !== null && <PokemonSheet key={selectedId} game={game} speciesId={selectedId} onClose={() => setSelectedId(null)} />}
-    </>
+    </div>
   )
 }

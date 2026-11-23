@@ -24,8 +24,8 @@ interface Props {
 }
 
 /**
- * Las incursiones con sus llaves: con servidor, «Programar» (con otros jugadores) en las que piden llave y «Jugar ya»
- * (con bots) en las gratuitas; sin servidor, todas «Jugar ya». Sin servidor ocupa la pestaña entera
+ * Subpestaña Programar: todas las incursiones con sus llaves; con servidor, «Programar» (con otros jugadores) en las
+ * que piden llave y «Jugar ya» (con bots) en las gratuitas; sin servidor, todas «Jugar ya»
  */
 export function IncursionList(props: Props) {
   const [info, setInfo] = useState(false)
@@ -33,7 +33,7 @@ export function IncursionList(props: Props) {
   const [scheduling, setScheduling] = useState<Incursion | null>(null)
   const { game, online } = props
 
-  const content = (
+  return (
     <>
       <button className="btn incursion-info-btn" onClick={() => setInfo(true)}>
         Cómo funcionan las incursiones
@@ -58,7 +58,6 @@ export function IncursionList(props: Props) {
       )}
     </>
   )
-  return online ? content : <div className="screen scroll incursion-list">{content}</div>
 }
 
 interface CardProps {

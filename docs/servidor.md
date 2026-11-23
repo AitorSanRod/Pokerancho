@@ -106,7 +106,7 @@ cada navegador tendría que volver a activar los avisos. Sin ellas, Ajustes › 
 ### 6. Probarlo
 
 1. Abre la web en el móvil y en el ordenador (o en una ventana de incógnito: cuenta como otro jugador).
-2. **Raids**: en los dos, termina el tutorial, ve a *Ruta › Raids* y, con la sala abierta (la primera media hora de
+2. **Raids**: en los dos, termina el tutorial, ve a *Comunidad › Raids* y, con la sala abierta (la primera media hora de
    cada hora UTC), entra con un Pokémon (la primera vez pide el apodo). Los dos aparecen en la misma sala.
 3. **Cuenta**: *Ajustes (engranaje) › Cuenta › Crear una cuenta*. Llega un correo (mira en spam); al abrir el
    enlace vuelves a la web con la sesión iniciada y la partida se sube sola. En otro dispositivo, en la pantalla del

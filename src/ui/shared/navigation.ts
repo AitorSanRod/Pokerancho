@@ -1,10 +1,16 @@
 import { PushGo } from '../../game/incursion/schedule/schedulePushes'
 
 /** Pestañas del menú inferior */
-export type AppTab = 'route' | 'ranch' | 'shop' | 'gacha' | 'dex'
+export type AppTab = 'route' | 'community' | 'ranch' | 'dex' | 'shop'
 
 /** Secciones de la Tienda a las que se puede saltar desde otra pantalla */
 export type ShopSpot = 'keys'
+/** Subpestañas de Ruta */
+export type RouteSpot = 'route' | 'expeditions' | 'tower'
+/** Subpestañas de Comunidad */
+export type CommunitySpot = 'incursion' | 'raid'
+/** Subpestañas de Comunidad › Incursiones a las que se puede saltar (p. ej. desde un aviso); `room`, la sala del checkin */
+export type IncursionSpot = 'board' | 'mine' | 'room'
 
 let showTab: ((tab: AppTab) => void) | null = null
 let pendingSpot: ShopSpot | null = null
@@ -33,34 +39,52 @@ export function clearShopSpot() {
   pendingSpot = null
 }
 
-/** Subpestañas de Ruta › Incursiones a las que se puede saltar (p. ej. desde un aviso) */
-export type IncursionSpot = 'board' | 'mine'
-
-let incursionSpot: IncursionSpot | null = null
-const incursionListeners = new Set<(spot: IncursionSpot) => void>()
-
-/** La pestaña Ruta y la de Incursiones se apuntan para abrirse cuando lo pida un aviso */
-export function listenIncursionRequests(onSpot: (spot: IncursionSpot) => void): () => void {
-  incursionListeners.add(onSpot)
-  return () => incursionListeners.delete(onSpot)
+/**
+ * Subpestaña pedida desde otra pantalla: si su pantalla está montada la abre al momento (`listen`); si no, queda
+ * pedida hasta que la recoja al montarse (`take`, que la consume)
+ */
+function spotChannel<T>() {
+  let pending: T | null = null
+  const listeners = new Set<(spot: T) => void>()
+  return {
+    request(spot: T) {
+      pending = listeners.size > 0 ? null : spot
+      listeners.forEach((l) => l(spot))
+    },
+    take(): T | null {
+      const spot = pending
+      pending = null
+      return spot
+    },
+    listen(onSpot: (spot: T) => void): () => void {
+      listeners.add(onSpot)
+      return () => listeners.delete(onSpot)
+    },
+  }
 }
 
-/** Abre Ruta › Incursiones en esa subpestaña */
-export function goToIncursions(spot: IncursionSpot) {
-  incursionSpot = spot
+export const routeSpots = spotChannel<RouteSpot>()
+export const communitySpots = spotChannel<CommunitySpot>()
+export const incursionSpots = spotChannel<IncursionSpot>()
+
+/** Abre Ruta en esa subpestaña */
+export function goToRoute(spot: RouteSpot) {
   showTab?.('route')
-  incursionListeners.forEach((l) => l(spot))
+  routeSpots.request(spot)
 }
 
-/** La subpestaña pedida y aún sin enseñar (la consume) */
-export function takeIncursionSpot(): IncursionSpot | null {
-  const spot = incursionSpot
-  incursionSpot = null
-  return spot
+/** Abre Comunidad › Raids */
+export function goToRaids() {
+  showTab?.('community')
+  communitySpots.request('raid')
 }
 
-/** Si hay una subpestaña de incursiones pedida y aún sin enseñar */
-export const incursionSpotPending = (): boolean => incursionSpot !== null
+/** Abre Comunidad › Incursiones en esa subpestaña */
+export function goToIncursions(spot: IncursionSpot) {
+  showTab?.('community')
+  incursionSpots.request(spot)
+  communitySpots.request('incursion')
+}
 
 /** Subpestaña a la que lleva cada destino de aviso push (`go`) */
 const PUSH_SPOTS: Record<PushGo, IncursionSpot> = { [PushGo.Board]: 'board', [PushGo.Mine]: 'mine' }

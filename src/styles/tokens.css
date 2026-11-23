@@ -24,6 +24,8 @@
   --hp-mid: #f7d02c;
   --hp-low: #e3350d;
   --exp: #1a6fbf;
+  /* Algo en marcha (ruta, incursión, sala de raid): punto que late y tarjetas de «En curso» */
+  --live: #2fa84f;
   --radius: 14px;
   /* Capas (z-index), de abajo arriba. Dentro de la app: */
   --z-float: 40; /* sobre el contenido de una pantalla: aviso del tutorial, penumbra de la captura */

@@ -12,7 +12,7 @@ export const TOWER_GUIDE: Guide = {
     {
       image: shot('tower-tab'),
       title: 'Entra en la torre',
-      text: 'En la pestaña Ruta, el último icono de arriba abre la Torre. Ahí ves tu récord, el de esta semana (empieza de cero cada lunes) y el próximo premio: algunos pisos dan uno la primera vez de cada semana.',
+      text: 'En la pestaña Ruta, arriba, Torre. Ahí ves tu récord, el de esta semana (empieza de cero cada lunes) y el próximo premio: algunos pisos dan uno la primera vez de cada semana.',
     },
     {
       image: shot('tower-start'),

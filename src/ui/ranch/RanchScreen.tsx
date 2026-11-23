@@ -5,6 +5,7 @@ import { act } from '../../store/store'
 import { moveBlocker, moveMon, placeMon, ranchCount } from '../../game/team/ranches'
 import { SettingsMenu } from '../settings/SettingsMenu'
 import { PokemonSheet } from '../shared/sheet/PokemonSheet'
+import { ActivityStrip } from './ActivityStrip'
 import { BoxSheet } from './BoxSheet'
 import { RanchMenu } from './RanchMenu'
 import type { RanchDrop } from './RanchMon'
@@ -63,6 +64,7 @@ export function RanchScreen({ game }: { game: GameState }) {
           )}
         </div>
         <RanchSlots game={game} ranch={ranch} />
+        <ActivityStrip game={game} />
         {count > 1 && (
           <>
             <button className="ranch-arrow left" onClick={() => carousel.turn(-1)} aria-label="Rancho anterior" />

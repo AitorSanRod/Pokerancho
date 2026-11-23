@@ -15,7 +15,7 @@ export const RAID_GUIDE: Guide = {
     {
       image: shot('raid-tab'),
       title: 'Entra en Raids',
-      text: `En la pestaña Ruta, toca el icono de arriba a la derecha. Arriba eliges el jefe: el Normal o el de Difíciles. Cada jefe abre su sala ${formatMinutes(RAID_LOBBY_MS / 60_000)} antes de la pelea, a la misma hora para todos.`,
+      text: `En la pestaña Comunidad, abre Raids. Arriba eliges el jefe: el Normal o el de Difíciles. Cada jefe abre su sala ${formatMinutes(RAID_LOBBY_MS / 60_000)} antes de la pelea, a la misma hora para todos.`,
     },
     {
       image: shot('raid-join'),

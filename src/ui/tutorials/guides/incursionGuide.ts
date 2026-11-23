@@ -20,7 +20,7 @@ export const INCURSION_GUIDE: Guide = {
     {
       image: shot('inc-tab'),
       title: 'Entra en Incursiones',
-      text: `En la pestaña Ruta, toca el icono de la llave. Cada incursión es una serie de salas (combates, descansos y un jefe al final) que se recorre en grupo de ${PARTY_SIZE}.`,
+      text: `En la pestaña Comunidad, abre Incursiones. Cada incursión es una serie de salas (combates, descansos y un jefe al final) que se recorre en grupo de ${PARTY_SIZE}.`,
     },
     {
       image: shot('inc-keys'),

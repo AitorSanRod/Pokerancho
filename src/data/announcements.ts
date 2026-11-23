@@ -21,6 +21,19 @@ export interface Announcement {
 /** Anuncios del tablón, del más nuevo al más viejo; el primero sale en una ventana al entrar hasta que se ve */
 export const ANNOUNCEMENTS: Announcement[] = [
   {
+    id: 'raids-2026-11-23',
+    date: '2026-11-23',
+    title: '¡Nueva rotación de Raids!',
+    text: 'Los jefes de la pestaña Raids han cambiado. En la rotación Normal salen uno tras otro, en orden, y cada uno pide un nivel mínimo para entrar en su sala. En Difíciles sale uno al azar cada vez: tienen más nivel y más vida, pero dan muchos más premios.',
+    groups: [
+      {
+        label: 'Normal',
+        speciesIds: [POKEMON.Eevee, POKEMON.Scyther, POKEMON.Pinsir, POKEMON.Lapras, POKEMON.Dragonite],
+      },
+      { label: 'Difíciles', speciesIds: [POKEMON.Togekiss, POKEMON.Altaria, POKEMON.Salamence] },
+    ],
+  },
+  {
     id: 'ajustes-2026-11',
     date: '2026-11-18',
     title: 'Menta neutra, favoritos y más',

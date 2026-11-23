@@ -1,4 +1,4 @@
-/* Pantalla con pestañas de icono arriba (IconTabs): Ruta y Gacha */
+/* Pantalla con pestañas de icono arriba (IconTabs): Ruta, Comunidad y Gacha */
 
 .tabbed {
   display: flex;
@@ -14,22 +14,20 @@
   min-height: 0;
   position: relative;
 }
-/* Pestañas de arriba: solo el icono; la activa se ensancha y despliega su nombre */
+/* Pestañas de arriba: icono con su nombre debajo, todas del mismo ancho */
 .icon-tabs {
   display: flex;
 }
 .icon-tabs button {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  gap: 1px;
   flex: 1 1 0;
-  min-height: 44px;
-  transition: flex-grow 0.3s ease, gap 0.3s ease;
-}
-.icon-tabs button.active {
-  flex-grow: 2.6;
-  gap: 6px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 4px 2px;
 }
 .icon-tab-icon {
   position: relative;
@@ -40,14 +38,24 @@
   top: -6px;
   right: -10px;
 }
-.icon-tab-label {
-  max-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  opacity: 0;
-  transition: max-width 0.3s ease, opacity 0.2s ease;
+.icon-tab-icon .live-dot {
+  position: absolute;
+  top: -2px;
+  right: -6px;
 }
-.icon-tabs button.active .icon-tab-label {
-  max-width: 140px;
-  opacity: 1;
+/* Un nombre largo («Mis incursiones» con cuatro pestañas) pasa a dos líneas en vez de cortarse */
+.icon-tab-label {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  text-align: center;
+  overflow-wrap: anywhere;
+  font-size: 0.72rem;
+  line-height: 1.1;
+}
+.icon-tabs button:not(.active) .icon-tab-label {
+  opacity: 0.75;
 }

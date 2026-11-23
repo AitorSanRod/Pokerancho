@@ -2,11 +2,11 @@
  * Capturas de las guías de torre, gimnasios, tienda, gacha, ficha y cuenta (las demás, en shots.mjs). Mismo formato:
  * `name`, `scenario` (demoSave.mjs), `steps` y `focus`.
  */
-import { nav, openMenu, openRanchMon, routeBattle, showSection, tap, toRoute, toRouteTab, wait } from './steps.mjs'
+import { nav, openMenu, openRanchMon, routeBattle, showSection, tap, toRoute, toRouteTab, toDex, toGachaTab, wait } from './steps.mjs'
 
 /** Abre la ficha de la Pokédex de esa especie (por su clave de POKEMON, p. ej. 'Abra') */
 async function openDexCell(page, name) {
-  await nav(page, 'dex')
+  await toDex(page)
   const index = await page.evaluate(async (key) => {
     const { POKEMON } = await import('/src/data/pokemon.ts')
     const isSprite = (img) => img.src.endsWith(`/${POKEMON[key]}.png`) || img.src.endsWith(`/${POKEMON[key]}.gif`)
@@ -19,10 +19,6 @@ async function openDexCell(page, name) {
 
 const toShopTab = async (p, label) => {
   await nav(p, 'shop')
-  await tap(p, `::-p-aria(${label})`, 900)
-}
-const toGachaTab = async (p, label) => {
-  await nav(p, 'gacha')
   await tap(p, `::-p-aria(${label})`, 900)
 }
 const GYM_ROW = '::-p-text(Gimnasio de Ciudad Plateada)'

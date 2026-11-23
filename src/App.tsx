@@ -24,14 +24,14 @@ import { ItemIcon } from './ui/shared/ItemIcon'
 import { listenPushNavigation, listenTabRequests, type AppTab } from './ui/shared/navigation'
 import { pendingKey, useUnseen } from './ui/shared/useUnseen'
 import { useMenuPending } from './ui/ranch/useMenuPending'
-import { DexScreen, GachaScreen, preloadScreens, RanchScreen, RouteScreen, ShopScreen, StarterScreen } from './ui/lazyScreens'
+import { CommunityScreen, GachaScreen, preloadScreens, RanchScreen, RouteScreen, ShopScreen, StarterScreen } from './ui/lazyScreens'
 
 const TABS: { id: AppTab; icon: Item; label: string }[] = [
   { id: 'route', icon: ICON.Route, label: 'Ruta' },
-  { id: 'gacha', icon: ICON.Gacha, label: 'Gacha' },
+  { id: 'community', icon: ICON.Incursion, label: 'Comunidad' },
   { id: 'ranch', icon: ICON.Ranch, label: 'Rancho' },
-  { id: 'shop', icon: ICON.Shop, label: 'Tienda' },
   { id: 'dex', icon: ICON.Dex, label: 'Pokédex' },
+  { id: 'shop', icon: ICON.Shop, label: 'Tienda' },
 ]
 const TICK_MS = 250
 
@@ -69,12 +69,13 @@ export default function App() {
   // Los puntos rojos se apagan al entrar en la pestaña y vuelven si aparece algo nuevo
   const runNeedsLook = game.run && game.run.phase !== 'walking' ? [`${game.run.routeId}:${game.run.phase}`] : []
   const routePending = pendingKey([...runNeedsLook, ...game.expeditions.filter(isExpeditionDone).map((e) => e.uid)])
+  const communityPending = pendingKey([...game.raidPrizes.map((p) => p.uid), ...(game.incursionCheckin ? [game.incursionCheckin.scheduleId] : [])])
   const badges: Record<AppTab, boolean> = {
     route: useUnseen('tab:route', routePending, tab === 'route'),
+    community: useUnseen('tab:community', communityPending, tab === 'community'),
     ranch: useUnseen('tab:ranch', useMenuPending(game), tab === 'ranch'),
+    dex: useUnseen('tab:dex-nav', pendingKey(combinableIds(game)), tab === 'dex'),
     shop: false,
-    gacha: false,
-    dex: useUnseen('tab:dex', pendingKey(combinableIds(game)), tab === 'dex'),
   }
 
   if (game.tutorial === TutorialStep.Starter) {
@@ -98,10 +99,10 @@ export default function App() {
       <main className="content">
         <Suspense fallback={<ScreenLoading />}>
           {tab === 'route' && <RouteScreen game={game} />}
+          {tab === 'community' && <CommunityScreen game={game} />}
           {tab === 'ranch' && <RanchScreen game={game} />}
+          {tab === 'dex' && <GachaScreen game={game} />}
           {tab === 'shop' && <ShopScreen game={game} />}
-          {tab === 'gacha' && <GachaScreen game={game} />}
-          {tab === 'dex' && <DexScreen game={game} />}
         </Suspense>
         <TutorialNavHint game={game} currentTab={tab} tabIds={TABS.map((t) => t.id)} />
       </main>

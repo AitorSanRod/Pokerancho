@@ -73,3 +73,13 @@
   flex-direction: column;
   gap: 8px;
 }
+
+/* Tablón y Mis incursiones sin servidor: por qué no hay nada y el botón a la lista para jugar ya */
+.incursion-offline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.incursion-offline p {
+  margin: 0;
+}

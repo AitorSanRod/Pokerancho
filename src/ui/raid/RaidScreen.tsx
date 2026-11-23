@@ -22,7 +22,7 @@ const TAB_SPRITE_SIZE = 24
 const firstTab = (game: GameState): RaidRotation => RAID_ROTATIONS.find((r) => game.raids[r]) ?? RAID_ROTATIONS[0]
 
 /**
- * Pestaña Ruta › Raids: una pestaña por rotación de jefes, todas con el mismo calendario (raidSchedule.ts). Con la sala
+ * Comunidad › Raids: una pestaña por rotación de jefes, todas con el mismo calendario (raidSchedule.ts). Con la sala
  * abierta se entra con un Pokémon y su ataque; al empezar, la pelea bajo las pestañas, y aún se puede entrar en ella
  * en el sitio de un bot (raidLateJoin.ts). Con servidor, la sala es la suya, con otros jugadores; sin él, en local con bots
  */

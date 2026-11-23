@@ -364,6 +364,21 @@
   border-radius: 50%;
   background: var(--red);
 }
+/* Punto verde que late: hay algo en marcha (pestañas, tira «En curso» del rancho) */
+.live-dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--live);
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+@keyframes live-pulse {
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--live) 35%, transparent);
+  }
+}
 /* Contador rojo (pestañas, avisos) */
 .count-badge {
   display: inline-block;

@@ -4,7 +4,7 @@
  * las guías más nuevas, en guideShots.mjs.
  */
 import { GUIDE_SHOTS } from './guideShots.mjs'
-import { tap, nav, openRanchMon, showSection, tapUntilRing, toRoute, toRouteTab, openMenu, routeBattle } from './steps.mjs'
+import { tap, nav, openRanchMon, showSection, tapUntilRing, toRoute, toRouteTab, toCommunityTab, toDex, toGachaTab, openMenu, routeBattle } from './steps.mjs'
 
 export const SHOTS = [
   // Mejoras, misiones y toques
@@ -13,7 +13,7 @@ export const SHOTS = [
     name: 'perks-dex',
     scenario: { perks: true },
     steps: async (p) => {
-      await nav(p, 'dex')
+      await toDex(p)
       await tap(p, '::-p-text(Mejoras)')
     },
     focus: '.dex-perks',
@@ -51,23 +51,23 @@ export const SHOTS = [
   },
   { name: 'play-run', scenario: { run: true }, steps: routeBattle },
   { name: 'play-expeditions', scenario: { expedition: true }, steps: (p) => toRouteTab(p, 'Expediciones'), focus: '::-p-aria(Expediciones)' },
-  { name: 'play-gacha', steps: (p) => nav(p, 'gacha'), focus: '::-p-text(Tirar x1)' },
-  { name: 'play-dex', steps: (p) => nav(p, 'dex'), focus: '.dex-cell.ready' },
+  { name: 'play-gacha', steps: (p) => toGachaTab(p, 'Tirar'), focus: '::-p-text(Tirar x1)' },
+  { name: 'play-dex', steps: toDex, focus: '.dex-cell.ready' },
   // Raids: «raid-join» y «raid-nickname» necesitan la sala abierta (la primera media hora de cada hora, raidSchedule.ts)
-  { name: 'raid-tab', steps: toRoute, focus: '::-p-aria(Raids)' },
-  { name: 'raid-join', steps: (p) => toRouteTab(p, 'Raids', 1500), focus: '::-p-text(Entrar en la sala)' },
-  { name: 'raid-send', scenario: { raid: 'lobby' }, steps: (p) => toRouteTab(p, 'Raids', 1500), focus: '::-p-text(Salir de la sala)' },
+  { name: 'raid-tab', steps: (p) => nav(p, 'community'), focus: '::-p-aria(Raids)' },
+  { name: 'raid-join', steps: (p) => toCommunityTab(p, 'Raids', 1500), focus: '::-p-text(Entrar en la sala)' },
+  { name: 'raid-send', scenario: { raid: 'lobby' }, steps: (p) => toCommunityTab(p, 'Raids', 1500), focus: '::-p-text(Salir de la sala)' },
   {
     name: 'raid-nickname',
     steps: async (p) => {
-      await toRouteTab(p, 'Raids', 1500)
+      await toCommunityTab(p, 'Raids', 1500)
       await tap(p, '::-p-text(Entrar en la sala)')
     },
   },
-  { name: 'raid-battle', scenario: { raid: 'fight' }, steps: (p) => toRouteTab(p, 'Raids', 3000), focus: '.move-bar' },
-  { name: 'raid-prize', scenario: { raidPrize: true }, steps: (p) => toRouteTab(p, 'Raids', 1500), focus: '.raid-prize-banner' },
+  { name: 'raid-battle', scenario: { raid: 'fight' }, steps: (p) => toCommunityTab(p, 'Raids', 3000), focus: '.move-bar' },
+  { name: 'raid-prize', scenario: { raidPrize: true }, steps: (p) => toCommunityTab(p, 'Raids', 1500), focus: '.raid-prize-banner' },
   // Incursiones
-  { name: 'inc-tab', steps: toRoute, focus: '::-p-aria(Incursiones)' },
+  { name: 'inc-tab', steps: (p) => nav(p, 'community'), focus: '::-p-aria(Incursiones)' },
   {
     name: 'inc-keys',
     steps: async (p) => {
@@ -76,23 +76,23 @@ export const SHOTS = [
     },
     focus: '.shop-fold-keys .shop-grid',
   },
-  { name: 'inc-info', steps: (p) => toRouteTab(p, 'Incursiones'), focus: '::-p-text(Cómo funcionan las incursiones)' },
-  { name: 'inc-board', respond: 'board', steps: (p) => toRouteTab(p, 'Incursiones'), focus: '.schedule-card' },
+  { name: 'inc-info', steps: (p) => toCommunityTab(p, 'Incursiones'), focus: '::-p-text(Cómo funcionan las incursiones)' },
+  { name: 'inc-board', respond: 'board', steps: (p) => toCommunityTab(p, 'Incursiones'), focus: '.schedule-card' },
   {
     name: 'inc-schedule',
     respond: 'board',
     steps: async (p) => {
-      await toRouteTab(p, 'Incursiones')
+      await toCommunityTab(p, 'Incursiones')
       await tap(p, '::-p-aria(Programar)')
       await tap(p, '.incursion-card .btn.go::-p-text(Programar)', 900)
     },
     focus: '.schedule-dialog',
   },
-  { name: 'inc-room', respond: 'room', steps: (p) => toRouteTab(p, 'Incursiones', 1200), focus: '.schedule-room-you' },
-  { name: 'inc-tap', scenario: { incursion: 'tap' }, steps: (p) => toRouteTab(p, 'Incursiones', 1200), focus: '.incursion-tap-pad' },
-  { name: 'inc-battle', scenario: { incursion: 'battle' }, steps: (p) => toRouteTab(p, 'Incursiones', 1500), focus: '.incursion-revives' },
-  { name: 'inc-regroup', scenario: { incursion: 'regroup' }, steps: (p) => toRouteTab(p, 'Incursiones', 1500), focus: '.incursion-regroup' },
-  { name: 'inc-summary', scenario: { incursion: 'finished' }, steps: (p) => toRouteTab(p, 'Incursiones', 1500), focus: '.incursion-summary' },
+  { name: 'inc-room', respond: 'room', steps: (p) => toCommunityTab(p, 'Incursiones', 1200), focus: '.schedule-room-you' },
+  { name: 'inc-tap', scenario: { incursion: 'tap' }, steps: (p) => toCommunityTab(p, 'Incursiones', 1200), focus: '.incursion-tap-pad' },
+  { name: 'inc-battle', scenario: { incursion: 'battle' }, steps: (p) => toCommunityTab(p, 'Incursiones', 1500), focus: '.incursion-revives' },
+  { name: 'inc-regroup', scenario: { incursion: 'regroup' }, steps: (p) => toCommunityTab(p, 'Incursiones', 1500), focus: '.incursion-regroup' },
+  { name: 'inc-summary', scenario: { incursion: 'finished' }, steps: (p) => toCommunityTab(p, 'Incursiones', 1500), focus: '.incursion-summary' },
   // Evolucionar y mejorar
   {
     name: 'evo-train',
@@ -121,7 +121,7 @@ export const SHOTS = [
   {
     name: 'evo-star',
     steps: async (p) => {
-      await nav(p, 'dex')
+      await toDex(p)
       await tap(p, '.dex-cell.ready', 900)
       await showSection(p, 'Tickets')
     },

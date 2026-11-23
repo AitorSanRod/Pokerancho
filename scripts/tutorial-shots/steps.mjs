@@ -1,6 +1,6 @@
 // Pasos comunes de las capturas: tocar, navegar, abrir fichas y menús, llegar a un combate
 
-export const NAV = { route: 1, gacha: 2, ranch: 3, shop: 4, dex: 5 }
+export const NAV = { route: 1, community: 2, ranch: 3, dex: 4, shop: 5 }
 
 export const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -52,6 +52,18 @@ export async function tapUntilRing(page) {
 export const toRoute = (p) => nav(p, 'route')
 export const toRouteTab = async (p, label, after) => {
   await toRoute(p)
+  await tap(p, `::-p-aria(${label})`, after)
+}
+/** Comunidad › Incursiones o Raids */
+export const toCommunityTab = async (p, label, after) => {
+  await nav(p, 'community')
+  await tap(p, `::-p-aria(${label})`, after)
+}
+/** Pestaña Pokédex (se abre en su subpestaña Pokédex) */
+export const toDex = (p) => nav(p, 'dex')
+/** Pokédex › Tirar, Trituradora o MissingNo */
+export const toGachaTab = async (p, label, after = 900) => {
+  await nav(p, 'dex')
   await tap(p, `::-p-aria(${label})`, after)
 }
 export const openMenu = async (p, entry) => {

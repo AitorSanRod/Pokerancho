@@ -120,14 +120,24 @@ export function useScheduleBoard(): ScheduleBoardState {
       document.removeEventListener('visibilitychange', onVisible)
     }
   }, [])
-  return useSyncExternalStore(
-    (l) => {
-      listeners.add(l)
-      return () => listeners.delete(l)
-    },
-    () => current,
-  )
+  return useBoardState()
 }
+
+/** Lo último que se sabe del tablón sin quedarse consultándolo: solo lo pide una vez si aún no se tiene (tira «En curso» del rancho) */
+export function useScheduleBoardPeek(): ScheduleBoardState {
+  useEffect(() => {
+    if (!current.board && !current.loading && current.online !== false) void refreshScheduleBoard()
+  }, [])
+  return useBoardState()
+}
+
+const subscribe = (l: () => void) => {
+  listeners.add(l)
+  return () => {
+    listeners.delete(l)
+  }
+}
+const useBoardState = (): ScheduleBoardState => useSyncExternalStore(subscribe, () => current)
 
 /** Alguien está mirando el tablón (no hace falta pedirlo aparte) */
 export const boardWatched = (): boolean => watchers > 0
