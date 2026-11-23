@@ -2,6 +2,7 @@ import { incursion, type IncursionId } from '../../../data/incursions'
 import type { GameState } from '../../core/state'
 import { holdMoney, releaseMoney } from '../../core/wallet'
 import { canEnter } from '../entry'
+import { canAffordEntry } from '../keys'
 import { applyGroupView } from '../online/linkedIncursion'
 import type { GroupView } from '../online/protocol'
 import { adoptServerLock, startCheckin } from './scheduleCheckin'
@@ -35,9 +36,10 @@ export interface ScheduleCheckin {
 
 export const bondOf = (s: GameState, scheduleId: string): HeldBond | undefined => s.incursionBonds.find((b) => b.scheduleId === scheduleId)
 
-/** Por qué no puede crear ni aceptar esa incursión (null si puede): hace falta un Pokémon con el nivel de entrada */
+/** Por qué no puede crear ni aceptar esa incursión (null si puede): hace falta su llave y un Pokémon con el nivel de entrada */
 export function scheduleBlocker(s: GameState, incursionId: IncursionId): string | null {
   const inc = incursion(incursionId)
+  if (!canAffordEntry(s, incursionId)) return 'Necesitas una llave de esta incursión para apuntarte o programarla. Se compran en la Tienda.'
   return s.owned.some((m) => canEnter(inc, m.level)) ? null : `Ninguno de tus Pokémon tiene el nivel para entrar (Nv. ${inc.minLevel}–${inc.maxLevel}).`
 }
 

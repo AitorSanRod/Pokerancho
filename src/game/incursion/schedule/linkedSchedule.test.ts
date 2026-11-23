@@ -47,6 +47,11 @@ describe('fianza en la partida', () => {
     expect(scheduleBlocker(s, TEST_INCURSION.id)).not.toBeNull()
   })
 
+  it('crear y aceptar exigen una llave de esa incursión', () => {
+    s.incursionKeys[TEST_INCURSION.id] = 0
+    expect(scheduleBlocker(s, TEST_INCURSION.id)).not.toBeNull()
+  })
+
   it('al darse de baja o si el creador cancela, se devuelve', () => {
     see(NOW)
     leaveSchedule(sched, ME, NOW)

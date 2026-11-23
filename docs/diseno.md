@@ -264,10 +264,11 @@ nuevo (otra especie lista para combinar, otra expedición de vuelta…). Lo vist
 (`ui/shared/useUnseen.ts`). Las pestañas de arriba enseñan icono y nombre; con algo en marcha dentro (ruta, torre,
 incursión, sala de raid), un punto verde que late.
 
-Arriba del rancho, la tira **«En curso»** (`game/core/activity.ts` + `ui/ranch/ActivityStrip.tsx`) junta lo que hay
-en marcha y lo abierto para unirse: ruta, torre, incursión, checkin, la próxima incursión programada, salas de raid
-(o la sala abierta si no estás en ninguna), expediciones e incursiones del tablón con sitio. Cada tarjeta lleva a su
-pestaña; las que piden que se miren ya (premios, checkin, sala abierta) van con borde amarillo.
+Abajo del rancho, entre la Caja y el Menú y con su mismo botón, la fila **«En curso»** (`game/core/activity.ts` +
+`ui/ranch/ActivityStrip.tsx`) junta lo que hay en marcha y lo abierto para unirse: ruta, torre, incursión, checkin, las
+incursiones programadas (un solo botón con cuántas hay), salas de raid (o la sala abierta si no estás en ninguna),
+expediciones e incursiones del tablón con sitio. Cada botón lleva a su pestaña; los que piden que se miren ya
+(premios, checkin, sala abierta) van con borde amarillo.
 
 ## Aviso legal
 

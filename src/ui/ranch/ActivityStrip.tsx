@@ -1,4 +1,4 @@
-import { activities } from '../../game/core/activity'
+import { ActivityKind, activities, type Activity } from '../../game/core/activity'
 import type { GameState } from '../../game/core/state'
 import { useScheduleBoardPeek } from '../../net/incursionBoard'
 import { ItemIcon } from '../shared/ItemIcon'
@@ -6,8 +6,9 @@ import { activityCard } from './activityText'
 import './activity-strip.css'
 
 /**
- * Tira «En curso» arriba del rancho: lo que tiene en marcha (ruta, torre, incursiones, raids, expediciones) y lo abierto
- * para unirse (sala de raid, tablón de incursiones). Cada tarjeta lleva a su pestaña; sin nada, no se pinta
+ * Botones «En curso» abajo del rancho, entre la Caja y el Menú y con su mismo aspecto: lo que tiene en marcha (ruta,
+ * torre, incursiones, raids, expediciones) y lo abierto para unirse (sala de raid, tablón de incursiones). Cada uno
+ * lleva a su pestaña; sin nada, no se pinta
  */
 export function ActivityStrip({ game }: { game: GameState }) {
   const { board, clockOffset } = useScheduleBoardPeek()
@@ -19,19 +20,21 @@ export function ActivityStrip({ game }: { game: GameState }) {
     <nav className="activity-strip" aria-label="En curso">
       {list.map((a) => {
         const card = activityCard(a, now)
+        const text = `${card.title}: ${card.detail}`
         return (
-          <button key={`${a.kind}:${card.title}`} className={`activity-card ${a.ready ? 'ready' : ''}`} onClick={card.go}>
-            <span className="activity-icon">
-              <ItemIcon item={card.icon} size={26} />
-              <span className={a.ready ? 'dot' : 'live-dot'} />
-            </span>
-            <span className="activity-text">
-              <strong className="small">{card.title}</strong>
-              <span className="tiny">{card.detail}</span>
-            </span>
+          <button key={`${a.kind}:${card.title}`} className={`activity-button ${a.ready ? 'ready' : ''}`} onClick={card.go} title={text} aria-label={text}>
+            <ItemIcon item={card.icon} size={34} />
+            <span className="tiny">{card.label}</span>
+            <ActivityMark activity={a} />
           </button>
         )
       })}
     </nav>
   )
+}
+
+/** Marca de la esquina: cuántas programadas hay o, en lo demás, si pide que se mire ya o sigue en marcha */
+function ActivityMark({ activity }: { activity: Activity }) {
+  if (activity.kind === ActivityKind.Scheduled) return <span className="count-badge">{activity.count}</span>
+  return <span className={activity.ready ? 'dot' : 'live-dot'} />
 }

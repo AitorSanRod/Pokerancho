@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { type GameState } from '../../game/core/state'
+import { canAffordEntry } from '../../game/incursion/keys'
 import { scheduleBlocker } from '../../game/incursion/schedule/linkedSchedule'
 import { BOND_FRACTION, bondFor, CHECKIN_OPEN_MS } from '../../game/incursion/schedule/scheduleRules'
 import type { ScheduleView } from '../../game/incursion/schedule/scheduleView'
@@ -7,6 +8,7 @@ import { joinScheduled } from '../../net/incursionBoard'
 import { nickname } from '../../net/identity'
 import { NicknameDialog } from '../raid/NicknameDialog'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
+import { goToShop } from '../shared/navigation'
 import { formatMinutes, formatMoney, formatPercent } from '../shared/format'
 import { ScheduleCard } from './ScheduleCard'
 import { boardBlocker, REFUSAL_TEXT, scheduleName } from './scheduleText'
@@ -39,7 +41,17 @@ function JoinAction({ game, view, onJoined }: { game: GameState; view: ScheduleV
     else onJoined()
   }
 
-  if (blocker) return <p className="notice small">{blocker}</p>
+  if (blocker)
+    return (
+      <>
+        <p className="notice small">{blocker}</p>
+        {!canAffordEntry(game, view.incursionId) && (
+          <button className="btn primary" onClick={() => goToShop('keys')}>
+            Comprar llave
+          </button>
+        )}
+      </>
+    )
   return (
     <>
       {error && <p className="notice small">{error}</p>}

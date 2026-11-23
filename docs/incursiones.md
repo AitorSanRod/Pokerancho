@@ -31,7 +31,7 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
 | Estados alterados | Duran como mucho 5 turnos (volver a ponerlo reinicia la cuenta) y se quitan al acabar cada sala. Uno a la vez; los jefes, hasta 3 distintos. **Sueño** (solo en incursiones): el 1.er turno no se despierta, el 2.º con un 25%, el 3.º con un 75% y el 4.º seguro; al despertarse ataca ese mismo turno. **Congelación**: pierde de 1 a 3 turnos al azar (en las rutas, 1) |
 | Duración | 15–25 min, según los niveles del grupo (cuanto más fuerte, antes caen los rivales) |
 | Pokémon dentro | Sale del rancho como en una expedición; vuelve al terminar con los PS que le queden |
-| Acceso | Con una **llave** de esa incursión, comprada en la Tienda (muy fácil 5.000 ₽, fácil 10.000 ₽, media 30.000 ₽, difícil 50.000 ₽; como mucho 10 de cada una); hace falta para marcar Pokémon en la sala y se gasta al empezar |
+| Acceso | Con una **llave** de esa incursión, comprada en la Tienda (muy fácil 5.000 ₽, fácil 10.000 ₽, media 30.000 ₽, difícil 50.000 ₽; como mucho 10 de cada una); hace falta para programarla, apuntarse y marcar Pokémon en la sala, y se gasta al empezar |
 | Información | Un apartado en la pestaña que explica cómo funciona todo (grupo, movimientos, pasivas, revivires, nivel, retirada, llaves) |
 | Premios | Escritos a mano: ₽ y EXP en cada sala de combate superada; al terminar, ₽, EXP, tickets y **tickets de cualquier Pokémon** que elijamos |
 | Dónde | Nueva pestaña **Incursiones** arriba en Ruta, junto a Rutas y Raids |
@@ -51,7 +51,7 @@ Debe ser exigente: con un grupo mal compuesto (sin curación, sin nadie que agua
  ┌────────────────────┐   Tablón (programadas por otros: hora, huecos,
  │  Tablón /          │   premios, llave, fianza) · Mis incursiones
  │  Programar         │   (cuenta atrás, baja) · Programar (franja de 15 min)
- └─────────┬──────────┘   crear o aceptar: fianza del 10% del dinero
+ └─────────┬──────────┘   crear o aceptar (con llave): fianza del 10%
            ▼  10 min antes se abre la sala
  ┌────────────────────┐   checkin: se devuelve la fianza; se marca el primer
  │  Sala del checkin  │   Pokémon disponible y su ataque (cambiar o «Fijar»;
@@ -526,10 +526,10 @@ completar.
 Desde el 2026-11-17 sustituyen a la cola automática (decisión del usuario, `specs/001-incursiones-programadas/`).
 
 - **Programar**: en Comunidad › Incursiones › Programar se elige incursión (las que piden llave; la gratuita se juega ya) y
-  una franja de 15 min entre 15 min y 7 días después. El creador ocupa el primer hueco y deja su fianza. Se avisa por
+  una franja de 15 min entre 15 min y 7 días después; hace falta su llave. El creador ocupa el primer hueco y deja su fianza. Se avisa por
   push a todos los que tienen activado el tema «Incursiones programadas» (salvo al creador), puedan entrar o no.
 - **Aceptar**: desde el Tablón, si quedan huecos y tiene algún Pokémon con el nivel de entrada (aunque esté de
-  expedición). No hace falta la llave, pero la tarjeta dice si la tiene. Se ven la hora, los apuntados, el nivel y los
+  expedición) y su llave (sin ella, «Comprar llave»; la llave se comprueba en el móvil: el servidor no las conoce). Se ven la hora, los apuntados, el nivel y los
   premios (los de las salas y el final). Pide apodo, como las raids.
 - **Fianza**: el 10% del dinero al crear o aceptar, retenida en la partida (`incursionBonds`); no cuenta como gastado
   para las misiones y sí para el ranking de dinero. Se devuelve al hacer el checkin, al darse de baja a tiempo o si el

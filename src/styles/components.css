@@ -364,7 +364,7 @@
   border-radius: 50%;
   background: var(--red);
 }
-/* Punto verde que late: hay algo en marcha (pestañas, tira «En curso» del rancho) */
+/* Punto verde que late: hay algo en marcha (pestañas, botones «En curso» del rancho) */
 .live-dot {
   display: inline-block;
   flex-shrink: 0;

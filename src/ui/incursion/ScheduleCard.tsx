@@ -32,7 +32,7 @@ export function ScheduleCard({ game, view, children }: { game: GameState; view: 
         </p>
         <div className="row gap schedule-card-key small">
           <ItemIcon item={ICON.Incursion} size={24} off={keys === 0} />
-          {keys > 0 ? `Tienes ${keys} llave${keys === 1 ? '' : 's'}` : 'No tienes llave: sin ella no podrás entrar'}
+          {keys > 0 ? `Tienes ${keys} llave${keys === 1 ? '' : 's'}` : 'No tienes llave: sin ella no puedes apuntarte'}
         </div>
         <IncursionPrizesFold inc={inc} />
         {children}

@@ -90,17 +90,13 @@ function IncursionCard({ game, inc, schedules, onEnter, onSchedule }: CardProps)
           ) : (
             <span className="incursion-keys small">{freePrizeSpent(game, inc.id) ? 'Gratis · premios ya cobrados' : 'Gratis'}</span>
           )}
-          {schedules ? (
-            <button className="btn go grow" onClick={onSchedule}>
-              Programar
-            </button>
-          ) : !canAffordEntry(game, inc.id) ? (
+          {!canAffordEntry(game, inc.id) ? (
             <button className="btn primary grow" onClick={() => goToShop('keys')}>
               Comprar llave
             </button>
           ) : (
-            <button className="btn go grow" onClick={onEnter}>
-              Jugar ya
+            <button className="btn go grow" onClick={schedules ? onSchedule : onEnter}>
+              {schedules ? 'Programar' : 'Jugar ya'}
             </button>
           )}
         </div>
