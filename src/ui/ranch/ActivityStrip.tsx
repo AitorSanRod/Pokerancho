@@ -6,8 +6,8 @@ import { activityCard } from './activityText'
 import './activity-strip.css'
 
 /**
- * Botones «En curso» abajo del rancho, entre la Caja y el Menú y con su mismo aspecto: lo que tiene en marcha (ruta,
- * torre, incursiones, raids, expediciones) y lo abierto para unirse (sala de raid, tablón de incursiones). Cada uno
+ * Botones «En curso» abajo del rancho, entre la Caja y el Menú y con su mismo aspecto: solo incursiones y raids: lo que
+ * tiene en marcha y lo abierto para unirse (sala de raid, tablón de incursiones). Cada uno
  * lleva a su pestaña; sin nada, no se pinta
  */
 export function ActivityStrip({ game }: { game: GameState }) {

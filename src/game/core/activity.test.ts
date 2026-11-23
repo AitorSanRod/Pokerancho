@@ -32,21 +32,6 @@ describe('actividades en curso', () => {
     expect(kinds(played())).toEqual([])
   })
 
-  it('la ruta pide que se mire al acabar', () => {
-    const s = played()
-    s.run = { routeId: KANTO.routes[0].id, phase: 'walking' } as GameState['run']
-    expect(activities(s, FIGHT_NOW, null)).toEqual([{ kind: ActivityKind.Run, routeId: KANTO.routes[0].id, ready: false }])
-    s.run!.phase = 'complete'
-    expect(activities(s, FIGHT_NOW, null)[0].ready).toBe(true)
-  })
-
-  it('cuenta las expediciones fuera y las que han vuelto', () => {
-    const s = played()
-    const id = KANTO.routes[0].id
-    s.expeditions = [testExpedition('a', id), testExpedition('b', id, { elapsedMin: 999, durationMin: 15 })]
-    expect(activities(s, FIGHT_NOW, null)).toEqual([{ kind: ActivityKind.Expeditions, out: 2, done: 1, ready: true }])
-  })
-
   it('enseña la próxima programada y cuántas hay; pide mirarla al abrirse el checkin', () => {
     const s = played()
     const now = FIGHT_NOW
@@ -87,10 +72,16 @@ describe('actividades en curso', () => {
     expect(activities(played(), FIGHT_NOW, board)).toEqual([{ kind: ActivityKind.Board, open: 2, ready: false }])
   })
 
-  it('el orden: lo propio en marcha antes que lo abierto para unirse', () => {
+  it('no enseña la ruta, la torre ni las expediciones', () => {
     const s = played()
     s.run = { routeId: KANTO.routes[0].id, phase: 'walking' } as GameState['run']
     s.expeditions = [testExpedition('a', KANTO.routes[0].id)]
-    expect(kinds(s, FIGHT_NOW, [view({})])).toEqual([ActivityKind.Run, ActivityKind.Expeditions, ActivityKind.Board])
+    expect(kinds(s)).toEqual([])
+  })
+
+  it('el orden: lo propio en marcha antes que lo abierto para unirse', () => {
+    const s = played()
+    s.incursion = { incursionId: INCURSION } as GameState['incursion']
+    expect(kinds(s, FIGHT_NOW, [view({})])).toEqual([ActivityKind.Incursion, ActivityKind.Board])
   })
 })

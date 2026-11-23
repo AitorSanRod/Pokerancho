@@ -265,10 +265,10 @@ nuevo (otra especie lista para combinar, otra expedición de vuelta…). Lo vist
 incursión, sala de raid), un punto verde que late.
 
 Abajo del rancho, entre la Caja y el Menú y con su mismo botón, la fila **«En curso»** (`game/core/activity.ts` +
-`ui/ranch/ActivityStrip.tsx`) junta lo que hay en marcha y lo abierto para unirse: ruta, torre, incursión, checkin, las
-incursiones programadas (un solo botón con cuántas hay), salas de raid (o la sala abierta si no estás en ninguna),
-expediciones e incursiones del tablón con sitio. Cada botón lleva a su pestaña; los que piden que se miren ya
-(premios, checkin, sala abierta) van con borde amarillo.
+`ui/ranch/ActivityStrip.tsx`) junta solo incursiones y raids, lo que hay en marcha y lo abierto para unirse: incursión, checkin, las
+incursiones programadas (un solo botón con cuántas hay), salas de raid (o la sala abierta si no estás en ninguna) e
+incursiones del tablón con sitio. Cada botón lleva a su pestaña; los que piden que se miren ya
+(checkin, sala abierta) van con borde amarillo.
 
 ## Aviso legal
 

@@ -1,10 +1,9 @@
 import type { Item } from '../../data/items'
 import { incursion } from '../../data/incursions'
-import { route } from '../../data/maps'
 import { ActivityKind, type Activity } from '../../game/core/activity'
 import { formatClock, formatWhen } from '../shared/format'
 import { ICON } from '../shared/icons'
-import { goToIncursions, goToRaids, goToRoute } from '../shared/navigation'
+import { goToIncursions, goToRaids } from '../shared/navigation'
 import { ROTATION_LABEL } from '../raid/rotations'
 
 /** Lo que enseña una tarjeta de la tira «En curso» y adónde lleva al tocarla */
@@ -23,10 +22,6 @@ const until = (at: number, now: number): string => (at - now < 60 * 60_000 ? `en
 
 export function activityCard(a: Activity, now: number): ActivityCard {
   switch (a.kind) {
-    case ActivityKind.Run:
-      return { icon: ICON.Route, label: 'Ruta', title: route(a.routeId).name, detail: a.ready ? '¡Ruta terminada!' : 'En ruta', go: () => goToRoute('route') }
-    case ActivityKind.Tower:
-      return { icon: ICON.Tower, label: 'Torre', title: 'Torre', detail: a.ready ? 'Premios por ver' : `Piso ${a.floor}`, go: () => goToRoute('tower') }
     case ActivityKind.Incursion:
       return { icon: ICON.Incursion, label: 'Incursión', title: incursion(a.incursionId).name, detail: 'Incursión en curso', go: () => goToIncursions('mine') }
     case ActivityKind.Checkin:
@@ -47,13 +42,6 @@ export function activityCard(a: Activity, now: number): ActivityCard {
       return { icon: ICON.Raid, label: 'Raid', title: `Raid ${ROTATION_LABEL[a.rotation]}`, detail: a.fighting ? 'Pelea en curso' : 'En la sala', go: goToRaids }
     case ActivityKind.RaidLobby:
       return { icon: ICON.Raid, label: 'Sala raid', title: 'Raids: sala abierta', detail: `Pelea ${until(a.fightAt, now)}`, go: goToRaids }
-    case ActivityKind.Expeditions:
-      return {
-        icon: ICON.Expedition, label: 'Expedición',
-        title: 'Expediciones',
-        detail: a.done > 0 ? `${a.done} de ${a.out} han vuelto` : `${a.out} fuera`,
-        go: () => goToRoute('expeditions'),
-      }
     case ActivityKind.Board:
       return {
         icon: ICON.Board, label: 'Tablón',
